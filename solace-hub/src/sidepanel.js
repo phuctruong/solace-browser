@@ -194,9 +194,7 @@
         openDomainDrillDown(domain);
         // Navigate main browser to domain dashboard
         var url = domain.host === 'localhost' ? 'http://localhost:8888/dashboard' : 'http://localhost:8888/domains/' + encodeURIComponent(domain.host);
-        try { window.top.location.href = url; } catch(e) {
-          postJson('/api/navigate', { url: url });
-        }
+        navigateMainBrowser(url);
       });
       tbody.appendChild(tr);
     });
@@ -261,7 +259,7 @@
         if (app.triggers > 0) html += ' <span class="yy-pill yy-pill-success" style="font-size:0.55rem">' + app.triggers + ' triggers</span>';
         html += '<div class="yy-app-actions">';
         html += '<button onclick="window.runDomainAction(\'' + escapeHtml(app.app_id) + '\',\'run\')">Run</button>';
-        html += '<button onclick="window.top.location.href=\'http://localhost:8888/apps/' + escapeHtml(app.app_id) + '\'">Details</button>';
+        html += '<button onclick="navigateMainBrowser(\'http://localhost:8888/apps/' + escapeHtml(app.app_id) + '\')">Details</button>';
         html += '</div></div>';
       });
       appsList.innerHTML = html;
@@ -269,6 +267,40 @@
       appsList.innerHTML = '<p class="yy-copy">Could not load apps.</p>';
     });
   }
+
+  // ── Tab Management: report browser tabs to runtime ──
+  function reportTabs() {
+    try {
+      // In Chromium side panel, we can't use chrome.tabs directly
+      // But we CAN navigate the main content area via window.top
+      // Report the current tab info
+      var tabInfo = { url: '', title: '' };
+      try {
+        tabInfo.url = window.top.location.href;
+        tabInfo.title = window.top.document.title;
+      } catch(e) {
+        // Cross-origin — use last known URL
+        tabInfo.url = state.lastReportedUrl || '';
+      }
+      sendToRuntime({ type: 'tab_info', tabs: [tabInfo] });
+    } catch(e) {}
+  }
+  setInterval(reportTabs, 5000);
+
+  // Navigate main browser area (works from sidebar)
+  function navigateMainBrowser(url) {
+    try {
+      window.top.location.href = url;
+    } catch(e) {
+      // Cross-origin fallback: send via WebSocket command
+      sendToRuntime({ type: 'navigate_request', url: url });
+      // Also try postMessage
+      try { window.top.postMessage({ type: 'solace_navigate', url: url }, '*'); } catch(e2) {}
+    }
+  }
+
+  // Make it available globally for onclick handlers
+  window.navigateMainBrowser = navigateMainBrowser;
 
   // Back button: return to domain list
   (function() {

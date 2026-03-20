@@ -145,6 +145,23 @@ async fn handle_yinyang_ws(socket: WebSocket, state: AppState, session_id: Strin
                             let _ = title; // available for future use
                         }
                     }
+                    "navigate_request" => {
+                        // Sidebar requests navigation — send via session channel if available
+                        if let Some(url) = parsed.get("url").and_then(|v| v.as_str()) {
+                            let channels = state.session_channels.read();
+                            for (_, tx) in channels.iter() {
+                                let cmd = serde_json::json!({"type": "navigate", "url": url}).to_string();
+                                let _ = tx.send(cmd);
+                            }
+                        }
+                    }
+                    "tab_info" => {
+                        // Sidebar reports tab information — store in state
+                        // For now just log; later we can build full tab management
+                        if let Some(tabs) = parsed.get("tabs").and_then(|v| v.as_array()) {
+                            tracing::debug!(tab_count = tabs.len(), "tab info received");
+                        }
+                    }
                     "auth_handshake" => {
                         // Browser sidebar detected login on solaceagi.com/dashboard
                         // Payload: { type: "auth_handshake", token: "firebase_id_token", email: "user@example.com" }
