@@ -1043,75 +1043,98 @@ async fn app_detail_page(
         evidence_rows = "<tr><td colspan=\"3\" class=\"sb-text-muted\">No evidence records for this app yet.</td></tr>".to_string();
     }
 
-    let icon = domain_icon_path(&app.domain);
+    let run_count = runs.len();
+    let persona_display = if app.persona.is_empty() { "AI Worker" } else { &app.persona };
+    let category_display = if app.category.is_empty() { "standard" } else { &app.category };
+    let tags_html = app.tags.iter()
+        .map(|t| format!("<span class=\"sb-pill sb-pill--info sb-text-2xs\">{}</span>", html_escape::encode_text(t)))
+        .collect::<Vec<_>>().join(" ");
+
     let body = format!(
-        r#"<p><a href="/domains/{domain}">&larr; {domain}</a></p>
-<div class="sb-flex" class="sb-section-header">
-  <img class="sb-app-icon" src="{icon}" alt="">
-  <span class="sb-pill sb-pill--info">{domain}</span>
-  <span class="sb-pill sb-pill--success">v{version}</span>
+        r#"<p><a href="/dashboard">&larr; Dashboard</a> | <a href="/domains/{domain}">{domain}</a></p>
+
+<!-- Worker Profile Header -->
+<div class="sb-status-bar">
+  <div class="sb-card sb-stat-card">
+    <div class="sb-kicker">Worker</div>
+    <div class="sb-stat-value" style="font-size:1.2rem">{name}</div>
+    <div><span class="sb-pill sb-pill--info">{persona}</span> <span class="sb-pill sb-pill--success">{category}</span></div>
+  </div>
+  <div class="sb-card sb-stat-card">
+    <div class="sb-kicker">Runs</div>
+    <div class="sb-stat-value">{run_count}</div>
+  </div>
+  <div class="sb-card sb-stat-card">
+    <div class="sb-kicker">Evidence</div>
+    <div class="sb-stat-value">{evidence_count}</div>
+  </div>
+  <div class="sb-card sb-stat-card">
+    <div class="sb-kicker">Schedule</div>
+    <div><code>{schedule}</code></div>
+  </div>
+  <div class="sb-card sb-stat-card">
+    <a href="/api/v1/apps/run/{id}" class="sb-btn sb-btn--sm">Run Now</a>
+    <a href="/esign" class="sb-btn sb-btn--sm" style="margin-top:0.3rem">Sign Off</a>
+  </div>
 </div>
 
-<div class="sb-tabs" role="tablist">
-  <button class="sb-tab sb-tab--active" data-tab="overview" onclick="showTab(this,'overview')">Overview</button>
-  <button class="sb-tab" data-tab="runs" onclick="showTab(this,'runs')">Runs</button>
-  <button class="sb-tab" data-tab="evidence" onclick="showTab(this,'evidence')">Evidence</button>
-  <button class="sb-tab" data-tab="settings" onclick="showTab(this,'settings')">Settings</button>
-  <button class="sb-tab" data-tab="share" onclick="showTab(this,'share')">Share</button>
+<!-- Tags -->
+<div style="margin-bottom:1rem">{tags_html}</div>
+
+<!-- Worker Description -->
+<div class="sb-card" style="margin-bottom:1rem">
+  <p>{desc}</p>
 </div>
 
-<div id="panel-overview" class="sb-tab-panel">
-  {manifest_section}
-</div>
+<!-- Activity History -->
+<section>
+  <h2 class="sb-heading">Run History</h2>
+  <table class="sb-table" id="runs-table"><thead><tr><th>Run ID</th><th>Time</th></tr></thead><tbody>{run_rows}</tbody></table>
+</section>
 
-<div id="panel-runs" class="sb-tab-panel" hidden>
-  <table class="sb-table"><thead><tr><th>Run ID</th><th>Time</th></tr></thead><tbody>{run_rows}</tbody></table>
-</div>
+<!-- Evidence Trail -->
+<section class="sb-section">
+  <div class="sb-section-header">
+    <h2 class="sb-heading">Evidence Trail (Part 11)</h2>
+    <a href="/evidence" class="sb-btn sb-btn--sm">Full Chain</a>
+  </div>
+  <table class="sb-table" id="evidence-table"><thead><tr><th>Timestamp</th><th>Event</th><th>SHA-256</th></tr></thead><tbody>{evidence_rows}</tbody></table>
+</section>
 
-<div id="panel-evidence" class="sb-tab-panel" hidden>
-  <table class="sb-table"><thead><tr><th>Timestamp</th><th>Event</th><th>Hash</th></tr></thead><tbody>{evidence_rows}</tbody></table>
-  <p class="sb-section"><a href="/evidence" class="sb-btn sb-btn--sm">Full Evidence Chain</a></p>
-</div>
-
-<div id="panel-settings" class="sb-tab-panel" hidden>
+<!-- Worker Config -->
+<section class="sb-section">
+  <h2 class="sb-heading">Configuration</h2>
   <div class="sb-card">
     <table class="sb-table">
-      <tr><td><strong>Schedule</strong></td><td><code>{schedule}</code></td></tr>
+      <tr><td><strong>ID</strong></td><td><code>{id}</code></td></tr>
+      <tr><td><strong>Domain</strong></td><td><a href="/domains/{domain}">{domain}</a></td></tr>
+      <tr><td><strong>Version</strong></td><td>{version}</td></tr>
       <tr><td><strong>Tier</strong></td><td>{tier}</td></tr>
-      <tr><td><strong>Template</strong></td><td>{template}</td></tr>
-      <tr><td><strong>Source URL</strong></td><td>{source_url}</td></tr>
+      <tr><td><strong>Persona</strong></td><td>{persona}</td></tr>
+      <tr><td><strong>Category</strong></td><td>{category}</td></tr>
     </table>
   </div>
-</div>
-
-<div id="panel-share" class="sb-tab-panel" hidden>
-  <div class="sb-card">
-    <h3>Share this app</h3>
-    <p class="sb-text-muted">Send this app to a colleague. They install it locally — your data stays yours.</p>
-    <div >
-      <label >Recipient email</label>
-      <input type="email" id="share-app-email" placeholder="colleague@company.com" class="sb-input">
-    </div>
-    <button class="sb-btn sb-btn--sm sb-btn--primary" onclick="shareApp()">Share via solaceagi.com</button>
-    <p id="share-app-result" class="sb-text-muted sb-section"></p>
-  </div>
-</div>
+</section>
 
 <script>
-function showTab(btn, id) {{
-  document.querySelectorAll('.sb-tab').forEach(t => t.classList.remove('sb-tab--active'));
-  document.querySelectorAll('.sb-tab-panel').forEach(p => p.hidden = true);
-  btn.classList.add('sb-tab--active');
-  document.getElementById('panel-' + id).hidden = false;
+if (typeof jQuery !== 'undefined' && jQuery.fn.DataTable) {{
+  jQuery.fn.dataTable.ext.errMode = 'none';
+  try {{ jQuery('#runs-table').DataTable({{paging:true,ordering:true,pageLength:10,dom:'ftip'}}); }} catch(e) {{}}
+  try {{ jQuery('#evidence-table').DataTable({{paging:true,ordering:true,pageLength:10,dom:'ftip'}}); }} catch(e) {{}}
 }}
 </script>"#,
         domain = html_escape::encode_text(&app.domain),
-        icon = html_escape::encode_text(&icon),
+        id = html_escape::encode_text(&app.id),
+        name = html_escape::encode_text(&app.name),
+        desc = html_escape::encode_text(&app.description),
         version = html_escape::encode_text(&app.version),
+        persona = html_escape::encode_text(persona_display),
+        category = html_escape::encode_text(category_display),
         schedule = schedule_display,
         tier = tier_display,
-        template = html_escape::encode_text(&app.report_template),
-        source_url = app.source_url.as_deref().filter(|s| !s.is_empty()).map(|s| html_escape::encode_text(s).to_string()).unwrap_or_else(|| "—".to_string()),
+        run_count = run_count,
+        evidence_count = app_evidence.len(),
+        tags_html = tags_html,
     );
 
     Ok(Html(hub_page(
