@@ -84,6 +84,30 @@
         <div class="yy-domain-grid" id="domain-grid"></div>
       </section>
 
+        <!-- Active Apps: shown when trigger-matched apps exist for current page -->
+        <section class="yy-card" id="active-apps-section" style="display:none">
+          <div class="yy-section-head">
+            <div>
+              <p class="yy-section-kicker">Active for this page</p>
+              <h2 id="active-apps-title">—</h2>
+            </div>
+            <span id="active-apps-count" class="yy-pill yy-pill-success">0</span>
+          </div>
+          <div id="active-apps-list"></div>
+        </section>
+
+        <!-- Domain Status: OAuth3 + app details for current domain -->
+        <section class="yy-card" id="domain-status-section" style="display:none">
+          <div class="yy-section-head">
+            <div>
+              <p class="yy-section-kicker">Domain</p>
+              <h2 id="domain-status-name">—</h2>
+            </div>
+            <span id="domain-oauth3-pill" class="yy-pill yy-pill-muted">—</span>
+          </div>
+          <div id="domain-status-detail"></div>
+        </section>
+
         <section class="yy-card">
           <div class="yy-section-head">
             <div>

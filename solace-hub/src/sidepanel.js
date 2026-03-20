@@ -419,6 +419,8 @@
           }
           // Auto-capture: create Prime Wiki snapshot + Stillwater + PZip
           capturePageSnapshot(currentUrl);
+          // Check for domain app triggers on this page
+          checkDomainTriggers(currentUrl);
         }
       } catch (e) {
         // Cross-origin — sidebar can't read top URL, try runtime URL API
@@ -456,6 +458,125 @@
       // Cross-origin — can't capture HTML, that's expected
     }
   }
+
+  // Check domain app triggers for the current URL
+  function checkDomainTriggers(url) {
+    try {
+      var parts = url.split('://');
+      if (parts.length < 2) return;
+      var hostPath = parts[1].split('/');
+      var domain = hostPath[0];
+      var path = '/' + hostPath.slice(1).join('/');
+      // Skip localhost
+      if (domain.indexOf('localhost') !== -1 || domain.indexOf('127.0.0.1') !== -1) {
+        updateActiveApps(null, domain, path);
+        return;
+      }
+
+      // Fetch trigger matches
+      getJson('/api/v1/domains/' + encodeURIComponent(domain) + '/triggers?path=' + encodeURIComponent(path))
+        .then(function(d) { updateActiveApps(d, domain, path); })
+        .catch(function() {});
+
+      // Fetch domain status
+      getJson('/api/v1/domains/' + encodeURIComponent(domain) + '/status')
+        .then(function(d) { updateDomainStatus(d); })
+        .catch(function() {});
+    } catch(e) {}
+  }
+
+  // Update the Active Apps section in the sidebar
+  function updateActiveApps(data, domain, path) {
+    var section = qs('active-apps-section');
+    var list = qs('active-apps-list');
+    var title = qs('active-apps-title');
+    var count = qs('active-apps-count');
+    if (!section || !list) return;
+
+    if (!data || !data.matched_apps || data.matched_apps.length === 0) {
+      section.style.display = 'none';
+      return;
+    }
+
+    section.style.display = 'block';
+    title.textContent = domain;
+    count.textContent = data.matched_apps.length;
+    count.className = 'yy-pill yy-pill-success';
+
+    var html = '';
+    data.matched_apps.forEach(function(app) {
+      html += '<div class="yy-event-item" style="padding:0.5rem;margin-bottom:0.5rem;border:1px solid var(--yy-border);border-radius:8px">';
+      html += '<strong>' + (app.app_name || app.app_id) + '</strong>';
+      if (app.trigger_context) {
+        html += ' <span class="yy-pill yy-pill-success" style="font-size:0.6rem">' + app.trigger_context + '</span>';
+      }
+      // Action buttons
+      if (app.actions && app.actions.length > 0) {
+        html += '<div style="margin-top:0.4rem;display:flex;gap:0.3rem;flex-wrap:wrap">';
+        app.actions.forEach(function(action) {
+          html += '<button class="yy-mode-btn" style="font-size:0.7rem;padding:0.2rem 0.5rem" onclick="runDomainAction(\'' + app.app_id + '\',\'' + action.id + '\')">' + action.label + '</button>';
+        });
+        html += '</div>';
+      }
+      html += '</div>';
+    });
+    list.innerHTML = html;
+  }
+
+  // Update the Domain Status section
+  function updateDomainStatus(data) {
+    var section = qs('domain-status-section');
+    var name = qs('domain-status-name');
+    var pill = qs('domain-oauth3-pill');
+    var detail = qs('domain-status-detail');
+    if (!section || !data) return;
+
+    section.style.display = 'block';
+    name.textContent = data.domain || '—';
+
+    // OAuth3 status
+    var oauthStatus = data.oauth3_status || 'not_configured';
+    if (oauthStatus === 'active') {
+      pill.textContent = 'OAuth3 ✓';
+      pill.className = 'yy-pill yy-pill-success';
+    } else if (oauthStatus === 'expired') {
+      pill.textContent = 'OAuth3 expired';
+      pill.className = 'yy-pill yy-pill-warning';
+    } else {
+      pill.textContent = 'No login';
+      pill.className = 'yy-pill yy-pill-muted';
+    }
+
+    var html = '<p class="yy-copy">' + (data.apps_count||0) + ' apps, ' + (data.wiki_snapshots||0) + ' snapshots</p>';
+    if (oauthStatus !== 'active' && data.apps_count > 0) {
+      html += '<button class="yy-mode-btn" style="margin-top:0.3rem;font-size:0.75rem" onclick="setupOAuth3(\'' + (data.domain||'') + '\')">Setup OAuth3 Login</button>';
+    }
+    detail.innerHTML = html;
+  }
+
+  // Run a domain app action
+  window.runDomainAction = function(appId, actionId) {
+    postJson('/api/v1/apps/run/' + appId, { action: actionId }).then(function(d) {
+      console.log('[Solace] Action result:', d);
+    });
+  };
+
+  // Setup OAuth3 for a domain
+  window.setupOAuth3 = function(domain) {
+    // Navigate the main browser to the domain's login page
+    try {
+      var loginUrls = {
+        'mail.google.com': 'https://accounts.google.com/signin',
+        'github.com': 'https://github.com/login',
+        'linkedin.com': 'https://www.linkedin.com/login',
+      };
+      var url = loginUrls[domain] || ('https://' + domain + '/login');
+      window.top.location.href = url;
+    } catch(e) {
+      // Cross-origin fallback
+      postJson('/api/navigate', { url: 'https://' + domain + '/login' });
+    }
+  };
 
   // Detect login on solaceagi.com/dashboard and trigger auth handshake
   function detectDashboardLogin() {
@@ -728,18 +849,19 @@
       var loggedIn = d.connected && d.config;
       var gate = qs('gate-overlay');
       var main = qs('main-content');
-      if (gate) gate.style.display = loggedIn ? 'none' : 'block';
-      if (main) main.style.display = loggedIn ? 'block' : 'none';
+      // Always show main content — sidebar works without login (local apps)
+      if (gate) gate.style.display = loggedIn ? 'none' : 'none'; // Hide gate always — show inline prompt instead
+      if (main) main.style.display = 'block'; // Always visible
       if (loggedIn) {
         var dot = qs('gate-status-dot');
         if (dot) dot.className = 'yy-status-dot status-online';
         setText('gate-status', 'Signed in as ' + (d.config.user_email || ''));
-        // First time unlocking — refresh data
-        if (!_sidebarUnlocked) {
-          _sidebarUnlocked = true;
-          renderDomains();
-          renderEvents();
-        }
+      }
+      // Always render domains and events (works offline / without login)
+      if (!_sidebarUnlocked) {
+        _sidebarUnlocked = true;
+        renderDomains();
+        renderEvents();
       }
     }).catch(function () {
       // Runtime not reachable — show gate
