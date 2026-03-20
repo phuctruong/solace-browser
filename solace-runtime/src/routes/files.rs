@@ -368,20 +368,71 @@ async fn dashboard_page(State(state): State<AppState>) -> Html<String> {
   // Load CRM contacts
   fetchJson('/api/v1/backoffice/backoffice-crm/contacts').then(function(d) {{
     var items = d.items || [];
-    var html = '<div class="bo-stats"><div class="bo-stat-card"><div class="bo-stat-value">' + items.length + '</div><div class="bo-stat-label">Contacts</div></div></div>';
+    // Pipeline stats by stage
+    var stages = {{}};
+    items.forEach(function(c) {{ var s = c.stage || 'unknown'; stages[s] = (stages[s]||0) + 1; }});
+    var stageOrder = ['lead','contacted','qualified','proposal','negotiation','won','lost'];
+    var html = '<div class="bo-stats">';
+    html += '<div class="bo-stat-card"><div class="bo-stat-value">' + items.length + '</div><div class="bo-stat-label">Total Contacts</div></div>';
+    stageOrder.forEach(function(s) {{
+      if (stages[s]) {{
+        var cls = s === 'won' ? 'bo-stat-trend--up' : s === 'lost' ? 'bo-stat-trend--down' : '';
+        html += '<div class="bo-stat-card"><div class="bo-stat-value">' + stages[s] + '</div><div class="bo-stat-label ' + cls + '">' + s + '</div></div>';
+      }}
+    }});
+    html += '</div>';
+
+    // Pipeline chart placeholder
+    html += '<div id="crm-pipeline-chart" class="bo-chart" style="height:200px;margin-bottom:1rem"></div>';
+
+    // Contacts table with DataTables
     if (items.length) {{
-      html += '<table class="sb-table"><thead><tr><th>Name</th><th>Email</th><th>Stage</th><th>Source</th></tr></thead><tbody>';
+      html += '<table class="sb-table" id="crm-table"><thead><tr><th>Name</th><th>Email</th><th>Stage</th><th>Source</th><th>Notes</th></tr></thead><tbody>';
       items.forEach(function(c) {{
-        var cls = c.stage === 'won' ? 'success' : c.stage === 'lost' ? 'danger' : 'info';
+        var cls = c.stage === 'won' ? 'success' : c.stage === 'lost' ? 'danger' : c.stage === 'qualified' ? 'warning' : 'info';
         html += '<tr><td><strong>' + esc(c.name||'') + '</strong></td><td>' + esc(c.email||'') + '</td>';
         html += '<td><span class="sb-pill sb-pill--' + cls + '">' + esc(c.stage||'—') + '</span></td>';
-        html += '<td>' + esc(c.source||'') + '</td></tr>';
+        html += '<td>' + esc(c.source||'') + '</td>';
+        html += '<td class="sb-text-xs">' + esc((c.notes||'').substring(0,60)) + '</td></tr>';
       }});
       html += '</tbody></table>';
     }} else {{
       html += '<p class="sb-text-muted">No contacts yet. AI workers will populate this as they research.</p>';
     }}
+
+    // Deals section
+    html += '<h3 class="sb-heading" style="margin-top:1.5rem">Deals Pipeline</h3>';
+    html += '<div id="crm-deals"></div>';
+
     ge('dash-crm').innerHTML = html;
+
+    // Init DataTables on CRM table
+    if (typeof jQuery !== 'undefined' && jQuery.fn.DataTable) {{
+      jQuery.fn.dataTable.ext.errMode = 'none';
+      try {{ jQuery('#crm-table').DataTable({{paging:true,searching:true,ordering:true,pageLength:10,dom:'ftip'}}); }} catch(e) {{}}
+    }}
+
+    // Load deals and render pipeline chart
+    fetchJson('/api/v1/backoffice/backoffice-crm/deals').then(function(dd) {{
+      var deals = dd.items || [];
+      if (!deals.length) {{ ge('crm-deals').innerHTML = '<p class="sb-text-muted">No deals yet.</p>'; return; }}
+      var dealHtml = '<div class="bo-kanban">';
+      var dealStages = {{'discovery':[],'demo':[],'proposal':[],'negotiation':[],'closed_won':[],'closed_lost':[]}};
+      deals.forEach(function(d) {{ if(dealStages[d.stage]) dealStages[d.stage].push(d); }});
+      ['discovery','demo','proposal','negotiation','closed_won','closed_lost'].forEach(function(s) {{
+        dealHtml += '<div class="bo-kanban-column"><div class="bo-kanban-column-header">' + s.replace('_',' ').toUpperCase();
+        dealHtml += ' <span class="sb-pill sb-pill--info sb-text-2xs">' + dealStages[s].length + '</span></div>';
+        dealStages[s].forEach(function(d) {{
+          dealHtml += '<div class="bo-kanban-card"><strong>' + esc(d.title||'?') + '</strong>';
+          if (d.value) dealHtml += '<div class="sb-text-xs">$' + Number(d.value).toLocaleString() + '</div>';
+          dealHtml += '</div>';
+        }});
+        dealHtml += '</div>';
+      }});
+      dealHtml += '</div>';
+      ge('crm-deals').innerHTML = dealHtml;
+    }}).catch(function(){{}});
+
   }}).catch(function(){{ ge('dash-crm').innerHTML = '<p class="sb-text-muted">CRM not initialized yet.</p>'; }});
 
   // Load Messages
