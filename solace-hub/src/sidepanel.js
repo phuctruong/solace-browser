@@ -216,16 +216,20 @@
     state.domains = Array.isArray(payload.items) ? payload.items : [];
     if (!state.domains.length) {
       state.selectedDomain = null;
+      setText('domain-count', '0 active');
+      renderDomains();
       return;
     }
     if (!state.selectedDomain) {
       state.selectedDomain = state.domains[0];
-      return;
+    } else {
+      const current = state.domains.find(function (entry) {
+        return entry.id === state.selectedDomain.id || entry.host === state.selectedDomain.host;
+      });
+      state.selectedDomain = current || state.domains[0];
     }
-    const current = state.domains.find(function (entry) {
-      return entry.id === state.selectedDomain.id || entry.host === state.selectedDomain.host;
-    });
-    state.selectedDomain = current || state.domains[0];
+    setText('domain-count', state.domains.length + ' active');
+    renderDomains();
   }
 
   async function refreshEvents() {
@@ -857,11 +861,11 @@
         if (dot) dot.className = 'yy-status-dot status-online';
         setText('gate-status', 'Signed in as ' + (d.config.user_email || ''));
       }
-      // Always render domains and events (works offline / without login)
+      // Always load domains and events (works offline / without login)
       if (!_sidebarUnlocked) {
         _sidebarUnlocked = true;
-        renderDomains();
-        renderEvents();
+        refreshDomains();
+        refreshEvents();
       }
     }).catch(function () {
       // Runtime not reachable — show gate

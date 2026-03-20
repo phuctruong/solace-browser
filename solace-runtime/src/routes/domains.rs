@@ -141,6 +141,7 @@ async fn list_domains() -> Json<serde_json::Value> {
                 "host": domain,
                 "label": domain,
                 "url": format!("http://127.0.0.1:8888/domains/{}", domain),
+                "icon": format!("http://127.0.0.1:8888/icons/apps/{}", crate::routes::files::domain_icon_filename(domain)),
                 "app_count": count,
             })
         })
