@@ -107,12 +107,26 @@ async fn handle_yinyang_ws(socket: WebSocket, state: AppState, session_id: Strin
                 match msg_type {
                     "url_changed" => {
                         // Browser navigated — update session's current URL
-                        if let Some(url) = parsed.get("url").and_then(|v| v.as_str()) {
-                            if !session_id.is_empty() {
-                                let mut sessions = state.sessions.write();
-                                if let Some(session) = sessions.values_mut().find(|s| s.session_id == session_id) {
-                                    session.url = url.to_string();
-                                }
+                        let nav_url = parsed.get("url").and_then(|v| v.as_str()).unwrap_or("").to_string();
+                        if !nav_url.is_empty() && !session_id.is_empty() {
+                            let mut sessions = state.sessions.write();
+                            if let Some(session) = sessions.values_mut().find(|s| s.session_id == session_id) {
+                                session.url = nav_url.clone();
+                            }
+                        }
+                        // Auto-capture: if sidebar sent page content, create Prime Wiki snapshot
+                        if let Some(content) = parsed.get("content").and_then(|v| v.as_str()) {
+                            if !nav_url.is_empty() && content.len() > 100
+                                && !nav_url.contains("localhost") && !nav_url.contains("127.0.0.1")
+                            {
+                                let wiki_url = nav_url.clone();
+                                let wiki_content = content.to_string();
+                                let _handle = tokio::spawn(async move {
+                                    let client = reqwest::Client::new();
+                                    let _ = client.post("http://127.0.0.1:8888/api/v1/wiki/extract")
+                                        .json(&serde_json::json!({"url": wiki_url, "content": wiki_content}))
+                                        .send().await;
+                                });
                             }
                         }
                     }

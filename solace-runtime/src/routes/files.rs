@@ -1778,10 +1778,13 @@ select.sb-input {{ cursor: pointer; }}
 <script src="/vendor/jquery.dataTables.min.js"></script>
 <script>
 if (typeof jQuery !== 'undefined' && jQuery.fn.DataTable) {{
+  jQuery.fn.dataTable.ext.errMode = 'none';
   jQuery('.sb-table').each(function() {{
-    if (!jQuery.fn.DataTable.isDataTable(this)) {{
-      jQuery(this).DataTable({{ paging: true, searching: true, ordering: true, pageLength: 25, dom: 'ftip' }});
-    }}
+    try {{
+      if (!jQuery.fn.DataTable.isDataTable(this)) {{
+        jQuery(this).DataTable({{ paging: true, searching: true, ordering: true, pageLength: 25, dom: 'ftip' }});
+      }}
+    }} catch(e) {{}}
   }});
 }}
 </script>

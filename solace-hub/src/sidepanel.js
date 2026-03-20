@@ -404,10 +404,14 @@
         const currentUrl = window.top.location.href;
         if (currentUrl !== state.lastReportedUrl) {
           state.lastReportedUrl = currentUrl;
+          // Send URL + page content via WebSocket for auto-capture
+          var pageContent = '';
+          try { pageContent = window.top.document.documentElement.outerHTML; } catch(e) {}
           sendToRuntime({
             type: 'url_changed',
             url: currentUrl,
-            title: window.top.document.title
+            title: window.top.document.title,
+            content: pageContent.length > 100 ? pageContent : ''
           });
           // Detect solaceagi.com dashboard login → trigger auth handshake
           if (currentUrl.indexOf('solaceagi.com/dashboard') !== -1 && !state.handshakeAttempted) {
