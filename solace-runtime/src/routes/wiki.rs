@@ -69,33 +69,7 @@ async fn extract_page(
 
             let url_hash = &decomp.sha256[..16];
 
-            // 1. Save .prime-snapshot.md (agent-readable structure)
-            let snapshot_md = format!(
-                "<!-- Diagram: hub-browse-capture-pipeline -->\n\
-                 # Prime Snapshot: {}\n\
-                 # SHA-256: {}\n\
-                 # Codec: {} | Sections: {}\n\n\
-                 ## Stillwater\n\
-                 - headings: {}\n\
-                 - nav_links: {}\n\
-                 - meta: {}\n\
-                 - template_hash: {}\n\n\
-                 ## Ripple\n\
-                 - title: {}\n\
-                 - sections: {}\n",
-                decomp.url, decomp.sha256,
-                decomp.codec.name(), decomp.ripple.sections.len(),
-                decomp.stillwater.headings.len(),
-                decomp.stillwater.nav_links.len(),
-                decomp.stillwater.meta.len(),
-                decomp.stillwater.template_hash,
-                decomp.ripple.title,
-                decomp.ripple.sections.len(),
-            );
-            let snapshot_path = wiki_dir.join(format!("{url_hash}.prime-snapshot.md"));
-            let _ = fs::write(&snapshot_path, &snapshot_md);
-
-            // 2. Save .pzwb (PZip compressed original — decompress = exact HTML)
+            // 0. Compress with PZip FIRST (need size for snapshot metadata)
             let pzwb_path = wiki_dir.join(format!("{url_hash}.pzwb"));
             let compressed = if let Ok(pzwb) = crate::pzip::web::compress(content, "text/html") {
                 let len = pzwb.len();
@@ -104,6 +78,73 @@ async fn extract_page(
             } else {
                 0
             };
+
+            // 1. Save .prime-snapshot.md (Prime Mermaid format — geometric language)
+            // Mermaid flowchart captures page STRUCTURE, not just counts.
+            // This enables: page reconstruction, regression testing, AI comprehension.
+            let section_nodes: String = if decomp.ripple.sections.is_empty() {
+                // If no sections extracted, use headings as nodes
+                decomp.stillwater.headings.iter().enumerate().map(|(i, h)| {
+                    let safe = h.replace('"', "'").replace('\n', " ").chars().take(40).collect::<String>();
+                    format!("    PAGE --> S{}[{}]", i, safe)
+                }).collect::<Vec<_>>().join("\n")
+            } else {
+                decomp.ripple.sections.iter().enumerate().map(|(i, s)| {
+                    let label = if s.heading.is_empty() { "Section" } else { &s.heading };
+                    let safe = label.replace('"', "'").replace('\n', " ").chars().take(40).collect::<String>();
+                    format!("    PAGE --> S{}[{}]", i, safe)
+                }).collect::<Vec<_>>().join("\n")
+            };
+            let title_short = decomp.ripple.title.chars().take(50).collect::<String>();
+            let page_label = extract_path(&decomp.url);
+            let snapshot_md = format!(
+                "<!-- Diagram: hub-browse-capture-pipeline -->\n\
+                 # Prime Snapshot: {url}\n\
+                 # SHA-256: {sha}\n\
+                 # DNA: `page({path}) = stillwater(nav+meta) × ripple(sections) × seal(sha256)`\n\
+                 # Auth: 65537 | Codec: {codec} | Compression: {ratio}\n\n\
+                 ## Identity\n\
+                 - **URL**: {url}\n\
+                 - **Codec**: {codec}\n\
+                 - **Original**: {orig} bytes → **Compressed**: {comp} bytes\n\n\
+                 ## Canonical Diagram\n\n\
+                 ```mermaid\n\
+                 flowchart TB\n\
+                     PAGE[PAGE<br>{path}<br>{title}]\n\
+                 {nodes}\n\
+                 ```\n\n\
+                 ## Stillwater (Generator — shared across domain)\n\
+                 - headings: {h_count}\n\
+                 - nav_links: {n_count}\n\
+                 - meta: {m_count}\n\
+                 - template_hash: {th}\n\n\
+                 ## Ripple (Residual — this page only)\n\
+                 - title: {title}\n\
+                 - sections: {s_count}\n\n\
+                 ## Verification\n\
+                 ```\n\
+                 ASSERT: SHA-256 matches content\n\
+                 ASSERT: Codec detected as {codec}\n\
+                 ASSERT: Stillwater template_hash present\n\
+                 ```\n",
+                url = decomp.url,
+                sha = decomp.sha256,
+                path = page_label,
+                codec = decomp.codec.name(),
+                ratio = if compressed > 0 { format!("{:.1}:1", content.len() as f64 / compressed as f64) } else { "N/A".to_string() },
+                orig = content.len(),
+                comp = compressed,
+                title = title_short,
+                nodes = section_nodes,
+                h_count = decomp.stillwater.headings.len(),
+                n_count = decomp.stillwater.nav_links.len(),
+                m_count = decomp.stillwater.meta.len(),
+                th = decomp.stillwater.template_hash,
+                s_count = decomp.ripple.sections.len(),
+            );
+            // 2. Write the snapshot (PZip already saved above)
+            let snapshot_path = wiki_dir.join(format!("{url_hash}.prime-snapshot.md"));
+            let _ = fs::write(&snapshot_path, &snapshot_md);
 
             // 3. Update domain sitemap (auto-create prime-wiki per domain)
             let domain = extract_domain(&decomp.url);
