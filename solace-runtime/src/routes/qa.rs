@@ -23,7 +23,7 @@ pub fn routes() -> Router<AppState> {
         .route("/api/v1/qa/status", get(qa_status))
 }
 
-/// The 7 QA app types — all PUBLIC, all free.
+/// The 8 QA app types — all PUBLIC, all free.
 const QA_TYPES: &[(&str, &str, &str)] = &[
     ("visual", "Visual QA", "Screenshot comparison, CSS token compliance, responsive breakpoint testing"),
     ("api", "API QA", "Endpoint smoke tests, response schema validation, latency monitoring"),
@@ -32,6 +32,7 @@ const QA_TYPES: &[(&str, &str, &str)] = &[
     ("performance", "Performance QA", "First Contentful Paint, Largest Contentful Paint, CLS, memory profiling"),
     ("evidence", "Evidence QA", "Hash chain integrity verification, ALCOA+ compliance, Part 11 audit readiness"),
     ("integration", "Integration QA", "Cross-app flow testing, domain-to-domain handoff, end-to-end journeys"),
+    ("snapshot", "Snapshot QA", "Compare live Prime Wiki snapshots against spec snapshots. Detect drift, missing pages, codec mismatches."),
 ];
 
 async fn list_qa_types() -> Json<Value> {
@@ -97,6 +98,7 @@ async fn run_qa(
         "performance" => run_performance_qa(&payload.target).await,
         "evidence" => run_evidence_qa(&state).await,
         "integration" => run_integration_qa(&state).await,
+        "snapshot" => run_snapshot_qa(&payload.target, &state).await,
         _ => json!({"error": "unknown type"}),
     };
 
@@ -340,7 +342,7 @@ async fn run_performance_qa(target: &str) -> Value {
 async fn run_evidence_qa(state: &AppState) -> Value {
     let mut checks = Vec::new();
     let solace_home = crate::utils::solace_home();
-    let evidence_path = solace_home.join("evidence.jsonl");
+    let evidence_path = solace_home.join("runtime").join("evidence.jsonl");
 
     // Check evidence file exists
     let exists = evidence_path.exists();
@@ -400,7 +402,7 @@ async fn run_integration_qa(state: &AppState) -> Value {
         ("apps → recipes", "/api/apps", "/api/v1/recipes"),
         ("apps → evidence", "/api/apps", "/api/v1/evidence"),
         ("health → qa types", "/health", "/api/v1/qa/types"),
-        ("domains → sessions", "/api/v1/domains", "/api/v1/sessions"),
+        ("domains → sessions", "/api/v1/domains", "/api/v1/browser/sessions"),
     ];
 
     for (name, ep1, ep2) in &flows {
@@ -422,6 +424,111 @@ async fn run_integration_qa(state: &AppState) -> Value {
     json!({"checks": checks})
 }
 
+/// Snapshot QA: compare live Prime Wiki snapshots against filesystem state.
+/// Checks: snapshot exists per domain, Stillwater template present, PZip binary valid,
+/// Mermaid flowchart present, verification assertions present, codec consistency.
+async fn run_snapshot_qa(target: &str, _state: &AppState) -> Value {
+    let mut checks = Vec::new();
+    let wiki_dir = crate::utils::solace_home().join("wiki");
+
+    // Check 1: Wiki directory exists
+    let wiki_exists = wiki_dir.exists();
+    checks.push(json!({"name": "wiki_dir_exists", "passed": wiki_exists, "detail": format!("{}", wiki_dir.display())}));
+    if !wiki_exists {
+        return json!({"checks": checks});
+    }
+
+    // Check 2: At least one snapshot exists
+    let snapshots: Vec<_> = std::fs::read_dir(&wiki_dir)
+        .into_iter()
+        .flatten()
+        .filter_map(|e| e.ok())
+        .filter(|e| e.file_name().to_string_lossy().ends_with(".prime-snapshot.md"))
+        .collect();
+    checks.push(json!({"name": "snapshots_exist", "passed": !snapshots.is_empty(), "detail": format!("{} snapshots", snapshots.len())}));
+
+    // Check 3: PZip binaries exist for each snapshot
+    let pzwb_count = std::fs::read_dir(&wiki_dir)
+        .into_iter()
+        .flatten()
+        .filter_map(|e| e.ok())
+        .filter(|e| e.file_name().to_string_lossy().ends_with(".pzwb"))
+        .count();
+    let pzwb_match = pzwb_count >= snapshots.len();
+    checks.push(json!({"name": "pzwb_match_snapshots", "passed": pzwb_match, "detail": format!("{} pzwb files for {} snapshots", pzwb_count, snapshots.len())}));
+
+    // Check 4: Domains directory exists with at least one domain
+    let domains_dir = wiki_dir.join("domains");
+    let domain_count = if domains_dir.exists() {
+        std::fs::read_dir(&domains_dir)
+            .into_iter()
+            .flatten()
+            .filter_map(|e| e.ok())
+            .filter(|e| e.file_type().map(|t| t.is_dir()).unwrap_or(false))
+            .count()
+    } else {
+        0
+    };
+    checks.push(json!({"name": "domains_captured", "passed": domain_count > 0, "detail": format!("{} domains", domain_count)}));
+
+    // Check 5: Each domain has a Stillwater template
+    let mut sw_pass = true;
+    let mut sw_detail = Vec::new();
+    if domains_dir.exists() {
+        for entry in std::fs::read_dir(&domains_dir).into_iter().flatten().filter_map(|e| e.ok()) {
+            if entry.file_type().map(|t| t.is_dir()).unwrap_or(false) {
+                let domain = entry.file_name().to_string_lossy().to_string();
+                let sw_path = entry.path().join("stillwater.prime-snapshot.md");
+                if sw_path.exists() {
+                    sw_detail.push(format!("{}:OK", domain));
+                } else {
+                    sw_pass = false;
+                    sw_detail.push(format!("{}:MISSING", domain));
+                }
+            }
+        }
+    }
+    checks.push(json!({"name": "domain_stillwater_templates", "passed": sw_pass, "detail": sw_detail.join(", ")}));
+
+    // Check 6: Snapshots contain Prime Mermaid format (DNA + flowchart + assertions)
+    let mut mermaid_count = 0;
+    let mut dna_count = 0;
+    let mut assert_count = 0;
+    for snap in &snapshots {
+        if let Ok(content) = std::fs::read_to_string(snap.path()) {
+            if content.contains("```mermaid") { mermaid_count += 1; }
+            if content.contains("# DNA:") { dna_count += 1; }
+            if content.contains("ASSERT:") { assert_count += 1; }
+        }
+    }
+    let total = snapshots.len();
+    checks.push(json!({"name": "mermaid_flowcharts", "passed": mermaid_count == total, "detail": format!("{}/{} have Mermaid", mermaid_count, total)}));
+    checks.push(json!({"name": "dna_equations", "passed": dna_count == total, "detail": format!("{}/{} have DNA", dna_count, total)}));
+    checks.push(json!({"name": "verification_asserts", "passed": assert_count == total, "detail": format!("{}/{} have ASSERTs", assert_count, total)}));
+
+    // Check 7: If target is an external URL, verify it has been captured
+    // Skip localhost — excluded from wiki capture by design (it's ourselves)
+    if target.starts_with("http") && !target.contains("localhost") && !target.contains("127.0.0.1") {
+        let target_domain = target
+            .split("://").nth(1).unwrap_or("")
+            .split('/').next().unwrap_or("")
+            .replace("www.", "");
+        let domain_exists = domains_dir.join(&target_domain).exists();
+        checks.push(json!({"name": "target_domain_captured", "passed": domain_exists, "detail": format!("Domain '{}' in wiki", target_domain)}));
+    }
+
+    // Check 8: Wiki stats via API (self-test)
+    if let Ok(resp) = reqwest::get("http://127.0.0.1:8888/api/v1/wiki/stats").await {
+        if let Ok(stats) = resp.json::<Value>().await {
+            let count = stats.get("snapshot_count").and_then(|v| v.as_u64()).unwrap_or(0);
+            let community = stats.get("community_browsing").and_then(|v| v.as_bool()).unwrap_or(false);
+            checks.push(json!({"name": "wiki_api_stats", "passed": count > 0 && community, "detail": format!("snapshots={}, community={}", count, community)}));
+        }
+    }
+
+    json!({"checks": checks})
+}
+
 async fn get_qa_report(
     axum::extract::Query(params): axum::extract::Query<HashMap<String, String>>,
 ) -> Result<Json<Value>, (StatusCode, Json<Value>)> {
@@ -432,7 +539,7 @@ async fn get_qa_report(
 
     let solace_home = crate::utils::solace_home();
     // Search for report across all QA app outboxes
-    for qa_type in ["visual", "api", "accessibility", "security", "performance", "evidence", "integration"] {
+    for qa_type in ["visual", "api", "accessibility", "security", "performance", "evidence", "integration", "snapshot"] {
         let report_path = solace_home
             .join("apps")
             .join("localhost")
@@ -457,7 +564,7 @@ async fn list_qa_reports() -> Json<Value> {
     let solace_home = crate::utils::solace_home();
     let mut reports = Vec::new();
 
-    for qa_type in ["visual", "api", "accessibility", "security", "performance", "evidence", "integration"] {
+    for qa_type in ["visual", "api", "accessibility", "security", "performance", "evidence", "integration", "snapshot"] {
         let runs_dir = solace_home
             .join("apps")
             .join("localhost")
@@ -499,7 +606,7 @@ async fn qa_status(State(_state): State<AppState>) -> Json<Value> {
     let mut type_counts: HashMap<String, usize> = HashMap::new();
     let mut total_runs = 0;
 
-    for qa_type in ["visual", "api", "accessibility", "security", "performance", "evidence", "integration"] {
+    for qa_type in ["visual", "api", "accessibility", "security", "performance", "evidence", "integration", "snapshot"] {
         let runs_dir = solace_home
             .join("apps")
             .join("localhost")
@@ -515,7 +622,7 @@ async fn qa_status(State(_state): State<AppState>) -> Json<Value> {
 
     Json(json!({
         "qa_platform": true,
-        "types_available": 7,
+        "types_available": QA_TYPES.len(),
         "total_runs": total_runs,
         "runs_by_type": type_counts,
         "visibility": "public",
@@ -529,7 +636,7 @@ mod tests {
 
     #[test]
     fn qa_types_count() {
-        assert_eq!(QA_TYPES.len(), 7);
+        assert_eq!(QA_TYPES.len(), 8);
     }
 
     #[test]
@@ -544,5 +651,10 @@ mod tests {
     #[test]
     fn default_target_localhost() {
         assert_eq!(default_target(), "http://localhost:8888");
+    }
+
+    #[test]
+    fn qa_types_includes_snapshot() {
+        assert!(QA_TYPES.iter().any(|(id, _, _)| *id == "snapshot"));
     }
 }

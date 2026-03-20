@@ -422,6 +422,25 @@
       font-size: 0.85rem;
       font-family: var(--sb-font-mono);
     }
+    /* ─── Utility classes (replaces inline styles) ─── */
+    .sb-text-2xs { font-size: 0.65rem; }
+    .sb-text-3xs { font-size: 0.6rem; }
+    .sb-text-xs { font-size: 0.75rem; }
+    .sb-text-sm { font-size: 0.8rem; }
+    .sb-text-mono-xs { font-family: var(--sb-font-mono); font-size: 0.7rem; }
+    .sb-icon-md { height: 48px; width: auto; vertical-align: middle; }
+    .sb-flex-center { justify-content: center; flex-wrap: wrap; }
+    .sb-nowrap { white-space: nowrap; }
+    .sb-ml-md { margin-left: 1rem; }
+    .sb-mt-xs { margin-top: 0.25rem; }
+    .sb-my-xs { margin: 0.3rem 0; }
+    .sb-text-center { text-align: center; }
+    .sb-p-md { padding: 1rem; }
+    .sh-model-label { display: inline-flex; align-items: center; gap: 4px; margin-right: 1rem; font-size: 0.85rem; cursor: pointer; }
+    .sh-model-checkbox { accent-color: var(--sb-accent); }
+    .sh-rerun-link { font-size: 0.75rem; color: var(--sb-text-muted); }
+    .sh-detail-cell { font-size: 0.8rem; max-width: 300px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .sh-notification-row { display: flex; align-items: center; justify-content: space-between; padding: 0.4rem 0; border-bottom: 1px solid var(--sb-border); }
   </style>
 </head>
 <body>
@@ -501,11 +520,11 @@
   <!-- TABS -->
   <div id="hub-tabs" class="sh-tabs-container">
     <div class="sb-tabs" role="tablist">
-      <button class="sb-tab sb-tab--active" data-tab="overview" role="tab" aria-selected="true" onclick="switchTab(this,'overview')">Overview</button>
-      <button class="sb-tab" data-tab="sessions" role="tab" onclick="switchTab(this,'sessions')">Sessions</button>
-      <button class="sb-tab" data-tab="events" role="tab" onclick="switchTab(this,'events')">Events <span id="events-badge" class="sb-pill sb-pill--danger sh-events-badge">0</span></button>
-      <button class="sb-tab" data-tab="remote" role="tab" onclick="switchTab(this,'remote')">Remote</button>
-      <button class="sb-tab" data-tab="settings" role="tab" onclick="switchTab(this,'settings')">Settings</button>
+      <button class="sb-tab sb-tab--active" data-tab="overview" role="tab" aria-selected="true">Overview</button>
+      <button class="sb-tab" data-tab="sessions" role="tab">Sessions</button>
+      <button class="sb-tab" data-tab="events" role="tab">Events <span id="events-badge" class="sb-pill sb-pill--danger sh-events-badge">0</span></button>
+      <button class="sb-tab" data-tab="remote" role="tab">Remote</button>
+      <button class="sb-tab" data-tab="settings" role="tab">Settings</button>
     </div>
     <script>
     function switchTab(btn, tabId) {
@@ -782,14 +801,19 @@
 <script>
 // Inline hub-app.js
 // Diagram: 04-hub-lifecycle
-// Global tab switcher (must be outside IIFE for onclick= to reach it)
+// Tab switcher — no inline onclick (security QA compliance)
 function switchTab(btn, tabId) {
-  document.querySelectorAll('.sb-tab').forEach(function(t) { t.classList.remove('sb-tab--active'); });
+  document.querySelectorAll('.sb-tab').forEach(function(t) { t.classList.remove('sb-tab--active'); t.setAttribute('aria-selected', 'false'); });
   btn.classList.add('sb-tab--active');
+  btn.setAttribute('aria-selected', 'true');
   document.querySelectorAll('.hub-tab-panel').forEach(function(p) { p.style.display = 'none'; });
   var panel = document.getElementById('tab-' + tabId);
   if (panel) { panel.style.display = 'block'; }
 }
+// Wire up tabs via addEventListener (no inline onclick)
+document.querySelectorAll('.sb-tab[data-tab]').forEach(function(btn) {
+  btn.addEventListener('click', function() { switchTab(this, this.dataset.tab); });
+});
 
 // IIFE for all other functionality
 (function() {
@@ -861,7 +885,7 @@ function switchTab(btn, tabId) {
         setTimeout(function() { connectCLIs(); }, 100);
       } else {
         $('src-local').innerHTML = '<span class="sb-pill sb-pill--danger">✗ None found</span>';
-        $('src-local-action').innerHTML = '<span class="sb-text-muted" style="font-size:0.8rem">Install claude, codex, or gemini</span>';
+        $('src-local-action').innerHTML = '<span class="sb-text-muted" class="sb-text-sm">Install claude, codex, or gemini</span>';
       }
 
       // Auth pill + account status + remote
@@ -886,7 +910,7 @@ function switchTab(btn, tabId) {
           $('topbar-user-info').style.display = 'flex';
           $('topbar-user').textContent = email;
 
-          var yGif = '<img src="/media/yinyang-rotating_70pct_128px.gif" style="height:48px;width:auto;vertical-align:middle">';
+          var yGif = '<img src="/media/yinyang-rotating_70pct_128px.gif" class="sb-icon-md" alt="Loading indicator">';
 
           if (email === 'byok@local') {
             // BYOK key set
@@ -904,7 +928,7 @@ function switchTab(btn, tabId) {
             acct.innerHTML = '<span class="sb-pill sb-pill--success">● ' + esc(email) + '</span> <span class="sb-text-muted">Powered by Managed LLM + 47 uplifts</span>';
           } else {
             // Free account — connected but not paying for managed LLM
-            $('src-managed').innerHTML = '<span class="sb-pill sb-pill--success">' + esc(email) + '</span> <span class="sb-text-muted" style="font-size:0.75rem">Free account</span>';
+            $('src-managed').innerHTML = '<span class="sb-pill sb-pill--success">' + esc(email) + '</span> <span class="sb-text-muted" class="sb-text-xs">Free account</span>';
             auth.textContent = esc(email);
             auth.className = 'sb-pill sb-pill--success';
             acct.style.display = 'block';
@@ -936,11 +960,11 @@ function switchTab(btn, tabId) {
             $('llm-gate').innerHTML =
               '<div class="hub-gate">' +
               '<div class="hub-gate-msg">Solace Browser requires an LLM to power it.</div>' +
-              '<div class="sb-flex sb-gap-sm" style="justify-content:center;flex-wrap:wrap">' +
+              '<div class="sb-flex sb-gap-sm" class="sb-flex-center">' +
               '<button class="sb-btn sb-btn--primary" data-action="promptBYOK">Enter API Key (BYOK)</button>' +
               '<button class="sb-btn" data-action="openManagedLLM">Sign Up for Managed LLM</button>' +
               '</div>' +
-              '<div class="sb-text-muted sb-mt-md" style="font-size:0.8rem">Or install claude, codex, or gemini CLI on your PATH</div>' +
+              '<div class="sb-text-muted sb-mt-md" class="sb-text-sm">Or install claude, codex, or gemini CLI on your PATH</div>' +
               '</div>';
             $('llm-card').classList.add('hub-blocked');
 
@@ -1058,9 +1082,9 @@ function switchTab(btn, tabId) {
         var urlShort = (s.url || '').replace('http://','').replace('https://','').substring(0,30);
         return '<tr>' +
           '<td><strong>' + esc(s.profile) + '</strong></td>' +
-          '<td class="sb-text-mono" style="font-size:0.8rem">' + esc(urlShort) + '</td>' +
+          '<td class="sb-text-mono" class="sb-text-sm">' + esc(urlShort) + '</td>' +
           '<td class="sb-text-muted">' + (s.pid || '?') + '</td>' +
-          '<td class="sb-text-muted" style="font-size:0.8rem">' + started + '</td>' +
+          '<td class="sb-text-muted" class="sb-text-sm">' + started + '</td>' +
           '<td>' +
             '<button class="sb-btn sb-btn--sm sb-btn--danger" data-action="closeSession" data-session-id="' + esc(s.session_id) + '">Close</button>' +
           '</td>' +
@@ -1115,7 +1139,7 @@ function switchTab(btn, tabId) {
           body:JSON.stringify({api_key:key, user_email:'byok@local', device_id:'local', paid_user:false})
         }).then(function(){
           toast('BYOK key saved!', 'success');
-          $('src-byok-gif').innerHTML = '<img src="/media/yinyang-rotating_70pct_128px.gif" style="height:48px;width:auto">';
+          $('src-byok-gif').innerHTML = '<img src="/media/yinyang-rotating_70pct_128px.gif" class="sb-icon-md" alt="Loading indicator">';
           enableLaunchButton();
           ($('topbar-user')||{}).textContent = 'BYOK Active';
           ($('topbar-user')||{}).className = 'sb-pill sb-pill--success';
@@ -1149,12 +1173,12 @@ function switchTab(btn, tabId) {
       // Build model checklist with ⏳ status
       var html = '';
       agents.forEach(function(a) {
-        html += '<div style="margin-bottom:0.5rem"><strong>' + esc(a.id) + '</strong> <span id="cli-status-'+esc(a.id)+'" class="sb-pill sb-pill--warning" style="font-size:0.65rem">⏳ testing</span>';
-        html += '<div style="margin-left:1rem;margin-top:0.25rem">';
+        html += '<div class="sb-mb-sm"><strong>' + esc(a.id) + '</strong> <span id="cli-status-'+esc(a.id)+'" class="sb-pill sb-pill--warning" class="sb-text-2xs">⏳ testing</span>';
+        html += '<div class="sb-ml-md sb-mt-xs">';
         (a.models||[]).forEach(function(m) {
           var short = m.replace('claude-','').replace('gpt-','').replace('-20251001','');
-          html += '<label style="display:inline-flex;align-items:center;gap:4px;margin-right:1rem;font-size:0.85rem;cursor:pointer">';
-          html += '<input type="checkbox" checked style="accent-color:var(--sb-accent)" data-cli="'+esc(a.id)+'" data-model="'+esc(m)+'">';
+          html += '<label class="sh-model-label">';
+          html += '<input type="checkbox" checked class="sh-model-checkbox" data-cli="'+esc(a.id)+'" data-model="'+esc(m)+'">';
           html += '<span class="sb-text-mono">' + esc(short) + '</span></label>';
         });
         html += '</div></div>';
@@ -1186,8 +1210,8 @@ function switchTab(btn, tabId) {
           if (total <= 0) {
             // All done
             if (verified > 0) {
-              $('src-local').innerHTML = '<span class="sb-pill sb-pill--success">✓ ' + verified + ' connected</span> <a href="#" data-action="connectCLIs" style="font-size:0.75rem;color:var(--sb-text-muted)">rerun</a>';
-              $('src-local-action').innerHTML = '<img src="/media/yinyang-rotating_70pct_128px.gif" style="height:48px;width:auto">';
+              $('src-local').innerHTML = '<span class="sb-pill sb-pill--success">✓ ' + verified + ' connected</span> <a href="#" data-action="connectCLIs" class="sh-rerun-link">rerun</a>';
+              $('src-local-action').innerHTML = '<img src="/media/yinyang-rotating_70pct_128px.gif" class="sb-icon-md" alt="Loading indicator">';
               hasLLM = true;
               enableLaunchButton();
               // Persist validated state
@@ -1223,7 +1247,7 @@ function switchTab(btn, tabId) {
     toast('Opening browser — complete sign-in there. Hub will detect automatically.', 'success');
     // Show waiting state in LLM card
     var managedGif = $('src-managed-gif');
-    if (managedGif) managedGif.innerHTML = '<span class="sb-text-muted" style="font-size:0.8rem">Waiting for sign-in...</span>';
+    if (managedGif) managedGif.innerHTML = '<span class="sb-text-muted" class="sb-text-sm">Waiting for sign-in...</span>';
     fetch('/api/v1/browser/launch', {method:'POST', headers:{'Content-Type':'application/json'},
       body:JSON.stringify({url:'https://solaceagi.com/dashboard', allow_duplicate:true})
     }).then(function(r){return r.json();}).then(function(d) {
@@ -1280,7 +1304,7 @@ function switchTab(btn, tabId) {
       if (url && url.startsWith('http')) {
         display.textContent = url;
         display.style.color = 'var(--sb-success)';
-        $('src-ollama-gif').innerHTML = '<img src="/media/yinyang-rotating_70pct_128px.gif" style="height:48px;width:auto">';
+        $('src-ollama-gif').innerHTML = '<img src="/media/yinyang-rotating_70pct_128px.gif" class="sb-icon-md" alt="Loading indicator">';
         hasLLM = true;
         enableLaunchButton();
         toast('Ollama URL saved!', 'success');
@@ -1371,9 +1395,9 @@ function switchTab(btn, tabId) {
         var started = s.started_at ? s.started_at.substring(0, 19).replace('T',' ') : '?';
         return '<tr>' +
           '<td><strong>' + esc(s.profile) + '</strong></td>' +
-          '<td class="sb-text-mono" style="font-size:0.8rem">' + esc(s.url || '') + '</td>' +
+          '<td class="sb-text-mono" class="sb-text-sm">' + esc(s.url || '') + '</td>' +
           '<td class="sb-text-muted">' + (s.pid || '?') + '</td>' +
-          '<td class="sb-text-muted" style="font-size:0.8rem">' + started + '</td>' +
+          '<td class="sb-text-muted" class="sb-text-sm">' + started + '</td>' +
           '<td><button class="sb-btn sb-btn--sm sb-btn--danger" data-action="closeSession" data-session-id="' + esc(s.session_id) + '">Close</button></td>' +
           '</tr>';
       }).join('');
@@ -1413,13 +1437,13 @@ function switchTab(btn, tabId) {
         var eventUrl = '/dashboard#event-' + (ev.id || ev.timestamp || '');
         var sessionShort = ev.session_id ? ev.session_id.substring(0,8) : '';
         return '<tr class="hub-event-row" data-action="openEventDetail" data-event-url="' + esc(eventUrl) + '">' +
-          '<td class="sb-text-muted" style="white-space:nowrap">' + ts + '</td>' +
-          '<td><span class="sb-pill sb-pill--' + cls + '" style="font-size:0.65rem">' + lvl + '</span></td>' +
+          '<td class="sb-text-muted" class="sb-nowrap">' + ts + '</td>' +
+          '<td><span class="sb-pill sb-pill--' + cls + '" class="sb-text-2xs">' + lvl + '</span></td>' +
           '<td>' + esc(evType) + '</td>' +
           '<td class="sb-text-muted">' + esc(domain) + '</td>' +
           '<td class="sb-text-muted">' + esc(appId) + '</td>' +
-          '<td class="sb-text-mono sb-text-muted" style="font-size:0.75rem">' + sessionShort + '</td>' +
-          '<td style="font-size:0.8rem;max-width:300px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">' + esc(detail) + '</td>' +
+          '<td class="sb-text-mono sb-text-muted" class="sb-text-xs">' + sessionShort + '</td>' +
+          '<td class="sh-detail-cell">' + esc(detail) + '</td>' +
           '</tr>';
       }).join('');
 
@@ -1470,7 +1494,7 @@ function switchTab(btn, tabId) {
       var installed = agents.filter(function(a){return a.installed;});
       $('settings-llm').innerHTML = installed.length ?
         installed.map(function(a) {
-          return '<div style="margin:0.3rem 0"><strong>' + esc(a.id) + '</strong> — ' + (a.models||[]).join(', ') + '</div>';
+          return '<div class="sb-my-xs"><strong>' + esc(a.id) + '</strong> — ' + (a.models||[]).join(', ') + '</div>';
         }).join('') :
         '<span class="sb-text-muted">No LLM CLIs detected</span>';
     });
@@ -1523,9 +1547,9 @@ function switchTab(btn, tabId) {
       $('signoffs-count').textContent = items.length;
       if (badge) { badge.textContent = items.length; badge.style.display = 'inline'; }
       $('signoffs-list').innerHTML = items.map(function(n) {
-        return '<div style="display:flex;align-items:center;justify-content:space-between;padding:0.4rem 0;border-bottom:1px solid var(--sb-border)">' +
-          '<div><span class="sb-pill sb-pill--warning" style="font-size:0.6rem">L' + (n.level || 3) + '</span> ' + esc(n.message || n.title || 'Action required') +
-          (n.session_id ? ' <span class="sb-text-muted" style="font-size:0.75rem">[' + esc(n.session_id.substring(0,8)) + ']</span>' : '') +
+        return '<div class="sh-notification-row">' +
+          '<div><span class="sb-pill sb-pill--warning" class="sb-text-3xs">L' + (n.level || 3) + '</span> ' + esc(n.message || n.title || 'Action required') +
+          (n.session_id ? ' <span class="sb-text-muted" class="sb-text-xs">[' + esc(n.session_id.substring(0,8)) + ']</span>' : '') +
           '</div>' +
           '<div class="sb-flex sb-gap-sm">' +
           '<button class="sb-btn sb-btn--sm sb-btn--primary" data-action="approveSignoff" data-signoff-id="' + esc(n.id || '') + '">Approve</button>' +
@@ -1619,10 +1643,10 @@ function switchTab(btn, tabId) {
       var entries = d.entries || [];
       var list = $('remote-audit-list');
       if (!list) return;
-      if (!entries.length) { list.innerHTML = '<p class="sb-text-muted" style="text-align:center;padding:1rem">No remote actions recorded</p>'; return; }
-      var html = '<table class="sb-table" style="font-size:0.8rem"><thead><tr><th>Event</th><th>Actor</th><th>Time</th><th>Hash</th></tr></thead><tbody>';
+      if (!entries.length) { list.innerHTML = '<p class="sb-text-muted" class="sb-text-center sb-p-md">No remote actions recorded</p>'; return; }
+      var html = '<table class="sb-table" class="sb-text-sm"><thead><tr><th>Event</th><th>Actor</th><th>Time</th><th>Hash</th></tr></thead><tbody>';
       entries.slice(0,20).forEach(function(e) {
-        html += '<tr><td>' + esc(e.event||'?') + '</td><td>' + esc(e.actor||'?') + '</td><td style="font-size:0.75rem">' + esc((e.timestamp||'').substring(0,19)) + '</td><td style="font-family:var(--sb-font-mono);font-size:0.7rem">' + esc((e.hash||'').substring(0,12)) + '...</td></tr>';
+        html += '<tr><td>' + esc(e.event||'?') + '</td><td>' + esc(e.actor||'?') + '</td><td class="sb-text-xs">' + esc((e.timestamp||'').substring(0,19)) + '</td><td class="sb-text-mono-xs">' + esc((e.hash||'').substring(0,12)) + '...</td></tr>';
       });
       html += '</tbody></table>';
       list.innerHTML = html;
@@ -1639,7 +1663,7 @@ function switchTab(btn, tabId) {
         if ($('settings-plan')) $('settings-plan').textContent = d.config.paid_user ? 'Paid' : 'Free';
         // Update managed LLM sign-in button to show connected state
         if ($('src-managed-gif') && d.config.user_email) {
-          $('src-managed-gif').innerHTML = '<span class="sb-pill sb-pill--success" style="font-size:0.75rem">Connected</span>';
+          $('src-managed-gif').innerHTML = '<span class="sb-pill sb-pill--success" class="sb-text-xs">Connected</span>';
         }
       } else {
         if ($('settings-auth-status')) $('settings-auth-status').textContent = 'Not connected';
