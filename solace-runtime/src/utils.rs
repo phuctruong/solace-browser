@@ -34,7 +34,11 @@ pub fn now_iso8601() -> String {
 pub fn scan_apps() -> Vec<crate::app_engine::AppManifest> {
     let mut apps = Vec::new();
     for path in scan_app_dirs() {
-        if let Ok(manifest) = crate::app_engine::inbox::load_manifest(&path) {
+        if let Ok(mut manifest) = crate::app_engine::inbox::load_manifest(&path) {
+            // Default empty domain to "localhost" (home domain)
+            if manifest.domain.is_empty() || manifest.domain == "general" {
+                manifest.domain = "localhost".to_string();
+            }
             apps.push(manifest);
         }
     }

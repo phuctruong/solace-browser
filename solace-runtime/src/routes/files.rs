@@ -438,7 +438,25 @@ async fn dashboard_page(State(state): State<AppState>) -> Html<String> {
       }});
       html += '</tbody></table>';
     }} else {{
-      html += '<p class="sb-text-muted">No contacts yet. AI workers will populate this as they research.</p>';
+      html += '<p class="sb-text-muted">No contacts yet.</p>';
+      html += '<div class="sb-card" style="margin-top:0.75rem"><h3>Quick Add Contact</h3>';
+      html += '<div class="bo-form-grid"><div class="bo-form-field"><label>Name</label><input id="qc-name" class="sb-input" placeholder="Jane Smith"></div>';
+      html += '<div class="bo-form-field"><label>Email</label><input id="qc-email" class="sb-input" placeholder="jane@company.com"></div>';
+      html += '<div class="bo-form-field"><label>Stage</label><select id="qc-stage" class="sb-input"><option>lead</option><option>contacted</option><option>qualified</option><option>proposal</option><option>won</option></select></div>';
+      html += '<div class="bo-form-field"><label>Source</label><input id="qc-source" class="sb-input" placeholder="web_research"></div></div>';
+      html += '<button class="sb-btn sb-btn--sm" style="margin-top:0.5rem" id="qc-submit">Add Contact</button></div>';
+      // Wire quick-create
+      setTimeout(function(){{
+        var btn = document.getElementById('qc-submit');
+        if(btn) btn.addEventListener('click', function(){{
+          fetchJson('/api/v1/backoffice/backoffice-crm/contacts').then(function(){{}});
+          fetch('/api/v1/backoffice/backoffice-crm/contacts',{{method:'POST',headers:{{'Content-Type':'application/json'}},
+            body:JSON.stringify({{name:document.getElementById('qc-name').value,email:document.getElementById('qc-email').value,stage:document.getElementById('qc-stage').value,source:document.getElementById('qc-source').value}})
+          }}).then(function(r){{return r.json()}}).then(function(d){{
+            if(d.created) {{ alert('Contact added!'); location.reload(); }}
+          }});
+        }});
+      }}, 100);
     }}
 
     // Deals section
@@ -515,6 +533,29 @@ async fn dashboard_page(State(state): State<AppState>) -> Html<String> {
     html += '</div>';
     ge('dash-tasks').innerHTML = html;
   }}).catch(function(){{ ge('dash-tasks').innerHTML = '<p class="sb-text-muted">Tasks not initialized yet.</p>'; }});
+
+  // Quick-create task form (always visible at top of Tasks tab)
+  var taskFormHtml = '<div class="sb-card" style="margin-bottom:1rem"><h3>Assign New Task</h3>';
+  taskFormHtml += '<div class="bo-form-grid"><div class="bo-form-field"><label>Title</label><input id="qt-title" class="sb-input" placeholder="Research Series A fintech companies"></div>';
+  taskFormHtml += '<div class="bo-form-field"><label>Assign To</label><select id="qt-assign" class="sb-input"><option value="phuc">Human (phuc)</option>';
+  taskFormHtml += '<option value="market-analyst">Market Analyst</option><option value="competitor-research">Competitor Research</option>';
+  taskFormHtml += '<option value="bizdev">BizDev</option><option value="content">Content Marketing</option></select></div>';
+  taskFormHtml += '<div class="bo-form-field" style="grid-column:span 2"><label>Description</label><textarea id="qt-desc" class="sb-input" rows="2" placeholder="Describe what you want done..."></textarea></div></div>';
+  taskFormHtml += '<button class="sb-btn sb-btn--sm" id="qt-submit" style="margin-top:0.5rem">Create Task</button></div>';
+  var tasksEl = ge('dash-tasks');
+  if (tasksEl) tasksEl.insertAdjacentHTML('afterbegin', taskFormHtml);
+  setTimeout(function(){{
+    var btn = document.getElementById('qt-submit');
+    if(btn) btn.addEventListener('click', function(){{
+      fetch('/api/v1/backoffice/backoffice-tasks/tasks',{{method:'POST',headers:{{'Content-Type':'application/json'}},
+        body:JSON.stringify({{title:document.getElementById('qt-title').value,description:document.getElementById('qt-desc').value,
+          status:'open',priority:'normal',assigned_to:document.getElementById('qt-assign').value,
+          assigned_type:document.getElementById('qt-assign').value==='phuc'?'human':'agent'}})
+      }}).then(function(r){{return r.json()}}).then(function(d){{
+        if(d.created) {{ alert('Task created!'); location.reload(); }}
+      }});
+    }});
+  }}, 200);
 
   // Load system stats (QA + CLI workers + jobs)
   Promise.all([fetchJson('/api/v1/cli'), fetchJson('/api/v1/jobs/stats')]).then(function(r) {{
@@ -1928,8 +1969,8 @@ fn domain_icon_path(domain: &str) -> String {
     // Map domain → icon filename (order: exact match, root domain, keyword)
     let mappings: &[(&str, &str)] = &[
         ("localhost", "/media/yinyang-rotating_70pct_128px.gif"),
-        ("dev.local", "/media/yinyang-rotating_70pct_128px.gif"),
         ("google.com", "google-search.png"),
+        ("gemini.google.com", "gemini.png"),
         ("news.google.com", "google-search.png"),
         ("mail.google.com", "gmail.jpg"),
         ("drive.google.com", "google-drive.png"),
@@ -1940,6 +1981,8 @@ fn domain_icon_path(domain: &str) -> String {
         ("github.com", "github.png"),
         ("amazon.com", "amazon.png"),
         ("web.whatsapp.com", "whats-app.jpg"),
+        ("whatsapp.com", "whats-app.jpg"),
+        ("phuc.net", "/icons/yinyang-logo.png"),
         ("solaceagi.com", "/icons/yinyang-logo.png"),
         ("multi-site", "/icons/orchestration.png"),
     ];
