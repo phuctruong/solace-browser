@@ -1704,7 +1704,13 @@ async fn hire_page(State(state): State<AppState>) -> Html<String> {
 /// Map a domain name to its icon path in /icons/apps/.
 /// Tries common names: domain root, subdomain keyword, known brands.
 pub fn domain_icon_filename(domain: &str) -> String {
-    domain_icon_path(domain).replace("/icons/apps/", "")
+    let path = domain_icon_path(domain);
+    // Strip any leading path — return just the filename
+    path.rsplit('/').next().unwrap_or("yinyang-logo.png").to_string()
+}
+
+pub fn domain_icon_path_pub(domain: &str) -> String {
+    domain_icon_path(domain)
 }
 
 fn domain_icon_path(domain: &str) -> String {
