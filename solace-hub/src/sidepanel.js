@@ -151,15 +151,17 @@
   }
 
   // Domain traffic rankings (approximate, for sort order)
+  // Monthly visits in millions (Similarweb approx, May 2025)
   var DOMAIN_TRAFFIC = {
-    'google.com': 90000, 'mail.google.com': 25000, 'youtube.com': 80000,
-    'calendar.google.com': 5000, 'drive.google.com': 4000, 'gemini.google.com': 1000,
-    'amazon.com': 4000, 'github.com': 3000, 'linkedin.com': 2500,
-    'reddit.com': 2200, 'chatgpt.com': 2000, 'instagram.com': 6000,
-    'twitter.com': 5000, 'slack.com': 500, 'news.ycombinator.com': 100,
-    'whatsapp.com': 3000, 'claude.ai': 300, 'solaceagi.com': 1,
-    'phuc.net': 1, 'localhost': 99999, 'openai.com': 800,
-    'openrouter.ai': 50, 'opnsr.al': 10
+    'localhost': 99999,
+    'google.com': 85000, 'youtube.com': 35000, 'facebook.com': 18000,
+    'instagram.com': 8000, 'twitter.com': 6500, 'reddit.com': 3500,
+    'amazon.com': 3200, 'whatsapp.com': 2800, 'chatgpt.com': 2500,
+    'linkedin.com': 2000, 'mail.google.com': 1800, 'github.com': 1000,
+    'drive.google.com': 800, 'calendar.google.com': 500, 'openai.com': 400,
+    'slack.com': 300, 'gemini.google.com': 200, 'claude.ai': 100,
+    'news.ycombinator.com': 50, 'openrouter.ai': 10,
+    'solaceagi.com': 1, 'phuc.net': 1
   };
 
   function renderDomains() {
