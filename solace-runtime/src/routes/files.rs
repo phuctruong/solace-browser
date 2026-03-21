@@ -609,13 +609,50 @@ async fn dashboard_page(State(state): State<AppState>) -> Html<String> {
   loadBackofficeTab('backoffice-email', 'campaigns', 'dash-email', 'No email campaigns yet.');
   loadBackofficeTab('backoffice-support', 'tickets', 'dash-support', 'No support tickets yet.');
   loadBackofficeTab('backoffice-invoicing', 'invoices', 'dash-invoicing', 'No invoices yet.');
+  // Run worker: POST to app run API, show result, post to backoffice
+  window.runWorker = function(appId, btn) {{
+    btn.textContent = 'Running...';
+    btn.disabled = true;
+    fetch('/api/v1/apps/run/' + appId, {{method: 'POST'}})
+      .then(function(r) {{ return r.json(); }})
+      .then(function(d) {{
+        btn.textContent = 'Done ✓';
+        btn.style.background = 'var(--sb-success, #22c55e)';
+        btn.style.color = 'var(--sb-bg, #0f172a)';
+        // Post result to messages
+        fetch('/api/v1/backoffice/backoffice-messages/messages', {{
+          method: 'POST',
+          headers: {{'Content-Type': 'application/json'}},
+          body: JSON.stringify({{
+            channel_id: 'general',
+            sender: appId,
+            sender_type: 'agent',
+            content: 'Run complete. ' + (d.report ? 'Report: ' + d.report.split('/').pop() : 'Done.'),
+            message_type: 'result',
+            priority: 'normal'
+          }})
+        }}).catch(function(){{}});
+        // Reset button after 3s
+        setTimeout(function() {{
+          btn.textContent = 'Run';
+          btn.disabled = false;
+          btn.style.background = '';
+          btn.style.color = '';
+        }}, 3000);
+      }})
+      .catch(function(e) {{
+        btn.textContent = 'Error';
+        btn.style.background = 'var(--sb-danger, #ef4444)';
+        setTimeout(function() {{ btn.textContent = 'Run'; btn.disabled = false; btn.style.background = ''; }}, 3000);
+      }});
+  }};
 }})();
 </script>"#,
         role_count = role_apps.len(),
         domain_count = domain_apps.len(),
         evidence_count = part11.record_count,
         role_cards = role_apps.iter().map(|a| format!(
-            r#"<div class="sb-card"><div class="sb-card-header"><h3 class="sb-card-title"><a href="/apps/{id}">{name}</a></h3><span class="sb-pill sb-pill--info">{persona}</span></div><div class="sb-card-body"><p class="sb-text-sm">{desc}</p><div class="sb-app-meta"><a href="/apps/{id}" class="sb-btn sb-btn--sm">Run</a></div></div></div>"#,
+            r#"<div class="sb-card" id="worker-{id}"><div class="sb-card-header"><h3 class="sb-card-title"><a href="/apps/{id}">{name}</a></h3><span class="sb-pill sb-pill--info">{persona}</span></div><div class="sb-card-body"><p class="sb-text-sm">{desc}</p><div class="sb-app-meta"><button class="sb-btn sb-btn--sm" onclick="runWorker('{id}',this)">Run</button> <a href="/apps/{id}" class="sb-btn sb-btn--sm" style="background:transparent;border:1px solid var(--sb-border)">Manage</a></div></div></div>"#,
             id = html_escape::encode_text(&a.id),
             name = html_escape::encode_text(&a.name),
             desc = html_escape::encode_text(&a.description),
