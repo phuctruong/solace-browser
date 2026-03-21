@@ -284,18 +284,23 @@ async fn dashboard_page(State(state): State<AppState>) -> Html<String> {
   </div>
 </div>
 
-<!-- Dashboard Tabs -->
-<div class="sb-tabs" role="tablist" id="dash-tabs" style="flex-wrap:wrap">
+<!-- Dashboard Tabs (Claude feedback: collapse to 5 + More dropdown) -->
+<div class="sb-tabs" role="tablist" id="dash-tabs">
   <button class="sb-tab sb-tab--active" data-tab="workers" role="tab" aria-selected="true">AI Workers</button>
   <button class="sb-tab" data-tab="crm" role="tab">CRM</button>
   <button class="sb-tab" data-tab="messages" role="tab">Messages</button>
   <button class="sb-tab" data-tab="tasks" role="tab">Tasks</button>
-  <button class="sb-tab" data-tab="docs" role="tab">Docs</button>
-  <button class="sb-tab" data-tab="email-tab" role="tab">Email</button>
-  <button class="sb-tab" data-tab="support" role="tab">Support</button>
-  <button class="sb-tab" data-tab="invoicing" role="tab">Invoicing</button>
   <button class="sb-tab" data-tab="domains-tab" role="tab">Domains</button>
-  <button class="sb-tab" data-tab="all-apps" role="tab">All Apps</button>
+  <details style="display:inline-block;position:relative;vertical-align:middle">
+    <summary class="sb-tab" style="list-style:none;cursor:pointer">More &#9662;</summary>
+    <div style="position:absolute;top:100%;left:0;background:var(--sb-surface,#fff);border:1px solid var(--sb-border);border-radius:var(--sb-radius);padding:0.25rem;z-index:10;min-width:130px;box-shadow:var(--sb-shadow)">
+      <button class="sb-tab" data-tab="docs" role="tab" style="display:block;width:100%;text-align:left;margin:2px 0">Docs</button>
+      <button class="sb-tab" data-tab="email-tab" role="tab" style="display:block;width:100%;text-align:left;margin:2px 0">Email</button>
+      <button class="sb-tab" data-tab="support" role="tab" style="display:block;width:100%;text-align:left;margin:2px 0">Support</button>
+      <button class="sb-tab" data-tab="invoicing" role="tab" style="display:block;width:100%;text-align:left;margin:2px 0">Invoicing</button>
+      <button class="sb-tab" data-tab="all-apps" role="tab" style="display:block;width:100%;text-align:left;margin:2px 0">All Apps</button>
+    </div>
+  </details>
 </div>
 
 <!-- TAB: AI Workers (default) -->
@@ -680,7 +685,7 @@ async fn dashboard_page(State(state): State<AppState>) -> Html<String> {
         },
         evidence_count = part11.record_count,
         role_cards = role_apps.iter().map(|a| format!(
-            r#"<div class="sb-card" id="worker-{id}"><div class="sb-card-header"><h3 class="sb-card-title"><a href="/apps/{id}">{name}</a></h3><span class="sb-pill sb-pill--info">{persona}</span></div><div class="sb-card-body"><p class="sb-text-sm">{desc}</p><div class="sb-app-meta"><button class="sb-btn sb-btn--sm" onclick="runWorker('{id}',this)">Run</button> <a href="/apps/{id}" class="sb-btn sb-btn--sm" style="background:transparent;border:1px solid var(--sb-border)">Manage</a></div></div></div>"#,
+            r#"<div class="sb-card" id="worker-{id}"><div class="sb-card-header"><h3 class="sb-card-title"><a href="/apps/{id}">{name}</a></h3><span class="sb-pill sb-pill--info">{persona}</span></div><div class="sb-card-body"><p class="sb-text-sm">{desc}</p><div class="sb-app-meta"><button class="sb-btn sb-btn--approve sb-btn--sm" onclick="runWorker('{id}',this)">Run</button> <a href="/apps/{id}" class="sb-btn sb-btn--sm" style="background:transparent;border:1px solid var(--sb-border);color:var(--sb-text-muted)">Manage</a></div></div></div>"#,
             id = html_escape::encode_text(&a.id),
             name = html_escape::encode_text(&a.name),
             desc = html_escape::encode_text(&a.description),
