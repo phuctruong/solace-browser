@@ -368,16 +368,19 @@
   }
   setInterval(reportTabs, 5000);
 
-  // Navigate main browser area (works from sidebar)
+  // Navigate main browser area WITHOUT navigating the sidebar itself.
+  // The sidebar is a panel — it must NOT change its own location.
+  // Use the runtime's navigate API to change the browser's active tab URL.
   function navigateMainBrowser(url) {
-    try {
-      window.top.location.href = url;
-    } catch(e) {
-      // Cross-origin fallback: send via WebSocket command
-      sendToRuntime({ type: 'navigate_request', url: url });
-      // Also try postMessage
-      try { window.top.postMessage({ type: 'solace_navigate', url: url }, '*'); } catch(e2) {}
-    }
+    // Method 1: Send via WebSocket to runtime, which forwards to browser
+    sendToRuntime({ type: 'navigate_request', url: url });
+    // Method 2: Use the navigate API endpoint
+    fetch(API_BASE + '/api/navigate', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ url: url })
+    }).catch(function(){});
+    // DO NOT use window.top.location.href — that navigates the sidebar itself
   }
 
   // Make it available globally for onclick handlers
@@ -569,12 +572,15 @@
 
     switch (command) {
       case 'navigate':
+        // DO NOT navigate sidebar — it must stay as SPA
+        // The runtime should navigate the browser tab directly via C++ or CDP
         if (payload.url) {
-          window.top.location.href = payload.url;
+          console.log('[Solace] Navigate request (sidebar cannot navigate main tab):', payload.url);
         }
         break;
       case 'reload':
-        window.top.location.reload();
+        // Same — sidebar must not reload itself
+        console.log('[Solace] Reload request (sidebar ignoring — stays stable)');
         break;
       case 'get_url':
         sendToRuntime({
@@ -794,18 +800,14 @@
   // Setup OAuth3 for a domain
   window.setupOAuth3 = function(domain) {
     // Navigate the main browser to the domain's login page
-    try {
-      var loginUrls = {
-        'mail.google.com': 'https://accounts.google.com/signin',
-        'github.com': 'https://github.com/login',
-        'linkedin.com': 'https://www.linkedin.com/login',
-      };
-      var url = loginUrls[domain] || ('https://' + domain + '/login');
-      window.top.location.href = url;
-    } catch(e) {
-      // Cross-origin fallback
-      postJson('/api/navigate', { url: 'https://' + domain + '/login' });
-    }
+    var loginUrls = {
+      'mail.google.com': 'https://accounts.google.com/signin',
+      'github.com': 'https://github.com/login',
+      'linkedin.com': 'https://www.linkedin.com/login',
+    };
+    var url = loginUrls[domain] || ('https://' + domain + '/login');
+    // Use runtime API — sidebar must not navigate itself
+    navigateMainBrowser(url);
   };
 
   // Detect login on solaceagi.com/dashboard and trigger auth handshake
