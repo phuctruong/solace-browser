@@ -30,3 +30,4 @@ pub mod cli_workers;
 pub mod pubsub_api;
 pub mod webhooks;
 pub mod file_watcher;
+pub mod analytics;

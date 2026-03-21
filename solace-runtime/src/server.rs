@@ -72,6 +72,7 @@ pub fn build_router(state: crate::state::AppState) -> Router {
         .merge(crate::routes::pubsub_api::routes())
         .merge(crate::routes::webhooks::routes())
         .merge(crate::routes::file_watcher::routes())
+        .merge(crate::routes::analytics::routes())
         .layer(middleware::from_fn(add_service_headers))
         .layer(TraceLayer::new_for_http())
         .layer(cors)
