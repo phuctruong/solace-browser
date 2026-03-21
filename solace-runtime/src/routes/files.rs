@@ -2196,7 +2196,7 @@ fn hub_page(title: &str, body_content: &str) -> String {
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>{title} — Solace Hub</title>
+<title>{title} — Solace Dashboard</title>
 <link rel="icon" href="/icons/yinyang-logo.png">
 <link rel="stylesheet" href="/styleguide.css">
 <link rel="stylesheet" href="/vendor/jquery.dataTables.min.css">
@@ -2264,8 +2264,8 @@ select.sb-input {{ cursor: pointer; }}
 <header class="sb-topbar">
   <nav aria-label="Main navigation">
   <div class="sb-topbar-brand">
-    <img src="/icons/yinyang-logo.png" alt="Solace Hub logo" loading="lazy">
-    <span>Solace Hub</span>
+    <img src="/icons/yinyang-logo.png" alt="Solace logo" loading="lazy">
+    <span>Solace Dashboard</span> <span class="sb-pill sb-pill--info sb-text-2xs" style="vertical-align:middle">Local</span>
   </div>
   <div class="sb-topbar-spacer"></div>
   <a href="/dashboard" class="sb-nav-link">Dashboard</a>
@@ -2386,7 +2386,7 @@ mod tests {
     #[test]
     fn hub_page_contains_nav() {
         let html = hub_page("Test Title", "<p>content</p>");
-        assert!(html.contains("Solace Hub"));
+        assert!(html.contains("Solace Dashboard"));
         assert!(html.contains("/domains"));
         assert!(html.contains("/evidence"));
         assert!(html.contains("Test Title"));
