@@ -286,9 +286,9 @@ async fn signoff_page(State(_state): State<AppState>) -> Html<String> {
 <div class="sb-section-header">
   <h2 class="sb-heading">Pending Actions</h2>
   <div>
-    <button class="sb-btn sb-btn--sm" id="approve-all-btn">Approve All</button>
-    <button class="sb-btn sb-btn--sm" id="reject-all-btn" style="margin-left:0.3rem">Reject Selected</button>
-    <button class="sb-btn sb-btn--sm" id="do-now-btn" style="margin-left:0.3rem">Do Now</button>
+    <button class="sb-btn sb-btn--approve sb-btn--sm" id="approve-all-btn">Approve All</button>
+    <button class="sb-btn sb-btn--reject sb-btn--sm" id="reject-all-btn" style="margin-left:0.3rem">Reject Selected</button>
+    <button class="sb-btn sb-btn--donow sb-btn--sm" id="do-now-btn" style="margin-left:0.3rem">Do Now</button>
   </div>
 </div>
 
@@ -335,17 +335,19 @@ async fn signoff_page(State(_state): State<AppState>) -> Html<String> {
       return;
     }
     items.forEach(function(a) {
-      var cls = a.priority === 'critical' ? 'danger' : a.priority === 'review' ? 'warning' : 'success';
-      var statusCls = a.status === 'approved' ? 'success' : a.status === 'rejected' ? 'danger' : 'info';
+      // Color-code action types (deterministic design: each color has a citation)
+      var typeCls = {delete:'danger',send:'warning',outreach:'warning',reply:'info',post:'info',archive:'success',read:'success',create:'success'}[a.action_type] || 'info';
+      var statusCls = a.status === 'approved' ? 'success' : a.status === 'rejected' ? 'danger' : a.status === 'proposed' ? 'warning' : 'info';
       var tr = document.createElement('tr');
+      tr.id = 'action-row-' + (a.id||'').substring(0,8);
       tr.innerHTML = '<td><input type="checkbox" class="action-check" data-id="' + esc(a.id||'') + '"></td>' +
         '<td><strong>' + esc(a.summary||'') + '</strong></td>' +
         '<td>' + esc(a.domain||'') + '</td>' +
-        '<td>' + esc(a.app_id||'') + '</td>' +
-        '<td><span class="sb-pill sb-pill--info">' + esc(a.action_type||'') + '</span></td>' +
-        '<td><span class="sb-pill sb-pill--' + cls + '">' + esc(a.priority||'') + '</span></td>' +
+        '<td class="sb-text-xs">' + esc(a.app_id||'') + '</td>' +
+        '<td><span class="sb-pill sb-pill--' + typeCls + '">' + esc(a.action_type||'') + '</span></td>' +
+        '<td><span class="sb-pill sb-pill--' + statusCls + '">' + esc(a.priority||'') + '</span></td>' +
         '<td><span class="sb-pill sb-pill--' + statusCls + '">' + esc(a.status||'') + '</span></td>' +
-        '<td><button class="sb-btn sb-btn--sm" onclick="approveAction(\'' + esc(a.id||'') + '\')">Approve</button></td>';
+        '<td><button class="sb-btn sb-btn--approve sb-btn--sm" onclick="approveAction(\'' + esc(a.id||'') + '\')">Approve</button></td>';
       tbody.appendChild(tr);
     });
 
@@ -363,18 +365,28 @@ async fn signoff_page(State(_state): State<AppState>) -> Html<String> {
 
   // Approve all button
   ge('approve-all-btn').addEventListener('click', function() {
-    document.querySelectorAll('.action-check:checked').forEach(function(cb) {
+    var checked = document.querySelectorAll('.action-check:checked');
+    if (!checked.length) { if (window.Solace) Solace.toast('Select actions first', 'pending'); return; }
+    checked.forEach(function(cb) {
       fetch('/api/v1/actions/' + cb.dataset.id + '/approve', {method:'POST'});
+      var row = cb.closest('tr');
+      if (row) row.style.background = 'rgba(38,191,140,0.15)';
     });
-    setTimeout(function() { location.reload(); }, 500);
+    if (window.Solace) Solace.toast(checked.length + ' actions approved', 'verified');
+    setTimeout(function() { location.reload(); }, 1500);
   });
 
   // Reject button
   ge('reject-all-btn').addEventListener('click', function() {
-    document.querySelectorAll('.action-check:checked').forEach(function(cb) {
+    var checked = document.querySelectorAll('.action-check:checked');
+    if (!checked.length) { if (window.Solace) Solace.toast('Select actions first', 'pending'); return; }
+    checked.forEach(function(cb) {
       fetch('/api/v1/actions/' + cb.dataset.id + '/reject', {method:'POST'});
+      var row = cb.closest('tr');
+      if (row) row.style.background = 'rgba(215,58,73,0.1)';
     });
-    setTimeout(function() { location.reload(); }, 500);
+    if (window.Solace) Solace.toast(checked.length + ' actions rejected', 'pending');
+    setTimeout(function() { location.reload(); }, 1500);
   });
 
   // Do now button
@@ -385,9 +397,20 @@ async fn signoff_page(State(_state): State<AppState>) -> Html<String> {
     setTimeout(function() { location.reload(); }, 500);
   });
 
-  // Global approve function
+  // Global approve function with dopamine feedback (Brunson: satisfaction on action)
   window.approveAction = function(id) {
-    fetch('/api/v1/actions/' + id + '/approve', {method:'POST'}).then(function() { location.reload(); });
+    var row = document.querySelector('[data-id="' + id + '"]');
+    if (row) row = row.closest('tr');
+    fetch('/api/v1/actions/' + id + '/approve', {method:'POST'}).then(function() {
+      if (row) {
+        row.style.transition = 'all 0.3s';
+        row.style.background = 'rgba(38,191,140,0.15)';
+        row.querySelector('.sb-btn--approve').textContent = 'Approved ✓';
+        row.querySelector('.sb-btn--approve').disabled = true;
+      }
+      if (window.Solace) Solace.toast('Action approved — cooldown started', 'verified');
+      setTimeout(function() { location.reload(); }, 1500);
+    });
   };
 })();
 </script>"#;
