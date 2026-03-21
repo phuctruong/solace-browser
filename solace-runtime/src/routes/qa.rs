@@ -8,7 +8,7 @@ use axum::{
     routing::{get, post},
     Json, Router,
 };
-use serde::{Deserialize, Serialize};
+use serde::Deserialize;
 use serde_json::{json, Value};
 use std::collections::HashMap;
 
@@ -170,7 +170,7 @@ async fn run_qa(
     })))
 }
 
-async fn run_visual_qa(target: &str, state: &AppState) -> Value {
+async fn run_visual_qa(target: &str, _state: &AppState) -> Value {
     let mut checks = Vec::new();
 
     // Check 1: Target responds
@@ -243,7 +243,7 @@ async fn run_api_qa(target: &str) -> Value {
     json!({"checks": checks})
 }
 
-async fn run_accessibility_qa(target: &str, state: &AppState) -> Value {
+async fn run_accessibility_qa(target: &str, _state: &AppState) -> Value {
     let mut checks = Vec::new();
 
     if let Ok(resp) = reqwest::get(target).await {
@@ -339,7 +339,7 @@ async fn run_performance_qa(target: &str) -> Value {
     json!({"checks": checks})
 }
 
-async fn run_evidence_qa(state: &AppState) -> Value {
+async fn run_evidence_qa(_state: &AppState) -> Value {
     let mut checks = Vec::new();
     let solace_home = crate::utils::solace_home();
     let evidence_path = solace_home.join("runtime").join("evidence.jsonl");
@@ -391,7 +391,7 @@ async fn run_evidence_qa(state: &AppState) -> Value {
     json!({"checks": checks})
 }
 
-async fn run_integration_qa(state: &AppState) -> Value {
+async fn run_integration_qa(_state: &AppState) -> Value {
     let mut checks = Vec::new();
     let client = reqwest::Client::new();
     let base = "http://localhost:8888";

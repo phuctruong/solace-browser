@@ -8,11 +8,11 @@ use axum::{
     routing::{get, post},
     Json, Router,
 };
-use serde::{Deserialize, Serialize};
+use serde::Deserialize;
 use serde_json::{json, Value};
 use std::collections::HashMap;
 use std::process::Command;
-use std::time::{Duration, Instant};
+use std::time::Instant;
 
 use crate::state::AppState;
 
@@ -172,7 +172,7 @@ async fn run_worker(
     }
 
     // Clamp timeout
-    let timeout_secs = req.timeout.min(300).max(1);
+    let _timeout_secs = req.timeout.min(300).max(1);
 
     // Build command
     let mut cmd = Command::new(&path);

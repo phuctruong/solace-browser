@@ -268,9 +268,9 @@ async fn preview_action(
     Path(id): Path<String>,
 ) -> Result<Json<Value>, (StatusCode, Json<Value>)> {
     // Look up the action to get its preview_hash
-    let config = crate::routes::backoffice::load_workspace_config("backoffice-actions")
+    let _config = crate::routes::backoffice::load_workspace_config("backoffice-actions")
         .unwrap_or_default();
-    let solace_home = crate::utils::solace_home();
+    let _solace_home = crate::utils::solace_home();
 
     // For now return the action's details + any associated wiki snapshot
     Ok(Json(json!({
@@ -281,7 +281,7 @@ async fn preview_action(
 }
 
 /// Sign-off HTML page
-async fn signoff_page(State(state): State<AppState>) -> Html<String> {
+async fn signoff_page(State(_state): State<AppState>) -> Html<String> {
     let body = r#"
 <div class="sb-section-header">
   <h2 class="sb-heading">Pending Actions</h2>

@@ -126,7 +126,7 @@ async fn dashboard_page(State(state): State<AppState>) -> Html<String> {
     let sessions = state.sessions.read().clone();
     let events = state.runtime_events.read().clone();
     let uptime = state.uptime_seconds();
-    let theme = state.theme.read().clone();
+    let _theme = state.theme.read().clone();
     let delight = state.delight.read().clone();
     let notifications = state.notifications.read().clone();
     let solace_home = crate::utils::solace_home();
@@ -134,7 +134,7 @@ async fn dashboard_page(State(state): State<AppState>) -> Html<String> {
 
     // Greeting
     let greeting = delight.warm_greeting();
-    let celebration = delight
+    let _celebration = delight
         .celebration_message()
         .map(|m| format!("<p class=\"sb-pill sb-pill--success\">{m}</p>"))
         .unwrap_or_default();
@@ -239,7 +239,7 @@ async fn dashboard_page(State(state): State<AppState>) -> Html<String> {
 
     // Unread notifications
     let unread = notifications.iter().filter(|n| !n.read).count();
-    let notif_badge = if unread > 0 {
+    let _notif_badge = if unread > 0 {
         format!("<span class=\"sb-pill sb-pill--warning\">{unread} unread</span>")
     } else {
         String::new()
@@ -256,8 +256,8 @@ async fn dashboard_page(State(state): State<AppState>) -> Html<String> {
 
     // Categorize apps
     let role_apps: Vec<_> = apps.iter().filter(|a| a.category == "role").collect();
-    let backoffice_apps: Vec<_> = apps.iter().filter(|a| a.category == "backoffice").collect();
-    let qa_apps: Vec<_> = apps.iter().filter(|a| a.category == "qa").collect();
+    let _backoffice_apps: Vec<_> = apps.iter().filter(|a| a.category == "backoffice").collect();
+    let _qa_apps: Vec<_> = apps.iter().filter(|a| a.category == "qa").collect();
     let domain_apps: Vec<_> = apps.iter().filter(|a| a.category == "domain").collect();
 
     let body = format!(
@@ -755,7 +755,7 @@ async fn domain_detail_page(
 
     // Stillwater info (if domain wiki exists)
     let wiki_dir = crate::utils::solace_home().join("wiki").join("domains");
-    let stillwater_section = if wiki_dir.join(format!("{domain}.json")).is_file() {
+    let _stillwater_section = if wiki_dir.join(format!("{domain}.json")).is_file() {
         match fs::read_to_string(wiki_dir.join(format!("{domain}.json"))) {
             Ok(raw) => format!(
                 "<section class=\"stillwater\"><h2>Stillwater</h2><pre>{}</pre></section>",
@@ -1004,7 +1004,7 @@ async fn app_detail_page(
         html_escape::encode_text(&app.tier).to_string()
     };
 
-    let manifest_section = format!(
+    let _manifest_section = format!(
         "<section class=\"manifest\">\
          <h2>Manifest</h2>\
          <table>\
@@ -1868,7 +1868,7 @@ async fn settings_page(State(state): State<AppState>) -> Html<String> {
 // ---------------------------------------------------------------------------
 // GET /hire — "Hire an AI Worker" job description wizard
 // ---------------------------------------------------------------------------
-async fn hire_page(State(state): State<AppState>) -> Html<String> {
+async fn hire_page(State(_state): State<AppState>) -> Html<String> {
     let apps = crate::app_engine::scan_installed_apps();
     let role_apps: Vec<_> = apps.iter().filter(|a| a.category == "role").collect();
 

@@ -8,7 +8,6 @@ use axum::{
     routing::{get, post},
     Json, Router,
 };
-use serde::Deserialize;
 use serde_json::{json, Value};
 
 use crate::state::AppState;

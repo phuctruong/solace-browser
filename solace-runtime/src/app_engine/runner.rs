@@ -595,7 +595,7 @@ async fn run_cli_app(
     std::fs::write(&report_path, &html).map_err(|e| e.to_string())?;
 
     // Evidence
-    let evidence_input = format!("{}:{}:{}:{}", app_id, run_id, binary, stdout.len());
+    let _evidence_input = format!("{}:{}:{}:{}", app_id, run_id, binary, stdout.len());
     let _ = crate::evidence::record_event(
         &solace_home,
         &format!("cli.run.{}", app_id),

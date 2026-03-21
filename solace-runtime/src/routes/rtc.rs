@@ -3,14 +3,13 @@
 //! The core value proposition: Stillwater template + Ripple delta = full page HTML.
 
 use axum::{
-    extract::{Path, Query},
+    extract::Path,
     http::StatusCode,
     response::Html,
     routing::get,
     Json, Router,
 };
 use serde_json::{json, Value};
-use std::collections::HashMap;
 
 use crate::state::AppState;
 

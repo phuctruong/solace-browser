@@ -354,7 +354,7 @@ struct UpdateAppPayload {
 /// POST /api/v1/apps/:app_id/update — update app manifest fields
 async fn update_app(
     Path(app_id): Path<String>,
-    State(state): State<AppState>,
+    State(_state): State<AppState>,
     Json(payload): Json<UpdateAppPayload>,
 ) -> Result<Json<Value>, (StatusCode, Json<Value>)> {
     let app_dir = crate::utils::find_app_dir(&app_id)

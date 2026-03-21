@@ -6,10 +6,9 @@
 use chrono::Utc;
 use parking_lot::RwLock;
 use serde::{Deserialize, Serialize};
-use serde_json::{json, Value};
+use serde_json::Value;
 use sha2::{Digest, Sha256};
 use std::collections::HashMap;
-use std::sync::Arc;
 use tokio::sync::broadcast;
 
 /// Maximum events kept in memory per topic before flush to SQLite.

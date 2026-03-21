@@ -7,7 +7,7 @@ use rusqlite::{params_from_iter, Connection};
 use serde_json::{json, Value};
 use sha2::{Digest, Sha256};
 
-use super::schema::{TableDef, WorkspaceConfig};
+use super::schema::TableDef;
 
 /// Insert a new record. Returns the record with generated id + timestamps.
 pub fn insert(

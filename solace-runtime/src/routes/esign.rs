@@ -34,7 +34,7 @@ pub fn routes() -> Router<AppState> {
 /// Write feedback delta to app's inbox/feedback/ directory.
 /// This is the RL training signal: delta(proposed, approved) = learning.
 fn write_feedback_delta(
-    solace_home: &std::path::Path,
+    _solace_home: &std::path::Path,
     app_id: &str,
     run_id: &str,
     decision: &str,
@@ -76,7 +76,7 @@ fn write_feedback_delta(
 
 /// GET /api/v1/feedback/history — list all feedback across all apps
 async fn feedback_history() -> Json<Value> {
-    let solace_home = crate::utils::solace_home();
+    let _solace_home = crate::utils::solace_home();
     let apps = crate::app_engine::scan_installed_apps();
     let mut all_feedback = Vec::new();
 
@@ -207,7 +207,7 @@ fn default_approve() -> String {
 }
 
 async fn standard_sign(
-    State(state): State<AppState>,
+    State(_state): State<AppState>,
     Json(payload): Json<StandardSignPayload>,
 ) -> Result<Json<Value>, (StatusCode, Json<Value>)> {
     let solace_home = crate::utils::solace_home();
@@ -343,7 +343,7 @@ async fn build_package(
     if !payload.app_id.is_empty() {
         if let Some(app_dir) = crate::utils::find_app_dir(&payload.app_id) {
             let runs_dir = app_dir.join("outbox").join("runs");
-            if let Ok(mut entries) = std::fs::read_dir(&runs_dir) {
+            if let Ok(entries) = std::fs::read_dir(&runs_dir) {
                 let mut dirs: Vec<_> = entries
                     .filter_map(|e| e.ok())
                     .filter(|e| e.path().is_dir())
