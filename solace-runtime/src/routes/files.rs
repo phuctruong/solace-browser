@@ -267,18 +267,20 @@ async fn dashboard_page(State(state): State<AppState>) -> Html<String> {
     <div class="sb-kicker">AI Workers</div>
     <div class="sb-stat-value">{role_count}</div>
   </div>
-  <div class="sb-card sb-stat-card">
-    <div class="sb-kicker">Domain Apps</div>
-    <div class="sb-stat-value">{domain_count}</div>
+  <div class="sb-card sb-stat-card" id="pending-stat">
+    <div class="sb-kicker">Pending</div>
+    <div class="sb-stat-value" id="pending-count">—</div>
+    <div><a href="/signoff" class="sb-text-xs" style="color:var(--sb-accent)">Sign Off</a></div>
   </div>
   <div class="sb-card sb-stat-card">
-    <div class="sb-kicker">Evidence</div>
-    <div class="sb-stat-value">{evidence_count}</div>
+    <div class="sb-kicker">Completed</div>
+    <div class="sb-stat-value">{total_runs}</div>
+    <div class="sb-text-xs" style="color:var(--sb-text-muted)">tasks</div>
+  </div>
+  <div class="sb-card sb-stat-card">
+    <div class="sb-kicker">Trust</div>
     <div>{chain_badge}</div>
-  </div>
-  <div class="sb-card sb-stat-card">
-    <div class="sb-kicker">Uptime</div>
-    <div class="sb-stat-value">{uptime_str}</div>
+    <div class="sb-text-xs" style="color:var(--sb-text-muted)">{evidence_count} evidence</div>
   </div>
 </div>
 
@@ -609,6 +611,21 @@ async fn dashboard_page(State(state): State<AppState>) -> Html<String> {
   loadBackofficeTab('backoffice-email', 'campaigns', 'dash-email', 'No email campaigns yet.');
   loadBackofficeTab('backoffice-support', 'tickets', 'dash-support', 'No support tickets yet.');
   loadBackofficeTab('backoffice-invoicing', 'invoices', 'dash-invoicing', 'No invoices yet.');
+  // Load pending actions count for stats bar
+  fetchJson('/api/v1/actions/summary').then(function(d) {{
+    var count = d.needs_review || 0;
+    var el = ge('pending-count');
+    if (el) {{
+      el.textContent = count;
+      if (count > 0) {{
+        el.style.color = 'var(--sb-warning)';
+        ge('pending-stat').style.borderColor = 'var(--sb-warning)';
+      }} else {{
+        el.style.color = 'var(--sb-success)';
+      }}
+    }}
+  }}).catch(function(){{}});
+
   // Run worker: POST to app run API, show result, post to backoffice
   window.runWorker = function(appId, btn) {{
     btn.textContent = 'Running...';
@@ -649,7 +666,18 @@ async fn dashboard_page(State(state): State<AppState>) -> Html<String> {
 }})();
 </script>"#,
         role_count = role_apps.len(),
-        domain_count = domain_apps.len(),
+        total_runs = {
+            let mut count = 0usize;
+            for app in &apps {
+                if let Some(dir) = crate::utils::find_app_dir(&app.id) {
+                    let runs_dir = dir.join("outbox").join("runs");
+                    if runs_dir.exists() {
+                        count += std::fs::read_dir(&runs_dir).into_iter().flatten().filter_map(|e| e.ok()).count();
+                    }
+                }
+            }
+            count
+        },
         evidence_count = part11.record_count,
         role_cards = role_apps.iter().map(|a| format!(
             r#"<div class="sb-card" id="worker-{id}"><div class="sb-card-header"><h3 class="sb-card-title"><a href="/apps/{id}">{name}</a></h3><span class="sb-pill sb-pill--info">{persona}</span></div><div class="sb-card-body"><p class="sb-text-sm">{desc}</p><div class="sb-app-meta"><button class="sb-btn sb-btn--sm" onclick="runWorker('{id}',this)">Run</button> <a href="/apps/{id}" class="sb-btn sb-btn--sm" style="background:transparent;border:1px solid var(--sb-border)">Manage</a></div></div></div>"#,
