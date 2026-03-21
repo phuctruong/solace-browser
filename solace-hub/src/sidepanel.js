@@ -369,19 +369,42 @@
   setInterval(reportTabs, 5000);
 
   // Navigate main browser area WITHOUT navigating the sidebar itself.
-  // The sidebar is a panel — it must NOT change its own location.
-  // Use the runtime's navigate API to change the browser's active tab URL.
+  // Uses native C++ chrome.send() when available (Chromium WebUI),
+  // falls back to runtime API for non-WebUI contexts.
   function navigateMainBrowser(url) {
-    // Method 1: Send via WebSocket to runtime, which forwards to browser
-    sendToRuntime({ type: 'navigate_request', url: url });
-    // Method 2: Use the navigate API endpoint
-    fetch(API_BASE + '/api/navigate', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ url: url })
-    }).catch(function(){});
-    // DO NOT use window.top.location.href — that navigates the sidebar itself
+    if (typeof chrome !== 'undefined' && typeof chrome.send === 'function') {
+      // Native C++ handler: navigates the active tab directly via TabStripModel
+      chrome.send('solaceNavigateTab', [url]);
+    } else {
+      // Fallback: use runtime API
+      sendToRuntime({ type: 'navigate_request', url: url });
+      fetch(API_BASE + '/api/navigate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ url: url })
+      }).catch(function(){});
+    }
   }
+
+  // Get all browser tabs via native C++ API
+  function getBrowserTabs() {
+    if (typeof chrome !== 'undefined' && typeof chrome.send === 'function') {
+      chrome.send('solaceGetTabs', []);
+    }
+  }
+
+  // Close all tabs except active via native C++ API
+  function closeOtherTabs() {
+    if (typeof chrome !== 'undefined' && typeof chrome.send === 'function') {
+      chrome.send('solaceCloseOtherTabs', []);
+    }
+  }
+
+  // Listen for tab list response from C++
+  window.addEventListener('solace-tabs', function(e) {
+    var detail = e.detail || {};
+    console.log('[Solace] Tabs:', detail.count, detail.tabs);
+  });
 
   // Make it available globally for onclick handlers
   window.navigateMainBrowser = navigateMainBrowser;
