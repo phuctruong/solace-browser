@@ -79,48 +79,42 @@
     </div>
 
     <main class="yy-main" id="main-content" style="display:none">
-      <!-- Status bar -->
-      <section class="yy-card yy-hero-card">
+      <!-- Compact status bar -->
+      <section class="yy-card" style="padding:0.5rem 0.7rem">
         <div class="yy-status-row" aria-live="polite">
           <span id="ws-status-dot" class="yy-status-dot status-connecting"></span>
-          <span id="hero-status" class="yy-status-copy">Connecting to Solace Runtime...</span>
-        </div>
-        <div class="yy-topline">
-          <span id="mode-pill" class="yy-pill yy-pill-muted">Agent only</span>
-          <span id="source-pill" class="yy-pill yy-pill-muted">No model source</span>
-          <span id="device-pill" class="yy-pill yy-pill-muted">Device pending</span>
+          <span id="hero-status" class="yy-status-copy" style="font-size:0.75rem">Connecting...</span>
         </div>
       </section>
 
-      <!-- Mode toggle: Navigate vs Create -->
-      <div class="yy-mode-toggle">
-        <button class="yy-mode-btn yy-mode-btn--active" id="mode-nav-btn" onclick="setYYMode('nav')">Navigate</button>
-        <button class="yy-mode-btn" id="mode-create-btn" onclick="setYYMode('create')">+ Create App</button>
-      </div>
-
       <!-- ═══ NAVIGATE MODE (default) ═══ -->
       <div id="yy-nav-mode">
-        <!-- Selected Domain Header (shown when a domain is selected) -->
-        <section class="yy-card" id="selected-domain-section" style="display:none">
+        <!-- 1. PENDING ACTIONS (top priority) -->
+        <section class="yy-card" id="actions-section">
           <div class="yy-section-head">
-            <div style="display:flex;align-items:center;gap:0.5rem">
-              <img id="selected-domain-icon" src="" alt="" style="width:28px;height:28px;border-radius:6px">
-              <div>
-                <p class="yy-section-kicker">Selected Domain</p>
-                <h2 id="selected-domain-name">—</h2>
-              </div>
-            </div>
             <div>
-              <span id="selected-domain-apps-pill" class="yy-pill yy-pill-muted">0 apps</span>
-              <span id="selected-domain-oauth3" class="yy-pill yy-pill-muted"></span>
+              <p class="yy-section-kicker">Needs Your Attention</p>
+              <h2 id="actions-title">Pending Actions</h2>
             </div>
+            <span id="actions-count" class="yy-pill yy-pill-warning">0</span>
           </div>
-          <button class="yy-mode-btn" id="back-to-domains" style="font-size:0.7rem;margin-top:0.3rem">← All Domains</button>
-          <!-- Domain Apps list (DataTables) -->
-          <div id="domain-apps-list" style="margin-top:0.5rem"></div>
+          <div id="actions-list"></div>
+          <a href="http://localhost:8888/signoff" class="yy-mode-btn" style="display:block;text-align:center;margin-top:0.4rem;font-size:0.7rem;text-decoration:none">View All in Sign-Off Page</a>
         </section>
 
-        <!-- Active Apps: trigger-matched for current page -->
+        <!-- 2. YOUR AI TEAM (workers) -->
+        <section class="yy-card" id="workers-section">
+          <div class="yy-section-head">
+            <div>
+              <p class="yy-section-kicker">Your AI Team</p>
+              <h2>Workers</h2>
+            </div>
+            <span id="workers-count" class="yy-pill yy-pill-muted">0</span>
+          </div>
+          <div id="workers-list"></div>
+        </section>
+
+        <!-- 3. ACTIVE DOMAIN APPS (context-aware) -->
         <section class="yy-card" id="active-apps-section" style="display:none">
           <div class="yy-section-head">
             <div>
@@ -132,14 +126,14 @@
           <div id="active-apps-list"></div>
         </section>
 
-        <!-- Domain List (expandable rows with inline apps) -->
+        <!-- 4. DOMAINS (collapsed by default) -->
         <section class="yy-card" id="domain-list-section">
           <div class="yy-section-head">
             <div>
               <p class="yy-section-kicker">Domains</p>
-              <h2>Your apps by domain</h2>
+              <h2>Browse by domain</h2>
             </div>
-            <span id="domain-count" class="yy-pill yy-pill-muted">0 active</span>
+            <span id="domain-count" class="yy-pill yy-pill-muted">0</span>
           </div>
           <input type="text" id="domain-filter" class="yy-domain-filter" placeholder="Filter domains...">
           <div id="domain-accordion"></div>

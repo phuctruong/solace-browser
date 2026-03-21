@@ -324,6 +324,76 @@
     });
   }
 
+  // ── Load Pending Actions (top of sidebar) ──
+  function loadPendingActions() {
+    getJson('/api/v1/actions/summary').then(function(summary) {
+      var count = summary.needs_review || 0;
+      setText('actions-count', count);
+      var section = qs('actions-section');
+      if (section) {
+        var countEl = qs('actions-count');
+        if (countEl) countEl.className = count > 0 ? 'yy-pill yy-pill-warning' : 'yy-pill yy-pill-success';
+      }
+      setText('actions-title', count > 0 ? count + ' Pending Actions' : 'All Clear');
+
+      if (count === 0) {
+        qs('actions-list').innerHTML = '<p class="yy-copy" style="font-size:0.7rem;color:var(--yy-success)">No actions need your review.</p>';
+        return;
+      }
+
+      getJson('/api/v1/actions/pending?status=proposed').then(function(d) {
+        var items = d.items || [];
+        var html = '';
+        items.forEach(function(a) {
+          var typeCls = a.action_type === 'delete' ? 'danger' : a.action_type === 'send' ? 'warning' : 'info';
+          html += '<div class="yy-app-row">';
+          html += '<div style="display:flex;justify-content:space-between;align-items:center">';
+          html += '<div><div class="yy-app-name">' + escapeHtml(a.summary || '') + '</div>';
+          html += '<div class="yy-app-meta"><span class="yy-pill yy-pill-' + typeCls + '" style="font-size:0.55rem">' + escapeHtml(a.action_type || '') + '</span> ' + escapeHtml(a.domain || '') + '</div></div>';
+          html += '<div class="yy-app-actions" style="flex-shrink:0">';
+          html += '<button onclick="fetch(\'/api/v1/actions/' + escapeHtml(a.id || '') + '/approve\',{method:\'POST\'}).then(function(){loadPendingActions()})">✓</button>';
+          html += '<button onclick="fetch(\'/api/v1/actions/' + escapeHtml(a.id || '') + '/reject\',{method:\'POST\'}).then(function(){loadPendingActions()})">✗</button>';
+          html += '</div></div></div>';
+        });
+        qs('actions-list').innerHTML = html;
+      });
+    }).catch(function() {
+      qs('actions-list').innerHTML = '<p class="yy-copy" style="font-size:0.7rem">Loading...</p>';
+    });
+  }
+  window.loadPendingActions = loadPendingActions;
+  loadPendingActions();
+  setInterval(loadPendingActions, 10000);
+
+  // ── Load AI Workers ──
+  function loadWorkers() {
+    getJson('/api/v1/domains/localhost/status').then(function(d) {
+      var apps = d.apps || [];
+      var workers = apps.filter(function(a) { return a.name && (a.name.indexOf('role') !== -1 || a.app_id.indexOf('role') !== -1); });
+      var backoffice = apps.filter(function(a) { return a.app_id.indexOf('backoffice') !== -1; });
+
+      setText('workers-count', workers.length + ' workers, ' + backoffice.length + ' office');
+
+      var html = '';
+      // Workers first
+      workers.forEach(function(a) {
+        html += '<div class="yy-app-row">';
+        html += '<div class="yy-app-name">' + escapeHtml(a.name || a.app_id) + '</div>';
+        html += '<div class="yy-app-actions">';
+        html += '<button onclick="navigateMainBrowser(\'http://localhost:8888/apps/' + escapeHtml(a.app_id) + '\')">Manage</button>';
+        html += '</div></div>';
+      });
+      // Backoffice summary
+      if (backoffice.length > 0) {
+        html += '<div style="margin-top:0.4rem;font-size:0.7rem;color:var(--yy-text-muted)">' + backoffice.length + ' office apps: ';
+        html += backoffice.map(function(a) { return '<a href="#" onclick="navigateMainBrowser(\'http://localhost:8888/backoffice/' + escapeHtml(a.app_id) + '\')" style="color:var(--yy-accent);text-decoration:none">' + escapeHtml(a.app_id.replace('backoffice-','')) + '</a>'; }).join(' · ');
+        html += '</div>';
+      }
+      qs('workers-list').innerHTML = html || '<p class="yy-copy" style="font-size:0.7rem">No workers configured yet.</p>';
+    }).catch(function() {});
+  }
+  loadWorkers();
+
   // Auto-expand current domain when URL changes
   function autoExpandCurrentDomain() {
     var currentDomain = '';
