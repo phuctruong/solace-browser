@@ -471,10 +471,29 @@
   }
 
   // Listen for tab list response from C++
-  window.addEventListener('solace-tabs', function(e) {
-    var detail = e.detail || {};
-    console.log('[Solace] Tabs:', detail.count, detail.tabs);
+  window.addEventListener('solace-tabs-updated', function() {
+    var tabs = window.__solaceTabs || [];
+    console.log('[Solace] Tabs:', tabs.length);
+    // Auto-close duplicate localhost tabs (keep only the active one)
+    var localhostTabs = tabs.filter(function(t) { return t.url.indexOf('localhost:8888') !== -1; });
+    if (localhostTabs.length > 1) {
+      console.log('[Solace] Closing', localhostTabs.length - 1, 'duplicate localhost tabs');
+      localhostTabs.forEach(function(t) {
+        if (!t.active && typeof chrome !== 'undefined' && typeof chrome.send === 'function') {
+          chrome.send('solaceCloseTab', [t.index]);
+        }
+      });
+    }
   });
+
+  // On sidebar startup: clean up extra tabs + get tab list
+  setTimeout(function() {
+    if (typeof chrome !== 'undefined' && typeof chrome.send === 'function') {
+      // First close other tabs, then get the list
+      chrome.send('solaceCloseOtherTabs', []);
+      setTimeout(function() { chrome.send('solaceGetTabs', []); }, 1000);
+    }
+  }, 3000); // Wait 3s for sidebar to fully connect
 
   // Make it available globally for onclick handlers
   window.navigateMainBrowser = navigateMainBrowser;

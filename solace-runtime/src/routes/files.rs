@@ -2271,13 +2271,8 @@ select.sb-input {{ cursor: pointer; }}
   <a href="/dashboard" class="sb-nav-link">Dashboard</a>
   <a href="/hire" class="sb-nav-link">Hire AI</a>
   <a href="/domains" class="sb-nav-link">Domains</a>
-  <a href="/appstore" class="sb-nav-link">App Store</a>
-  <a href="/llms" class="sb-nav-link">LLMs</a>
   <a href="/evidence" class="sb-nav-link">Evidence</a>
-  <a href="/budget" class="sb-nav-link">Budget</a>
-  <a href="/recipes" class="sb-nav-link">Recipes</a>
-  <a href="/oauth3" class="sb-nav-link">OAuth3</a>
-  <a href="/esign" class="sb-nav-link">E-Sign</a>
+  <a href="/signoff" class="sb-nav-link">Sign Off</a>
   <a href="/settings" class="sb-nav-link">Settings</a>
   <span class="sb-topbar-stat">v{version}</span>
   </nav>
