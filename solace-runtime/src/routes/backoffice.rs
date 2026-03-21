@@ -323,20 +323,12 @@ async fn backoffice_home(State(_state): State<AppState>) -> Html<String> {
         }
     }
 
-    Html(format!(
-        r#"<!-- Diagram: apps-backoffice-framework -->
-<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Solace Backoffice</title>
-<link rel="stylesheet" href="/styleguide.css">
-</head><body>
-<div class="sb-topbar"><span class="sb-topbar-brand">Solace Backoffice</span></div>
-<main class="sb-container" style="max-width:800px;margin:2rem auto;padding:1rem">
-<h1>Backoffice Apps</h1>
+    let body = format!(
+        r#"<h1>Backoffice Apps</h1>
 <p class="sb-text-muted">SQLite-backed workspace apps for AI workers + humans.</p>
-{cards}
-</main></body></html>"#
-    ))
+<div class="sb-card-grid">{cards}</div>"#
+    );
+    Html(crate::routes::files::hub_page_pub("Backoffice", &body))
 }
 
 async fn backoffice_app_home(
@@ -360,22 +352,12 @@ async fn backoffice_app_home(
         ));
     }
 
-    Ok(Html(format!(
-        r#"<!-- Diagram: apps-backoffice-framework -->
-<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>{name} — Solace Backoffice</title>
-<link rel="stylesheet" href="/styleguide.css">
-</head><body>
-<div class="sb-topbar">
-  <a href="/backoffice" class="sb-topbar-brand" style="text-decoration:none">Solace Backoffice</a>
-  <span class="sb-text-muted"> / {name}</span>
-</div>
-<main class="sb-container" style="max-width:800px;margin:2rem auto;padding:1rem">
+    let body = format!(
+        r#"<p><a href="/backoffice">&larr; Backoffice</a> | <a href="/dashboard">Dashboard</a></p>
 <h1>{name}</h1>
-{table_links}
-</main></body></html>"#
-    )))
+<div class="sb-card-grid">{table_links}</div>"#
+    );
+    Ok(Html(crate::routes::files::hub_page_pub(&format!("{} — Backoffice", name), &body)))
 }
 
 async fn backoffice_table_view(
@@ -426,33 +408,13 @@ async fn backoffice_table_view(
 
     let total = rows_html.matches("<tr>").count();
 
-    Ok(Html(format!(
-        r#"<!-- Diagram: apps-backoffice-framework -->
-<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>{table} — {name} — Solace Backoffice</title>
-<link rel="stylesheet" href="/styleguide.css">
-<link rel="stylesheet" href="/vendor/jquery.dataTables.min.css">
-</head><body>
-<div class="sb-topbar">
-  <a href="/backoffice" class="sb-topbar-brand" style="text-decoration:none">Backoffice</a>
-  <span class="sb-text-muted"> / <a href="/backoffice/{app_id}">{name}</a> / {table}</span>
-</div>
-<main class="sb-container" style="max-width:1200px;margin:2rem auto;padding:1rem">
+    let body = format!(
+        r#"<p><a href="/backoffice/{app_id}">&larr; {name}</a> | <a href="/backoffice">Backoffice</a> | <a href="/dashboard">Dashboard</a></p>
 <h1>{table} <span class="sb-pill sb-pill--info">{total} records</span></h1>
-<table class="sb-table bo-table" style="width:100%">
+<table class="sb-table" style="width:100%">
   <thead><tr>{headers}</tr></thead>
   <tbody>{rows_html}</tbody>
-</table>
-</main>
-<script src="/vendor/jquery.min.js"></script>
-<script src="/vendor/jquery.dataTables.min.js"></script>
-<script>
-if(typeof jQuery!=='undefined'&&jQuery.fn.DataTable){{
-  jQuery.fn.dataTable.ext.errMode='none';
-  jQuery('.bo-table').DataTable({{paging:true,searching:true,ordering:true,pageLength:25,dom:'ftip'}});
-}}
-</script>
-</body></html>"#
-    )))
+</table>"#
+    );
+    Ok(Html(crate::routes::files::hub_page_pub(&format!("{} — {}", table, name), &body)))
 }
