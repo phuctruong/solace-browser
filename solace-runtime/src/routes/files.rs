@@ -2261,16 +2261,86 @@ select.sb-input {{ cursor: pointer; }}
 <script src="/vendor/jquery-3.7.1.min.js"></script>
 <script src="/vendor/jquery.dataTables.min.js"></script>
 <script>
-if (typeof jQuery !== 'undefined' && jQuery.fn.DataTable) {{
-  jQuery.fn.dataTable.ext.errMode = 'none';
-  jQuery('.sb-table').each(function() {{
-    try {{
-      if (!jQuery.fn.DataTable.isDataTable(this)) {{
-        jQuery(this).DataTable({{ paging: true, searching: true, ordering: true, pageLength: 25, dom: 'ftip' }});
+// Solace Base JS — inspired by Crio's MVC patterns, upgraded for modern web
+(function() {{
+  'use strict';
+  var S = window.Solace = window.Solace || {{}};
+
+  // ── Section reload (Crio pattern: POST → replace innerHTML) ──
+  S.reload = function(sectionId, url, params) {{
+    fetch(url, {{
+      method: params ? 'POST' : 'GET',
+      headers: params ? {{'Content-Type': 'application/json'}} : {{}},
+      body: params ? JSON.stringify(params) : undefined
+    }}).then(function(r) {{ return r.text(); }}).then(function(html) {{
+      var el = document.getElementById(sectionId);
+      if (el) {{
+        el.innerHTML = html;
+        el.classList.add('sb-animate-in');
+        S.initTables(el);
+        setTimeout(function() {{ el.classList.remove('sb-animate-in'); }}, 300);
       }}
-    }} catch(e) {{}}
-  }});
-}}
+    }}).catch(function(e) {{ console.error('[Solace] reload failed:', e); }});
+  }};
+
+  // ── Form submit → reload section (Crio: reloadSectionWithForm) ──
+  S.submitForm = function(sectionId, form) {{
+    var data = new FormData(form);
+    fetch(form.action || form.dataset.action, {{
+      method: 'POST',
+      body: data
+    }}).then(function(r) {{ return r.text(); }}).then(function(html) {{
+      var el = document.getElementById(sectionId);
+      if (el) {{ el.innerHTML = html; S.highlight(sectionId); S.initTables(el); }}
+    }});
+  }};
+
+  // ── Highlight flash on success (Crio: green flash dopamine) ──
+  S.highlight = function(sectionId) {{
+    var el = document.getElementById(sectionId);
+    if (!el) return;
+    el.style.transition = 'background 0.3s';
+    el.style.background = 'rgba(38, 191, 140, 0.15)';
+    setTimeout(function() {{ el.style.background = ''; }}, 1500);
+  }};
+
+  // ── Init DataTables on container ──
+  S.initTables = function(container) {{
+    if (typeof jQuery === 'undefined' || !jQuery.fn.DataTable) return;
+    jQuery.fn.dataTable.ext.errMode = 'none';
+    var tables = container ? jQuery(container).find('.sb-table') : jQuery('.sb-table');
+    tables.each(function() {{
+      try {{
+        if (!jQuery.fn.DataTable.isDataTable(this)) {{
+          jQuery(this).DataTable({{ paging: true, searching: true, ordering: true, pageLength: 25, dom: 'ftip' }});
+        }}
+      }} catch(e) {{}}
+    }});
+  }};
+
+  // ── Inline edit (Crio: .editable click → load edit form) ──
+  S.makeEditable = function(el, editUrl) {{
+    el.style.cursor = 'pointer';
+    el.title = 'Click to edit';
+    el.addEventListener('click', function() {{
+      S.reload(el.id, editUrl);
+    }});
+  }};
+
+  // ── Toast notification ──
+  S.toast = function(message, type) {{
+    var toast = document.createElement('div');
+    toast.className = 'sb-trust-badge sb-trust-badge--' + (type || 'verified');
+    toast.style.cssText = 'position:fixed;top:1rem;right:1rem;z-index:9999;padding:0.5rem 1rem;font-size:0.85rem;box-shadow:var(--sb-shadow)';
+    toast.textContent = message;
+    document.body.appendChild(toast);
+    toast.classList.add('sb-animate-in');
+    setTimeout(function() {{ toast.remove(); }}, 3000);
+  }};
+
+  // ── Init on load ──
+  S.initTables(document);
+}})();
 </script>
 </body>
 </html>"##,
