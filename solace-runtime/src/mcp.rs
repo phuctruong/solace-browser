@@ -92,6 +92,28 @@ pub fn mcp_tool_definitions() -> Vec<Value> {
                 "required": ["agent_id", "prompt"]
             }
         }),
+        // ── Backoffice ──
+        json!({"name": "backoffice_read", "description": "Read records from backoffice table (CRM, messages, tasks, etc.)", "inputSchema": {"type": "object", "properties": {"app_id": {"type": "string"}, "table": {"type": "string"}}, "required": ["app_id", "table"]}}),
+        json!({"name": "backoffice_write", "description": "Create record in backoffice table", "inputSchema": {"type": "object", "properties": {"app_id": {"type": "string"}, "table": {"type": "string"}, "data": {"type": "object"}}, "required": ["app_id", "table", "data"]}}),
+        // ── CLI workers ──
+        json!({"name": "cli_run", "description": "Run CLI worker (web-scraper, git-worker, claude-worker)", "inputSchema": {"type": "object", "properties": {"worker_id": {"type": "string"}, "input": {"type": "string"}}, "required": ["worker_id", "input"]}}),
+        json!({"name": "cli_list", "description": "List available CLI workers", "inputSchema": {"type": "object", "properties": {}}}),
+        // ── Jobs ──
+        json!({"name": "job_enqueue", "description": "Add job to priority queue", "inputSchema": {"type": "object", "properties": {"job_type": {"type": "string"}, "payload": {"type": "object"}, "priority": {"type": "integer"}}, "required": ["job_type", "payload"]}}),
+        json!({"name": "job_claim", "description": "Claim next available job", "inputSchema": {"type": "object", "properties": {"worker_id": {"type": "string"}}, "required": ["worker_id"]}}),
+        // ── Events ──
+        json!({"name": "event_publish", "description": "Publish event to topic", "inputSchema": {"type": "object", "properties": {"topic": {"type": "string"}, "payload": {"type": "object"}}, "required": ["topic", "payload"]}}),
+        // ── Wiki ──
+        json!({"name": "wiki_stats", "description": "Get Prime Wiki snapshot stats", "inputSchema": {"type": "object", "properties": {}}}),
+        json!({"name": "wiki_extract", "description": "Extract page to Stillwater+PZip snapshot", "inputSchema": {"type": "object", "properties": {"url": {"type": "string"}, "content": {"type": "string"}}, "required": ["url", "content"]}}),
+        // ── Domains ──
+        json!({"name": "domain_status", "description": "Get domain status (apps, OAuth3, wiki)", "inputSchema": {"type": "object", "properties": {"domain": {"type": "string"}}, "required": ["domain"]}}),
+        json!({"name": "domain_triggers", "description": "Match domain app triggers for URL", "inputSchema": {"type": "object", "properties": {"domain": {"type": "string"}, "path": {"type": "string"}}, "required": ["domain"]}}),
+        // ── Webhooks + File Watch ──
+        json!({"name": "webhook_create", "description": "Register webhook for events", "inputSchema": {"type": "object", "properties": {"name": {"type": "string"}, "url": {"type": "string"}, "event": {"type": "string"}}, "required": ["name", "url", "event"]}}),
+        json!({"name": "file_watch", "description": "Watch filesystem path for changes", "inputSchema": {"type": "object", "properties": {"path": {"type": "string"}, "pattern": {"type": "string"}, "app_id": {"type": "string"}}, "required": ["path"]}}),
+        // ── Sign-off ──
+        json!({"name": "esign", "description": "Sign off on action (approve/reject with RL feedback)", "inputSchema": {"type": "object", "properties": {"action_id": {"type": "string"}, "decision": {"type": "string"}, "feedback": {"type": "string"}}, "required": ["action_id", "decision"]}}),
     ]
 }
 
