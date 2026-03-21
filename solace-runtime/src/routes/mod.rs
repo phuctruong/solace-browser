@@ -35,3 +35,4 @@ pub mod email;
 pub mod rtc;
 pub mod browser_native;
 pub mod sync;
+pub mod actions;

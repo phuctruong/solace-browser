@@ -33,7 +33,7 @@ pub fn routes() -> Router<AppState> {
 }
 
 /// Load workspace config for a backoffice app from its manifest.yaml
-fn load_workspace_config(app_id: &str) -> Result<WorkspaceConfig, String> {
+pub fn load_workspace_config(app_id: &str) -> Result<WorkspaceConfig, String> {
     let solace_home = crate::utils::solace_home();
 
     // Search in multiple locations

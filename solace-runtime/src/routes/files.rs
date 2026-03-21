@@ -2119,6 +2119,10 @@ fn page(title: &str, body: &str) -> String {
 /// Read the VERSION file at compile time for display in UI.
 const SOLACE_VERSION: &str = include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/../VERSION"));
 
+pub fn hub_page_pub(title: &str, body_content: &str) -> String {
+    hub_page(title, body_content)
+}
+
 fn hub_page(title: &str, body_content: &str) -> String {
     let version = SOLACE_VERSION.trim();
     format!(
