@@ -33,3 +33,5 @@ pub mod file_watcher;
 pub mod analytics;
 pub mod email;
 pub mod rtc;
+pub mod browser_native;
+pub mod sync;
