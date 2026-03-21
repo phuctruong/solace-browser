@@ -772,3 +772,197 @@ pre { background: var(--sb-surface-strong); padding: 1rem; border-radius: var(--
 .sb-progress-bar--accent { background: var(--sb-accent); }
 .sb-progress-bar--warning { background: var(--sb-warning); }
 .sb-progress-bar--danger { background: var(--sb-danger); }
+
+/* ═══════════════════════════════════════════════════════════════════
+   EXTENDED: Heatmap, Charts, Animations, Enhanced Components
+   Persona-driven: Van Edwards (trust) + Brunson (dopamine) +
+   Sutherland (perception) + Kay (medium) + Ive (reduce)
+   ═══════════════════════════════════════════════════════════════════ */
+
+/* ─── Heatmap colors (for quality surfaces + coverage maps) ─── */
+:root {
+  --sb-heat-0: #1e293b;    /* cold: untested */
+  --sb-heat-20: #1e3a5f;   /* cool: low coverage */
+  --sb-heat-40: #1e4d3a;   /* warm: partial */
+  --sb-heat-60: #3a6b1e;   /* hot: good coverage */
+  --sb-heat-80: #6b8a1e;   /* very hot: strong */
+  --sb-heat-100: #22c55e;  /* max: fully sealed */
+  --sb-heat-danger: #ef4444;
+}
+
+.sb-heatmap { display: grid; gap: 2px; }
+.sb-heatmap-cell {
+  aspect-ratio: 1;
+  border-radius: 3px;
+  transition: all var(--sb-transition);
+  cursor: pointer;
+}
+.sb-heatmap-cell:hover { transform: scale(1.3); z-index: 1; box-shadow: var(--sb-shadow-glow); }
+.sb-heatmap-cell[data-score="0"] { background: var(--sb-heat-0); }
+.sb-heatmap-cell[data-score="1"] { background: var(--sb-heat-20); }
+.sb-heatmap-cell[data-score="2"] { background: var(--sb-heat-40); }
+.sb-heatmap-cell[data-score="3"] { background: var(--sb-heat-60); }
+.sb-heatmap-cell[data-score="4"] { background: var(--sb-heat-80); }
+.sb-heatmap-cell[data-score="5"] { background: var(--sb-heat-100); }
+
+/* ─── Chart containers (amCharts + Mermaid ready) ─── */
+.sb-chart { width: 100%; border-radius: var(--sb-radius); overflow: hidden; background: var(--sb-surface); border: 1px solid var(--sb-border); }
+.sb-chart--sm { height: 200px; }
+.sb-chart--md { height: 300px; }
+.sb-chart--lg { height: 400px; }
+.sb-chart--full { height: 100%; min-height: 300px; }
+
+/* Mermaid diagram container */
+.sb-mermaid { background: var(--sb-surface); border-radius: var(--sb-radius); padding: 1rem; border: 1px solid var(--sb-border); overflow-x: auto; }
+.sb-mermaid .mermaid { text-align: center; }
+
+/* ─── Smooth animations (Ive: invisible transitions) ─── */
+@keyframes sb-fade-in { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes sb-pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.6; } }
+@keyframes sb-slide-in { from { transform: translateX(-10px); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+
+.sb-animate-in { animation: sb-fade-in 0.3s ease-out; }
+.sb-animate-pulse { animation: sb-pulse 2s infinite; }
+.sb-animate-slide { animation: sb-slide-in 0.2s ease-out; }
+
+/* ─── Dopamine feedback (Brunson: satisfying interactions) ─── */
+.sb-btn--approve {
+  background: var(--sb-success);
+  color: var(--sb-on-accent);
+  font-weight: 600;
+  transition: all 0.2s ease;
+}
+.sb-btn--approve:hover { transform: scale(1.05); box-shadow: 0 0 12px rgba(85, 215, 170, 0.4); }
+.sb-btn--approve:active { transform: scale(0.95); }
+
+.sb-btn--reject {
+  background: transparent;
+  color: var(--sb-danger);
+  border: 1px solid var(--sb-danger);
+}
+.sb-btn--reject:hover { background: rgba(255, 123, 123, 0.1); }
+
+.sb-btn--donow {
+  background: var(--sb-accent);
+  color: var(--sb-on-accent);
+  font-weight: 600;
+}
+.sb-btn--donow:hover { box-shadow: 0 0 12px rgba(120, 185, 255, 0.4); }
+
+/* ─── Trust indicators (Van Edwards: first 7 seconds) ─── */
+.sb-trust-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.2rem 0.6rem;
+  border-radius: 100px;
+  font-size: 0.7rem;
+  font-weight: 600;
+}
+.sb-trust-badge--verified { background: var(--sb-pill-success-bg); color: var(--sb-pill-success-text); }
+.sb-trust-badge--pending { background: var(--sb-pill-warning-bg); color: var(--sb-pill-warning-text); }
+.sb-trust-badge--sealed { background: rgba(120, 185, 255, 0.15); color: var(--sb-accent); border: 1px solid rgba(120, 185, 255, 0.3); }
+
+/* ─── Evidence display (Sutherland: perceived authority) ─── */
+.sb-evidence-hash {
+  font-family: var(--sb-font-mono);
+  font-size: 0.65rem;
+  color: var(--sb-text-muted);
+  background: var(--sb-surface-strong);
+  padding: 0.15rem 0.4rem;
+  border-radius: 3px;
+  letter-spacing: 0.05em;
+  user-select: all;
+}
+
+.sb-evidence-chain {
+  border-left: 2px solid var(--sb-accent);
+  padding-left: 1rem;
+  margin-left: 0.5rem;
+}
+
+/* ─── Cooldown timer (Sutherland: anticipation creates value) ─── */
+.sb-cooldown {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  font-size: 0.75rem;
+  font-family: var(--sb-font-mono);
+  color: var(--sb-warning);
+}
+.sb-cooldown-bar {
+  width: 60px;
+  height: 4px;
+  background: var(--sb-surface-strong);
+  border-radius: 2px;
+  overflow: hidden;
+}
+.sb-cooldown-fill {
+  height: 100%;
+  background: var(--sb-warning);
+  border-radius: 2px;
+  transition: width 1s linear;
+}
+
+/* ─── Worker avatar (Van Edwards: humanize AI) ─── */
+.sb-worker-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 0.9rem;
+  flex-shrink: 0;
+}
+.sb-worker-avatar--ai { background: linear-gradient(135deg, var(--sb-accent-soft), rgba(168, 85, 247, 0.15)); color: var(--sb-accent); border: 1px solid rgba(120, 185, 255, 0.2); }
+.sb-worker-avatar--human { background: linear-gradient(135deg, rgba(85, 215, 170, 0.15), rgba(85, 215, 170, 0.05)); color: var(--sb-success); border: 1px solid rgba(85, 215, 170, 0.2); }
+
+/* ─── Quality surface (Kay: think THROUGH the UI) ─── */
+.sb-quality-surface {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+  gap: 0.5rem;
+}
+.sb-quality-cell {
+  text-align: center;
+  padding: 0.75rem 0.5rem;
+  border-radius: var(--sb-radius);
+  transition: all var(--sb-transition);
+}
+.sb-quality-cell:hover { transform: translateY(-2px); box-shadow: var(--sb-shadow); }
+.sb-quality-label { font-size: 0.65rem; text-transform: uppercase; letter-spacing: 0.1em; color: var(--sb-text-muted); }
+.sb-quality-value { font-size: 1.5rem; font-weight: 700; margin-top: 0.25rem; }
+.sb-quality-bar { height: 3px; border-radius: 2px; margin-top: 0.5rem; background: var(--sb-surface-strong); }
+.sb-quality-fill { height: 100%; border-radius: 2px; }
+
+/* ─── Persona card (for committee scores) ─── */
+.sb-persona-card {
+  display: flex;
+  gap: 0.75rem;
+  padding: 0.75rem;
+  border-radius: var(--sb-radius);
+  background: var(--sb-surface-soft);
+  border: 1px solid var(--sb-border);
+  transition: border-color var(--sb-transition);
+}
+.sb-persona-card:hover { border-color: var(--sb-accent); }
+.sb-persona-name { font-weight: 600; font-size: 0.85rem; }
+.sb-persona-role { font-size: 0.7rem; color: var(--sb-text-muted); }
+.sb-persona-score { font-size: 1.2rem; font-weight: 700; color: var(--sb-success); }
+.sb-persona-verdict { font-size: 0.75rem; color: var(--sb-text-muted); margin-top: 0.25rem; font-style: italic; }
+
+/* ─── Content breathing (Ive: let content breathe) ─── */
+.sb-breathe { padding: 2rem 0; }
+.sb-breathe-sm { padding: 1rem 0; }
+.sb-spacer { height: 1.5rem; }
+.sb-spacer-sm { height: 0.75rem; }
+
+/* ─── Responsive: mobile sidebar collapses ─── */
+@media (max-width: 768px) {
+  .sb-main-content { padding: 0 0.75rem; }
+  .sb-card-grid { grid-template-columns: 1fr; }
+  .sb-tabs { font-size: 0.75rem; }
+  .sb-stat-value { font-size: 1.4rem; }
+}
