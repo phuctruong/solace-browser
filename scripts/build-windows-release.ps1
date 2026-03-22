@@ -165,6 +165,26 @@ set SCRIPT_DIR=%~dp0
 '@
 Set-Content -LiteralPath (Join-Path $BundleDir "solace-browser.cmd") -Value $launcher -Encoding ASCII
 
+# Launcher for auto-start: starts runtime (apps discovered from install dir automatically)
+$runtimeLauncher = @'
+@echo off
+setlocal
+set SCRIPT_DIR=%~dp0
+start "" /B "%SCRIPT_DIR%solace-runtime.exe"
+'@
+Set-Content -LiteralPath (Join-Path $BundleDir "solace-launcher.bat") -Value $runtimeLauncher -Encoding ASCII
+
+# Default cloud config (user can edit later with their API key)
+$cloudConfig = @"
+{
+  "api_key": "",
+  "user_email": "",
+  "device_id": "$env:COMPUTERNAME",
+  "paid_user": false
+}
+"@
+Set-Content -LiteralPath (Join-Path $BundleDir "cloud_config_default.json") -Value $cloudConfig -Encoding UTF8
+
 $manifest = @{
     version = $version
     bundle = "solace-browser-release-windows"

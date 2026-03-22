@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!--
   solace-browser.wxs — WiX v4 MSI installer for Solace Browser + Solace Hub (Windows)
-  Auth: 65537 | Legacy debug port permanently banned
+  Auth: 65537 | v2.2.0 | GLOW 777
 
   Build:
     wix build -src scripts/windows/solace-browser.wxs -src dist/windows-bundle-files.wxs \
@@ -12,7 +12,7 @@
   <Package
     Name="Solace Browser"
     Manufacturer="Solace AI"
-    Version="1.0.0"
+    Version="2.2.0"
     UpgradeCode="A5C2F4D7-3B8E-4A91-B6C0-2D7F1E9A4B83"
     Scope="perMachine"
     Compressed="yes"
@@ -29,6 +29,8 @@
       <ComponentGroupRef Id="ProductComponents" />
       <ComponentGroupRef Id="BundleFiles" />
       <ComponentGroupRef Id="ShortcutComponents" />
+      <ComponentGroupRef Id="AutoStartComponents" />
+      <ComponentGroupRef Id="SolaceConfigComponents" />
     </Feature>
   </Package>
 
@@ -41,6 +43,10 @@
         <Directory Id="ApplicationProgramsFolder" Name="Solace Browser" />
       </Directory>
       <Directory Id="DesktopFolder" />
+      <!-- User profile .solace directory for config -->
+      <Directory Id="PersonalFolder">
+        <Directory Id="SolaceUserDir" Name=".solace" />
+      </Directory>
     </Directory>
   </Fragment>
 
@@ -59,6 +65,46 @@
           Value="[INSTALLFOLDER]"
           Type="string"
           KeyPath="no" />
+        <RegistryValue
+          Root="HKLM"
+          Key="SOFTWARE\Solace Browser"
+          Name="Version"
+          Value="2.2.0"
+          Type="string"
+          KeyPath="no" />
+      </Component>
+
+      <!-- Launcher batch script that sets SOLACE_CLI_ROOT and starts runtime -->
+      <Component Id="LauncherScript" Guid="D9F5A3B1-7C2E-4D83-B0A6-5E1C8F4D2A97">
+        <File
+          Id="SolaceLauncher"
+          Source="$(var.BundleDir)\solace-launcher.bat"
+          Name="solace-launcher.bat"
+          KeyPath="yes" />
+      </Component>
+    </ComponentGroup>
+
+    <!-- Auto-start runtime at login via registry Run key -->
+    <ComponentGroup Id="AutoStartComponents" Directory="INSTALLFOLDER">
+      <Component Id="AutoStartRuntime" Guid="E1A6B4C2-8D3F-4E94-C1B7-6F2D9A5E3B08">
+        <RegistryValue
+          Root="HKCU"
+          Key="SOFTWARE\Microsoft\Windows\CurrentVersion\Run"
+          Name="SolaceRuntime"
+          Value="&quot;[INSTALLFOLDER]solace-launcher.bat&quot;"
+          Type="string"
+          KeyPath="yes" />
+      </Component>
+    </ComponentGroup>
+
+    <!-- Create default cloud_config.json in user .solace directory -->
+    <ComponentGroup Id="SolaceConfigComponents" Directory="SolaceUserDir">
+      <Component Id="CloudConfig" Guid="F2B7C5D3-9E4A-4F05-D2C8-7A3E0B6F4C19">
+        <File
+          Id="CloudConfigJson"
+          Source="$(var.BundleDir)\cloud_config_default.json"
+          Name="cloud_config.json"
+          KeyPath="yes" />
       </Component>
     </ComponentGroup>
 
@@ -67,15 +113,17 @@
         <Shortcut
           Id="StartMenuShortcutEntry"
           Name="Solace Browser"
-          Description="Hub-first Browser runtime for Solace"
+          Description="AI Worker Platform — Hub + Browser + Runtime"
           Target="[INSTALLFOLDER]solace-hub.exe"
+          Arguments="--head"
           WorkingDirectory="INSTALLFOLDER" />
         <Shortcut
           Id="DesktopShortcutEntry"
           Directory="DesktopFolder"
           Name="Solace Browser"
-          Description="Hub-first Browser runtime for Solace"
+          Description="AI Worker Platform — Hub + Browser + Runtime"
           Target="[INSTALLFOLDER]solace-hub.exe"
+          Arguments="--head"
           WorkingDirectory="INSTALLFOLDER" />
         <RemoveFolder Id="CleanupStartMenu" On="uninstall" />
         <RegistryValue
