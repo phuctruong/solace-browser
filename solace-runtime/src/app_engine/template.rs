@@ -36,6 +36,11 @@ fn load_template(manifest: &AppManifest, app_dir: &Path) -> Result<String, Strin
             .to_string());
     }
 
+    // Inline template: if the template field contains {{ or {%, treat as content not filename
+    if manifest.template.contains("{{") || manifest.template.contains("{%") {
+        return Ok(wrap_inline_template(&manifest.template));
+    }
+
     let local_path = app_dir.join(&manifest.template);
     if let Ok(template) = fs::read_to_string(&local_path) {
         return Ok(template);
@@ -44,6 +49,39 @@ fn load_template(manifest: &AppManifest, app_dir: &Path) -> Result<String, Strin
     builtin_template(&manifest.template)
         .map(str::to_string)
         .ok_or_else(|| format!("template not found: {}", manifest.template))
+}
+
+/// Wrap inline template content in the standard report HTML structure.
+fn wrap_inline_template(content: &str) -> String {
+    let header = r#"<!-- Diagram: 05-solace-runtime-architecture -->
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>{{ app.name }} | {{ generated_at }}</title>
+  <style>
+    body { font-family: system-ui; max-width: 920px; margin: auto; padding: 32px; color: #0f172a; }
+    header, footer { border-bottom: 1px solid #e2e8f0; padding-bottom: 16px; margin-bottom: 24px; }
+    footer { border-top: 1px solid #e2e8f0; border-bottom: 0; padding-top: 16px; margin-top: 32px; }
+    section { margin-bottom: 24px; }
+    pre { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 16px; overflow: auto; }
+    .meta { color: #64748b; font-size: 0.9rem; }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>{{ app.name }}</h1>
+    <p>{{ app.description }}</p>
+    <p class="meta">Generated: {{ generated_at }}</p>
+  </header>
+  <section>"#;
+    let footer = r#"  </section>
+  <footer>
+    <p class="meta">Solace Runtime | Evidence-chained</p>
+  </footer>
+</body>
+</html>"#;
+    [header, content, footer].join("\n")
 }
 
 fn builtin_template(name: &str) -> Option<&'static str> {
