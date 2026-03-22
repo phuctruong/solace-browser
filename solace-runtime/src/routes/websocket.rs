@@ -114,8 +114,19 @@ async fn handle_yinyang_ws(socket: WebSocket, state: AppState, session_id: Strin
                                 session.url = nav_url.clone();
                             }
                         }
-                        // Auto-capture: if sidebar sent page content, create Prime Wiki snapshot
+                        // Auto-capture: if sidebar sent page content, store as live page HTML
+                        // AND create Prime Wiki snapshot
                         if let Some(content) = parsed.get("content").and_then(|v| v.as_str()) {
+                            let title = parsed.get("title").and_then(|v| v.as_str()).unwrap_or("");
+                            // Store live page HTML in state (GET /api/v1/browser/page-html reads this)
+                            if !nav_url.is_empty() && content.len() > 100 {
+                                let mut page = state.page_html.write();
+                                page.html = content.to_string();
+                                page.url = nav_url.clone();
+                                page.title = title.to_string();
+                                page.captured_at = crate::utils::now_iso8601();
+                            }
+                            // Also send to wiki/extract for Stillwater compression + Prime Wiki snapshot
                             if !nav_url.is_empty() && content.len() > 100
                                 && !nav_url.contains("localhost") && !nav_url.contains("127.0.0.1")
                             {
@@ -155,11 +166,11 @@ async fn handle_yinyang_ws(socket: WebSocket, state: AppState, session_id: Strin
                             }
                         }
                     }
-                    "tab_info" => {
-                        // Sidebar reports tab information — store in state
-                        // For now just log; later we can build full tab management
+                    "tab_info" | "tabs_list" => {
+                        // Sidebar reports tab list — store in state for GET /api/v1/browser/tabs
                         if let Some(tabs) = parsed.get("tabs").and_then(|v| v.as_array()) {
-                            tracing::debug!(tab_count = tabs.len(), "tab info received");
+                            *state.browser_tabs.write() = tabs.clone();
+                            tracing::debug!(tab_count = tabs.len(), "tabs updated");
                         }
                     }
                     "auth_handshake" => {

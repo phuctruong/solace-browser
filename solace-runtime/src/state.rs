@@ -58,6 +58,18 @@ pub struct AppState {
     pub update_status: Arc<RwLock<crate::updates::UpdateStatus>>,
     /// Pending JS to execute in Hub WebView (polled by Hub).
     pub pending_js: Arc<RwLock<Option<String>>>,
+    /// Live page HTML: the actual currently-rendered full page HTML of the active browser tab.
+    /// Updated by the sidebar on every URL change (2s polling via WebSocket url_changed event).
+    /// GET /api/v1/browser/page-html returns this. MCP tool browser_page_html reads it.
+    pub page_html: Arc<RwLock<PageHtml>>,
+    /// Browser tabs: the actual list of open tabs reported by the C++ layer via sidebar.
+    /// GET /api/v1/browser/tabs returns this. Updated via POST or WebSocket tabs_list.
+    pub browser_tabs: Arc<RwLock<Vec<serde_json::Value>>>,
+    /// Active worker run: tracks the currently running worker app and its step progress.
+    /// Workers POST updates here; sidebar polls to show live progress.
+    pub worker_run: Arc<RwLock<Option<WorkerRun>>>,
+    /// Last navigated URL (set by POST /api/navigate). Sidebar reads this to detect current domain.
+    pub current_url: Arc<RwLock<String>>,
     /// Backoffice database manager: one SQLite DB per backoffice app, lazy init.
     pub backoffice_db: Arc<crate::backoffice::db::DbManager>,
     /// Pub/Sub event bus: agents subscribe to topics, events trigger subscribers.
@@ -249,6 +261,34 @@ impl TutorialState {
     }
 }
 
+/// Active worker run — tracks step progress for the sidebar.
+#[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
+pub struct WorkerRun {
+    pub app_id: String,
+    pub app_name: String,
+    pub run_id: String,
+    pub status: String,           // running, done, error
+    pub current_step: usize,
+    pub total_steps: usize,
+    pub step_label: String,
+    pub log_lines: Vec<String>,   // last N log lines
+    pub started_at: String,
+    pub updated_at: String,
+}
+
+/// Live page HTML from the active browser tab.
+#[derive(Clone, Debug, Default)]
+pub struct PageHtml {
+    /// The full outerHTML of the page's documentElement.
+    pub html: String,
+    /// The URL this HTML was captured from.
+    pub url: String,
+    /// The page title at capture time.
+    pub title: String,
+    /// ISO 8601 timestamp of when this HTML was captured.
+    pub captured_at: String,
+}
+
 impl AppState {
     pub fn new() -> Self {
         let solace_home = crate::utils::solace_home();
@@ -295,6 +335,10 @@ impl AppState {
             tunnel: Arc::new(RwLock::new(TunnelState::default())),
             update_status: Arc::new(RwLock::new(crate::updates::UpdateStatus::default())),
             pending_js: Arc::new(RwLock::new(None)),
+            page_html: Arc::new(RwLock::new(PageHtml::default())),
+            browser_tabs: Arc::new(RwLock::new(Vec::new())),
+            worker_run: Arc::new(RwLock::new(None)),
+            current_url: Arc::new(RwLock::new(String::new())),
             backoffice_db: Arc::new(crate::backoffice::db::DbManager::new(
                 solace_home.join("backoffice"),
             )),
