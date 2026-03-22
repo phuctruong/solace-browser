@@ -414,7 +414,8 @@ async fn get_current_url(State(state): State<AppState>) -> Json<Value> {
         .split('/').next().unwrap_or("")
         .split(':').next().unwrap_or("")
         .to_string();
-    Json(json!({"url": url, "domain": domain}))
+    let icon = crate::routes::files::domain_icon_path_pub(&domain);
+    Json(json!({"url": url, "domain": domain, "icon": icon}))
 }
 
 // ── Worker Run Progress ──

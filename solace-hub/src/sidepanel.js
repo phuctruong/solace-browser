@@ -130,17 +130,14 @@
     state.currentDomain = domain;
     state.domainApps = apps;
 
-    // Domain bar — use the icon from domain_icon_path (served at /icons/apps/)
-    var iconUrl = (apps.length > 0 && apps[0].icon) ? API + apps[0].icon : API + '/icons/apps/' + encodeURIComponent(domain.replace(/\./g, '')) + '.png';
-    // Try the domain_icon_path pattern first
+    // Domain bar — use icon from runtime's domain_icon_path
+    var iconUrl = API + '/icons/yinyang-logo.png'; // fallback
+    $('yy-domain-icon').src = iconUrl;
     getJson('/api/v1/browser/current-url').then(function (d) {
-      if (d.domain) {
-        // Use the first app's domain to get the icon
-        var icon = API + '/icons/apps/' + encodeURIComponent(d.domain.split('.')[0]) + '.png';
-        $('yy-domain-icon').src = icon;
+      if (d.icon) {
+        $('yy-domain-icon').src = API + d.icon;
       }
     }).catch(function () {});
-    $('yy-domain-icon').src = iconUrl;
     $('yy-domain-icon').onerror = function () { this.src = API + '/icons/yinyang-logo.png'; };
     setText('yy-domain-name', domain);
     setText('yy-domain-apps-count', apps.length + ' app' + (apps.length !== 1 ? 's' : ''));
