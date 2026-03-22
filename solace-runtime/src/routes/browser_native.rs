@@ -342,6 +342,13 @@ async fn resume_tab(State(state): State<AppState>) -> Json<Value> {
     Json(json!({"resumed": true}))
 }
 
+/// Extract domain from a URL string.
+fn extract_domain_from_url(url: &str) -> String {
+    url.split("//").nth(1).unwrap_or("")
+        .split('/').next().unwrap_or("")
+        .to_string()
+}
+
 // ── Chrome.send Bridge ──
 // Routes chrome.send calls from the sidebar (localhost) to the C++ browser handlers.
 // The sidebar calls: chrome.send('solaceNavigateTab', ['https://claude.ai/new'])
@@ -550,7 +557,7 @@ async fn update_worker_run(
 // ── Browser Tabs ──
 
 /// GET /api/v1/browser/tabs — get all open browser tabs.
-/// Data comes from: (1) AppState (WebSocket), (2) browser_tabs.json file fallback.
+/// Priority: (1) AppState (WebSocket), (2) backoffice-browser DB, (3) browser_tabs.json file.
 async fn get_tabs(State(state): State<AppState>) -> Json<Value> {
     let tabs = state.browser_tabs.read();
     if !tabs.is_empty() {
@@ -558,17 +565,36 @@ async fn get_tabs(State(state): State<AppState>) -> Json<Value> {
     }
     drop(tabs);
 
-    // Fallback: read browser_tabs.json written by sidebar JS or C++
-    let tabs_file = crate::utils::solace_home().join("browser_tabs.json");
-    if let Ok(content) = std::fs::read_to_string(&tabs_file) {
-        if let Ok(file_tabs) = serde_json::from_str::<Vec<Value>>(&content) {
-            // Update state for future reads
-            *state.browser_tabs.write() = file_tabs.clone();
-            return Json(json!({"tabs": file_tabs, "count": file_tabs.len(), "source": "file"}));
+    // Fallback 1: read from backoffice-browser SQLite (the persistent memory substrate)
+    if let Ok(config) = crate::routes::backoffice::load_workspace_config("backoffice-browser") {
+        if let Some(table_def) = config.tables.iter().find(|t| t.name == "tabs") {
+            if let Ok(conn) = state.backoffice_db.get_connection("backoffice-browser", &config) {
+                let conn_guard = conn.lock();
+                let filters = vec![("status".to_string(), "open".to_string())];
+                if let Ok(result) = crate::backoffice::crud::select_list(&conn_guard, table_def, 0, 100, None, &filters) {
+                    if let Some(items) = result.get("items").and_then(|v| v.as_array()) {
+                        if !items.is_empty() {
+                            *state.browser_tabs.write() = items.clone();
+                            return Json(json!({"tabs": items, "count": items.len(), "source": "backoffice"}));
+                        }
+                    }
+                }
+            }
         }
     }
 
-    Json(json!({"tabs": [], "count": 0, "source": "none", "note": "No tabs reported yet. Sidebar WebSocket or browser_tabs.json needed."}))
+    // Fallback 2: read browser_tabs.json file
+    let tabs_file = crate::utils::solace_home().join("browser_tabs.json");
+    if let Ok(content) = std::fs::read_to_string(&tabs_file) {
+        if let Ok(file_tabs) = serde_json::from_str::<Vec<Value>>(&content) {
+            if !file_tabs.is_empty() {
+                *state.browser_tabs.write() = file_tabs.clone();
+                return Json(json!({"tabs": file_tabs, "count": file_tabs.len(), "source": "file"}));
+            }
+        }
+    }
+
+    Json(json!({"tabs": [], "count": 0, "source": "none", "note": "No tabs reported. Use POST /api/v1/browser/tabs or backoffice-browser."}))
 }
 
 /// POST /api/v1/browser/tabs — update tab list (called by sidebar when C++ reports tabs).
@@ -583,9 +609,32 @@ async fn update_tabs(
 ) -> Json<Value> {
     let count = payload.tabs.len();
     *state.browser_tabs.write() = payload.tabs.clone();
-    // Persist to file so tabs survive runtime restart and work without WebSocket
+    // Persist to file
     let tabs_file = crate::utils::solace_home().join("browser_tabs.json");
     let _ = std::fs::write(&tabs_file, serde_json::to_string_pretty(&payload.tabs).unwrap_or_default());
+    // Persist to backoffice-browser DB
+    if let Ok(config) = crate::routes::backoffice::load_workspace_config("backoffice-browser") {
+        if let Some(table_def) = config.tables.iter().find(|t| t.name == "tabs") {
+            if let Ok(conn) = state.backoffice_db.get_connection("backoffice-browser", &config) {
+                let conn_guard = conn.lock();
+                // Mark all existing tabs as closed, then insert/update current ones
+                let _ = conn_guard.execute("UPDATE tabs SET status = 'closed', closed_at = ?1 WHERE status = 'open'",
+                    rusqlite::params![crate::utils::now_iso8601()]);
+                for tab in &payload.tabs {
+                    let data = json!({
+                        "tab_id": tab.get("id").and_then(|v| v.as_str()).unwrap_or("unknown"),
+                        "url": tab.get("url").and_then(|v| v.as_str()).unwrap_or(""),
+                        "title": tab.get("title").and_then(|v| v.as_str()).unwrap_or(""),
+                        "domain": extract_domain_from_url(tab.get("url").and_then(|v| v.as_str()).unwrap_or("")),
+                        "active": if tab.get("active").and_then(|v| v.as_bool()).unwrap_or(false) { "1" } else { "0" },
+                        "status": "open",
+                        "last_navigated": crate::utils::now_iso8601(),
+                    });
+                    let _ = crate::backoffice::crud::insert(&conn_guard, table_def, &data, "sidebar");
+                }
+            }
+        }
+    }
     Json(json!({"updated": true, "count": count}))
 }
 

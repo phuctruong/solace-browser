@@ -308,6 +308,23 @@ async fn navigate(
     // Store the navigated URL so sidebar can detect current domain
     *state.current_url.write() = payload.url.clone();
 
+    // Log to backoffice-browser navigation_history
+    if let Ok(config) = crate::routes::backoffice::load_workspace_config("backoffice-browser") {
+        if let Some(table_def) = config.tables.iter().find(|t| t.name == "navigation_history") {
+            if let Ok(conn) = state.backoffice_db.get_connection("backoffice-browser", &config) {
+                let domain = payload.url.split("//").nth(1).unwrap_or("").split('/').next().unwrap_or("");
+                let data = json!({
+                    "url": payload.url,
+                    "title": "",
+                    "domain": domain,
+                    "action": "navigate",
+                    "source": "api",
+                });
+                let _ = crate::backoffice::crud::insert(&conn.lock(), table_def, &data, "navigate_api");
+            }
+        }
+    }
+
     state.event_bus.publish("browser.navigate", json!({"url": payload.url}), "navigate_api");
 
     Ok(Json(json!({
