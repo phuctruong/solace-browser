@@ -140,17 +140,28 @@
     state.currentDomain = domain;
     state.domainApps = apps;
 
-    // Domain bar — use icon from runtime's domain_icon_path
-    var iconUrl = API + '/icons/yinyang-logo.png'; // fallback
+    // Domain bar — icon + auth status
+    var iconUrl = API + '/icons/yinyang-logo.png';
     $('yy-domain-icon').src = iconUrl;
     getJson('/api/v1/browser/current-url').then(function (d) {
-      if (d.icon) {
-        $('yy-domain-icon').src = API + d.icon;
-      }
+      if (d.icon) $('yy-domain-icon').src = API + d.icon;
     }).catch(function () {});
     $('yy-domain-icon').onerror = function () { this.src = API + '/icons/yinyang-logo.png'; };
     setText('yy-domain-name', domain);
     setText('yy-domain-apps-count', apps.length + ' app' + (apps.length !== 1 ? 's' : ''));
+
+    // Check OAuth3/auth status for this domain
+    getJson('/api/v1/oauth3/domain/' + encodeURIComponent(domain)).then(function (auth) {
+      var authEl = $('yy-domain-auth');
+      if (!authEl) return;
+      if (auth.status === 'active' || auth.status === 'likely_active') {
+        authEl.innerHTML = '<span class="yy-auth-dot yy-auth-dot--active"></span> Signed in';
+      } else if (auth.status === 'expired') {
+        authEl.innerHTML = '<span class="yy-auth-dot yy-auth-dot--expired"></span> Sign in needed';
+      } else {
+        authEl.innerHTML = '<span class="yy-auth-dot yy-auth-dot--unknown"></span> Auth unknown';
+      }
+    }).catch(function () {});
 
     // App cards — highlighted if url_match patterns match current URL
     var currentUrl = state.currentUrl || '';

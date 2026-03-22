@@ -58,6 +58,13 @@
     .yy-domain-bar .yy-domain-name { flex: 1; font-weight: 700; font-size: 1rem; }
     .yy-domain-bar .yy-apps-pill { font-size: 0.75rem; padding: 0.2rem 0.6rem; border-radius: 10px; background: var(--yy-accent); color: var(--yy-bg); }
     .yy-app-card { padding: 0.6rem; margin-bottom: 0.4rem; background: var(--yy-surface-soft); border-radius: var(--yy-radius-sm); border: 1px solid transparent; transition: border-color 0.15s; }
+    /* ─── Domain auth status ─── */
+    .yy-domain-auth { font-size: 0.75rem; color: var(--yy-text-muted); padding: 0.2rem 0.5rem; margin-bottom: 0.3rem; }
+    .yy-auth-dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 4px; vertical-align: middle; }
+    .yy-auth-dot--active { background: var(--yy-success); }
+    .yy-auth-dot--expired { background: var(--yy-danger); }
+    .yy-auth-dot--unknown { background: var(--yy-text-muted); }
+
     .yy-app-card:hover { border-color: var(--yy-accent); }
     .yy-app-card--active { border-color: var(--yy-success); background: rgba(74,217,173,0.08); }
     .yy-app-card--active .yy-app-name { color: var(--yy-success); }
@@ -184,6 +191,7 @@
           <span class="yy-domain-name" id="yy-domain-name"></span>
           <span class="yy-apps-pill" id="yy-domain-apps-count"></span>
         </div>
+        <div class="yy-domain-auth" id="yy-domain-auth"></div>
         <div id="yy-domain-apps"></div>
       </div>
 
