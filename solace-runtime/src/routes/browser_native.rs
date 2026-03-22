@@ -550,14 +550,25 @@ async fn update_worker_run(
 // ── Browser Tabs ──
 
 /// GET /api/v1/browser/tabs — get all open browser tabs.
-/// Data comes from the C++ HandleGetTabs → sidebar JS → POST here.
+/// Data comes from: (1) AppState (WebSocket), (2) browser_tabs.json file fallback.
 async fn get_tabs(State(state): State<AppState>) -> Json<Value> {
     let tabs = state.browser_tabs.read();
-    let count = tabs.len();
-    Json(json!({
-        "tabs": *tabs,
-        "count": count,
-    }))
+    if !tabs.is_empty() {
+        return Json(json!({"tabs": *tabs, "count": tabs.len(), "source": "websocket"}));
+    }
+    drop(tabs);
+
+    // Fallback: read browser_tabs.json written by sidebar JS or C++
+    let tabs_file = crate::utils::solace_home().join("browser_tabs.json");
+    if let Ok(content) = std::fs::read_to_string(&tabs_file) {
+        if let Ok(file_tabs) = serde_json::from_str::<Vec<Value>>(&content) {
+            // Update state for future reads
+            *state.browser_tabs.write() = file_tabs.clone();
+            return Json(json!({"tabs": file_tabs, "count": file_tabs.len(), "source": "file"}));
+        }
+    }
+
+    Json(json!({"tabs": [], "count": 0, "source": "none", "note": "No tabs reported yet. Sidebar WebSocket or browser_tabs.json needed."}))
 }
 
 /// POST /api/v1/browser/tabs — update tab list (called by sidebar when C++ reports tabs).
@@ -571,39 +582,74 @@ async fn update_tabs(
     Json(payload): Json<TabsUpdate>,
 ) -> Json<Value> {
     let count = payload.tabs.len();
-    *state.browser_tabs.write() = payload.tabs;
+    *state.browser_tabs.write() = payload.tabs.clone();
+    // Persist to file so tabs survive runtime restart and work without WebSocket
+    let tabs_file = crate::utils::solace_home().join("browser_tabs.json");
+    let _ = std::fs::write(&tabs_file, serde_json::to_string_pretty(&payload.tabs).unwrap_or_default());
     Json(json!({"updated": true, "count": count}))
 }
 
-/// POST /api/v1/browser/tabs/close-all — close all tabs except active via sidebar WebSocket.
+/// POST /api/v1/browser/tabs/close-all — close all tabs except active.
+/// Uses 3 delivery methods: (1) WebSocket relay, (2) file command, (3) state update.
 async fn close_all_tabs(State(state): State<AppState>) -> Json<Value> {
+    // Method 1: WebSocket relay to sidebar
     let channels = state.session_channels.read();
     let msg = json!({"command": "close_other_tabs"}).to_string();
     let mut sent = 0;
     for (_, tx) in channels.iter() {
         if tx.send(msg.clone()).is_ok() { sent += 1; }
     }
-    // Clear the tab list in state (sidebar will re-report accurate list)
+    drop(channels);
+
+    // Method 2: Write command file for sidebar JS to poll
+    let cmd_file = crate::utils::solace_home().join("browser_commands.json");
+    let cmd = json!({
+        "command": "close_other_tabs",
+        "timestamp": crate::utils::now_iso8601(),
+    });
+    let _ = std::fs::write(&cmd_file, serde_json::to_string(&cmd).unwrap_or_default());
+
+    // Method 3: Clear state (sidebar will re-report accurate list)
     state.browser_tabs.write().retain(|_| false);
+    let tabs_file = crate::utils::solace_home().join("browser_tabs.json");
+    let _ = std::fs::write(&tabs_file, "[]");
+
     Json(json!({"ok": true, "action": "close_all_tabs", "channels_notified": sent}))
 }
 
 /// POST /api/v1/browser/tabs/:tab_id/close — close a specific tab by ID.
+/// Uses 3 delivery methods: (1) WebSocket relay, (2) file command, (3) state update.
 async fn close_tab_by_id(
     State(state): State<AppState>,
     Path(tab_id): Path<String>,
 ) -> Json<Value> {
+    // Method 1: WebSocket relay
     let channels = state.session_channels.read();
     let msg = json!({"command": "close_tab", "tab_id": tab_id}).to_string();
     let mut sent = 0;
     for (_, tx) in channels.iter() {
         if tx.send(msg.clone()).is_ok() { sent += 1; }
     }
-    // Remove from cached tab list
+    drop(channels);
+
+    // Method 2: Write command file
+    let cmd_file = crate::utils::solace_home().join("browser_commands.json");
+    let cmd = json!({
+        "command": "close_tab",
+        "tab_id": tab_id,
+        "timestamp": crate::utils::now_iso8601(),
+    });
+    let _ = std::fs::write(&cmd_file, serde_json::to_string(&cmd).unwrap_or_default());
+
+    // Method 3: Remove from cached state + file
     state.browser_tabs.write().retain(|t| {
         t.get("id").and_then(|v| v.as_str()) != Some(&tab_id)
     });
-    Json(json!({"ok": true, "action": "close_tab", "tab_id": tab_id, "channels_notified": sent}))
+    let tabs_file = crate::utils::solace_home().join("browser_tabs.json");
+    let current_tabs = state.browser_tabs.read().clone();
+    let _ = std::fs::write(&tabs_file, serde_json::to_string_pretty(&current_tabs).unwrap_or_default());
+
+    Json(json!({"ok": true, "tab_id": tab_id, "channels_notified": sent}))
 }
 
 /// GET /api/v1/browser/tabs/active — get the currently active tab.

@@ -627,7 +627,22 @@ async fn handle_tools_call(params: &Value, state: &AppState) -> Result<Value, (i
         // ── P0: Browser Visibility ──
         "browser_tabs" => {
             let tabs = state.browser_tabs.read().clone();
-            json!({"tabs": tabs, "count": tabs.len()})
+            if !tabs.is_empty() {
+                json!({"tabs": tabs, "count": tabs.len(), "source": "websocket"})
+            } else {
+                // Fallback: read browser_tabs.json
+                let tabs_file = crate::utils::solace_home().join("browser_tabs.json");
+                if let Ok(content) = std::fs::read_to_string(&tabs_file) {
+                    if let Ok(file_tabs) = serde_json::from_str::<Vec<Value>>(&content) {
+                        *state.browser_tabs.write() = file_tabs.clone();
+                        json!({"tabs": file_tabs, "count": file_tabs.len(), "source": "file"})
+                    } else {
+                        json!({"tabs": [], "count": 0, "source": "none"})
+                    }
+                } else {
+                    json!({"tabs": [], "count": 0, "source": "none"})
+                }
+            }
         }
         "browser_navigate" => {
             let url = require_string(&arguments, "url")?;
@@ -784,13 +799,20 @@ async fn handle_tools_call(params: &Value, state: &AppState) -> Result<Value, (i
         }
         // ── Tab Management ──
         "browser_tabs_close_all" => {
+            // WebSocket relay
             let channels = state.session_channels.read();
             let msg = json!({"command": "close_other_tabs"}).to_string();
             let mut sent = 0;
             for (_, tx) in channels.iter() {
                 if tx.send(msg.clone()).is_ok() { sent += 1; }
             }
+            drop(channels);
+            // File command fallback
+            let cmd_file = crate::utils::solace_home().join("browser_commands.json");
+            let _ = std::fs::write(&cmd_file, json!({"command":"close_other_tabs","timestamp":crate::utils::now_iso8601()}).to_string());
+            // Clear state + file
             state.browser_tabs.write().retain(|_| false);
+            let _ = std::fs::write(crate::utils::solace_home().join("browser_tabs.json"), "[]");
             json!({"ok": true, "action": "close_all_tabs", "channels_notified": sent})
         }
         "browser_tab_close" => {
@@ -801,9 +823,14 @@ async fn handle_tools_call(params: &Value, state: &AppState) -> Result<Value, (i
             for (_, tx) in channels.iter() {
                 if tx.send(msg.clone()).is_ok() { sent += 1; }
             }
+            drop(channels);
+            let cmd_file = crate::utils::solace_home().join("browser_commands.json");
+            let _ = std::fs::write(&cmd_file, json!({"command":"close_tab","tab_id":tab_id,"timestamp":crate::utils::now_iso8601()}).to_string());
             state.browser_tabs.write().retain(|t| {
                 t.get("id").and_then(|v| v.as_str()) != Some(&tab_id)
             });
+            let tabs = state.browser_tabs.read().clone();
+            let _ = std::fs::write(crate::utils::solace_home().join("browser_tabs.json"), serde_json::to_string_pretty(&tabs).unwrap_or_default());
             json!({"ok": true, "tab_id": tab_id, "channels_notified": sent})
         }
         "browser_active_tab" => {
