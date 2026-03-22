@@ -102,6 +102,8 @@ pub struct Trigger {
     #[serde(default)]
     pub path: String,
     #[serde(default)]
+    pub url_match: Vec<String>,
+    #[serde(default)]
     pub dom_selector: String,
     #[serde(default)]
     pub context: String,

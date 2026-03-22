@@ -109,6 +109,16 @@
     });
   }
 
+  // ─── URL Matching (for context-aware app highlighting) ───
+  function matchesUrl(app, url) {
+    var patterns = app.url_match || [];
+    if (!patterns.length || !url) return false;
+    for (var i = 0; i < patterns.length; i++) {
+      if (url.indexOf(patterns[i]) !== -1) return true;
+    }
+    return false;
+  }
+
   // ─── Domain Detection ───
   function extractDomain(url) {
     try {
@@ -142,17 +152,29 @@
     setText('yy-domain-name', domain);
     setText('yy-domain-apps-count', apps.length + ' app' + (apps.length !== 1 ? 's' : ''));
 
-    // App cards with argument support
+    // App cards — highlighted if url_match patterns match current URL
+    var currentUrl = state.currentUrl || '';
     var html = '';
-    apps.forEach(function (app) {
+
+    // Sort: matching apps first, then non-matching
+    var sorted = apps.slice().sort(function (a, b) {
+      var aMatch = matchesUrl(a, currentUrl) ? 0 : 1;
+      var bMatch = matchesUrl(b, currentUrl) ? 0 : 1;
+      return aMatch - bMatch;
+    });
+
+    sorted.forEach(function (app) {
       var scheduleText = app.schedule || 'Manual';
       var lastRun = app.last_run || 'Never';
       var hasArgs = app.arguments && app.arguments.length > 0;
       var appIcon = app.icon ? API + app.icon : '';
-      html += '<div class="yy-app-card">';
+      var isMatch = matchesUrl(app, currentUrl);
+      html += '<div class="yy-app-card' + (isMatch ? ' yy-app-card--active' : '') + '">';
       html += '<div class="yy-app-name">';
-      if (appIcon) html += '<img src="' + esc(appIcon) + '" alt="" style="width:16px;height:16px;vertical-align:middle;margin-right:4px" onerror="this.style.display=\'none\'">';
-      html += esc(app.name || app.app_id) + '</div>';
+      if (appIcon) html += '<img src="' + esc(appIcon) + '" alt="" class="yy-app-icon-sm" onerror="this.classList.add(\'yy-hidden\')">';
+      html += esc(app.name || app.app_id);
+      if (isMatch) html += ' <span class="yy-match-badge">for this page</span>';
+      html += '</div>';
       if (app.description) html += '<div class="yy-app-desc">' + esc(app.description) + '</div>';
       // Argument input (if app accepts arguments)
       if (hasArgs) {

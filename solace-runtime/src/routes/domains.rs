@@ -779,12 +779,26 @@ async fn domain_status(
         "domain": domain,
         "oauth3_status": oauth3_status,
         "apps_count": domain_apps.len(),
-        "apps": domain_apps.iter().map(|a| serde_json::json!({
-            "app_id": a.id,
-            "name": a.name,
-            "triggers": a.triggers.len(),
-            "actions": a.actions.len(),
-        })).collect::<Vec<_>>(),
+        "apps": domain_apps.iter().map(|a| {
+            // Collect url_match patterns from triggers for client-side page matching
+            let url_patterns: Vec<String> = a.triggers.iter()
+                .flat_map(|t| t.url_match.clone())
+                .collect();
+            let contexts: Vec<String> = a.triggers.iter()
+                .map(|t| t.context.clone())
+                .collect();
+            serde_json::json!({
+                "app_id": a.id,
+                "name": a.name,
+                "description": a.description,
+                "schedule": a.schedule,
+                "persona": a.persona,
+                "triggers": a.triggers.len(),
+                "actions": a.actions.len(),
+                "url_match": url_patterns,
+                "contexts": contexts,
+            })
+        }).collect::<Vec<_>>(),
         "wiki_snapshots": snapshot_count,
         "cloud_connected": cloud,
     }))
