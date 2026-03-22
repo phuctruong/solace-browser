@@ -64,13 +64,14 @@ pub fn local_version() -> String {
 
     // Try VERSION file in bundle dir
     for candidate in &[
+        solace_home.join("bin").join("VERSION"),
         solace_home.join("VERSION"),
-        PathBuf::from("/usr/lib/solace-browser/solace-browser-release/VERSION"),
         std::env::current_exe()
             .unwrap_or_default()
             .parent()
             .unwrap_or(Path::new("."))
             .join("VERSION"),
+        PathBuf::from("/usr/lib/solace-browser/solace-browser-release/VERSION"),
     ] {
         if let Ok(v) = std::fs::read_to_string(candidate) {
             let trimmed = v.trim().to_string();
@@ -120,10 +121,15 @@ pub async fn download_and_install(manifest: &RemoteManifest) -> Result<String, S
     let _ = std::fs::create_dir_all(&updates_dir);
     let _ = std::fs::create_dir_all(&backups_dir);
 
-    let tarball_url = format!(
-        "{}/solace-browser-chromium-linux-x86_64.tar.gz",
-        GCS_BASE
-    );
+    // Platform-specific tarball name
+    let tarball_name = if cfg!(target_os = "macos") {
+        "solace-browser-macos-universal.tar.gz"
+    } else if cfg!(target_os = "windows") {
+        "solace-browser-windows-x86_64.msi"
+    } else {
+        "solace-browser-chromium-linux-x86_64.tar.gz"
+    };
+    let tarball_url = format!("{}/{}", GCS_BASE, tarball_name);
     let sha256_url = format!("{}.sha256", tarball_url);
 
     // 1. Download SHA256
@@ -245,8 +251,12 @@ pub async fn download_and_install(manifest: &RemoteManifest) -> Result<String, S
     let _ = std::fs::remove_file(&tarball_path);
     let _ = std::fs::remove_dir_all(&extract_dir);
 
+    // 10. Write restart signal so Hub or systemd can restart the runtime
+    let restart_file = solace_home.join("runtime").join("restart_required");
+    let _ = std::fs::write(&restart_file, format!("updated_to={}\n", manifest.version));
+
     Ok(format!(
-        "Updated {} → {}",
+        "Updated {} → {}. Restart required.",
         current_version, manifest.version
     ))
 }
