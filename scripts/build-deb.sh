@@ -52,7 +52,7 @@ Version: ${version}
 Section: web
 Priority: optional
 Architecture: amd64
-Depends: python3 (>=3.10), libgtk-3-0, libx11-xcb1, libwebkit2gtk-4.0-37
+Depends: libgtk-3-0, libx11-xcb1, libnss3, libatk-bridge2.0-0, libcups2, libdrm2, libxkbcommon0, libxcomposite1, libxdamage1, libxrandr2, libgbm1, libpango-1.0-0, libasound2
 Maintainer: Solace AI <hello@solaceagi.com>
 Description: Solace Browser + Solace Hub portable runtime
  Solace Browser ships the real Chromium runtime together with Solace Hub.
