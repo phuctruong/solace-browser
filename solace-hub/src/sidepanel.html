@@ -44,7 +44,8 @@
     .yy-content p { margin: 0.35rem 0; }
 
     /* ─── Idle state ─── */
-    .yy-idle-status { font-size: 0.9rem; color: var(--yy-text-muted); margin-bottom: 0.6rem; }
+    .yy-idle-status { font-size: 0.9rem; color: var(--yy-text-muted); margin-bottom: 0.6rem; cursor: pointer; }
+    .yy-idle-status:hover { color: var(--yy-accent); }
     .yy-recent-session { display: flex; align-items: center; gap: 0.5rem; padding: 0.5rem 0.6rem; margin-bottom: 0.3rem; background: var(--yy-surface-soft); border-radius: var(--yy-radius-sm); font-size: 0.85rem; cursor: pointer; transition: background 0.15s; }
     .yy-recent-session:hover { background: var(--yy-surface-accent); }
     .yy-recent-session .yy-session-name { flex: 1; font-weight: 600; }
@@ -176,7 +177,7 @@
 
       <!-- STATE: Idle (no worker running, no domain match) -->
       <div id="yy-idle" class="yy-hidden">
-        <p class="yy-idle-status" id="yy-idle-status">0 workers scheduled</p>
+        <p class="yy-idle-status" id="yy-idle-status" data-navigate="http://localhost:8888/dashboard">0 workers scheduled</p>
 
         <!-- How it works — shown to new users -->
         <div id="yy-how-it-works" class="yy-how-section">
