@@ -280,6 +280,25 @@ async fn connect_tunnel(
                 }),
             );
 
+            // Spawn keepalive ping every 25s to prevent Cloud Run timeout
+            let ping_tx = ws_tx.clone();
+            let ping_state = state.clone();
+            tokio::spawn(async move {
+                use futures_util::SinkExt;
+                use tokio_tungstenite::tungstenite::Message;
+                loop {
+                    tokio::time::sleep(std::time::Duration::from_secs(25)).await;
+                    if !ping_state.tunnel.read().connected {
+                        break;
+                    }
+                    let ping = json!({"type": "ping"}).to_string();
+                    let mut tx = ping_tx.lock().await;
+                    if tx.send(Message::Text(ping.into())).await.is_err() {
+                        break;
+                    }
+                }
+            });
+
             // Spawn message handler: cloud commands → local execution
             let handler_state = state.clone();
             let handler_tx = ws_tx.clone();
