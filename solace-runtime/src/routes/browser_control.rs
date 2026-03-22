@@ -242,68 +242,16 @@ async fn navigate(
 
     *state.evidence_count.write() += 1;
 
-    // Navigate the EXISTING browser tab (don't open new tab).
-    // Uses xdotool: Ctrl+L (focus address bar) → type URL → Enter.
-    // Only spawns browser binary if no browser window exists.
-    let url_for_nav = payload.url.clone();
-    let navigated = tokio::task::spawn_blocking(move || {
-        let wid = find_browser_window();
-
-        if wid.is_some() {
-            // Browser exists — navigate by opening URL in the existing instance.
-            // NEVER use xdotool (types into wrong window) or pkill (destroys sessions).
-            // Instead, launch the binary with the URL — Chromium's single-instance
-            // detection sends the URL to the existing browser via IPC.
-            let home = std::env::var("HOME").unwrap_or_default();
-            let dev_binary = format!("{}/projects/solace-browser/source/src/out/Solace/solace", home);
-            let candidates = [
-                dev_binary.as_str(),
-                "/usr/lib/solace-browser/solace-browser-release/solace",
-                "/usr/bin/solace-browser",
-            ];
-            for cmd in &candidates {
-                if std::path::Path::new(cmd).exists() {
-                    // This opens the URL in the existing browser (Chromium IPC)
-                    let _ = std::process::Command::new(cmd)
-                        .arg(&url_for_nav)
-                        .spawn();
-                    return true;
-                }
-            }
-            return false;
-        }
-
-        // No browser window — spawn one
-        let binary_candidates = [
-            "/usr/lib/solace-browser/solace-browser-release/solace",
-            "/usr/bin/solace-browser",
-        ];
-        let home = std::env::var("HOME").unwrap_or_default();
-        let dev_binary = format!("{}/projects/solace-browser/source/src/out/Solace/solace", home);
-
-        for cmd in std::iter::once(dev_binary.as_str()).chain(binary_candidates.iter().copied()) {
-            if std::path::Path::new(cmd).exists() {
-                if std::process::Command::new(cmd)
-                    .arg(&url_for_nav)
-                    .arg("--disable-session-crashed-bubble")
-                    .arg("--no-first-run")
-                    .spawn()
-                    .is_ok()
-                {
-                    return true;
-                }
-            }
-        }
-        false
-    }).await.unwrap_or(false);
-
-    // Also try WebSocket → sidebar for in-tab navigation
-    let url_clone2 = payload.url.clone();
+    // Navigate via WebSocket relay to sidebar ONLY.
+    // NEVER spawn browser processes — that opens new tabs/windows.
+    // The sidebar receives the navigate command and loads the URL in the existing tab.
     let channels = state.session_channels.read();
+    let msg = serde_json::json!({"command": "navigate", "url": payload.url}).to_string();
+    let mut sent = 0;
     for (_, tx) in channels.iter() {
-        let cmd = serde_json::json!({"command": "navigate", "url": url_clone2}).to_string();
-        let _ = tx.send(cmd);
+        if tx.send(msg.clone()).is_ok() { sent += 1; }
     }
+    let navigated = sent > 0;
 
     // Store the navigated URL so sidebar can detect current domain
     *state.current_url.write() = payload.url.clone();
