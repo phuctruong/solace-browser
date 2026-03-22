@@ -186,25 +186,39 @@ fn spawn_backend_server(
     repo_root: &Path,
     token_sha256: &str,
 ) -> Result<Child, io::Error> {
-    // If server_path points to the Rust binary, spawn it directly (no Python needed)
-    if is_rust_runtime(server_path) {
+    // Always prefer direct execution for native binaries
+    // Check: is it a .exe, or has no extension (Unix binary), or is named solace-runtime?
+    let is_native = is_rust_runtime(server_path)
+        || server_path.extension().is_some_and(|ext| ext == "exe")
+        || server_path.extension().is_none(); // Unix binaries have no extension
+
+    if is_native {
+        eprintln!("INFO: Starting Rust runtime directly: {}", server_path.display());
         return Command::new(server_path).spawn();
     }
-    // Legacy fallback: Python yinyang-server.py
-    let python = python_executable();
-    Command::new(python)
-        .arg(server_path)
-        .arg(repo_root)
-        .arg("--token-sha256")
-        .arg(token_sha256)
-        .spawn()
+
+    // Only use Python for .py files (legacy — should never reach here in production)
+    if server_path.extension().is_some_and(|ext| ext == "py") {
+        eprintln!("WARN: Falling back to Python for legacy server: {}", server_path.display());
+        let python = python_executable();
+        return Command::new(python)
+            .arg(server_path)
+            .arg(repo_root)
+            .arg("--token-sha256")
+            .arg(token_sha256)
+            .spawn();
+    }
+
+    // Unknown file type — try direct execution
+    eprintln!("WARN: Unknown server type, attempting direct execution: {}", server_path.display());
+    Command::new(server_path).spawn()
 }
 
 /// Check if a path points to the Rust solace-runtime binary (not a .py script).
 fn is_rust_runtime(path: &Path) -> bool {
     path.file_name()
         .and_then(|n| n.to_str())
-        .map(|n| n == "solace-runtime")
+        .map(|n| n == "solace-runtime" || n == "solace-runtime.exe")
         .unwrap_or(false)
 }
 
