@@ -389,31 +389,60 @@
       setText('yy-idle-status', 'Dashboard available');
     });
 
-    // Upcoming scheduled runs
+    // Scheduled runs — split into "recently ran" and "upcoming"
     getJson('/api/schedules').then(function (d) {
       var jobs = (d.schedules || []).filter(function (j) { return j.enabled; });
-      if (jobs.length > 0) {
-        var html = '';
-        jobs.slice(0, 5).forEach(function (job) {
-          var cronText = job.cron || '—';
-          // Convert cron to human-readable (simple: extract hour)
-          var parts = cronText.split(' ');
-          var timeLabel = cronText;
-          if (parts.length >= 5 && parts[0] !== '*' && parts[1] !== '*') {
-            var h = parseInt(parts[1]); var m = parseInt(parts[0]);
-            var ampm = h >= 12 ? 'pm' : 'am';
-            h = h > 12 ? h - 12 : (h === 0 ? 12 : h);
-            timeLabel = h + ':' + (m < 10 ? '0' : '') + m + ampm;
-          }
-          html += '<div class="yy-upcoming-item">';
-          html += '<span class="yy-upcoming-time">' + esc(timeLabel) + '</span>';
-          html += '<span class="yy-upcoming-name">' + esc(job.label || job.app_id || 'Worker') + '</span>';
-          html += '</div>';
-        });
-        $('yy-upcoming-list').innerHTML = html;
-        show('yy-upcoming');
-        setText('yy-idle-status', jobs.length + ' workers scheduled, 0 running');
-      }
+      if (!jobs.length) return;
+
+      var now = new Date();
+      var nowH = now.getHours();
+      var nowM = now.getMinutes();
+      var nowMinutes = nowH * 60 + nowM;
+
+      // Parse cron times and sort
+      var parsed = jobs.map(function (job) {
+        var parts = (job.cron || '').split(' ');
+        var m = parseInt(parts[0]) || 0;
+        var h = parseInt(parts[1]) || 0;
+        var totalMin = h * 60 + m;
+        var isPast = totalMin < nowMinutes;
+        var ampm = h >= 12 ? 'pm' : 'am';
+        var hDisp = h > 12 ? h - 12 : (h === 0 ? 12 : h);
+        var timeLabel = hDisp + ':' + (m < 10 ? '0' : '') + m + ampm;
+        return { job: job, timeLabel: timeLabel, totalMin: totalMin, isPast: isPast };
+      }).sort(function (a, b) { return a.totalMin - b.totalMin; });
+
+      var pastRuns = parsed.filter(function (p) { return p.isPast; });
+      var upcoming = parsed.filter(function (p) { return !p.isPast; });
+
+      var html = '';
+      // Show current time
+      var nowAmPm = nowH >= 12 ? 'pm' : 'am';
+      var nowHDisp = nowH > 12 ? nowH - 12 : (nowH === 0 ? 12 : nowH);
+      html += '<div class="yy-upcoming-item" style="border-bottom:2px solid var(--yy-accent);padding-bottom:0.3rem;margin-bottom:0.3rem">';
+      html += '<span class="yy-upcoming-time" style="color:var(--yy-accent)">now</span>';
+      html += '<span class="yy-upcoming-name" style="color:var(--yy-accent)">' + nowHDisp + ':' + (nowM < 10 ? '0' : '') + nowM + nowAmPm + '</span>';
+      html += '</div>';
+
+      // Recently ran (last 3)
+      pastRuns.slice(-3).forEach(function (p) {
+        html += '<div class="yy-upcoming-item" data-navigate="http://localhost:8888/apps/' + esc(p.job.app_id) + '">';
+        html += '<span class="yy-upcoming-time" style="color:var(--yy-success)">' + esc(p.timeLabel) + '</span>';
+        html += '<span class="yy-upcoming-name">' + esc(p.job.label || p.job.app_id) + ' <span style="color:var(--yy-success);font-size:0.7rem">ran</span></span>';
+        html += '</div>';
+      });
+
+      // Upcoming (next 3)
+      upcoming.slice(0, 3).forEach(function (p) {
+        html += '<div class="yy-upcoming-item">';
+        html += '<span class="yy-upcoming-time">' + esc(p.timeLabel) + '</span>';
+        html += '<span class="yy-upcoming-name">' + esc(p.job.label || p.job.app_id) + '</span>';
+        html += '</div>';
+      });
+
+      $('yy-upcoming-list').innerHTML = html;
+      show('yy-upcoming');
+      setText('yy-idle-status', jobs.length + ' workers scheduled, 0 running');
     }).catch(function () {});
 
     // Recent sessions (last 3 completed runs)
