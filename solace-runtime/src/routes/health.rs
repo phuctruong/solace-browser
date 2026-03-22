@@ -10,6 +10,7 @@ pub fn routes() -> Router<AppState> {
         .route("/api/status", get(health))
         .route("/api/v1/system/status", get(system_status))
         .route("/api/v1/system/updates", get(update_status))
+        .route("/api/v1/system/check-update", axum::routing::post(check_update_now))
         .route("/agents", get(agents))
 }
 
@@ -26,6 +27,69 @@ async fn health() -> Json<serde_json::Value> {
 async fn update_status(State(state): State<AppState>) -> Json<serde_json::Value> {
     let status = state.update_status.read().clone();
     Json(serde_json::to_value(status).unwrap_or(json!({"error": "serialization failed"})))
+}
+
+/// POST /api/v1/system/check-update — trigger immediate update check + install
+async fn check_update_now(State(state): State<AppState>) -> Json<serde_json::Value> {
+    let current = crate::updates::local_version();
+
+    match crate::updates::check_for_update().await {
+        Ok(Some(manifest)) => {
+            let new_version = manifest.version.clone();
+            // Update found — try to install
+            {
+                let mut status = state.update_status.write();
+                status.latest_version = Some(new_version.clone());
+                status.update_available = true;
+                status.last_check = Some(crate::utils::now_iso8601());
+            }
+
+            match crate::updates::download_and_install(&manifest).await {
+                Ok(result) => {
+                    let mut status = state.update_status.write();
+                    status.last_update = Some(crate::utils::now_iso8601());
+                    status.update_available = false;
+                    status.last_error = None;
+                    Json(json!({
+                        "action": "updated",
+                        "old_version": current,
+                        "new_version": new_version,
+                        "result": result,
+                        "restart_required": true,
+                    }))
+                }
+                Err(err) => {
+                    let mut status = state.update_status.write();
+                    status.last_error = Some(err.clone());
+                    Json(json!({
+                        "action": "update_failed",
+                        "current_version": current,
+                        "new_version": new_version,
+                        "error": err,
+                    }))
+                }
+            }
+        }
+        Ok(None) => {
+            let mut status = state.update_status.write();
+            status.last_check = Some(crate::utils::now_iso8601());
+            status.update_available = false;
+            Json(json!({
+                "action": "up_to_date",
+                "current_version": current,
+            }))
+        }
+        Err(err) => {
+            let mut status = state.update_status.write();
+            status.last_check = Some(crate::utils::now_iso8601());
+            status.last_error = Some(err.clone());
+            Json(json!({
+                "action": "check_failed",
+                "current_version": current,
+                "error": err,
+            }))
+        }
+    }
 }
 
 async fn system_status(State(state): State<AppState>) -> Json<serde_json::Value> {

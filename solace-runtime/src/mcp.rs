@@ -134,6 +134,8 @@ pub fn mcp_tool_definitions() -> Vec<Value> {
         json!({"name": "browser_tabs_close_all", "description": "Close all browser tabs except the active one (via sidebar WebSocket)", "inputSchema": {"type": "object", "properties": {}}}),
         json!({"name": "browser_tab_close", "description": "Close a specific browser tab by ID", "inputSchema": {"type": "object", "properties": {"tab_id": {"type": "string"}}, "required": ["tab_id"]}}),
         json!({"name": "browser_active_tab", "description": "Get the currently active browser tab (URL, title)", "inputSchema": {"type": "object", "properties": {}}}),
+        // ── Updates ──
+        json!({"name": "check_update", "description": "Check for updates and install if available (triggers immediate check against GCS manifest)", "inputSchema": {"type": "object", "properties": {}}}),
     ]
 }
 
@@ -842,6 +844,35 @@ async fn handle_tools_call(params: &Value, state: &AppState) -> Result<Value, (i
                     let url = state.current_url.read().clone();
                     json!({"found": false, "current_url": url, "note": "No tabs reported by sidebar yet"})
                 }
+            }
+        }
+        // ── Updates ──
+        "check_update" => {
+            let current = crate::updates::local_version();
+            match crate::updates::check_for_update().await {
+                Ok(Some(manifest)) => {
+                    let new_version = manifest.version.clone();
+                    {
+                        let mut status = state.update_status.write();
+                        status.latest_version = Some(new_version.clone());
+                        status.update_available = true;
+                        status.last_check = Some(crate::utils::now_iso8601());
+                    }
+                    match crate::updates::download_and_install(&manifest).await {
+                        Ok(result) => {
+                            let mut s = state.update_status.write();
+                            s.last_update = Some(crate::utils::now_iso8601());
+                            s.update_available = false;
+                            json!({"action":"updated","old_version":current,"new_version":new_version,"result":result,"restart_required":true})
+                        }
+                        Err(err) => json!({"action":"update_failed","current_version":current,"new_version":new_version,"error":err}),
+                    }
+                }
+                Ok(None) => {
+                    state.update_status.write().last_check = Some(crate::utils::now_iso8601());
+                    json!({"action":"up_to_date","current_version":current})
+                }
+                Err(err) => json!({"action":"check_failed","current_version":current,"error":err}),
             }
         }
         // ── E-Sign ──
