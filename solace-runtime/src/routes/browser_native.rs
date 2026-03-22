@@ -415,7 +415,60 @@ async fn get_current_url(State(state): State<AppState>) -> Json<Value> {
         .split(':').next().unwrap_or("")
         .to_string();
     let icon = crate::routes::files::domain_icon_path_pub(&domain);
-    Json(json!({"url": url, "domain": domain, "icon": icon}))
+
+    // Detect login state from URL patterns
+    let is_auth_page = url.contains("accounts.google.com")
+        || url.contains("/login")
+        || url.contains("/signin")
+        || url.contains("/auth/")
+        || url.contains("/challenge/");
+    let is_logged_in = !is_auth_page && !domain.is_empty()
+        && domain != "localhost" && domain != "127.0.0.1";
+
+    // Track domain auth state — including detecting sign-in redirects
+    // If on an auth page with a continue/redirect URL, mark that target domain as needing auth
+    if is_auth_page {
+        // Extract the target domain from continue= or redirect= params
+        if let Some(continue_url) = url.split("continue=").nth(1)
+            .or_else(|| url.split("redirect=").nth(1))
+            .or_else(|| url.split("followup=").nth(1))
+        {
+            let decoded = continue_url.split('&').next().unwrap_or("")
+                .replace("%3A", ":").replace("%2F", "/");
+            let target_domain = decoded.split("://").nth(1).unwrap_or("")
+                .split('/').next().unwrap_or("").to_string();
+            if !target_domain.is_empty() {
+                let auth_path = crate::utils::solace_home().join("sessions/domain_auth.json");
+                let mut auth_data: serde_json::Value = std::fs::read_to_string(&auth_path)
+                    .ok().and_then(|s| serde_json::from_str(&s).ok()).unwrap_or(json!({}));
+                auth_data[&target_domain] = json!({
+                    "status": "expired",
+                    "last_verified": crate::utils::now_iso8601(),
+                    "url": decoded,
+                    "reason": "redirected to sign-in page",
+                });
+                let _ = std::fs::create_dir_all(auth_path.parent().unwrap_or(std::path::Path::new(".")));
+                let _ = std::fs::write(&auth_path, serde_json::to_string_pretty(&auth_data).unwrap_or_default());
+            }
+        }
+    }
+
+    if is_logged_in && !domain.is_empty() {
+        let auth_path = crate::utils::solace_home().join("sessions/domain_auth.json");
+        let mut auth_data: serde_json::Value = std::fs::read_to_string(&auth_path)
+            .ok()
+            .and_then(|s| serde_json::from_str(&s).ok())
+            .unwrap_or(json!({}));
+        auth_data[&domain] = json!({
+            "status": "active",
+            "last_verified": crate::utils::now_iso8601(),
+            "url": url,
+        });
+        let _ = std::fs::create_dir_all(auth_path.parent().unwrap_or(std::path::Path::new(".")));
+        let _ = std::fs::write(&auth_path, serde_json::to_string_pretty(&auth_data).unwrap_or_default());
+    }
+
+    Json(json!({"url": url, "domain": domain, "icon": icon, "logged_in": is_logged_in}))
 }
 
 // ── Worker Run Progress ──
