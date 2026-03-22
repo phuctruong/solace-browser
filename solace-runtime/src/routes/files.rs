@@ -418,14 +418,22 @@ async fn dashboard_page(State(state): State<AppState>) -> Html<String> {
   function fetchJson(url) {{ return fetch(url).then(function(r){{ return r.json(); }}); }}
   function esc(s) {{ var d=document.createElement('div'); d.textContent=s; return d.innerHTML; }}
 
-  // Tab switching
-  document.querySelectorAll('#dash-tabs .sb-tab').forEach(function(btn) {{
-    btn.addEventListener('click', function() {{
+  // Tab switching (handles both top-level tabs and More dropdown buttons)
+  document.querySelectorAll('#dash-tabs .sb-tab[data-tab]').forEach(function(btn) {{
+    btn.addEventListener('click', function(e) {{
+      e.stopPropagation(); // Prevent <details> from toggling
+      var tab = btn.dataset.tab;
+      if (!tab) return;
+      // Deactivate all tabs
       document.querySelectorAll('#dash-tabs .sb-tab').forEach(function(t) {{ t.classList.remove('sb-tab--active'); t.setAttribute('aria-selected','false'); }});
       btn.classList.add('sb-tab--active'); btn.setAttribute('aria-selected','true');
+      // Hide all panels, show selected
       document.querySelectorAll('.dash-tab-panel').forEach(function(p) {{ p.style.display='none'; }});
-      var panel = ge('tab-' + btn.dataset.tab);
+      var panel = ge('tab-' + tab);
       if (panel) panel.style.display = 'block';
+      // Close the More dropdown if it's open
+      var details = document.querySelector('#dash-tabs details');
+      if (details) details.removeAttribute('open');
     }});
   }});
 
