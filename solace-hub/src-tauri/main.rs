@@ -223,34 +223,46 @@ fn python_executable() -> &'static str {
 /// Locate the backend server binary. Prefers Rust solace-runtime; falls back to Python.
 ///
 /// Search order:
-///   1. solace-runtime/target/release/solace-runtime (Rust — preferred)
-///   2. ~/.solace/bin/solace-runtime (installed Rust binary)
-///   3. yinyang-server.py (legacy Python fallback)
+///   1. Same directory as Hub executable (MSI/deb install)
+///   2. solace-runtime/target/release/solace-runtime (dev build)
+///   3. ~/.solace/bin/solace-runtime (standalone install)
+///   4. yinyang-server.py (legacy Python fallback)
 fn resolve_server_script() -> Result<PathBuf, String> {
     let exe_path = std::env::current_exe().map_err(|e| e.to_string())?;
     let exe_dir = exe_path
         .parent()
         .ok_or_else(|| "Executable must have a parent directory".to_string())?;
 
-    // Search for Rust binary first
+    // 1. Same directory as Hub (production: MSI/deb installs both in same dir)
+    #[cfg(target_os = "windows")]
+    let runtime_name = "solace-runtime.exe";
+    #[cfg(not(target_os = "windows"))]
+    let runtime_name = "solace-runtime";
+
+    let adjacent = exe_dir.join(runtime_name);
+    if adjacent.exists() {
+        return Ok(adjacent);
+    }
+
+    // 2. Dev build: solace-runtime/target/release/
     for candidate_root in exe_dir.ancestors() {
         let rust_binary = candidate_root
             .join("solace-runtime")
             .join("target")
             .join("release")
-            .join("solace-runtime");
+            .join(runtime_name);
         if rust_binary.exists() {
             return Ok(rust_binary);
         }
     }
 
-    // Check ~/.solace/bin/solace-runtime
-    let home_bin = dirs_home().join(".solace").join("bin").join("solace-runtime");
+    // 3. Standalone install: ~/.solace/bin/
+    let home_bin = dirs_home().join(".solace").join("bin").join(runtime_name);
     if home_bin.exists() {
         return Ok(home_bin);
     }
 
-    // Fallback: Python yinyang-server.py
+    // 4. Legacy Python fallback
     for candidate_root in exe_dir.ancestors() {
         let server_script = candidate_root.join("yinyang-server.py");
         if server_script.exists() {
@@ -259,7 +271,8 @@ fn resolve_server_script() -> Result<PathBuf, String> {
     }
 
     Err(format!(
-        "Could not locate solace-runtime or yinyang-server.py from {}",
+        "Could not locate {} from {}",
+        runtime_name,
         exe_path.display()
     ))
 }
@@ -290,6 +303,17 @@ fn resolve_browser_binary(app: &tauri::AppHandle) -> Result<PathBuf, String> {
     let exe_dir = exe_path
         .parent()
         .ok_or_else(|| "Executable must have a parent directory".to_string())?;
+
+    // Same directory as Hub (MSI/deb install: all binaries in one dir)
+    #[cfg(target_os = "windows")]
+    {
+        candidates.push(exe_dir.join("solace.exe"));
+        candidates.push(exe_dir.join("solace_browser.exe"));
+    }
+    #[cfg(target_os = "linux")]
+    {
+        push_linux_browser_candidates(&mut candidates, exe_dir, mode);
+    }
 
     for candidate_root in exe_dir.ancestors() {
         #[cfg(target_os = "linux")]
@@ -353,28 +377,45 @@ fn push_linux_browser_candidates(
 
 fn ensure_runtime_port_available() -> Result<(), String> {
     if TcpStream::connect(("127.0.0.1", YINYANG_PORT)).is_ok() {
-        // Port occupied — ALWAYS kill and restart to ensure fresh binary.
-        // This prevents stale binaries from persisting across upgrades.
         eprintln!("INFO: Port {} occupied. Killing existing process to start fresh.", YINYANG_PORT);
 
-        // Try port.lock pid first (most reliable)
+        // Try port.lock pid first
         if let Ok(lock) = read_port_lock() {
             eprintln!("INFO: Killing process pid={} from port.lock", lock.pid);
-            let _ = std::process::Command::new("kill").arg("-9").arg(lock.pid.to_string()).status();
+            #[cfg(unix)]
+            {
+                let _ = std::process::Command::new("kill").arg("-9").arg(lock.pid.to_string()).status();
+            }
+            #[cfg(windows)]
+            {
+                let _ = std::process::Command::new("taskkill").args(["/F", "/PID", &lock.pid.to_string()]).status();
+            }
             std::thread::sleep(std::time::Duration::from_secs(1));
         }
 
-        // Also try pkill as fallback (catches orphans without port.lock)
-        let _ = std::process::Command::new("pkill").args(["-9", "-f", "solace-runtime"]).status();
-        std::thread::sleep(std::time::Duration::from_secs(1));
+        // Platform-specific process kill fallback
+        #[cfg(unix)]
+        {
+            let _ = std::process::Command::new("pkill").args(["-9", "-f", "solace-runtime"]).status();
+        }
+        #[cfg(windows)]
+        {
+            let _ = std::process::Command::new("taskkill").args(["/F", "/IM", "solace-runtime.exe"]).status();
+        }
+        std::thread::sleep(std::time::Duration::from_secs(2));
 
-        // Clean up port.lock
         let _ = std::fs::remove_file(port_lock_path());
 
-        // Final check
-        if TcpStream::connect(("127.0.0.1", YINYANG_PORT)).is_ok() {
-            return Err(format!("Port {} still occupied after cleanup", YINYANG_PORT));
+        // Wait up to 5s for port to clear (TCP TIME_WAIT)
+        for _ in 0..5 {
+            if TcpStream::connect(("127.0.0.1", YINYANG_PORT)).is_err() {
+                return Ok(());
+            }
+            std::thread::sleep(std::time::Duration::from_secs(1));
         }
+
+        // Still occupied — don't panic, log warning and try to proceed
+        eprintln!("WARN: Port {} still occupied after cleanup. Proceeding anyway (runtime may already be correct version).", YINYANG_PORT);
     }
     Ok(())
 }
