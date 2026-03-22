@@ -187,13 +187,26 @@ pub fn generate(
     );
     let start = std::time::Instant::now();
 
-    let child = Command::new(binary)
+    // For large prompts (>1000 chars), pipe via stdin to avoid CLI arg limits
+    let use_stdin = prompt.len() > 1000;
+    let stdin_mode = if use_stdin { std::process::Stdio::piped() } else { std::process::Stdio::null() };
+
+    let mut child = Command::new(binary)
         .args(args)
-        .stdin(std::process::Stdio::null())
+        .stdin(stdin_mode)
         .stdout(std::process::Stdio::piped())
         .stderr(std::process::Stdio::piped())
         .spawn()
         .map_err(|e| format!("failed to spawn {}: {}", agent_id, e))?;
+
+    // Write prompt to stdin for large prompts
+    if use_stdin {
+        if let Some(mut stdin) = child.stdin.take() {
+            use std::io::Write;
+            let _ = stdin.write_all(prompt.as_bytes());
+            drop(stdin);
+        }
+    }
 
     // Timeout via channel: thread calls wait_with_output, main thread recv with timeout.
     let (tx, rx) = std::sync::mpsc::channel();

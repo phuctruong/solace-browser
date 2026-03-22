@@ -196,9 +196,11 @@
         html += '</div>';
       }
       html += '<div class="yy-app-meta">';
-      html += '<span>Schedule: ' + esc(scheduleText) + '</span>';
-      html += '<span>Last: ' + esc(lastRun) + '</span>';
+      html += '<span>' + esc(scheduleText) + '</span>';
+      html += '<span>' + esc(lastRun === 'Never' ? '' : 'Last: ' + lastRun) + '</span>';
+      if (app.persona) html += '<span class="yy-llm-badge">' + esc(app.persona) + '</span>';
       html += '<button class="yy-btn-run" data-app-id="' + esc(app.app_id) + '">Run Now</button>';
+      html += '<a href="#" class="yy-app-settings" data-navigate="http://localhost:8888/apps/' + esc(app.app_id) + '">Settings</a>';
       html += '</div></div>';
     });
     $('yy-domain-apps').innerHTML = html;
