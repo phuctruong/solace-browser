@@ -1,0 +1,55 @@
+<!-- Engine Chooser Card — extracted from solace-hub/src/index.html for embedding in Rust dashboard -->
+<!-- Element IDs: src-local, src-byok, src-managed, src-ollama, src-managed-gif, src-byok-gif, src-ollama-gif, src-local-action -->
+<!-- Requires: dashboard-engine.js loaded after this HTML -->
+
+<div class="sb-card" id="llm-card">
+  <p class="sb-kicker">Choose Your AI Engine</p>
+  <p class="sb-text-muted sh-llm-description">Pick how AI powers your apps. Sign in is the easiest way to start.</p>
+  <table class="sb-table sh-table-spaced">
+    <thead><tr><th></th><th>Option</th><th>Status</th><th></th></tr></thead>
+    <tbody>
+      <tr class="sh-row-highlight">
+        <td>1</td>
+        <td><strong>Sign in to solaceagi.com</strong> <span class="sb-pill sb-pill--info sh-pill-xs">Easiest</span><br><span class="sb-text-muted sh-option-desc">Free account · No API key needed · We handle everything</span></td>
+        <td id="src-managed"><span class="sb-pill sb-pill--warning">Not signed in</span></td>
+        <td id="src-managed-gif"><button class="sb-btn sb-btn--sm sb-btn--primary" data-action="signIn">Sign in free</button></td>
+      </tr>
+      <tr>
+        <td>2</td>
+        <td><strong>Your own API key</strong><br><span class="sb-text-muted sh-option-desc">Paste your Anthropic or OpenAI key</span></td>
+        <td id="src-byok">
+          <span class="sb-editable" data-field="byok_key" id="byok-editable">
+            <span class="sb-editable-display sb-text-muted">Not set — click to enter key</span>
+            <input class="sb-editable-input sh-input-byok" id="byok-input" placeholder="sk-...">
+            <span class="sb-editable-pen" title="Edit"></span>
+          </span>
+        </td>
+        <td id="src-byok-gif"></td>
+      </tr>
+      <tr>
+        <td>3</td>
+        <td><strong>Ollama</strong><br><span class="sb-text-muted sh-option-desc">Self-hosted, no API key needed</span></td>
+        <td id="src-ollama">
+          <span class="sb-editable" data-field="ollama_url" id="ollama-editable">
+            <span class="sb-editable-display sb-text-muted">Not set — click to enter URL</span>
+            <input class="sb-editable-input sh-input-ollama" id="ollama-input" placeholder="http://localhost:11434">
+            <span class="sb-editable-pen" title="Edit"></span>
+          </span>
+        </td>
+        <td id="src-ollama-gif"></td>
+      </tr>
+      <tr>
+        <td>4</td>
+        <td><strong>Local CLI</strong><br><span class="sb-text-muted sh-option-desc">Auto-detect AI tools on PATH</span></td>
+        <td id="src-local"><span class="sb-pill sb-pill--warning">Not connected</span></td>
+        <td id="src-local-action"></td>
+      </tr>
+      <tr id="cli-details-row" class="sh-cli-details-row" style="display:none">
+        <td></td>
+        <td colspan="3" id="cli-models-area" class="sh-cli-models-area"></td>
+      </tr>
+    </tbody>
+  </table>
+  <div id="llm-gate"></div>
+  <div id="llm-account" class="sb-mt-md sh-llm-account"></div>
+</div>

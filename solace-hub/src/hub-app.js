@@ -136,6 +136,16 @@ function switchTab(btn, tabId) {
           auth.className = 'sb-pill sb-pill--warning';
           hasLLM = false;
 
+          // Check sidebar state for BYOK detection (byok.json on disk)
+          get('/api/v1/sidebar/state').then(function(ss) {
+            if (ss.gate === 'byok' || ss.llm_mode === 'byok') {
+              hasLLM = true;
+              $('src-byok').innerHTML = '<span class="sb-pill sb-pill--success">✓ BYOK Active (file)</span>';
+              auth.textContent = 'BYOK Active';
+              auth.className = 'sb-pill sb-pill--success';
+              enableLaunchButton();
+            }
+          }).catch(function(){});
         }
       });
 
@@ -388,12 +398,10 @@ function switchTab(btn, tabId) {
         }).then(function(r){return r.json();}).then(function(d) {
           var cell = $('cli-status-'+a.id);
           if (d.response || d.output || d.text) {
-            if (cell) cell.innerHTML = '✓ verified'; cell.className = 'sb-pill sb-pill--success';
-            cell.style.fontSize = '0.65rem';
+            if (cell) { cell.innerHTML = '✓ verified'; cell.className = 'sb-pill sb-pill--success'; cell.style.fontSize = '0.65rem'; }
             verified++;
           } else {
-            if (cell) cell.innerHTML = '✗ ' + esc((d.error||'failed').substring(0,30)); cell.className = 'sb-pill sb-pill--danger';
-            cell.style.fontSize = '0.65rem';
+            if (cell) { cell.innerHTML = '✗ ' + esc((d.error||'failed').substring(0,30)); cell.className = 'sb-pill sb-pill--danger'; cell.style.fontSize = '0.65rem'; }
           }
         }).catch(function() {
           var cell = $('cli-status-'+a.id);

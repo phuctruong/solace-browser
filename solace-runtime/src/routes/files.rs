@@ -4,7 +4,7 @@ use std::fs;
 
 use axum::extract::{Path, State};
 use axum::http::StatusCode;
-use axum::response::Html;
+use axum::response::{Html, Redirect};
 use axum::routing::get;
 use axum::Router;
 
@@ -108,14 +108,8 @@ pub fn routes() -> Router<AppState> {
         .nest_service("/vendor", tower_http::services::ServeDir::new(hub_assets_dir("vendor")))
 }
 
-async fn index() -> Html<String> {
-    if let Some(content) = hub_index_html() {
-        return Html(content);
-    }
-    Html(page(
-        "Solace Runtime",
-        "Local-first runtime active on port 8888.",
-    ))
+async fn index() -> Redirect {
+    Redirect::permanent("/dashboard")
 }
 
 // ---------------------------------------------------------------------------
@@ -261,7 +255,29 @@ async fn dashboard_page(State(state): State<AppState>) -> Html<String> {
     let domain_apps: Vec<_> = apps.iter().filter(|a| a.category == "domain").collect();
 
     let body = format!(
-        r#"<!-- Status bar -->
+        r#"<!-- Local/Cloud toggle + auth status -->
+<div class="sb-status-bar">
+  <div class="sb-card sb-stat-card">
+    <div class="sb-kicker">Dashboard</div>
+    <div>
+      <a href="/dashboard" class="sb-btn sb-btn--sm sb-btn--primary">Local</a>
+      <a href="https://solaceagi.com/dashboard" class="sb-btn sb-btn--sm">Cloud</a>
+    </div>
+    <div id="auth-status" class="sb-text-xs" style="color:var(--sb-text-muted);margin-top:0.2rem">Checking...</div>
+  </div>
+  <div class="sb-card sb-stat-card" id="llm-status-card">
+    <div class="sb-kicker">AI Engine</div>
+    <div id="llm-status-pill"><span class="sb-pill sb-pill--warning">Scanning...</span></div>
+    <div><a href="/llms" class="sb-text-xs" style="color:var(--sb-accent)">Configure</a></div>
+  </div>
+  <div class="sb-card sb-stat-card" id="browser-status-card">
+    <div class="sb-kicker">Browser</div>
+    <div id="browser-status-pill"><span class="sb-pill sb-pill--info">—</span></div>
+    <div><button class="sb-btn sb-btn--sm" id="btn-launch" onclick="launchBrowser()">Launch</button></div>
+  </div>
+</div>
+
+<!-- Status bar -->
 <div class="sb-status-bar">
   <div class="sb-card sb-stat-card">
     <div class="sb-kicker">AI Workers</div>
@@ -669,6 +685,78 @@ async fn dashboard_page(State(state): State<AppState>) -> Html<String> {
       }});
   }};
 }})();
+
+  // ─── Dashboard status: LLM engine + browser status (compact) ───
+  // Full engine config is at /llms — this just shows status summary
+  (function() {{
+    function eget(p) {{ return fetch('http://localhost:8888'+p).then(function(r){{ return r.json(); }}); }}
+
+    function scanStatus() {{
+      var llmPill = document.getElementById('llm-status-pill');
+      var browserPill = document.getElementById('browser-status-pill');
+
+      // LLM status: check sidebar state for gate
+      eget('/api/v1/sidebar/state').then(function(ss) {{
+        if (ss.gate === 'paid') {{
+          llmPill.innerHTML = '<span class="sb-pill sb-pill--success">Managed LLM</span>';
+        }} else if (ss.gate === 'byok') {{
+          llmPill.innerHTML = '<span class="sb-pill sb-pill--success">BYOK Active</span>';
+        }} else {{
+          // Check CLIs
+          eget('/api/v1/agents').then(function(d) {{
+            var installed = (d.agents||[]).filter(function(a){{ return a.installed; }}).length;
+            if (installed > 0) {{
+              llmPill.innerHTML = '<span class="sb-pill sb-pill--info">' + installed + ' CLIs</span>';
+            }} else {{
+              llmPill.innerHTML = '<span class="sb-pill sb-pill--warning">Not configured</span>';
+            }}
+          }}).catch(function(){{ llmPill.innerHTML = '<span class="sb-pill sb-pill--danger">Error</span>'; }});
+        }}
+      }}).catch(function(){{ llmPill.innerHTML = '<span class="sb-pill sb-pill--danger">Offline</span>'; }});
+
+      // Browser status
+      eget('/api/v1/browser/sessions').then(function(d) {{
+        var sessions = Array.isArray(d) ? d : (d.sessions || []);
+        if (sessions.length > 0) {{
+          browserPill.innerHTML = '<span class="sb-pill sb-pill--success">Running</span>';
+          document.getElementById('btn-launch').textContent = 'Open';
+        }} else {{
+          browserPill.innerHTML = '<span class="sb-pill sb-pill--info">Stopped</span>';
+          document.getElementById('btn-launch').textContent = 'Launch';
+        }}
+      }}).catch(function(){{}});
+    }}
+
+    window.launchBrowser = function() {{
+      var btn = document.getElementById('btn-launch');
+      btn.textContent = '...';
+      btn.disabled = true;
+      fetch('http://localhost:8888/api/v1/browser/launch', {{
+        method:'POST', headers:{{'Content-Type':'application/json'}}, body:'{{}}'
+      }}).then(function(r){{ return r.json(); }}).then(function(d) {{
+        if (d.session) {{
+          btn.textContent = 'Open';
+          document.getElementById('browser-status-pill').innerHTML = '<span class="sb-pill sb-pill--success">Running</span>';
+        }} else {{
+          btn.textContent = 'Launch';
+          btn.disabled = false;
+        }}
+      }}).catch(function() {{ btn.textContent = 'Launch'; btn.disabled = false; }});
+    }};
+
+    // Auth status
+    eget('/api/v1/cloud/status').then(function(c) {{
+      var el = document.getElementById('auth-status');
+      if (c.connected && c.config) {{
+        el.innerHTML = '<span style="color:var(--sb-success)">● ' + (c.config.user_email || 'Connected') + '</span>';
+      }} else {{
+        el.innerHTML = 'Not signed in · <a href="https://solaceagi.com/auth/login" style="color:var(--sb-accent)">Sign in</a>';
+      }}
+    }}).catch(function(){{}});
+
+    scanStatus();
+    setInterval(scanStatus, 30000);
+  }})();
 </script>"#,
         role_count = role_apps.len(),
         total_runs = {
@@ -713,19 +801,22 @@ async fn onboarding_page() -> Html<String> {
     ))
 }
 
-async fn sidebar_page() -> Html<String> {
+async fn sidebar_page() -> (axum::http::HeaderMap, Html<String>) {
+    let mut headers = axum::http::HeaderMap::new();
+    headers.insert("cache-control", "no-cache, no-store, must-revalidate".parse().unwrap());
     if let Some(content) = sidebar_asset("sidepanel.html") {
-        return Html(content);
+        return (headers, Html(content));
     }
-    Html(page(
+    (headers, Html(page(
         "Sidebar",
         "Yinyang sidebar — sidepanel.html not found. Build Solace Browser first.",
-    ))
+    ).to_string()))
 }
 
 async fn sidebar_js() -> (axum::http::HeaderMap, String) {
     let mut headers = axum::http::HeaderMap::new();
     headers.insert("content-type", "application/javascript".parse().unwrap());
+    headers.insert("cache-control", "no-cache, no-store, must-revalidate".parse().unwrap());
     let content = sidebar_asset("sidepanel.js").unwrap_or_else(|| "// sidepanel.js not found".to_string());
     (headers, content)
 }
@@ -733,6 +824,7 @@ async fn sidebar_js() -> (axum::http::HeaderMap, String) {
 async fn sidebar_css() -> (axum::http::HeaderMap, String) {
     let mut headers = axum::http::HeaderMap::new();
     headers.insert("content-type", "text/css".parse().unwrap());
+    headers.insert("cache-control", "no-cache, no-store, must-revalidate".parse().unwrap());
     let content = sidebar_asset("sidepanel.css").unwrap_or_else(|| "/* sidepanel.css not found */".to_string());
     (headers, content)
 }

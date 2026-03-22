@@ -20,8 +20,8 @@
   --yy-radius-md: 18px;
   --yy-radius-sm: 14px;
   --yy-shadow: 0 24px 56px rgba(2, 8, 16, 0.4);
-  --yy-font-body: "Averta Std", "Manrope", "IBM Plex Sans", "Segoe UI", sans-serif;
-  --yy-font-display: "Sora", "Space Grotesk", "Segoe UI", sans-serif;
+  --yy-font-body: "FiraSans-Regular", "Segoe UI", system-ui, -apple-system, sans-serif;
+  --yy-font-display: "FiraSans-Regular", "Segoe UI", system-ui, -apple-system, sans-serif;
   --yy-font-scale: 1;
   --yy-kicker-track: 0.14em;
   --yy-brand-track: 0.12em;
@@ -37,7 +37,7 @@
 
 html {
   color-scheme: dark;
-  font-size: calc(16px * var(--yy-font-scale));
+  font-size: calc(18px * var(--yy-font-scale));
 }
 
 body {
@@ -353,23 +353,53 @@ body[data-theme="light"] {
   letter-spacing: 0.08em;
 }
 
-.yy-card {
-  background: var(--yy-surface);
-  border: 1px solid var(--yy-border);
-  border-radius: var(--yy-radius-xl);
-  box-shadow: var(--yy-shadow);
-  padding: 0.82rem;
-  position: relative;
+/* ── HUD Sections ── */
+/* Each section has a VISIBLE distinct background. Not subtle — obvious. */
+
+.yy-hud-status {
+  display: flex; align-items: center; gap: 0.4rem;
+  padding: 0.4rem 0.7rem; font-size: 0.7rem; color: var(--yy-text-muted);
+  border-bottom: 1px solid var(--yy-border);
 }
 
-.yy-card::before {
-  content: "";
-  position: absolute;
-  inset: 0 0 auto 0;
-  height: 1px;
-  background: linear-gradient(90deg, transparent, var(--yy-glow), transparent);
-  pointer-events: none;
+.yy-hud-worker {
+  padding: 0.6rem 0.7rem;
+  background: rgba(255, 180, 50, 0.15);
+  border-left: 4px solid #ffb432;
+  font-size: 0.8rem;
 }
+
+.yy-hud-apps {
+  padding: 0.6rem 0.7rem;
+  background: rgba(40, 200, 140, 0.12);
+  border-left: 4px solid #28c88c;
+  font-size: 0.8rem;
+}
+
+.yy-hud-actions {
+  padding: 0.5rem 0.7rem;
+  background: rgba(255, 100, 100, 0.10);
+  border-left: 4px solid #ff6464;
+  font-size: 0.8rem;
+}
+
+.yy-hud-domains {
+  padding: 0.5rem 0.7rem;
+  font-size: 0.8rem;
+  border-top: 1px solid var(--yy-border);
+}
+
+.yy-hud-log {
+  font-size: 0.6rem; color: var(--yy-text-muted);
+  max-height: 80px; overflow-y: auto; margin-top: 0.3rem;
+  font-family: monospace; white-space: pre-wrap;
+}
+
+body[data-theme="light"] .yy-hud-worker  { background: rgba(200, 140, 30, 0.12); }
+body[data-theme="light"] .yy-hud-apps    { background: rgba(24, 117, 85, 0.10); }
+body[data-theme="light"] .yy-hud-actions { background: rgba(200, 60, 60, 0.08); }
+
+.yy-card { padding: 0.5rem 0.7rem; }
 
 .yy-domain-stage,
 .yy-domain-detail-card,

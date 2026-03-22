@@ -888,7 +888,17 @@ document.querySelectorAll('.sb-tab[data-tab]').forEach(function(btn) {
     // Always show main UI after 3 seconds even if API calls fail
     var transitionTimer = setTimeout(function() { showMainUI(); }, 3000);
 
-    get('/api/v1/agents').then(function(d) {
+    // Retry agent detection if runtime was still starting
+    function fetchAgents(retries) {
+      return get('/api/v1/agents').catch(function(e) {
+        if (retries > 0) {
+          return new Promise(function(resolve) { setTimeout(resolve, 1000); }).then(function() { return fetchAgents(retries - 1); });
+        }
+        throw e;
+      });
+    }
+
+    fetchAgents(3).then(function(d) {
       var agents = d.agents || [];
       var installed = agents.filter(function(a){return a.installed;});
       // Don't set hasLLM here — CLIs on PATH doesn't mean connected
@@ -965,6 +975,16 @@ document.querySelectorAll('.sb-tab[data-tab]').forEach(function(btn) {
           auth.className = 'sb-pill sb-pill--warning';
           hasLLM = false;
 
+          // Check sidebar state for BYOK detection (byok.json on disk)
+          get('/api/v1/sidebar/state').then(function(ss) {
+            if (ss.gate === 'byok' || ss.llm_mode === 'byok') {
+              hasLLM = true;
+              $('src-byok').innerHTML = '<span class="sb-pill sb-pill--success">✓ BYOK Active (file)</span>';
+              auth.textContent = 'BYOK Active';
+              auth.className = 'sb-pill sb-pill--success';
+              enableLaunchButton();
+            }
+          }).catch(function(){});
         }
       });
 
@@ -1217,12 +1237,10 @@ document.querySelectorAll('.sb-tab[data-tab]').forEach(function(btn) {
         }).then(function(r){return r.json();}).then(function(d) {
           var cell = $('cli-status-'+a.id);
           if (d.response || d.output || d.text) {
-            if (cell) cell.innerHTML = '✓ verified'; cell.className = 'sb-pill sb-pill--success';
-            cell.style.fontSize = '0.65rem';
+            if (cell) { cell.innerHTML = '✓ verified'; cell.className = 'sb-pill sb-pill--success'; cell.style.fontSize = '0.65rem'; }
             verified++;
           } else {
-            if (cell) cell.innerHTML = '✗ ' + esc((d.error||'failed').substring(0,30)); cell.className = 'sb-pill sb-pill--danger';
-            cell.style.fontSize = '0.65rem';
+            if (cell) { cell.innerHTML = '✗ ' + esc((d.error||'failed').substring(0,30)); cell.className = 'sb-pill sb-pill--danger'; cell.style.fontSize = '0.65rem'; }
           }
         }).catch(function() {
           var cell = $('cli-status-'+a.id);
@@ -1236,6 +1254,12 @@ document.querySelectorAll('.sb-tab[data-tab]').forEach(function(btn) {
               $('src-local-action').innerHTML = '<img src="/media/yinyang-rotating_70pct_128px.gif" class="sb-icon-md" alt="Loading indicator">';
               hasLLM = true;
               enableLaunchButton();
+              // Fix UI state — remove blocked gate if showMainUI() already set it
+              if ($('llm-card')) { $('llm-card').classList.add('hub-ready'); $('llm-card').classList.remove('hub-blocked'); }
+              if ($('llm-gate')) $('llm-gate').innerHTML = '';
+              var ta = $('topbar-user'); if (ta) { ta.textContent = verified + ' Local LLMs'; ta.className = 'sb-pill sb-pill--success'; }
+              $('topbar-signin').style.display = 'none';
+              $('topbar-user-info').style.display = 'flex';
               // Persist validated state
               var chipsHTML = $('cli-models-area').innerHTML;
               try { localStorage.setItem('solace_validated_clis', JSON.stringify({count:verified, chips:chipsHTML})); } catch(e) {}
@@ -1610,6 +1634,8 @@ document.querySelectorAll('.sb-tab[data-tab]').forEach(function(btn) {
   var dbg = document.getElementById('app-discovery-count');
   if (dbg) dbg.textContent = 'JS LOADED — running scan...';
   try { runScan(); } catch(e) { if (dbg) dbg.textContent = 'SCAN ERROR: ' + e.message; }
+  // Re-check CLI connection after 30s if not connected
+  setTimeout(function() { if (!hasLLM) { try { connectCLIs(); } catch(e) {} } }, 30000);
   // Refresh sessions on load and every 10s
   setTimeout(refreshSessions, 2000);
   setInterval(refreshSessions, 10000);

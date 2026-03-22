@@ -1,186 +1,211 @@
+<!-- Diagram: 08b-sidebar-v2-two-modes -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Yinyang AI Assistant</title>
-  <link rel="stylesheet" href="sidepanel.css">
-  <link rel="stylesheet" href="http://127.0.0.1:8888/vendor/jquery.dataTables.min.css">
+  <link rel="stylesheet" href="http://127.0.0.1:8888/sidepanel.css">
   <style>
-    /* Domain accordion */
-    .yy-domain-filter { width: 100%; padding: 0.4rem 0.6rem; background: var(--yy-surface); border: 1px solid var(--yy-border); color: var(--yy-text); border-radius: 8px; font-size: 0.8rem; margin-bottom: 0.5rem; box-sizing: border-box; }
-    .yy-domain-filter:focus { border-color: var(--yy-accent); outline: none; }
-    .yy-domain-item { border-bottom: 1px solid var(--yy-border); }
-    .yy-domain-header { display: flex; align-items: center; gap: 0.5rem; padding: 0.6rem 0.4rem; cursor: pointer; transition: background 0.15s; }
-    .yy-domain-header:hover { background: var(--yy-surface-accent); }
-    .yy-domain-header.yy-selected { background: var(--yy-surface-brand); border-left: 3px solid var(--yy-accent); }
-    .yy-domain-header img { width: 30px; height: 30px; border-radius: 6px; object-fit: contain; flex-shrink: 0; }
-    .yy-domain-header .yy-domain-info { flex: 1; min-width: 0; }
-    .yy-domain-header .yy-domain-name { font-size: 0.85rem; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    .yy-domain-header .yy-domain-apps-preview { font-size: 0.65rem; color: var(--yy-text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    .yy-domain-header .yy-domain-badge { flex-shrink: 0; }
-    .yy-domain-header .yy-chevron { font-size: 0.7rem; color: var(--yy-text-muted); transition: transform 0.2s; flex-shrink: 0; }
-    .yy-domain-header.yy-expanded .yy-chevron { transform: rotate(90deg); }
-    .yy-domain-apps { display: none; padding: 0.3rem 0.4rem 0.5rem 2.8rem; }
-    .yy-domain-apps.yy-open { display: block; }
-    .yy-app-row { padding: 0.5rem; margin-bottom: 0.3rem; background: var(--yy-surface-soft); border-radius: 8px; border: 1px solid transparent; transition: border-color 0.15s; }
-    .yy-app-row:hover { border-color: var(--yy-accent); }
-    .yy-app-row.yy-app-active { border-color: var(--yy-success); background: rgba(74,217,173,0.08); }
-    .yy-app-name { font-size: 0.8rem; font-weight: 600; }
-    .yy-app-meta { font-size: 0.65rem; color: var(--yy-text-muted); margin-top: 0.15rem; }
-    .yy-app-actions { display: flex; gap: 0.25rem; margin-top: 0.35rem; }
-    .yy-app-actions button { font-size: 0.7rem; padding: 0.2rem 0.5rem; background: var(--yy-surface-accent); border: 1px solid var(--yy-border); border-radius: 6px; color: var(--yy-text); cursor: pointer; transition: background 0.15s; }
-    .yy-app-actions button:hover { background: var(--yy-accent); color: var(--yy-bg); }
-    .yy-app-actions button.yy-btn-primary { background: var(--yy-accent); color: var(--yy-bg); }
+    /* Sidebar v2 — 3 states: idle, domain_detected, worker_running */
+
+    /* ─── Breathing glow (worker running state) ─── */
+    @keyframes yy-breathe {
+      0%, 100% { box-shadow: inset 0 0 0 1px var(--yy-accent), 0 0 12px var(--yy-glow); }
+      50% { box-shadow: inset 0 0 0 2px var(--yy-accent), 0 0 24px var(--yy-glow); }
+    }
+    .yy-shell--working { animation: yy-breathe 2s ease-in-out infinite; }
+    .yy-shell--working .yy-brand-bar { border-bottom-color: var(--yy-accent); }
+
+    /* ─── Approval waiting pulse ─── */
+    @keyframes yy-waiting {
+      0%, 100% { box-shadow: inset 0 0 0 1px var(--yy-warning); }
+      50% { box-shadow: inset 0 0 0 2px var(--yy-warning), 0 0 16px rgba(255,207,112,0.2); }
+    }
+    .yy-shell--approval { animation: yy-waiting 1.5s ease-in-out infinite; }
+
+    /* ─── Celebration flash ─── */
+    @keyframes yy-celebrate {
+      0% { box-shadow: inset 0 0 0 2px var(--yy-success), 0 0 30px rgba(74,217,173,0.4); }
+      100% { box-shadow: none; }
+    }
+    .yy-shell--done { animation: yy-celebrate 2s ease-out forwards; }
+
+    /* ─── Brand bar ─── */
+    .yy-brand-bar { display: flex; align-items: center; gap: 0.5rem; padding: 0.75rem 0.85rem; border-bottom: 1px solid var(--yy-border); }
+    .yy-brand-bar img { width: 28px; height: 28px; }
+    .yy-brand-bar .yy-brand-name { font-size: 1rem; font-weight: 700; flex: 1; }
+    .yy-brand-bar .yy-status-pill { font-size: 0.75rem; padding: 0.2rem 0.6rem; border-radius: 10px; background: var(--yy-surface-accent); color: var(--yy-text-muted); }
+    .yy-brand-bar .yy-status-pill--active { background: var(--yy-success); color: var(--yy-bg); }
+    .yy-brand-bar .yy-status-pill--warning { background: var(--yy-warning); color: var(--yy-bg); }
+
+    /* ─── Content area ─── */
+    .yy-content { padding: 0.85rem; overflow-y: auto; flex: 1; }
+    .yy-content p { margin: 0.35rem 0; }
+
+    /* ─── Idle state ─── */
+    .yy-idle-status { font-size: 0.9rem; color: var(--yy-text-muted); margin-bottom: 0.6rem; }
+    .yy-recent-session { display: flex; align-items: center; gap: 0.5rem; padding: 0.5rem 0.6rem; margin-bottom: 0.3rem; background: var(--yy-surface-soft); border-radius: var(--yy-radius-sm); font-size: 0.85rem; cursor: pointer; transition: background 0.15s; }
+    .yy-recent-session:hover { background: var(--yy-surface-accent); }
+    .yy-recent-session .yy-session-name { flex: 1; font-weight: 600; }
+    .yy-recent-session .yy-session-time { color: var(--yy-text-muted); font-size: 0.75rem; }
+    .yy-cta-link { display: block; margin-top: 0.85rem; text-align: center; font-size: 0.95rem; color: var(--yy-accent); text-decoration: none; font-weight: 600; }
+    .yy-cta-link:hover { color: var(--yy-accent-hover); }
+
+    /* ─── Domain detected state ─── */
+    .yy-domain-bar { display: flex; align-items: center; gap: 0.6rem; padding: 0.6rem; background: var(--yy-surface-brand); border-radius: var(--yy-radius-sm); margin-bottom: 0.6rem; }
+    .yy-domain-bar img { width: 32px; height: 32px; border-radius: 6px; }
+    .yy-domain-bar .yy-domain-name { flex: 1; font-weight: 700; font-size: 1rem; }
+    .yy-domain-bar .yy-apps-pill { font-size: 0.75rem; padding: 0.2rem 0.6rem; border-radius: 10px; background: var(--yy-accent); color: var(--yy-bg); }
+    .yy-app-card { padding: 0.6rem; margin-bottom: 0.4rem; background: var(--yy-surface-soft); border-radius: var(--yy-radius-sm); border: 1px solid transparent; transition: border-color 0.15s; }
+    .yy-app-card:hover { border-color: var(--yy-accent); }
+    .yy-app-card .yy-app-name { font-size: 0.95rem; font-weight: 600; }
+    .yy-app-card .yy-app-desc { font-size: 0.85rem; color: var(--yy-text-muted); margin-top: 0.15rem; }
+    .yy-app-card .yy-app-meta { display: flex; gap: 0.6rem; align-items: center; margin-top: 0.35rem; font-size: 0.8rem; color: var(--yy-text-muted); }
+    .yy-app-card .yy-btn-run { font-size: 0.85rem; padding: 0.3rem 0.8rem; background: var(--yy-accent); color: var(--yy-bg); border: none; border-radius: 6px; cursor: pointer; font-weight: 600; }
+    .yy-app-card .yy-btn-run:hover { background: var(--yy-accent-hover); }
+
+    /* ─── Worker running state ─── */
+    .yy-worker-bar { display: flex; align-items: center; gap: 0.5rem; padding: 0.6rem; margin-bottom: 0.5rem; }
+    .yy-worker-bar .yy-worker-name { flex: 1; font-weight: 700; font-size: 1rem; }
+    .yy-worker-bar .yy-working-pill { font-size: 0.75rem; padding: 0.2rem 0.6rem; border-radius: 10px; background: var(--yy-accent); color: var(--yy-bg); }
+    .yy-progress { font-size: 0.85rem; color: var(--yy-text-muted); margin-bottom: 0.4rem; }
+    .yy-timeline { list-style: none; padding: 0; margin: 0; }
+    .yy-timeline li { display: flex; gap: 0.5rem; padding: 0.3rem 0; font-size: 0.85rem; border-left: 2px solid var(--yy-border); padding-left: 0.7rem; margin-left: 0.4rem; }
+    .yy-timeline li:last-child { border-left-color: var(--yy-accent); }
+    .yy-timeline .yy-step-time { color: var(--yy-text-muted); font-size: 0.75rem; white-space: nowrap; }
+    .yy-timeline .yy-step-text { flex: 1; }
+    .yy-btn-stop { font-size: 0.85rem; padding: 0.35rem 0.9rem; background: var(--yy-danger); color: var(--yy-bg); border: none; border-radius: 6px; cursor: pointer; font-weight: 600; margin-top: 0.5rem; }
+
+    /* ─── Approval card (inline in timeline) ─── */
+    .yy-approval-card { background: var(--yy-surface-strong); border: 1px solid var(--yy-warning); border-radius: var(--yy-radius-sm); padding: 0.6rem; margin: 0.5rem 0; }
+    .yy-approval-card .yy-approval-title { font-size: 0.95rem; font-weight: 600; color: var(--yy-warning); }
+    .yy-approval-card .yy-approval-desc { font-size: 0.85rem; margin: 0.25rem 0; }
+    .yy-approval-card .yy-approval-actions { display: flex; gap: 0.4rem; margin-top: 0.4rem; }
+    .yy-approval-card .yy-btn-approve { font-size: 0.85rem; padding: 0.3rem 0.8rem; background: var(--yy-success); color: var(--yy-bg); border: none; border-radius: 6px; cursor: pointer; }
+    .yy-approval-card .yy-btn-reject { font-size: 0.85rem; padding: 0.3rem 0.8rem; background: var(--yy-danger); color: var(--yy-bg); border: none; border-radius: 6px; cursor: pointer; }
+
+    /* ─── Celebration state ─── */
+    .yy-celebrate-card { text-align: center; padding: 1.2rem; }
+    .yy-celebrate-card .yy-celebrate-icon { font-size: 2.5rem; margin-bottom: 0.4rem; }
+    .yy-celebrate-card .yy-celebrate-summary { font-size: 1rem; font-weight: 600; margin-bottom: 0.3rem; }
+    .yy-celebrate-card .yy-celebrate-stats { font-size: 0.9rem; color: var(--yy-text-muted); }
+    .yy-celebrate-card .yy-btn-view-session { display: inline-block; margin-top: 0.6rem; font-size: 0.95rem; padding: 0.45rem 1.2rem; background: var(--yy-success); color: var(--yy-bg); border: none; border-radius: var(--yy-radius-sm); cursor: pointer; font-weight: 600; text-decoration: none; }
+
+    /* ─── Logged out state ─── */
+    .yy-logged-out { text-align: center; padding: 1.5rem 0.85rem; }
+    .yy-logged-out .yy-teaser-domain { display: flex; align-items: center; gap: 0.5rem; justify-content: center; padding: 0.6rem; background: var(--yy-surface-brand); border-radius: var(--yy-radius-sm); margin: 0.85rem 0; font-size: 0.9rem; }
+    .yy-logged-out .yy-teaser-domain img { width: 28px; height: 28px; border-radius: 4px; }
+    .yy-logged-out .yy-signin-btn { display: inline-block; margin-top: 0.85rem; padding: 0.5rem 1.5rem; background: var(--yy-accent); color: var(--yy-bg); border: none; border-radius: var(--yy-radius-sm); font-size: 1rem; font-weight: 600; cursor: pointer; text-decoration: none; }
+    .yy-logged-out .yy-signin-btn:hover { background: var(--yy-accent-hover); }
+
+    /* ─── How it works (onboarding) ─── */
+    .yy-heading { font-size: 1.05rem; font-weight: 600; margin-top: 0.5rem; }
+    .yy-hint { font-size: 0.85rem; color: var(--yy-text-muted); margin-top: 0.3rem; line-height: 1.5; }
+    .yy-how-section { margin: 0.85rem 0; padding: 0.75rem; background: var(--yy-surface-soft); border-radius: var(--yy-radius-sm); }
+    .yy-how-title { font-size: 0.8rem; font-weight: 700; text-transform: uppercase; letter-spacing: var(--yy-kicker-track); color: var(--yy-text-muted); margin: 0 0 0.5rem 0; }
+    .yy-how-step { display: flex; align-items: flex-start; gap: 0.5rem; font-size: 0.9rem; line-height: 1.5; margin-bottom: 0.45rem; }
+    .yy-how-num { display: flex; align-items: center; justify-content: center; width: 22px; height: 22px; border-radius: 50%; background: var(--yy-accent); color: var(--yy-bg); font-size: 0.75rem; font-weight: 700; flex-shrink: 0; margin-top: 2px; }
+    .yy-link { color: var(--yy-accent); text-decoration: none; }
+    .yy-link:hover { color: var(--yy-accent-hover); text-decoration: underline; }
+
+    /* ─── Upcoming schedule ─── */
+    .yy-upcoming-item { display: flex; align-items: center; gap: 0.5rem; padding: 0.4rem 0; font-size: 0.85rem; border-bottom: 1px solid var(--yy-border); }
+    .yy-upcoming-item:last-child { border-bottom: none; }
+    .yy-upcoming-item .yy-upcoming-time { color: var(--yy-accent); font-weight: 600; font-size: 0.8rem; white-space: nowrap; min-width: 3.5rem; }
+    .yy-upcoming-item .yy-upcoming-name { flex: 1; }
+
+    /* ─── Utility ─── */
+    .yy-hidden { display: none; }
   </style>
 </head>
 <body class="yy-body" data-theme="dark">
-  <div class="yy-shell">
-    <!-- TOP NAV (matches Solace Hub topbar) -->
-    <header class="yy-header">
-      <div class="yy-brand">
-        <img class="yy-brand-logo" src="http://127.0.0.1:8888/media/yinyang-rotating_70pct_128px.gif" alt="Solace" onerror="this.src='http://127.0.0.1:8888/icons/yinyang-logo.png'">
-        <div class="yy-brand-copy">
-          <h1>Yinyang</h1>
-          <p class="yy-brand-tag">AI Assistant</p>
-        </div>
-      </div>
-      <div class="yy-header-controls">
-        <button class="yy-icon-btn" id="theme-toggle" title="Toggle theme" aria-label="Toggle theme">☀</button>
-        <div class="yy-lang-switcher">
-          <button class="yy-icon-btn" id="lang-toggle" title="Language" aria-label="Language" aria-expanded="false">
-            <img src="http://127.0.0.1:8888/icons/lang/globe-default.png" alt="" class="yy-lang-icon yy-lang-icon--default" onerror="this.parentElement.textContent='🌐'">
-            <img src="http://127.0.0.1:8888/icons/lang/globe-hover.png" alt="" class="yy-lang-icon yy-lang-icon--hover" onerror="this.style.display='none'">
-          </button>
-          <div class="yy-lang-menu" id="lang-menu" role="menu" hidden>
-            <a href="#" role="menuitem" data-lang="en" aria-current="page">English</a>
-            <a href="#" role="menuitem" data-lang="vi">Tiếng Việt</a>
-            <a href="#" role="menuitem" data-lang="ja">日本語</a>
-            <a href="#" role="menuitem" data-lang="ko">한국어</a>
-            <a href="#" role="menuitem" data-lang="zh">中文</a>
-            <a href="#" role="menuitem" data-lang="es">Español</a>
-            <a href="#" role="menuitem" data-lang="fr">Français</a>
-            <a href="#" role="menuitem" data-lang="de">Deutsch</a>
-          </div>
-        </div>
-      </div>
-    </header>
+  <div class="yy-shell" id="yy-shell">
 
-    <!-- REGISTRATION GATE (shown by default — hidden when cloud connected) -->
-    <div id="gate-overlay" style="padding:1.5rem;text-align:center">
-      <img src="http://127.0.0.1:8888/media/droplet-logo-merge_3x_128px.gif" alt="" style="width:80px;margin:1rem auto">
-      <h2 style="margin:0.5rem 0">Welcome to Solace</h2>
-      <p class="yy-copy">Sign in or create an account to activate the Yinyang sidebar.</p>
-      <p class="yy-copy" style="margin-top:1rem"><strong>Navigate to solaceagi.com/dashboard</strong> in the main browser window to sign in.</p>
-      <div class="yy-status-row" style="justify-content:center;margin-top:1rem" aria-live="polite">
-        <span id="gate-status-dot" class="yy-status-dot status-connecting"></span>
-        <span id="gate-status" class="yy-status-copy">Waiting for sign-in...</span>
-      </div>
+    <!-- ═══ BRAND BAR (always visible) ═══ -->
+    <div class="yy-brand-bar">
+      <img src="http://127.0.0.1:8888/icons/yinyang-logo.png" alt="Solace">
+      <span class="yy-brand-name">Yinyang</span>
+      <span class="yy-status-pill" id="yy-status-pill">idle</span>
     </div>
 
-    <main class="yy-main" id="main-content" style="display:none">
-      <!-- Compact status bar -->
-      <section class="yy-card" style="padding:0.5rem 0.7rem">
-        <div class="yy-status-row" aria-live="polite">
-          <span id="ws-status-dot" class="yy-status-dot status-connecting"></span>
-          <span id="hero-status" class="yy-status-copy" style="font-size:0.75rem">Connecting...</span>
+    <!-- ═══ CONTENT AREA (state-driven) ═══ -->
+    <div class="yy-content">
+
+      <!-- STATE: Logged Out -->
+      <div id="yy-logged-out" class="yy-logged-out yy-hidden">
+        <img src="http://127.0.0.1:8888/media/yinyang-rotating_70pct_128px.gif" alt="" style="width:64px;height:64px">
+        <p class="yy-heading">Your AI team works while you browse</p>
+        <p class="yy-hint">Yinyang watches as your AI workers automate tasks across the web. Sign in to get started.</p>
+        <div id="yy-teaser" class="yy-hidden"></div>
+        <a href="https://solaceagi.com/auth/login" class="yy-signin-btn">Sign in free</a>
+      </div>
+
+      <!-- STATE: Idle (no worker running, no domain match) -->
+      <div id="yy-idle" class="yy-hidden">
+        <p class="yy-idle-status" id="yy-idle-status">0 workers scheduled</p>
+
+        <!-- How it works — shown to new users -->
+        <div id="yy-how-it-works" class="yy-how-section">
+          <p class="yy-how-title">How Yinyang works</p>
+          <div class="yy-how-step">
+            <span class="yy-how-num">1</span>
+            <span>Open the <a href="#" class="yy-link" data-navigate="http://localhost:8888/dashboard">Dashboard</a> and run an AI worker</span>
+          </div>
+          <div class="yy-how-step">
+            <span class="yy-how-num">2</span>
+            <span>Watch the browser work autonomously — this sidebar narrates every step</span>
+          </div>
+          <div class="yy-how-step">
+            <span class="yy-how-num">3</span>
+            <span>Navigate to a site like Gmail or GitHub — matching apps appear here automatically</span>
+          </div>
         </div>
-      </section>
 
-      <!-- ═══ NAVIGATE MODE (default) ═══ -->
-      <div id="yy-nav-mode">
-        <!-- 1. PENDING ACTIONS (top priority) -->
-        <section class="yy-card" id="actions-section">
-          <div class="yy-section-head">
-            <div>
-              <p class="yy-section-kicker">Needs Your Attention</p>
-              <h2 id="actions-title">Pending Actions</h2>
-            </div>
-            <span id="actions-count" class="yy-pill yy-pill-warning">0</span>
-          </div>
-          <div id="actions-list"></div>
-          <a href="http://localhost:8888/signoff" class="yy-mode-btn" style="display:block;text-align:center;margin-top:0.4rem;font-size:0.7rem;text-decoration:none">View All in Sign-Off Page</a>
-        </section>
+        <!-- Upcoming scheduled runs -->
+        <div id="yy-upcoming" class="yy-hidden">
+          <p class="yy-how-title">Upcoming runs</p>
+          <div id="yy-upcoming-list"></div>
+        </div>
 
-        <!-- 2. YOUR AI TEAM (workers) -->
-        <section class="yy-card" id="workers-section">
-          <div class="yy-section-head">
-            <div>
-              <p class="yy-section-kicker">Your AI Team</p>
-              <h2>Workers</h2>
-            </div>
-            <span id="workers-count" class="yy-pill yy-pill-muted">0</span>
-          </div>
-          <div id="workers-list"></div>
-        </section>
+        <div id="yy-recent-sessions"></div>
+        <a href="#" class="yy-cta-link" id="yy-idle-cta" data-navigate="http://localhost:8888/dashboard">Open Dashboard</a>
+      </div>
 
-        <!-- 3. ACTIVE DOMAIN APPS (context-aware) -->
-        <section class="yy-card" id="active-apps-section" style="display:none">
-          <div class="yy-section-head">
-            <div>
-              <p class="yy-section-kicker">Active for this page</p>
-              <h2 id="active-apps-title">—</h2>
-            </div>
-            <span id="active-apps-count" class="yy-pill yy-pill-success">0</span>
-          </div>
-          <div id="active-apps-list"></div>
-        </section>
+      <!-- STATE: Domain Detected -->
+      <div id="yy-domain" class="yy-hidden">
+        <div class="yy-domain-bar" id="yy-domain-bar">
+          <img id="yy-domain-icon" src="" alt="">
+          <span class="yy-domain-name" id="yy-domain-name"></span>
+          <span class="yy-apps-pill" id="yy-domain-apps-count"></span>
+        </div>
+        <div id="yy-domain-apps"></div>
+      </div>
 
-        <!-- 4. DOMAINS (collapsed by default) -->
-        <section class="yy-card" id="domain-list-section">
-          <div class="yy-section-head">
-            <div>
-              <p class="yy-section-kicker">Domains</p>
-              <h2>Browse by domain</h2>
-            </div>
-            <span id="domain-count" class="yy-pill yy-pill-muted">0</span>
-          </div>
-          <input type="text" id="domain-filter" class="yy-domain-filter" placeholder="Filter domains...">
-          <div id="domain-accordion"></div>
-        </section>
+      <!-- STATE: Worker Running -->
+      <div id="yy-worker" class="yy-hidden">
+        <div class="yy-worker-bar">
+          <span class="yy-worker-name" id="yy-worker-name"></span>
+          <span class="yy-working-pill" id="yy-worker-pill">Working...</span>
+        </div>
+        <div class="yy-progress" id="yy-worker-progress"></div>
+        <ul class="yy-timeline" id="yy-timeline"></ul>
+        <div id="yy-approval-area"></div>
+        <button class="yy-btn-stop" id="yy-btn-stop">Stop</button>
+      </div>
 
-        <section class="yy-card">
-          <div class="yy-section-head">
-            <div>
-              <p class="yy-section-kicker">Recent activity</p>
-              <h2 id="event-feed-title">All events</h2>
-            </div>
-            <span id="event-feed-pill" class="yy-pill yy-pill-muted">0 events</span>
-          </div>
-          <p id="event-feed-copy" class="yy-copy">Click an event to see details.</p>
-          <div class="yy-event-feed" id="event-feed" aria-live="polite"></div>
-        </section>
-      </div><!-- end yy-nav-mode -->
+      <!-- STATE: Celebration (after worker completes) -->
+      <div id="yy-celebrate" class="yy-hidden">
+        <div class="yy-celebrate-card">
+          <div class="yy-celebrate-icon">&#10003;</div>
+          <div class="yy-celebrate-summary" id="yy-celebrate-summary"></div>
+          <div class="yy-celebrate-stats" id="yy-celebrate-stats"></div>
+          <a class="yy-btn-view-session" id="yy-celebrate-link" href="#">View Work Session</a>
+        </div>
+      </div>
 
-      <!-- ═══ CREATE MODE ═══ -->
-      <div id="yy-create-mode" style="display:none">
-        <section class="yy-card yy-chat-card">
-          <div class="yy-section-head yy-section-head-tight">
-            <div>
-              <p class="yy-section-kicker">Create Custom App</p>
-              <h2>Describe what you want</h2>
-            </div>
-            <span id="chat-model-pill" class="yy-pill yy-pill-muted">Model: checking</span>
-          </div>
-          <form class="yy-create-form" id="chat-form">
-            <label class="yy-sr-only" for="chat-input">Describe your app</label>
-            <input type="text" id="chat-input" class="yy-input" placeholder="e.g., Monitor HackerNews for AI funding news and email me a daily digest" autocomplete="off" maxlength="1000">
-            <button type="submit" class="yy-send-btn">Create</button>
-          </form>
-          <p id="assistant-helper" class="yy-copy">Describe what you want in plain English. Yinyang will create the app for you.</p>
-          <div class="yy-prompt-row" id="prompt-row">
-            <button type="button" class="yy-prompt-chip" data-prompt="Create a Google Search app that tracks AI browser funding and writes to Morning Brief.">Search to brief</button>
-            <button type="button" class="yy-prompt-chip" data-prompt="Create a Gmail app that keeps unread triage moving and saves a review report.">Gmail triage</button>
-            <button type="button" class="yy-prompt-chip" data-prompt="Create a new domain workflow for Slack that keeps one keepalive app running.">New domain</button>
-          </div>
-          <div class="yy-chat-messages" id="chat-messages" aria-live="polite"></div>
-        </section>
-      </div><!-- end yy-create-mode -->
-
-    </main>
+    </div>
   </div>
-  <script src="http://127.0.0.1:8888/vendor/jquery.min.js"></script>
-  <script src="http://127.0.0.1:8888/vendor/jquery.dataTables.min.js"></script>
-  <script src="sidepanel.js"></script>
+  <script src="http://127.0.0.1:8888/sidepanel.js"></script>
 </body>
 </html>

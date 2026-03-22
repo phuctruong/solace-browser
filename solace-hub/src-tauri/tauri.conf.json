@@ -78,9 +78,9 @@
         "resizable": true,
         "fullscreen": false,
         "decorations": true,
-        "visible": true,
+        "visible": false,
         "center": true,
-        "url": "http://localhost:8888/"
+        "url": "http://localhost:8888/dashboard"
       }
     ]
   }

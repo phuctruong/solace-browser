@@ -13,8 +13,60 @@ use crate::state::AppState;
 
 pub fn routes() -> Router<AppState> {
     Router::new()
+        .route("/api/v1/oauth3/tokens", axum::routing::get(list_tokens))
         .route("/api/v1/oauth3/validate", post(validate_token))
         .route("/api/v1/oauth3/revoke", post(revoke_token))
+}
+
+/// List all OAuth3 tokens in the vault (without exposing secrets).
+/// Returns domain, scopes, created_at, expires_at, and status for each token.
+async fn list_tokens(
+    State(_state): State<AppState>,
+) -> Json<serde_json::Value> {
+    let solace_home = crate::utils::solace_home();
+    let vault_path = solace_home.join("vault").join("oauth3.enc");
+
+    // Try to load vault with empty secret (public metadata only)
+    // If vault doesn't exist, return empty list
+    if !vault_path.exists() {
+        return Json(json!({
+            "tokens": [],
+            "vault_exists": false,
+            "message": "No OAuth3 vault found. Tokens are created when AI workers authenticate with domains."
+        }));
+    }
+
+    // Scan domain configs for OAuth3 status instead of decrypting vault
+    let apps_dir = solace_home.join("apps");
+    let mut domain_tokens: Vec<serde_json::Value> = Vec::new();
+
+    if let Ok(entries) = std::fs::read_dir(&apps_dir) {
+        for entry in entries.flatten() {
+            if !entry.path().is_dir() { continue; }
+            let domain = entry.file_name().to_string_lossy().to_string();
+            // Check for oauth3.json in domain dir
+            let oauth3_path = entry.path().join("oauth3.json");
+            if oauth3_path.exists() {
+                if let Ok(content) = std::fs::read_to_string(&oauth3_path) {
+                    if let Ok(data) = serde_json::from_str::<serde_json::Value>(&content) {
+                        domain_tokens.push(json!({
+                            "domain": domain,
+                            "status": if data.get("token").is_some() { "active" } else { "expired" },
+                            "scopes": data.get("scopes").cloned().unwrap_or(json!([])),
+                            "created_at": data.get("created_at").cloned().unwrap_or(json!(null)),
+                            "expires_at": data.get("expires_at").cloned().unwrap_or(json!(null)),
+                        }));
+                    }
+                }
+            }
+        }
+    }
+
+    Json(json!({
+        "tokens": domain_tokens,
+        "vault_exists": true,
+        "count": domain_tokens.len(),
+    }))
 }
 
 #[derive(Deserialize)]
