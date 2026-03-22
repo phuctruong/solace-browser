@@ -130,6 +130,10 @@ pub fn mcp_tool_definitions() -> Vec<Value> {
         json!({"name": "browser_key", "description": "Press keyboard key in browser (Return, Tab, Escape, End, etc.)", "inputSchema": {"type": "object", "properties": {"key": {"type": "string"}}, "required": ["key"]}}),
         json!({"name": "browser_screenshot", "description": "Get screenshot status (captured by sidebar)", "inputSchema": {"type": "object", "properties": {}}}),
         json!({"name": "notifications_list", "description": "List all notifications (read/unread)", "inputSchema": {"type": "object", "properties": {}}}),
+        // ── Tab Management ──
+        json!({"name": "browser_tabs_close_all", "description": "Close all browser tabs except the active one (via sidebar WebSocket)", "inputSchema": {"type": "object", "properties": {}}}),
+        json!({"name": "browser_tab_close", "description": "Close a specific browser tab by ID", "inputSchema": {"type": "object", "properties": {"tab_id": {"type": "string"}}, "required": ["tab_id"]}}),
+        json!({"name": "browser_active_tab", "description": "Get the currently active browser tab (URL, title)", "inputSchema": {"type": "object", "properties": {}}}),
     ]
 }
 
@@ -777,6 +781,41 @@ async fn handle_tools_call(params: &Value, state: &AppState) -> Result<Value, (i
             let notifications = state.notifications.read().clone();
             let unread = notifications.iter().filter(|n| !n.read).count();
             json!({"notifications": notifications, "total": notifications.len(), "unread": unread})
+        }
+        // ── Tab Management ──
+        "browser_tabs_close_all" => {
+            let channels = state.session_channels.read();
+            let msg = json!({"command": "close_other_tabs"}).to_string();
+            let mut sent = 0;
+            for (_, tx) in channels.iter() {
+                if tx.send(msg.clone()).is_ok() { sent += 1; }
+            }
+            state.browser_tabs.write().retain(|_| false);
+            json!({"ok": true, "action": "close_all_tabs", "channels_notified": sent})
+        }
+        "browser_tab_close" => {
+            let tab_id = require_string(&arguments, "tab_id")?;
+            let channels = state.session_channels.read();
+            let msg = json!({"command": "close_tab", "tab_id": tab_id}).to_string();
+            let mut sent = 0;
+            for (_, tx) in channels.iter() {
+                if tx.send(msg.clone()).is_ok() { sent += 1; }
+            }
+            state.browser_tabs.write().retain(|t| {
+                t.get("id").and_then(|v| v.as_str()) != Some(&tab_id)
+            });
+            json!({"ok": true, "tab_id": tab_id, "channels_notified": sent})
+        }
+        "browser_active_tab" => {
+            let tabs = state.browser_tabs.read();
+            let active = tabs.iter().find(|t| t.get("active").and_then(|v| v.as_bool()).unwrap_or(false));
+            match active {
+                Some(tab) => json!({"tab": tab, "found": true}),
+                None => {
+                    let url = state.current_url.read().clone();
+                    json!({"found": false, "current_url": url, "note": "No tabs reported by sidebar yet"})
+                }
+            }
         }
         // ── E-Sign ──
         "esign" => {

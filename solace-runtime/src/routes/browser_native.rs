@@ -24,6 +24,10 @@ pub fn routes() -> Router<AppState> {
         .route("/api/v1/worker/run", get(get_worker_run).post(update_worker_run))
         // Browser tabs — the ACTUAL open tabs from the C++ layer
         .route("/api/v1/browser/tabs", get(get_tabs).post(update_tabs))
+        // Tab management — close tabs via WebSocket relay to sidebar
+        .route("/api/v1/browser/tabs/close-all", post(close_all_tabs))
+        .route("/api/v1/browser/tabs/:tab_id/close", post(close_tab_by_id))
+        .route("/api/v1/browser/tabs/active", get(get_active_tab))
         // Live page HTML — the ACTUAL currently-rendered full page HTML of the active tab
         .route("/api/v1/browser/page-html", get(get_page_html).post(push_page_html))
         // Screenshot
@@ -569,6 +573,51 @@ async fn update_tabs(
     let count = payload.tabs.len();
     *state.browser_tabs.write() = payload.tabs;
     Json(json!({"updated": true, "count": count}))
+}
+
+/// POST /api/v1/browser/tabs/close-all — close all tabs except active via sidebar WebSocket.
+async fn close_all_tabs(State(state): State<AppState>) -> Json<Value> {
+    let channels = state.session_channels.read();
+    let msg = json!({"command": "close_other_tabs"}).to_string();
+    let mut sent = 0;
+    for (_, tx) in channels.iter() {
+        if tx.send(msg.clone()).is_ok() { sent += 1; }
+    }
+    // Clear the tab list in state (sidebar will re-report accurate list)
+    state.browser_tabs.write().retain(|_| false);
+    Json(json!({"ok": true, "action": "close_all_tabs", "channels_notified": sent}))
+}
+
+/// POST /api/v1/browser/tabs/:tab_id/close — close a specific tab by ID.
+async fn close_tab_by_id(
+    State(state): State<AppState>,
+    Path(tab_id): Path<String>,
+) -> Json<Value> {
+    let channels = state.session_channels.read();
+    let msg = json!({"command": "close_tab", "tab_id": tab_id}).to_string();
+    let mut sent = 0;
+    for (_, tx) in channels.iter() {
+        if tx.send(msg.clone()).is_ok() { sent += 1; }
+    }
+    // Remove from cached tab list
+    state.browser_tabs.write().retain(|t| {
+        t.get("id").and_then(|v| v.as_str()) != Some(&tab_id)
+    });
+    Json(json!({"ok": true, "action": "close_tab", "tab_id": tab_id, "channels_notified": sent}))
+}
+
+/// GET /api/v1/browser/tabs/active — get the currently active tab.
+async fn get_active_tab(State(state): State<AppState>) -> Json<Value> {
+    let tabs = state.browser_tabs.read();
+    let active = tabs.iter().find(|t| t.get("active").and_then(|v| v.as_bool()).unwrap_or(false));
+    match active {
+        Some(tab) => Json(json!({"tab": tab, "found": true})),
+        None => {
+            // Fallback: use current_url from state
+            let url = state.current_url.read().clone();
+            Json(json!({"found": false, "current_url": url, "note": "No tabs reported by sidebar yet"}))
+        }
+    }
 }
 
 // ── Live Page HTML ──
