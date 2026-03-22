@@ -390,19 +390,29 @@
     });
 
     // Upcoming scheduled runs
-    getJson('/api/v1/cron/jobs').then(function (d) {
-      var jobs = (d.jobs || d || []).filter(function (j) { return j.enabled !== false; });
+    getJson('/api/schedules').then(function (d) {
+      var jobs = (d.schedules || []).filter(function (j) { return j.enabled; });
       if (jobs.length > 0) {
         var html = '';
         jobs.slice(0, 5).forEach(function (job) {
-          var nextRun = job.next_run || job.schedule || '—';
+          var cronText = job.cron || '—';
+          // Convert cron to human-readable (simple: extract hour)
+          var parts = cronText.split(' ');
+          var timeLabel = cronText;
+          if (parts.length >= 5 && parts[0] !== '*' && parts[1] !== '*') {
+            var h = parseInt(parts[1]); var m = parseInt(parts[0]);
+            var ampm = h >= 12 ? 'pm' : 'am';
+            h = h > 12 ? h - 12 : (h === 0 ? 12 : h);
+            timeLabel = h + ':' + (m < 10 ? '0' : '') + m + ampm;
+          }
           html += '<div class="yy-upcoming-item">';
-          html += '<span class="yy-upcoming-time">' + esc(nextRun) + '</span>';
-          html += '<span class="yy-upcoming-name">' + esc(job.app_name || job.app_id || 'Worker') + '</span>';
+          html += '<span class="yy-upcoming-time">' + esc(timeLabel) + '</span>';
+          html += '<span class="yy-upcoming-name">' + esc(job.label || job.app_id || 'Worker') + '</span>';
           html += '</div>';
         });
         $('yy-upcoming-list').innerHTML = html;
         show('yy-upcoming');
+        setText('yy-idle-status', jobs.length + ' workers scheduled, 0 running');
       }
     }).catch(function () {});
 
