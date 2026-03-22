@@ -66,9 +66,27 @@
     .yy-auth-dot--unknown { background: var(--yy-text-muted); }
 
     .yy-app-card:hover { border-color: var(--yy-accent); }
-    .yy-app-card--active { border-color: var(--yy-success); background: rgba(74,217,173,0.08); }
-    .yy-app-card--active .yy-app-name { color: var(--yy-success); }
-    .yy-match-badge { font-size: 0.65rem; color: var(--yy-success); font-weight: 400; }
+    /* Active/highlighted app — Rams: "Good design makes a product understandable" */
+    .yy-app-card--active {
+      border-color: var(--yy-success);
+      background: linear-gradient(135deg, rgba(74,217,173,0.15) 0%, rgba(74,217,173,0.06) 100%);
+      box-shadow: 0 0 0 1px rgba(74,217,173,0.2), 0 2px 8px rgba(74,217,173,0.1);
+    }
+    .yy-app-card--active .yy-app-name { color: var(--yy-text); }
+    .yy-app-card--active .yy-btn-run {
+      background: var(--yy-success);
+      box-shadow: 0 2px 6px rgba(74,217,173,0.3);
+    }
+    .yy-match-badge {
+      font-size: 0.6rem;
+      color: var(--yy-bg);
+      background: var(--yy-success);
+      padding: 0.1rem 0.35rem;
+      border-radius: 4px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.03em;
+    }
     .yy-app-icon-sm { width: 16px; height: 16px; vertical-align: middle; margin-right: 4px; }
     .yy-app-card .yy-app-name { font-size: 0.95rem; font-weight: 600; }
     .yy-app-card .yy-app-desc { font-size: 0.85rem; color: var(--yy-text-muted); margin-top: 0.15rem; }
