@@ -538,13 +538,43 @@ async fn get_page_html(
     State(state): State<AppState>,
     axum::extract::Query(params): axum::extract::Query<std::collections::HashMap<String, String>>,
 ) -> Json<Value> {
-    let page = state.page_html.read();
+    let mut page = state.page_html.read().clone();
+
+    // Fallback: check browser_page_content.json written by C++ SolaceTabUrlReporter
+    if page.html.is_empty() {
+        let file_path = crate::utils::solace_home().join("browser_page_content.json");
+        if let Ok(content) = std::fs::read_to_string(&file_path) {
+            // Parse safely — the file may contain any UTF-8 content
+            match serde_json::from_str::<serde_json::Value>(&content) {
+                Ok(data) => {
+                    let html = data.get("html").and_then(|v| v.as_str()).unwrap_or("").to_string();
+                    let url = data.get("url").and_then(|v| v.as_str()).unwrap_or("").to_string();
+                    let title = data.get("title").and_then(|v| v.as_str()).unwrap_or("").to_string();
+                    if !html.is_empty() {
+                        let mut w = state.page_html.write();
+                        w.html = html.clone();
+                        w.url = url.clone();
+                        w.title = title.clone();
+                        w.captured_at = crate::utils::now_iso8601();
+                        drop(w);
+                        page = crate::state::PageHtml {
+                            html, url, title,
+                            captured_at: crate::utils::now_iso8601(),
+                        };
+                    }
+                }
+                Err(_) => {
+                    // JSON parse failed — file may have partial write. Skip.
+                }
+            }
+        }
+    }
 
     if page.html.is_empty() {
         return Json(json!({
             "error": "no_page_captured",
-            "message": "No page HTML captured yet. The browser sidebar sends HTML on every URL change.",
-            "hint": "Navigate to a page first, then wait 2-3 seconds for the sidebar to capture it.",
+            "message": "No page HTML captured yet. The browser captures page text on every navigation.",
+            "hint": "Navigate to a page first, then wait 5 seconds for capture.",
         }));
     }
 
