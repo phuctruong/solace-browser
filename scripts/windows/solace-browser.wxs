@@ -115,7 +115,6 @@
           Name="Solace Browser"
           Description="AI Worker Platform — Hub + Browser + Runtime"
           Target="[INSTALLFOLDER]solace-hub.exe"
-          Arguments=""
           WorkingDirectory="INSTALLFOLDER" />
         <Shortcut
           Id="DesktopShortcutEntry"
@@ -123,7 +122,6 @@
           Name="Solace Browser"
           Description="AI Worker Platform — Hub + Browser + Runtime"
           Target="[INSTALLFOLDER]solace-hub.exe"
-          Arguments=""
           WorkingDirectory="INSTALLFOLDER" />
         <RemoveFolder Id="CleanupStartMenu" On="uninstall" />
         <RegistryValue
