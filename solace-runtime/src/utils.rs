@@ -6,13 +6,7 @@ use chrono::Utc;
 use sha2::{Digest, Sha256};
 
 pub fn solace_home() -> PathBuf {
-    match std::env::var("SOLACE_HOME") {
-        Ok(path) => PathBuf::from(path),
-        Err(_) => match std::env::var("HOME") {
-            Ok(home) => PathBuf::from(home).join(".solace"),
-            Err(_) => PathBuf::from(".solace"),
-        },
-    }
+    resolve_solace_home_from_env(|key| std::env::var(key).ok(), cfg!(windows))
 }
 
 pub fn sha256_hex(input: &str) -> String {
@@ -155,4 +149,72 @@ pub fn modified_iso8601(path: &Path) -> Option<String> {
     let modified = fs::metadata(path).ok()?.modified().ok()?;
     let datetime: chrono::DateTime<Utc> = modified.into();
     Some(datetime.to_rfc3339())
+}
+
+fn resolve_solace_home_from_env<F>(get_env: F, _is_windows: bool) -> PathBuf
+where
+    F: Fn(&str) -> Option<String>,
+{
+    if let Some(path) = get_env("SOLACE_HOME") {
+        return PathBuf::from(path);
+    }
+    if _is_windows {
+        if let Some(userprofile) = get_env("USERPROFILE") {
+            return PathBuf::from(userprofile).join(".solace");
+        }
+        if let (Some(home_drive), Some(home_path)) = (get_env("HOMEDRIVE"), get_env("HOMEPATH")) {
+            return PathBuf::from(format!("{home_drive}{home_path}")).join(".solace");
+        }
+    }
+    if let Some(home) = get_env("HOME") {
+        return PathBuf::from(home).join(".solace");
+    }
+    PathBuf::from(".solace")
+}
+
+#[cfg(test)]
+mod tests {
+    use super::resolve_solace_home_from_env;
+    use std::path::PathBuf;
+
+    #[test]
+    fn resolve_solace_home_prefers_solace_home_env() {
+        let resolved = resolve_solace_home_from_env(
+            |key| match key {
+                "SOLACE_HOME" => Some("/tmp/solace-custom".to_string()),
+                "HOME" => Some("/tmp/home".to_string()),
+                _ => None,
+            },
+            false,
+        );
+
+        assert_eq!(resolved, PathBuf::from("/tmp/solace-custom"));
+    }
+
+    #[test]
+    fn resolve_solace_home_uses_userprofile_on_windows_when_home_missing() {
+        let resolved = resolve_solace_home_from_env(
+            |key| match key {
+                "USERPROFILE" => Some(r"C:\Users\solace".to_string()),
+                _ => None,
+            },
+            true,
+        );
+
+        assert_eq!(resolved, PathBuf::from(r"C:\Users\solace").join(".solace"));
+    }
+
+    #[test]
+    fn resolve_solace_home_uses_home_drive_and_path_on_windows() {
+        let resolved = resolve_solace_home_from_env(
+            |key| match key {
+                "HOMEDRIVE" => Some("C:".to_string()),
+                "HOMEPATH" => Some(r"\Users\solace".to_string()),
+                _ => None,
+            },
+            true,
+        );
+
+        assert_eq!(resolved, PathBuf::from(r"C:\Users\solace").join(".solace"));
+    }
 }

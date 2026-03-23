@@ -689,17 +689,45 @@ fn update_tray_tooltip(app: &tauri::AppHandle) {
 fn restore_dashboard_window(win: &Window) {
     // Force a real dashboard geometry so the tray app cannot get stuck as a tiny shell window.
     let _ = win.unminimize();
+    let _ = win.unmaximize();
+    let monitor = win.current_monitor().ok().flatten().map(|monitor| {
+        let size = monitor.size();
+        let scale = monitor.scale_factor();
+        (
+            size.width as f64 / scale,
+            size.height as f64 / scale,
+        )
+    });
+    let (width, height) = dashboard_target_size(monitor);
     let _ = win.set_min_size(Some(Size::Logical(LogicalSize {
-        width: 800.0,
-        height: 800.0,
+        width: 720.0,
+        height: 620.0,
     })));
     let _ = win.set_size(Size::Logical(LogicalSize {
-        width: 1400.0,
-        height: 1440.0,
+        width,
+        height,
     }));
     let _ = win.center();
     let _ = win.show();
     let _ = win.set_focus();
+}
+
+fn dashboard_target_size(monitor: Option<(f64, f64)>) -> (f64, f64) {
+    let fallback = (1280.0, 860.0);
+    let Some((monitor_width, monitor_height)) = monitor else {
+        return fallback;
+    };
+
+    if monitor_width <= 0.0 || monitor_height <= 0.0 {
+        return fallback;
+    }
+
+    let safe_width = (monitor_width - 80.0).max(720.0);
+    let safe_height = (monitor_height - 80.0).max(620.0);
+
+    let width = (monitor_width * 0.74).clamp(960.0, 1400.0).min(safe_width);
+    let height = (monitor_height * 0.78).clamp(620.0, 920.0).min(safe_height);
+    (width, height)
 }
 
 fn show_status_notification(_app: &tauri::AppHandle) {
@@ -934,4 +962,22 @@ fn main() {
 extern "C" {
     #[link_name = "kill"]
     fn libc_kill(pid: i32, sig: i32) -> i32;
+}
+
+#[cfg(test)]
+mod tests {
+    use super::dashboard_target_size;
+
+    #[test]
+    fn dashboard_target_size_keeps_window_shorter_than_1080p_monitor() {
+        let (_width, height) = dashboard_target_size(Some((1920.0, 1080.0)));
+        assert!(height <= 980.0, "dashboard height should stay below the visible title-bar threshold");
+    }
+
+    #[test]
+    fn dashboard_target_size_preserves_room_for_native_window_controls() {
+        let (width, height) = dashboard_target_size(Some((1366.0, 768.0)));
+        assert!(width <= 1280.0, "dashboard width should fit inside a typical laptop monitor");
+        assert!(height <= 700.0, "dashboard height should not bury the native frame controls");
+    }
 }
