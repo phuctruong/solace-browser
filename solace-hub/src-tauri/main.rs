@@ -806,11 +806,7 @@ fn main() {
         );
         std::process::exit(1);
     }
-    eprintln!(
-        "INFO: {} healthy at {}",
-        if is_rust { "Solace Runtime (Rust)" } else { "Yinyang Server (Python)" },
-        health_url
-    );
+    eprintln!("INFO: Solace Runtime healthy at {}", health_url);
 
     // ── Step 5: Read port.lock ────────────────────────────────────────────────
     let lock = read_port_lock().unwrap_or_else(|e| {
