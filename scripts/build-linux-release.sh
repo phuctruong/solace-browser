@@ -60,11 +60,7 @@ exec "${SCRIPT_DIR}/solace" "$@"
 EOF
   chmod 755 "${CHROMIUM_OUT}/solace-wrapper"
 fi
-# yinyang_server.py is legacy — Rust runtime replaces it.
-# Only require if they exist (backwards compat with older releases).
-if [ -f "${REPO_ROOT}/yinyang_server.py" ]; then
-  echo "Legacy yinyang_server.py found — will include in bundle."
-fi
+# Python files NO LONGER bundled. Pure Rust/C++ stack.
 
 echo "Building Solace Runtime release binary..."
 RUNTIME_DIR="${REPO_ROOT}/solace-runtime"
@@ -168,15 +164,12 @@ copy_tree "${REPO_ROOT}/data/fun-packs" "${BUNDLE_DIR}/data/"
 install -m 755 "${HUB_BINARY}" "${BUNDLE_DIR}/solace-hub-bin"
 install -m 755 "${RUNTIME_BINARY}" "${BUNDLE_DIR}/solace-runtime"
 
-for script_name in yinyang_server.py yinyang-server.py yinyang_mcp_server.py hub_tunnel_client.py evidence_bundle.py solace_cli.py; do
-  if [ -f "${REPO_ROOT}/${script_name}" ]; then
-    install -m 755 "${REPO_ROOT}/${script_name}" "${BUNDLE_DIR}/${script_name}"
-  fi
-done
+# Legacy Python files NO LONGER bundled. Rust solace-runtime replaces all Python code.
 
 install -m 644 "${REPO_ROOT}/VERSION" "${BUNDLE_DIR}/VERSION"
-if [ -f "${REPO_ROOT}/requirements.txt" ]; then
-  install -m 644 "${REPO_ROOT}/requirements.txt" "${BUNDLE_DIR}/requirements.txt"
+# requirements.txt no longer needed — pure Rust binary
+# if [ -f "${REPO_ROOT}/requirements.txt" ]; then
+#   install -m 644 "${REPO_ROOT}/requirements.txt" "${BUNDLE_DIR}/requirements.txt"
 fi
 if [ -f "${REPO_ROOT}/solace-hub/src-tauri/icons/yinyang-logo.png" ]; then
   install -m 644 "${REPO_ROOT}/solace-hub/src-tauri/icons/yinyang-logo.png" "${BUNDLE_DIR}/yinyang-logo.png"

@@ -202,21 +202,13 @@ fn spawn_backend_server(
         return cmd.spawn();
     }
 
-    // Only use Python for .py files (legacy — should never reach here in production)
-    if server_path.extension().is_some_and(|ext| ext == "py") {
-        eprintln!("WARN: Falling back to Python for legacy server: {}", server_path.display());
-        let python = python_executable();
-        return Command::new(python)
-            .arg(server_path)
-            .arg(repo_root)
-            .arg("--token-sha256")
-            .arg(token_sha256)
-            .spawn();
+    // All other cases: direct execution (no Python fallback)
+    eprintln!("INFO: Starting server directly: {}", server_path.display());
+    let mut cmd = Command::new(server_path);
+    if let Some(parent) = server_path.parent() {
+        cmd.current_dir(parent);
     }
-
-    // Unknown file type — try direct execution
-    eprintln!("WARN: Unknown server type, attempting direct execution: {}", server_path.display());
-    Command::new(server_path).spawn()
+    cmd.spawn()
 }
 
 /// Check if a path points to the Rust solace-runtime binary (not a .py script).
@@ -227,17 +219,7 @@ fn is_rust_runtime(path: &Path) -> bool {
         .unwrap_or(false)
 }
 
-/// Returns "python3" on Unix, "python" on Windows.
-fn python_executable() -> &'static str {
-    #[cfg(target_family = "unix")]
-    {
-        "python3"
-    }
-    #[cfg(target_family = "windows")]
-    {
-        "python"
-    }
-}
+// python_executable() REMOVED — no Python dependency. Pure Rust/C++ stack.
 
 /// Locate the backend server binary. Prefers Rust solace-runtime; falls back to Python.
 ///
@@ -281,16 +263,9 @@ fn resolve_server_script() -> Result<PathBuf, String> {
         return Ok(home_bin);
     }
 
-    // 4. Legacy Python fallback
-    for candidate_root in exe_dir.ancestors() {
-        let server_script = candidate_root.join("yinyang-server.py");
-        if server_script.exists() {
-            return Ok(server_script);
-        }
-    }
-
+    // No Python fallback — Rust solace-runtime is the ONLY backend.
     Err(format!(
-        "Could not locate {} from {}",
+        "Could not locate {} in install dir, dev build, or ~/.solace/bin/. Searched from: {}",
         runtime_name,
         exe_path.display()
     ))
@@ -803,9 +778,9 @@ fn main() {
     ensure_runtime_port_available()
         .unwrap_or_else(|msg| panic!("{msg}"));
 
-    // ── Step 1: Find solace-runtime (Rust) or yinyang-server.py (Python fallback)
+    // ── Step 1: Find solace-runtime (Rust binary — ONLY backend)
     let server_path = resolve_server_script()
-        .expect("Cannot locate solace-runtime binary or yinyang-server.py");
+        .expect("Cannot locate solace-runtime binary");
     let repo_root = server_path
         .parent()
         .expect("Server binary must have a parent directory");
@@ -816,14 +791,9 @@ fn main() {
     store_token_keychain(&session_token)
         .unwrap_or_else(|e| eprintln!("WARN: Could not store token in keychain: {e}"));
 
-    // ── Step 3: Spawn Backend Server (Rust preferred, Python fallback) ───────
-    let is_rust = is_rust_runtime(&server_path);
+    // ── Step 3: Spawn Rust Runtime (pure Rust — no Python) ──────────────────
     let server_child = spawn_backend_server(&server_path, repo_root, &session_sha256).unwrap_or_else(|e| {
-        panic!(
-            "FATAL: Cannot spawn {} — {}",
-            if is_rust { "solace-runtime" } else { "yinyang-server.py" },
-            e
-        );
+        panic!("FATAL: Cannot spawn solace-runtime — {}", e);
     });
 
     // ── Step 4: Wait for server to be healthy ────────────────────────────────

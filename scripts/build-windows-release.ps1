@@ -142,12 +142,8 @@ Copy-Tree (Join-Path $repoRoot "data\fun-packs") (Join-Path $BundleDir "data")
 Copy-Item -LiteralPath $HubBinary -Destination (Join-Path $BundleDir "solace-hub.exe") -Force
 Copy-Item -LiteralPath $RuntimeBinary -Destination (Join-Path $BundleDir "solace-runtime.exe") -Force
 
-foreach ($scriptName in @("yinyang_server.py", "yinyang-server.py", "yinyang_mcp_server.py", "hub_tunnel_client.py", "evidence_bundle.py", "solace_cli.py")) {
-    $scriptPath = Join-Path $repoRoot $scriptName
-    if (Test-Path -LiteralPath $scriptPath) {
-        Copy-Item -LiteralPath $scriptPath -Destination (Join-Path $BundleDir $scriptName) -Force
-    }
-}
+# Legacy Python files NO LONGER bundled. Rust solace-runtime replaces all Python code.
+# yinyang_server.py, evidence_bundle.py, hub_tunnel_client.py — all dead code.
 
 Copy-Item -LiteralPath (Join-Path $repoRoot "VERSION") -Destination (Join-Path $BundleDir "VERSION") -Force
 if (Test-Path -LiteralPath (Join-Path $repoRoot "requirements.txt")) {
