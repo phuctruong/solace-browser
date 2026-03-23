@@ -167,10 +167,6 @@ install -m 755 "${RUNTIME_BINARY}" "${BUNDLE_DIR}/solace-runtime"
 # Legacy Python files NO LONGER bundled. Rust solace-runtime replaces all Python code.
 
 install -m 644 "${REPO_ROOT}/VERSION" "${BUNDLE_DIR}/VERSION"
-# requirements.txt no longer needed — pure Rust binary
-# if [ -f "${REPO_ROOT}/requirements.txt" ]; then
-#   install -m 644 "${REPO_ROOT}/requirements.txt" "${BUNDLE_DIR}/requirements.txt"
-fi
 if [ -f "${REPO_ROOT}/solace-hub/src-tauri/icons/yinyang-logo.png" ]; then
   install -m 644 "${REPO_ROOT}/solace-hub/src-tauri/icons/yinyang-logo.png" "${BUNDLE_DIR}/yinyang-logo.png"
 fi
