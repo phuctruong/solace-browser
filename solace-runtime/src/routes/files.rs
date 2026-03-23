@@ -10,10 +10,23 @@ use axum::Router;
 
 use crate::state::AppState;
 
-/// Find Hub assets directory — checks dev path then installed path.
-/// Works on mac/windows/linux: ~/.solace/hub/ is the production location.
+/// Find Hub assets directory — checks multiple paths for cross-platform production.
 fn hub_assets_dir(subdir: &str) -> std::path::PathBuf {
-    // Dev path (only exists on dev machine)
+    // 1. Next to the binary (MSI/deb install — production)
+    if let Ok(exe) = std::env::current_exe() {
+        if let Some(bin_dir) = exe.parent() {
+            let adjacent = bin_dir.join(subdir);
+            if adjacent.is_dir() {
+                return adjacent;
+            }
+            // Also check src/ subdir (Hub assets layout)
+            let src_sub = bin_dir.join("src").join(subdir);
+            if src_sub.is_dir() {
+                return src_sub;
+            }
+        }
+    }
+    // 2. Dev path (only exists on dev machine)
     let dev = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
         .parent()
         .unwrap_or(std::path::Path::new("."))
@@ -23,12 +36,12 @@ fn hub_assets_dir(subdir: &str) -> std::path::PathBuf {
     if dev.is_dir() {
         return dev;
     }
-    // Installed path (~/.solace/hub/{subdir})
+    // 3. Installed path (~/.solace/hub/{subdir})
     let installed = crate::utils::solace_home().join("hub").join(subdir);
     if installed.is_dir() {
         return installed;
     }
-    // Fallback to dev path (will 404 gracefully via ServeDir)
+    // Fallback (will 404 gracefully via ServeDir)
     dev
 }
 

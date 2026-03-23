@@ -194,7 +194,12 @@ fn spawn_backend_server(
 
     if is_native {
         eprintln!("INFO: Starting Rust runtime directly: {}", server_path.display());
-        return Command::new(server_path).spawn();
+        let mut cmd = Command::new(server_path);
+        // Set working directory to install dir so runtime finds apps/assets
+        if let Some(parent) = server_path.parent() {
+            cmd.current_dir(parent);
+        }
+        return cmd.spawn();
     }
 
     // Only use Python for .py files (legacy — should never reach here in production)

@@ -194,26 +194,52 @@ pub async fn download_and_install(manifest: &RemoteManifest) -> Result<String, S
         }
     }
 
-    // 5. Extract tarball
+    // 5. Extract/install update (platform-specific)
     let extract_dir = updates_dir.join(format!("v{}", manifest.version));
     let _ = std::fs::remove_dir_all(&extract_dir);
     let _ = std::fs::create_dir_all(&extract_dir);
 
-    let output = std::process::Command::new("tar")
-        .args([
-            "-xzf",
-            tarball_path.to_str().unwrap_or(""),
-            "-C",
-            extract_dir.to_str().unwrap_or(""),
-        ])
-        .output()
-        .map_err(|e| format!("Extract failed: {}", e))?;
+    #[cfg(target_os = "windows")]
+    {
+        // Windows: MSI — run msiexec for silent install
+        let output = std::process::Command::new("msiexec")
+            .args([
+                "/i",
+                tarball_path.to_str().unwrap_or(""),
+                "/qn",           // silent
+                "/norestart",    // don't reboot
+            ])
+            .output()
+            .map_err(|e| format!("MSI install failed: {}", e))?;
 
-    if !output.status.success() {
-        return Err(format!(
-            "Extract failed: {}",
-            String::from_utf8_lossy(&output.stderr)
-        ));
+        if !output.status.success() {
+            return Err(format!(
+                "MSI install failed (exit {}): {}",
+                output.status.code().unwrap_or(-1),
+                String::from_utf8_lossy(&output.stderr)
+            ));
+        }
+    }
+
+    #[cfg(not(target_os = "windows"))]
+    {
+        // Linux/macOS: tar.gz extraction
+        let output = std::process::Command::new("tar")
+            .args([
+                "-xzf",
+                tarball_path.to_str().unwrap_or(""),
+                "-C",
+                extract_dir.to_str().unwrap_or(""),
+            ])
+            .output()
+            .map_err(|e| format!("Extract failed: {}", e))?;
+
+        if !output.status.success() {
+            return Err(format!(
+                "Extract failed: {}",
+                String::from_utf8_lossy(&output.stderr)
+            ));
+        }
     }
 
     // 6. Swap binaries

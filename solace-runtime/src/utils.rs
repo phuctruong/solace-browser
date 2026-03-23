@@ -86,19 +86,23 @@ pub fn scan_app_dirs() -> Vec<PathBuf> {
 fn app_search_paths() -> Vec<PathBuf> {
     let mut paths = vec![solace_home().join("apps")];
 
-    // Production: apps bundled next to the binary (MSI/deb install)
+    // Production: apps bundled next to or near the binary (MSI/deb install)
     if let Ok(exe) = std::env::current_exe() {
         if let Some(bin_dir) = exe.parent() {
-            // Check: <install_dir>/data/default/apps/
-            let bundled = bin_dir.join("data").join("default").join("apps");
-            if bundled.is_dir() && !paths.iter().any(|p| p == &bundled) {
-                paths.push(bundled);
-            }
-            // Also check: <install_dir>/../data/default/apps/ (Linux .deb layout)
-            if let Some(parent) = bin_dir.parent() {
-                let deb_path = parent.join("data").join("default").join("apps");
-                if deb_path.is_dir() && !paths.iter().any(|p| p == &deb_path) {
-                    paths.push(deb_path);
+            // Search multiple possible layouts
+            let candidates = [
+                // Flat MSI: <install_dir>/data/default/apps/
+                bin_dir.join("data").join("default").join("apps"),
+                // Bundle subdir: <install_dir>/solace-browser-release/data/default/apps/
+                bin_dir.join("solace-browser-release").join("data").join("default").join("apps"),
+                // Linux .deb: <install_dir>/../data/default/apps/
+                bin_dir.parent().unwrap_or(bin_dir).join("data").join("default").join("apps"),
+                // Windows Program Files: check if apps are alongside the binary
+                bin_dir.join("apps"),
+            ];
+            for candidate in &candidates {
+                if candidate.is_dir() && !paths.iter().any(|p| p == candidate) {
+                    paths.push(candidate.clone());
                 }
             }
         }
