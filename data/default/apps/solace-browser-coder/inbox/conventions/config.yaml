@@ -1,0 +1,16 @@
+# Config — Solace Browser Coder
+# P1 Gamification + P25 Soul + P43 GLOW
+
+app_id: solace-browser-coder
+glow_score: 0
+belt: white
+target_rung: 65537
+
+cli_command: "claude"
+cli_args: ["--print", "--dangerously-skip-permissions"]
+cli_timeout_seconds: 300
+
+project_root: "/home/phuc/projects/solace-browser"
+source_root: "/home/phuc/projects/solace-browser/source/src"
+build_dir: "out/Solace"
+binary: "out/Solace/chrome"

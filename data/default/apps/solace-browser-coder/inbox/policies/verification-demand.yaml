@@ -1,0 +1,24 @@
+# P48: Verification Demand — Every claim needs evidence hash
+# Catches: FM5 (Confirmation Cascade)
+authority: 65537
+rule: every_claim_needs_evidence
+enforcement: hard
+
+claims_require:
+  - file_path: "Exact path to file created/modified"
+  - line_count: "Number of lines changed"
+  - compile_result: "exit code of build command"
+  - hash: "SHA-256 of file content"
+
+forbidden_claims:
+  - "it works" # without build exit code
+  - "done" # without evidence bundle
+  - "confirmed" # without hash
+  - "tested" # without test output
+  - "looks good" # self-review is banned
+
+verification_format: |
+  CLAIM: {what}
+  EVIDENCE: {file_path}:{line_number}
+  HASH: sha256:{hash}
+  BUILD: exit {code}

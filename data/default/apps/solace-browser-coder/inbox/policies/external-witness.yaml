@@ -1,0 +1,25 @@
+# P52: External Witness — Agent cannot be sole witness to any claim
+# Catches: FM1 (Self-Review) + FM2 (Narrative Control)
+authority: 65537
+rule: minimum_two_witnesses
+enforcement: hard
+
+witness_sources:
+  - human: "User approves/rejects in sidebar"
+  - build_system: "autoninja exit code"
+  - browser: "Screenshot captured by browser process"
+  - hash_chain: "SHA-256 evidence chain"
+  - external_llm: "/llm-qa with different LLMs"
+
+agent_witness_value: 0 # Agent testimony has ZERO evidentiary value
+
+minimum_witnesses_per_claim:
+  file_created: 2 # human + file exists check
+  build_succeeds: 2 # build system + human sees log
+  ui_works: 3 # screenshot + human + build
+  task_complete: 3 # build + screenshot + human approval
+
+forbidden:
+  - agent_only_testimony: "Agent says 'done' without external witness"
+  - agent_captures_screenshot: "Browser captures, not agent"
+  - agent_writes_evidence: "Yinyang writes evidence, not agent"

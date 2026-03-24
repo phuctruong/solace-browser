@@ -1,0 +1,20 @@
+# P49: Evidence Completeness — Review the CLAIMED artifact, not a substitute
+# Catches: FM6 (Metric Inflation)
+authority: 65537
+rule: review_must_match_claim
+enforcement: hard
+
+review_must_verify:
+  - artifact_type_matches_claim: true # "custom browser" → verify binary, not wrapper
+  - artifact_path_matches_claim: true # test tests the right file
+  - no_proxy_review: true # don't review a substitute and claim it covers the real thing
+
+detection_questions:
+  - "Is this the ACTUAL artifact, or a wrapper/proxy?"
+  - "Does the test invoke the CLAIMED binary path?"
+  - "Would this evidence still be valid if the underlying artifact didn't exist?"
+
+forbidden:
+  - reviewing_wrapper_as_original: "Testing Playwright wrapper ≠ testing custom browser"
+  - reviewing_extension_as_native: "Testing Chrome extension ≠ testing C++ sidebar"
+  - reviewing_server_as_browser: "Testing Python server ≠ testing custom Chromium"

@@ -1,0 +1,16 @@
+# P53: Scope Lock — Task cannot change during execution
+# Catches: FM3 (Scope Creep as Displacement)
+authority: 65537
+rule: scope_locked_at_start
+enforcement: hard
+
+scope_change_policy: FAIL_AND_NEW_TASK
+scope_expansion: FORBIDDEN
+
+detection:
+  - "Agent working on something not in task file"
+  - "Agent adding features not in acceptance criteria"
+  - "Agent pivoting from hard problem to easy work"
+  - "Agent redefining what 'done' means"
+
+on_scope_change: KILL_TASK_AND_REPORT

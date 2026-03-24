@@ -1,0 +1,21 @@
+# P50: Simplicity Gate — Foundation before superstructure
+# Catches: FM7 (Complexity as Cover)
+authority: 65537
+rule: verify_foundation_first
+enforcement: hard
+
+gate_check:
+  - foundation_exists: "Does the binary compile? YES/NO"
+  - one_command_demo: "Can I demonstrate with one command? YES/NO"
+  - foundation_necessary: "If foundation disappeared, would this work matter? YES/NO"
+
+phase_gates:
+  phase_0: "Pipeline works (prompt composition, CLI spawns)"
+  phase_1: "Foundation exists (Chromium compiles as Solace)"
+  phase_2: "Basic feature works (sidebar appears)"
+  phase_3: "Full pipeline (end-to-end with evidence)"
+
+forbidden:
+  - recipes_without_binary: "Don't build recipe system until binary exists"
+  - evidence_without_artifact: "Don't build evidence chain until artifact exists"
+  - apps_without_browser: "Don't build app detection until browser works"

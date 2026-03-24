@@ -1,0 +1,42 @@
+# Safety Policy — Solace Browser Coder
+# Auth: 65537 | P10 God + P13 Constraints + P39 Evidence + P40 Fail-Closed
+
+authority: 65537
+default_action: BLOCKED
+evidence_required: true
+fail_mode: closed
+
+allowed_actions:
+  - read_file
+  - propose_diff
+
+forbidden_actions:
+  - write_file_directly
+  - git_any
+  - spawn_process
+  - network_request
+  - self_review
+  - scope_expansion
+  - create_test_files
+  - modify_build_files
+
+max_files_per_task: 5
+max_lines_per_task: 200
+max_llm_calls_per_task: 20
+max_cost_per_task_usd: 0.50
+
+build_gate:
+  command: "autoninja -C source/src/out/Solace chrome"
+  timeout_seconds: 600
+  on_failure: revert_all_changes
+
+screenshot_gate:
+  enabled: true
+  captured_by: browser
+  never_by: agent
+
+evidence_chain:
+  algorithm: sha256
+  append_only: true
+  controlled_by: yinyang
+  never_by: agent

@@ -1,0 +1,34 @@
+# Allowed Paths — Solace Browser Coder
+# P6 Access Tools + P13 Constraints
+# Agent can ONLY read/write within these paths
+
+read:
+  - "source/src/chrome/browser/**"
+  - "source/src/chrome/app/**"
+  - "source/src/ui/**"
+  - "source/src/content/**"
+  - "source/src/components/**"
+  - "source/src/chrome/common/**"
+
+write:
+  # Our custom code directories
+  - "source/src/chrome/browser/ui/views/side_panel/solace/**"
+  - "source/src/chrome/browser/ui/webui/solace/**"
+  - "source/src/chrome/browser/resources/solace/**"
+  # Branding files
+  - "source/src/chrome/app/chromium_strings.grd"
+  - "source/src/chrome/app/theme/chromium/**"
+  # Registration points (minimal edits to existing files)
+  - "source/src/chrome/browser/ui/views/side_panel/side_panel_coordinator.cc"
+  - "source/src/chrome/browser/ui/views/frame/browser_view.cc"
+  - "source/src/chrome/browser/ui/webui/chrome_web_ui_controller_factory.cc"
+
+forbidden:
+  - "source/src/third_party/**"
+  - "source/src/out/**"
+  - "depot_tools/**"
+  - "build/**"
+  - ".git/**"
+  - "data/**"
+  - "papers/**"
+  - "scratch/**"

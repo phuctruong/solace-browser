@@ -1,0 +1,20 @@
+# Defaults — Solace Browser Coder
+# P5 Recipes + P41 Never-Worse
+
+language: cpp
+style: chromium
+indent: 2_spaces
+line_length: 80
+naming: chromium_convention
+
+build_command: "autoninja -C out/Solace chrome"
+build_timeout_seconds: 600
+screenshot_after_build: true
+revert_on_build_failure: true
+
+model: claude-opus-4-6
+token_budget_per_task: 20000
+
+# P5 Recipe replay — cache successful patterns
+replay_cache_enabled: true
+replay_cost_usd: 0.001

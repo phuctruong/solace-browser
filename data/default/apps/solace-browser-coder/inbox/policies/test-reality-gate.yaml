@@ -1,0 +1,26 @@
+# P54: Test Reality Gate — Tests must test the CLAIMED artifact
+# Catches: FM4 (Test Theater)
+authority: 65537
+rule: tests_match_claims
+enforcement: hard
+
+test_requirements:
+  - test_name_matches_artifact: true
+  - test_invokes_real_binary: true
+  - test_path_matches_claim_path: true
+
+detection_rules:
+  - "If claim = 'custom Chromium binary', test must invoke out/Solace/chrome"
+  - "If claim = 'native C++ sidebar', test must verify C++ class exists and compiles"
+  - "If claim = 'working WebUI', test must load chrome://solace/ and verify DOM"
+
+test_theater_examples:
+  - bad: "Test imports Playwright → tests Python wrapper → reports 'browser test passed'"
+  - good: "Test invokes out/Solace/chrome → verifies side panel entry → reports binary proof"
+  - bad: "Test mocks everything → all green → nothing real tested"
+  - good: "Test compiles with autoninja → checks exit code → real build"
+
+forbidden:
+  - mock_the_artifact: "Don't mock the thing you're claiming to build"
+  - test_substitute: "Don't test a wrapper and claim it tests the real thing"
+  - all_green_no_binary: "5700 green tests + no binary = test theater"

@@ -1,0 +1,27 @@
+id: solace-browser-coder
+name: Solace Browser Coder
+description: Writes code for Solace Browser. Chained through Yinyang consent pipeline. Agent proposes diffs, human approves, browser captures evidence.
+category: development
+status: installed
+safety: B
+tier: free
+tier_reason: "Core development tool — free for all contributors"
+site: "localhost:*"
+type: standard
+scopes:
+  - local.filesystem.read
+  - local.filesystem.write
+  - local.process.spawn
+  - local.evidence
+partners:
+  produces_for: []
+  consumes_from: []
+required_inbox:
+  prompts:
+    - system-prompt.md
+  policies:
+    - safety.yaml
+    - allowed-paths.yaml
+  conventions:
+    config: config.yaml
+    defaults: defaults.yaml

@@ -1,0 +1,101 @@
+{
+  "id": "solace-browser-coder",
+  "version": "1.0.0",
+  "type": "standard",
+  "platform": "localhost",
+  "oauth3_scopes": ["local.filesystem.read", "local.filesystem.write", "local.process.spawn", "local.evidence"],
+  "evidence_type": "lane_a",
+  "steps": [
+    {
+      "id": "load_inbox",
+      "action": "load_inbox",
+      "description": "Load northstar, skills, constraints, task from inbox",
+      "evidence_capture": true
+    },
+    {
+      "id": "compose_prompt",
+      "action": "transform",
+      "description": "Compose full prompt: northstar + system-prompt + task + context",
+      "operations": ["concatenate_inbox_files", "inject_temporal_context", "inject_previous_failures"]
+    },
+    {
+      "id": "spawn_claude",
+      "action": "spawn_process",
+      "description": "Spawn claude CLI as subprocess with composed prompt",
+      "command": "claude --print --dangerously-skip-permissions",
+      "stdin": "{composed_prompt}",
+      "timeout_seconds": 300,
+      "evidence_capture": true
+    },
+    {
+      "id": "parse_diffs",
+      "action": "transform",
+      "description": "Parse proposed diffs from Claude output",
+      "operations": ["extract_unified_diffs", "validate_paths_allowed", "validate_line_count"]
+    },
+    {
+      "id": "require_approval",
+      "action": "require_approval",
+      "description": "Show diffs in sidebar. User approves/rejects each file.",
+      "display": "diff_viewer",
+      "evidence_capture": true
+    },
+    {
+      "id": "write_files",
+      "action": "write_approved_files",
+      "description": "Write only user-approved diffs to disk",
+      "evidence_capture": true
+    },
+    {
+      "id": "build",
+      "action": "spawn_process",
+      "description": "Compile: autoninja -C out/Solace chrome",
+      "command": "autoninja -C source/src/out/Solace chrome",
+      "timeout_seconds": 600,
+      "on_failure": "revert_all_changes",
+      "evidence_capture": true
+    },
+    {
+      "id": "screenshot",
+      "action": "screenshot",
+      "description": "Launch binary, take screenshot (browser captures, not agent)",
+      "command": "source/src/out/Solace/chrome --no-sandbox",
+      "wait_seconds": 5,
+      "evidence_capture": true
+    },
+    {
+      "id": "seal_evidence",
+      "action": "seal_evidence",
+      "description": "Hash all artifacts, append to evidence chain",
+      "artifacts": ["diffs", "build_log", "screenshot"],
+      "hash_algorithm": "sha256"
+    },
+    {
+      "id": "save_to_outbox",
+      "action": "save_to_outbox",
+      "description": "Write evidence bundle and report to outbox",
+      "files": ["evidence.json", "report.md", "diffs/*.patch", "screenshots/*.png", "build-logs/*.log"]
+    }
+  ],
+  "error_handling": {
+    "on_build_failure": "revert_and_report",
+    "on_approval_rejected": "discard_diffs",
+    "on_timeout": "kill_and_report",
+    "on_budget_exceeded": "stop_and_report",
+    "max_retries": 0
+  },
+  "budgets": {
+    "max_reads": 50,
+    "max_writes": 5,
+    "max_llm_calls": 20,
+    "max_cost_per_run_usd": 0.50,
+    "max_screenshots": 3
+  },
+  "metadata": {
+    "tags": ["development", "chromium", "coding", "chained-agent"],
+    "difficulty": "hard",
+    "estimated_duration_s": 300,
+    "idempotent": false,
+    "destructive": false
+  }
+}

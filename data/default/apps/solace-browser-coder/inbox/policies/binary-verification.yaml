@@ -1,0 +1,25 @@
+# P51: Binary Verification — TRUE or FALSE, no "in progress"
+# Catches: FM8 (Plausible Deniability)
+authority: 65537
+rule: claims_are_binary
+enforcement: hard
+
+binary_questions:
+  - "Does the file exist at the claimed path? YES/NO"
+  - "Does the binary compile? YES/NO"
+  - "Does the binary launch? YES/NO"
+  - "Does the sidebar appear? YES/NO"
+  - "Can the user click it? YES/NO"
+
+forbidden_answers:
+  - "in progress"
+  - "working toward"
+  - "almost ready"
+  - "needs minor fixes"
+  - "partially implemented"
+
+verification_commands:
+  file_exists: "test -f {path} && echo YES || echo NO"
+  binary_compiles: "autoninja -C out/Solace chrome && echo YES || echo NO"
+  binary_launches: "timeout 10 ./out/Solace/chrome --no-sandbox && echo YES || echo NO"
+  screenshot_taken: "test -f outbox/screenshots/*.png && echo YES || echo NO"

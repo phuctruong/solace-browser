@@ -1,0 +1,18 @@
+{
+  "max_llm_calls_per_task": 20,
+  "max_cost_per_task_usd": 0.50,
+  "max_files_per_task": 5,
+  "max_lines_changed_per_task": 200,
+  "cooldown_seconds": 5,
+  "remaining_runs": 999,
+  "reads_per_run": 50,
+  "writes_per_run": 5,
+  "drafts_per_run": 3,
+  "daily_max_tasks": 20,
+  "daily_max_cost_usd": 5.00,
+  "current_usage": {
+    "tasks_today": 0,
+    "cost_today_usd": 0.0,
+    "files_changed_today": 0
+  }
+}
