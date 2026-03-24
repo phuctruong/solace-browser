@@ -50,7 +50,9 @@ async fn create_notification(
     if !valid_levels.contains(&level.as_str()) {
         return Err((
             StatusCode::BAD_REQUEST,
-            Json(json!({"error": format!("invalid level: {level}. Must be one of: {}", valid_levels.join(", "))})),
+            Json(
+                json!({"error": format!("invalid level: {level}. Must be one of: {}", valid_levels.join(", "))}),
+            ),
         ));
     }
 

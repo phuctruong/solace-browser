@@ -11,67 +11,67 @@
 :root {
   /* Light theme is default — see [data-theme="light"] below */
   --sb-transition: 150ms ease;
-  --sb-font-mono: "Cascadia Code", "Fira Code", "JetBrains Mono", monospace;
+  --sb-font-mono: "JetBrains Mono", "Cascadia Code", "Fira Code", monospace;
   --sb-font-scale: 1;
   --sb-kicker-track: 0.12em;
 }
 
 /* Light theme — Crio-inspired professional SaaS palette (DEFAULT) */
 [data-theme="light"], :root {
-  --sb-bg: #fafbfc;
-  --sb-surface: #ffffff;
-  --sb-surface-soft: #f6f8fa;
-  --sb-surface-strong: #eef1f5;
-  --sb-surface-hover: #f0f3f7;
-  --sb-border: #d8dee2;
-  --sb-border-strong: #c1c9d1;
-  --sb-text: #24292e;
-  --sb-text-muted: #586069;
-  --sb-accent: #2d92b2;
-  --sb-accent-hover: #247a96;
-  --sb-accent-soft: rgba(45, 146, 178, 0.08);
+  --sb-bg: #f4efe8;
+  --sb-surface: rgba(255, 252, 248, 0.98);
+  --sb-surface-soft: #fbf7f1;
+  --sb-surface-strong: #ebf0f5;
+  --sb-surface-hover: #f2f6fa;
+  --sb-border: #d1dbe5;
+  --sb-border-strong: #9fb3c7;
+  --sb-text: #132235;
+  --sb-text-muted: #425569;
+  --sb-accent: #0f7aa8;
+  --sb-accent-hover: #0a6288;
+  --sb-accent-soft: rgba(15, 122, 168, 0.1);
   --sb-on-accent: #ffffff;
-  --sb-success: #26bf8c;
-  --sb-warning: #ffa126;
-  --sb-danger: #d73a49;
-  --sb-signal: #2d92b2;
-  --sb-shadow: 0 4px 16px rgba(0, 0, 0, 0.06);
-  --sb-shadow-glow: 0 0 12px rgba(45, 146, 178, 0.12);
-  --sb-radius: 8px;
-  --sb-radius-lg: 16px;
-  --sb-radius-sm: 4px;
-  --sb-font: "FiraSans-Regular", "Segoe UI", system-ui, -apple-system, sans-serif;
-  --sb-pill-success-bg: rgba(38, 191, 140, 0.1);
-  --sb-pill-success-text: #1a8c63;
-  --sb-pill-warning-bg: rgba(255, 161, 38, 0.1);
-  --sb-pill-warning-text: #c67f1e;
-  --sb-pill-danger-bg: rgba(215, 58, 73, 0.1);
-  --sb-pill-danger-text: #d73a49;
-  --sb-pill-info-bg: rgba(45, 146, 178, 0.1);
-  --sb-pill-info-text: #2d92b2;
+  --sb-success: #168660;
+  --sb-warning: #9b5f00;
+  --sb-danger: #be3f4c;
+  --sb-signal: #0f7aa8;
+  --sb-shadow: 0 10px 28px rgba(37, 57, 82, 0.08);
+  --sb-shadow-glow: 0 0 16px rgba(15, 122, 168, 0.12);
+  --sb-radius: 10px;
+  --sb-radius-lg: 18px;
+  --sb-radius-sm: 6px;
+  --sb-font: "Manrope", "IBM Plex Sans", "Segoe UI", system-ui, -apple-system, sans-serif;
+  --sb-pill-success-bg: rgba(22, 134, 96, 0.12);
+  --sb-pill-success-text: #0f6b4b;
+  --sb-pill-warning-bg: rgba(155, 95, 0, 0.12);
+  --sb-pill-warning-text: #8b5200;
+  --sb-pill-danger-bg: rgba(190, 63, 76, 0.12);
+  --sb-pill-danger-text: #a83341;
+  --sb-pill-info-bg: rgba(15, 122, 168, 0.12);
+  --sb-pill-info-text: #0f6f99;
 }
 
 /* Dark theme — opt-in via data-theme="dark" */
 [data-theme="dark"] {
-  --sb-bg: #0f1e33;
-  --sb-surface: rgba(15, 30, 51, 0.95);
-  --sb-surface-soft: rgba(20, 36, 55, 0.84);
-  --sb-surface-strong: #1a2d47;
-  --sb-surface-hover: #1e3550;
-  --sb-border: rgba(118, 160, 201, 0.15);
-  --sb-border-strong: rgba(118, 160, 201, 0.35);
-  --sb-text: #e8ecf2;
-  --sb-text-muted: #8899aa;
-  --sb-accent: #78b9ff;
+  --sb-bg: #0d1826;
+  --sb-surface: rgba(17, 29, 45, 0.96);
+  --sb-surface-soft: rgba(23, 39, 58, 0.9);
+  --sb-surface-strong: #1b2d42;
+  --sb-surface-hover: #223852;
+  --sb-border: rgba(146, 178, 214, 0.18);
+  --sb-border-strong: rgba(146, 178, 214, 0.42);
+  --sb-text: #f3f7fb;
+  --sb-text-muted: #c0ccda;
+  --sb-accent: #7bc0ff;
   --sb-accent-hover: #9fd5ff;
-  --sb-accent-soft: rgba(120, 185, 255, 0.12);
+  --sb-accent-soft: rgba(123, 192, 255, 0.14);
   --sb-on-accent: #0a1628;
   --sb-success: #55d7aa;
   --sb-warning: #ffd479;
   --sb-danger: #ff7b7b;
-  --sb-signal: #78b9ff;
+  --sb-signal: #7bc0ff;
   --sb-shadow: 0 8px 32px rgba(2, 7, 15, 0.4);
-  --sb-shadow-glow: 0 0 20px rgba(120, 185, 255, 0.1);
+  --sb-shadow-glow: 0 0 24px rgba(123, 192, 255, 0.14);
   --sb-pill-success-bg: rgba(85, 215, 170, 0.15);
   --sb-pill-success-text: #55d7aa;
   --sb-pill-warning-bg: rgba(255, 212, 121, 0.15);
@@ -80,6 +80,7 @@
   --sb-pill-danger-text: #ff7b7b;
   --sb-pill-info-bg: rgba(120, 185, 255, 0.15);
   --sb-pill-info-text: #78b9ff;
+  --sb-font: "Manrope", "IBM Plex Sans", "Segoe UI", system-ui, -apple-system, sans-serif;
 }
 
 /* ═══════════════════════════════════════════════════════════════════
@@ -87,13 +88,13 @@
    ═══════════════════════════════════════════════════════════════════ */
 
 *, *::before, *::after { box-sizing: border-box; }
-html { font-size: calc(20px * var(--sb-font-scale)); }
+html { font-size: calc(18px * var(--sb-font-scale)); }
 body {
   margin: 0;
   font-family: var(--sb-font);
   background: var(--sb-bg);
   color: var(--sb-text);
-  line-height: 1.5;
+  line-height: 1.55;
 }
 a { color: var(--sb-accent); text-decoration: none; }
 a:hover { color: var(--sb-accent-hover); }
@@ -120,7 +121,7 @@ pre { background: var(--sb-surface-strong); padding: 1rem; border-radius: var(--
   align-items: center;
   gap: 0.5rem;
   font-weight: 700;
-  font-size: 1.1rem;
+  font-size: 1.15rem;
   letter-spacing: var(--sb-kicker-track);
 }
 .sb-topbar-brand img { height: 28px; width: 28px; }
@@ -156,11 +157,11 @@ pre { background: var(--sb-surface-strong); padding: 1rem; border-radius: var(--
   background: var(--sb-surface-strong);
   border: 2px solid var(--sb-border-strong);
   border-bottom: 2px solid var(--sb-border-strong);
-  color: var(--sb-text-muted);
+  color: color-mix(in srgb, var(--sb-text) 82%, var(--sb-text-muted));
   padding: 0.5rem 1.2rem;
   border-radius: var(--sb-radius) var(--sb-radius) 0 0;
   cursor: pointer;
-  font-size: 0.9rem;
+  font-size: 0.95rem;
   font-weight: 600;
   font-family: var(--sb-font);
   transition: all var(--sb-transition);

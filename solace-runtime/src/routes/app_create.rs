@@ -20,7 +20,10 @@ use crate::state::AppState;
 pub fn routes() -> Router<AppState> {
     Router::new()
         .route("/api/v1/apps/create", post(create_app))
-        .route("/api/v1/apps/create-from-job", post(create_from_job_description))
+        .route(
+            "/api/v1/apps/create-from-job",
+            post(create_from_job_description),
+        )
         .route("/api/v1/apps/types", get(list_app_types))
         .route("/api/v1/apps/:app_id/delete", post(delete_app))
         .route("/api/v1/apps/:app_id/update", post(update_app))
@@ -64,8 +67,12 @@ struct CreateAppPayload {
     template: String,
 }
 
-fn default_type() -> String { "standard".to_string() }
-fn default_domain() -> String { "general".to_string() }
+fn default_type() -> String {
+    "standard".to_string()
+}
+fn default_domain() -> String {
+    "general".to_string()
+}
 
 /// POST /api/v1/apps/create — create a new Solace app
 async fn create_app(
@@ -74,31 +81,75 @@ async fn create_app(
 ) -> Result<Json<Value>, (StatusCode, Json<Value>)> {
     // Validate ID
     if payload.id.is_empty() || payload.id.len() > 100 {
-        return Err((StatusCode::BAD_REQUEST, Json(json!({"error": "id required (1-100 chars, kebab-case)"}))));
+        return Err((
+            StatusCode::BAD_REQUEST,
+            Json(json!({"error": "id required (1-100 chars, kebab-case)"})),
+        ));
     }
-    if !payload.id.chars().all(|c| c.is_alphanumeric() || c == '-' || c == '_') {
-        return Err((StatusCode::BAD_REQUEST, Json(json!({"error": "id must be kebab-case (a-z, 0-9, hyphens)"}))));
+    if !payload
+        .id
+        .chars()
+        .all(|c| c.is_alphanumeric() || c == '-' || c == '_')
+    {
+        return Err((
+            StatusCode::BAD_REQUEST,
+            Json(json!({"error": "id must be kebab-case (a-z, 0-9, hyphens)"})),
+        ));
     }
 
     // Validate type
     let valid_types = ["standard", "conductor", "monitor", "agent", "bridge", "cli"];
     if !valid_types.contains(&payload.app_type.as_str()) {
-        return Err((StatusCode::BAD_REQUEST, Json(json!({"error": format!("Invalid type. Must be one of: {:?}", valid_types)}))));
+        return Err((
+            StatusCode::BAD_REQUEST,
+            Json(json!({"error": format!("Invalid type. Must be one of: {:?}", valid_types)})),
+        ));
     }
 
     // Create app directory
     let solace_home = crate::utils::solace_home();
-    let app_dir = solace_home.join("apps").join(&payload.domain).join(&payload.id);
+    let app_dir = solace_home
+        .join("apps")
+        .join(&payload.domain)
+        .join(&payload.id);
 
     if app_dir.exists() {
-        return Err((StatusCode::CONFLICT, Json(json!({"error": format!("App {} already exists", payload.id)}))));
+        return Err((
+            StatusCode::CONFLICT,
+            Json(json!({"error": format!("App {} already exists", payload.id)})),
+        ));
     }
 
-    fs::create_dir_all(&app_dir).map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, Json(json!({"error": e.to_string()}))))?;
-    fs::create_dir_all(app_dir.join("inbox")).map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, Json(json!({"error": e.to_string()}))))?;
-    fs::create_dir_all(app_dir.join("inbox").join("pending")).map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, Json(json!({"error": e.to_string()}))))?;
-    fs::create_dir_all(app_dir.join("outbox")).map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, Json(json!({"error": e.to_string()}))))?;
-    fs::create_dir_all(app_dir.join("outbox").join("runs")).map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, Json(json!({"error": e.to_string()}))))?;
+    fs::create_dir_all(&app_dir).map_err(|e| {
+        (
+            StatusCode::INTERNAL_SERVER_ERROR,
+            Json(json!({"error": e.to_string()})),
+        )
+    })?;
+    fs::create_dir_all(app_dir.join("inbox")).map_err(|e| {
+        (
+            StatusCode::INTERNAL_SERVER_ERROR,
+            Json(json!({"error": e.to_string()})),
+        )
+    })?;
+    fs::create_dir_all(app_dir.join("inbox").join("pending")).map_err(|e| {
+        (
+            StatusCode::INTERNAL_SERVER_ERROR,
+            Json(json!({"error": e.to_string()})),
+        )
+    })?;
+    fs::create_dir_all(app_dir.join("outbox")).map_err(|e| {
+        (
+            StatusCode::INTERNAL_SERVER_ERROR,
+            Json(json!({"error": e.to_string()})),
+        )
+    })?;
+    fs::create_dir_all(app_dir.join("outbox").join("runs")).map_err(|e| {
+        (
+            StatusCode::INTERNAL_SERVER_ERROR,
+            Json(json!({"error": e.to_string()})),
+        )
+    })?;
 
     // Generate manifest.md
     let mut manifest = format!(
@@ -115,14 +166,26 @@ async fn create_app(
 - **Type**: {}
 - **Safety**: A
 "#,
-        payload.name, payload.id, payload.id, payload.domain,
-        if payload.app_type == "cli" { "developer" } else if payload.app_type == "conductor" { "orchestration" } else { "general" },
+        payload.name,
+        payload.id,
+        payload.id,
+        payload.domain,
+        if payload.app_type == "cli" {
+            "developer"
+        } else if payload.app_type == "conductor" {
+            "orchestration"
+        } else {
+            "general"
+        },
         payload.app_type,
     );
 
     // Add type-specific fields
     if !payload.orchestrates.is_empty() {
-        manifest.push_str(&format!("- **Orchestrates**: {}\n", payload.orchestrates.join(", ")));
+        manifest.push_str(&format!(
+            "- **Orchestrates**: {}\n",
+            payload.orchestrates.join(", ")
+        ));
     }
     if !payload.binary.is_empty() {
         manifest.push_str(&format!("- **Binary**: {}\n", payload.binary));
@@ -144,12 +207,24 @@ report_template: {}
 {}
 "#,
         payload.schedule,
-        if payload.app_type == "cli" { "cli-output" } else { "feed-digest" },
-        if payload.description.is_empty() { format!("Custom {} app", payload.app_type) } else { payload.description.clone() },
+        if payload.app_type == "cli" {
+            "cli-output"
+        } else {
+            "feed-digest"
+        },
+        if payload.description.is_empty() {
+            format!("Custom {} app", payload.app_type)
+        } else {
+            payload.description.clone()
+        },
     ));
 
-    fs::write(app_dir.join("manifest.md"), &manifest)
-        .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, Json(json!({"error": e.to_string()}))))?;
+    fs::write(app_dir.join("manifest.md"), &manifest).map_err(|e| {
+        (
+            StatusCode::INTERNAL_SERVER_ERROR,
+            Json(json!({"error": e.to_string()})),
+        )
+    })?;
 
     // Also write manifest.yaml for data_sources (the .md parser doesn't handle complex fields)
     if !payload.data_sources.is_empty() || !payload.orchestrates.is_empty() {
@@ -180,18 +255,45 @@ report_template: {}
 
     // Write system prompt if provided
     if !payload.system_prompt.is_empty() {
-        fs::create_dir_all(app_dir.join("inbox").join("prompts"))
-            .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, Json(json!({"error": e.to_string()}))))?;
-        fs::write(app_dir.join("inbox").join("prompts").join("system-prompt.md"), &payload.system_prompt)
-            .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, Json(json!({"error": e.to_string()}))))?;
+        fs::create_dir_all(app_dir.join("inbox").join("prompts")).map_err(|e| {
+            (
+                StatusCode::INTERNAL_SERVER_ERROR,
+                Json(json!({"error": e.to_string()})),
+            )
+        })?;
+        fs::write(
+            app_dir
+                .join("inbox")
+                .join("prompts")
+                .join("system-prompt.md"),
+            &payload.system_prompt,
+        )
+        .map_err(|e| {
+            (
+                StatusCode::INTERNAL_SERVER_ERROR,
+                Json(json!({"error": e.to_string()})),
+            )
+        })?;
     }
 
     // Write template if provided
     if !payload.template.is_empty() {
-        fs::create_dir_all(app_dir.join("inbox").join("templates"))
-            .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, Json(json!({"error": e.to_string()}))))?;
-        fs::write(app_dir.join("inbox").join("templates").join("report.html"), &payload.template)
-            .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, Json(json!({"error": e.to_string()}))))?;
+        fs::create_dir_all(app_dir.join("inbox").join("templates")).map_err(|e| {
+            (
+                StatusCode::INTERNAL_SERVER_ERROR,
+                Json(json!({"error": e.to_string()})),
+            )
+        })?;
+        fs::write(
+            app_dir.join("inbox").join("templates").join("report.html"),
+            &payload.template,
+        )
+        .map_err(|e| {
+            (
+                StatusCode::INTERNAL_SERVER_ERROR,
+                Json(json!({"error": e.to_string()})),
+            )
+        })?;
     }
 
     // Write data sources config if provided
@@ -202,7 +304,13 @@ report_template: {}
         fs::write(
             app_dir.join("inbox").join("data-sources.json"),
             serde_json::to_string_pretty(&sources_json).unwrap_or_default(),
-        ).map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, Json(json!({"error": e.to_string()}))))?;
+        )
+        .map_err(|e| {
+            (
+                StatusCode::INTERNAL_SERVER_ERROR,
+                Json(json!({"error": e.to_string()})),
+            )
+        })?;
     }
 
     // Update app count
@@ -310,21 +418,37 @@ async fn delete_app(
     Path(app_id): Path<String>,
     State(state): State<AppState>,
 ) -> Result<Json<Value>, (StatusCode, Json<Value>)> {
-    let app_dir = crate::utils::find_app_dir(&app_id)
-        .ok_or_else(|| (StatusCode::NOT_FOUND, Json(json!({"error": format!("App {} not found", app_id)}))))?;
+    let app_dir = crate::utils::find_app_dir(&app_id).ok_or_else(|| {
+        (
+            StatusCode::NOT_FOUND,
+            Json(json!({"error": format!("App {} not found", app_id)})),
+        )
+    })?;
 
     // Only allow deleting apps in ~/.solace/apps/ (not bundled defaults)
     let solace_home = crate::utils::solace_home();
     if !app_dir.starts_with(solace_home.join("apps")) {
-        return Err((StatusCode::FORBIDDEN, Json(json!({"error": "Cannot delete bundled default apps. Only user-created apps can be deleted."}))));
+        return Err((
+            StatusCode::FORBIDDEN,
+            Json(
+                json!({"error": "Cannot delete bundled default apps. Only user-created apps can be deleted."}),
+            ),
+        ));
     }
 
     let _ = crate::evidence::record_event(
-        &solace_home, &format!("app.deleted.{}", app_id), "user",
+        &solace_home,
+        &format!("app.deleted.{}", app_id),
+        "user",
         json!({"app_id": app_id, "path": app_dir.display().to_string()}),
     );
 
-    fs::remove_dir_all(&app_dir).map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, Json(json!({"error": e.to_string()}))))?;
+    fs::remove_dir_all(&app_dir).map_err(|e| {
+        (
+            StatusCode::INTERNAL_SERVER_ERROR,
+            Json(json!({"error": e.to_string()})),
+        )
+    })?;
 
     *state.app_count.write() = crate::utils::scan_apps().len() as u32;
 
@@ -357,8 +481,12 @@ async fn update_app(
     State(_state): State<AppState>,
     Json(payload): Json<UpdateAppPayload>,
 ) -> Result<Json<Value>, (StatusCode, Json<Value>)> {
-    let app_dir = crate::utils::find_app_dir(&app_id)
-        .ok_or_else(|| (StatusCode::NOT_FOUND, Json(json!({"error": format!("App {} not found", app_id)}))))?;
+    let app_dir = crate::utils::find_app_dir(&app_id).ok_or_else(|| {
+        (
+            StatusCode::NOT_FOUND,
+            Json(json!({"error": format!("App {} not found", app_id)})),
+        )
+    })?;
 
     // Load current manifest
     let mut manifest = crate::app_engine::inbox::load_manifest(&app_dir)
@@ -392,10 +520,18 @@ async fn update_app(
     }
 
     // Write updated manifest.yaml
-    let yaml_str = serde_yaml::to_string(&manifest)
-        .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, Json(json!({"error": e.to_string()}))))?;
-    fs::write(app_dir.join("manifest.yaml"), &yaml_str)
-        .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, Json(json!({"error": e.to_string()}))))?;
+    let yaml_str = serde_yaml::to_string(&manifest).map_err(|e| {
+        (
+            StatusCode::INTERNAL_SERVER_ERROR,
+            Json(json!({"error": e.to_string()})),
+        )
+    })?;
+    fs::write(app_dir.join("manifest.yaml"), &yaml_str).map_err(|e| {
+        (
+            StatusCode::INTERNAL_SERVER_ERROR,
+            Json(json!({"error": e.to_string()})),
+        )
+    })?;
 
     // Update system prompt if provided
     if let Some(prompt) = &payload.system_prompt {
@@ -407,7 +543,9 @@ async fn update_app(
 
     let solace_home = crate::utils::solace_home();
     let _ = crate::evidence::record_event(
-        &solace_home, &format!("app.updated.{}", app_id), "user",
+        &solace_home,
+        &format!("app.updated.{}", app_id),
+        "user",
         json!({"app_id": app_id, "updated_fields": updated_fields}),
     );
 
@@ -515,10 +653,23 @@ fn extract_targets_from_jd(jd: &str) -> ExtractedTargets {
         // Company names: 2+ consecutive capitalized words
         let words: Vec<&str> = trimmed.split_whitespace().collect();
         for window in words.windows(2) {
-            if window[0].chars().next().map(|c| c.is_uppercase()).unwrap_or(false)
-                && window[1].chars().next().map(|c| c.is_uppercase()).unwrap_or(false)
-                && window[0].len() > 1 && window[1].len() > 1
-                && !["The", "This", "That", "With", "From", "Into", "Each", "For", "And", "Not", "All"].contains(&window[0])
+            if window[0]
+                .chars()
+                .next()
+                .map(|c| c.is_uppercase())
+                .unwrap_or(false)
+                && window[1]
+                    .chars()
+                    .next()
+                    .map(|c| c.is_uppercase())
+                    .unwrap_or(false)
+                && window[0].len() > 1
+                && window[1].len() > 1
+                && ![
+                    "The", "This", "That", "With", "From", "Into", "Each", "For", "And", "Not",
+                    "All",
+                ]
+                .contains(&window[0])
             {
                 let name = format!("{} {}", window[0], window[1]);
                 if !companies.contains(&name) && companies.len() < 10 {
@@ -530,12 +681,39 @@ fn extract_targets_from_jd(jd: &str) -> ExtractedTargets {
 
     // Extract keywords: nouns and noun phrases relevant to business roles
     let industry_terms = [
-        "pricing", "market", "revenue", "growth", "competitor", "product",
-        "sales", "pipeline", "customer", "churn", "retention", "acquisition",
-        "compliance", "regulatory", "patent", "funding", "partnership",
-        "technology", "platform", "saas", "enterprise", "startup",
-        "engagement", "conversion", "roi", "kpi", "benchmark",
-        "distribution", "channel", "e-commerce", "retail", "b2b", "b2c",
+        "pricing",
+        "market",
+        "revenue",
+        "growth",
+        "competitor",
+        "product",
+        "sales",
+        "pipeline",
+        "customer",
+        "churn",
+        "retention",
+        "acquisition",
+        "compliance",
+        "regulatory",
+        "patent",
+        "funding",
+        "partnership",
+        "technology",
+        "platform",
+        "saas",
+        "enterprise",
+        "startup",
+        "engagement",
+        "conversion",
+        "roi",
+        "kpi",
+        "benchmark",
+        "distribution",
+        "channel",
+        "e-commerce",
+        "retail",
+        "b2b",
+        "b2c",
     ];
     let jd_lower = jd.to_lowercase();
     for term in &industry_terms {
@@ -544,7 +722,10 @@ fn extract_targets_from_jd(jd: &str) -> ExtractedTargets {
         }
     }
 
-    ExtractedTargets { companies, keywords }
+    ExtractedTargets {
+        companies,
+        keywords,
+    }
 }
 
 /// Generate search queries specific to the role and targets
@@ -640,8 +821,15 @@ async fn create_from_job_description(
         "executive".to_string() // default
     });
 
-    let company = payload.company.clone().unwrap_or_else(|| "My Company".to_string());
-    let app_id = format!("{}-role-{}", company.to_lowercase().replace(' ', "-"), detected_role);
+    let company = payload
+        .company
+        .clone()
+        .unwrap_or_else(|| "My Company".to_string());
+    let app_id = format!(
+        "{}-role-{}",
+        company.to_lowercase().replace(' ', "-"),
+        detected_role
+    );
     let app_name = format!("{} — {}", company, detected_role.replace('_', " "));
     let persona = role_persona(&detected_role);
     let apps = role_apps(&detected_role);
@@ -650,7 +838,10 @@ async fn create_from_job_description(
     let solace_home = crate::utils::solace_home();
     let app_dir = solace_home.join("apps").join("localhost").join(&app_id);
     std::fs::create_dir_all(&app_dir).map_err(|e| {
-        (StatusCode::INTERNAL_SERVER_ERROR, Json(json!({"error": e.to_string()})))
+        (
+            StatusCode::INTERNAL_SERVER_ERROR,
+            Json(json!({"error": e.to_string()})),
+        )
     })?;
     std::fs::create_dir_all(app_dir.join("inbox")).ok();
     std::fs::create_dir_all(app_dir.join("outbox")).ok();
@@ -675,12 +866,24 @@ levels:
 "#,
         app_id = app_id,
         app_name = app_name,
-        desc = payload.job_description.chars().take(200).collect::<String>().replace('"', "'"),
-        orch = apps.iter().map(|a| format!("  - {}", a)).collect::<Vec<_>>().join("\n"),
+        desc = payload
+            .job_description
+            .chars()
+            .take(200)
+            .collect::<String>()
+            .replace('"', "'"),
+        orch = apps
+            .iter()
+            .map(|a| format!("  - {}", a))
+            .collect::<Vec<_>>()
+            .join("\n"),
     );
 
     std::fs::write(app_dir.join("manifest.yaml"), &manifest).map_err(|e| {
-        (StatusCode::INTERNAL_SERVER_ERROR, Json(json!({"error": e.to_string()})))
+        (
+            StatusCode::INTERNAL_SERVER_ERROR,
+            Json(json!({"error": e.to_string()})),
+        )
     })?;
 
     // Write manifest.md with Prime Mermaid format
@@ -695,7 +898,11 @@ levels:
     std::fs::write(app_dir.join("manifest.md"), manifest_md).ok();
 
     // Save job description to inbox
-    std::fs::write(app_dir.join("inbox").join("job-description.md"), &payload.job_description).ok();
+    std::fs::write(
+        app_dir.join("inbox").join("job-description.md"),
+        &payload.job_description,
+    )
+    .ok();
 
     // ── ONBOARD PHASE: Parse JD into actionable config ──
     std::fs::create_dir_all(app_dir.join("inbox").join("context")).ok();
@@ -712,15 +919,30 @@ levels:
         targets_list = targets.companies.iter().map(|c| format!("  - {}", c)).collect::<Vec<_>>().join("\n"),
         keywords = targets.keywords.iter().map(|k| format!("  - {}", k)).collect::<Vec<_>>().join("\n"),
     );
-    std::fs::write(app_dir.join("inbox").join("context").join("targets.yaml"), &targets_yaml).ok();
+    std::fs::write(
+        app_dir.join("inbox").join("context").join("targets.yaml"),
+        &targets_yaml,
+    )
+    .ok();
 
     // Write context/search-queries.yaml
     let queries_yaml = format!(
         "# Auto-generated search queries for {role} role\nqueries:\n{queries}\n",
         role = detected_role,
-        queries = search_queries.iter().map(|q| format!("  - \"{}\"", q)).collect::<Vec<_>>().join("\n"),
+        queries = search_queries
+            .iter()
+            .map(|q| format!("  - \"{}\"", q))
+            .collect::<Vec<_>>()
+            .join("\n"),
     );
-    std::fs::write(app_dir.join("inbox").join("context").join("search-queries.yaml"), &queries_yaml).ok();
+    std::fs::write(
+        app_dir
+            .join("inbox")
+            .join("context")
+            .join("search-queries.yaml"),
+        &queries_yaml,
+    )
+    .ok();
 
     // Write Prime Mermaid diagram for this role
     let diagram = format!(
@@ -745,7 +967,14 @@ levels:
         targets_str = targets.companies.join(", "),
         queries_str = search_queries.join("; "),
     );
-    std::fs::write(app_dir.join("inbox").join("context").join("persona-prompt.md"), &persona_prompt).ok();
+    std::fs::write(
+        app_dir
+            .join("inbox")
+            .join("context")
+            .join("persona-prompt.md"),
+        &persona_prompt,
+    )
+    .ok();
 
     // Record evidence
     let _ = crate::evidence::record_event(

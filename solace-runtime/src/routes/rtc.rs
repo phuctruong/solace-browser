@@ -2,13 +2,7 @@
 //! RTC (Real-Time Compression/Reconstruction) — rebuild pages from Stillwater + Ripple + PZip.
 //! The core value proposition: Stillwater template + Ripple delta = full page HTML.
 
-use axum::{
-    extract::Path,
-    http::StatusCode,
-    response::Html,
-    routing::get,
-    Json, Router,
-};
+use axum::{extract::Path, http::StatusCode, response::Html, routing::get, Json, Router};
 use serde_json::{json, Value};
 
 use crate::state::AppState;
@@ -17,7 +11,10 @@ pub fn routes() -> Router<AppState> {
     Router::new()
         .route("/api/v1/rtc/reconstruct/:hash", get(reconstruct_page))
         .route("/api/v1/rtc/domain/:domain", get(domain_sitemap))
-        .route("/api/v1/rtc/domain/:domain/:page", get(domain_page_snapshot))
+        .route(
+            "/api/v1/rtc/domain/:domain/:page",
+            get(domain_page_snapshot),
+        )
         .route("/api/v1/rtc/stats", get(rtc_stats))
 }
 
@@ -29,25 +26,35 @@ async fn reconstruct_page(
     let pzwb_path = wiki_dir.join(format!("{}.pzwb", hash));
 
     if !pzwb_path.exists() {
-        return Err((StatusCode::NOT_FOUND, Json(json!({"error": format!("PZWB not found: {}", hash)}))));
+        return Err((
+            StatusCode::NOT_FOUND,
+            Json(json!({"error": format!("PZWB not found: {}", hash)})),
+        ));
     }
 
     let data = std::fs::read(&pzwb_path).map_err(|e| {
-        (StatusCode::INTERNAL_SERVER_ERROR, Json(json!({"error": format!("read: {e}")})))
+        (
+            StatusCode::INTERNAL_SERVER_ERROR,
+            Json(json!({"error": format!("read: {e}")})),
+        )
     })?;
 
     let html = crate::pzip::web::decompress(&data).map_err(|e| {
-        (StatusCode::INTERNAL_SERVER_ERROR, Json(json!({"error": format!("decompress: {e}")})))
+        (
+            StatusCode::INTERNAL_SERVER_ERROR,
+            Json(json!({"error": format!("decompress: {e}")})),
+        )
     })?;
 
     Ok(Html(String::from_utf8_lossy(&html).to_string()))
 }
 
 /// Get domain sitemap — all captured pages for a domain
-async fn domain_sitemap(
-    Path(domain): Path<String>,
-) -> Json<Value> {
-    let wiki_dir = crate::utils::solace_home().join("wiki").join("domains").join(&domain);
+async fn domain_sitemap(Path(domain): Path<String>) -> Json<Value> {
+    let wiki_dir = crate::utils::solace_home()
+        .join("wiki")
+        .join("domains")
+        .join(&domain);
 
     if !wiki_dir.exists() {
         return Json(json!({"domain": domain, "pages": [], "count": 0}));
@@ -70,7 +77,15 @@ async fn domain_sitemap(
                             url = line.replace("# Prime Snapshot: ", "").trim().to_string();
                         }
                         if line.contains("Codec:") {
-                            codec = line.split("Codec:").nth(1).unwrap_or("").split('|').next().unwrap_or("").trim().to_string();
+                            codec = line
+                                .split("Codec:")
+                                .nth(1)
+                                .unwrap_or("")
+                                .split('|')
+                                .next()
+                                .unwrap_or("")
+                                .trim()
+                                .to_string();
                         }
                     }
                 }
@@ -89,7 +104,9 @@ async fn domain_sitemap(
     // Check for Stillwater template
     let stillwater_path = wiki_dir.join("stillwater.prime-snapshot.md");
     let has_stillwater = stillwater_path.exists();
-    let stillwater_size = std::fs::metadata(&stillwater_path).map(|m| m.len()).unwrap_or(0);
+    let stillwater_size = std::fs::metadata(&stillwater_path)
+        .map(|m| m.len())
+        .unwrap_or(0);
 
     let count = pages.len();
     Json(json!({
@@ -105,15 +122,24 @@ async fn domain_sitemap(
 async fn domain_page_snapshot(
     Path((domain, page)): Path<(String, String)>,
 ) -> Result<Json<Value>, (StatusCode, Json<Value>)> {
-    let wiki_dir = crate::utils::solace_home().join("wiki").join("domains").join(&domain);
+    let wiki_dir = crate::utils::solace_home()
+        .join("wiki")
+        .join("domains")
+        .join(&domain);
     let snapshot_path = wiki_dir.join(format!("{}.prime-snapshot.md", page));
 
     if !snapshot_path.exists() {
-        return Err((StatusCode::NOT_FOUND, Json(json!({"error": format!("snapshot not found: {}/{}", domain, page)}))));
+        return Err((
+            StatusCode::NOT_FOUND,
+            Json(json!({"error": format!("snapshot not found: {}/{}", domain, page)})),
+        ));
     }
 
     let content = std::fs::read_to_string(&snapshot_path).map_err(|e| {
-        (StatusCode::INTERNAL_SERVER_ERROR, Json(json!({"error": format!("read: {e}")})))
+        (
+            StatusCode::INTERNAL_SERVER_ERROR,
+            Json(json!({"error": format!("read: {e}")})),
+        )
     })?;
 
     // Also load Stillwater template
@@ -142,7 +168,9 @@ async fn rtc_stats() -> Json<Value> {
         if let Ok(entries) = std::fs::read_dir(&wiki_dir) {
             for entry in entries.flatten() {
                 let name = entry.file_name().to_string_lossy().to_string();
-                if name.ends_with(".prime-snapshot.md") { snapshot_count += 1; }
+                if name.ends_with(".prime-snapshot.md") {
+                    snapshot_count += 1;
+                }
                 if name.ends_with(".pzwb") {
                     pzwb_count += 1;
                     total_pzwb_size += entry.metadata().map(|m| m.len()).unwrap_or(0);
@@ -160,8 +188,14 @@ async fn rtc_stats() -> Json<Value> {
                 if entry.file_type().map(|t| t.is_dir()).unwrap_or(false) {
                     let domain = entry.file_name().to_string_lossy().to_string();
                     let page_count = std::fs::read_dir(entry.path())
-                        .into_iter().flatten().filter_map(|e| e.ok())
-                        .filter(|e| e.file_name().to_string_lossy().ends_with(".prime-snapshot.md"))
+                        .into_iter()
+                        .flatten()
+                        .filter_map(|e| e.ok())
+                        .filter(|e| {
+                            e.file_name()
+                                .to_string_lossy()
+                                .ends_with(".prime-snapshot.md")
+                        })
                         .count();
                     let has_stillwater = entry.path().join("stillwater.prime-snapshot.md").exists();
                     domains.push(json!({
@@ -175,7 +209,10 @@ async fn rtc_stats() -> Json<Value> {
         }
     }
 
-    let rtc_ready = domains.iter().filter(|d| d["rtc_ready"].as_bool().unwrap_or(false)).count();
+    let rtc_ready = domains
+        .iter()
+        .filter(|d| d["rtc_ready"].as_bool().unwrap_or(false))
+        .count();
 
     Json(json!({
         "snapshots": snapshot_count,

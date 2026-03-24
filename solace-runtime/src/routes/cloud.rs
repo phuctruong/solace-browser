@@ -127,9 +127,7 @@ struct AppSummary {
 /// Collects local evidence + installed apps, encrypts with AES-256-GCM using
 /// the vault key derived from the cloud API key, and POSTs the ciphertext to
 /// the solaceagi.com twin sync endpoint. Stores a sync receipt locally.
-async fn sync_up(
-    State(state): State<AppState>,
-) -> Result<Json<Value>, (StatusCode, Json<Value>)> {
+async fn sync_up(State(state): State<AppState>) -> Result<Json<Value>, (StatusCode, Json<Value>)> {
     let config = require_cloud_config(&state)?;
     let solace_home = crate::utils::solace_home();
 
@@ -193,9 +191,7 @@ async fn sync_up(
             if status.is_success() {
                 (true, cloud_hash)
             } else {
-                return Err(sync_error(format!(
-                    "cloud returned {status}: {body_text}"
-                )));
+                return Err(sync_error(format!("cloud returned {status}: {body_text}")));
             }
         }
         Err(error) => {
@@ -265,9 +261,7 @@ async fn sync_down(
             if status.is_success() {
                 body_text
             } else {
-                return Err(sync_error(format!(
-                    "cloud returned {status}: {body_text}"
-                )));
+                return Err(sync_error(format!("cloud returned {status}: {body_text}")));
             }
         }
         Err(error) => {
@@ -337,9 +331,7 @@ async fn sync_down(
 /// GET /api/v1/cloud/sync/status
 ///
 /// Returns the last sync receipt (time, direction, conflict count).
-async fn sync_status(
-    State(state): State<AppState>,
-) -> Json<Value> {
+async fn sync_status(State(state): State<AppState>) -> Json<Value> {
     let config = state.cloud_config.read().clone();
     let solace_home = crate::utils::solace_home();
     let receipt = load_sync_receipt(&solace_home);
@@ -364,23 +356,16 @@ async fn sync_status(
 // ---------------------------------------------------------------------------
 
 fn require_cloud_config(state: &AppState) -> Result<CloudConfig, (StatusCode, Json<Value>)> {
-    state
-        .cloud_config
-        .read()
-        .clone()
-        .ok_or_else(|| {
-            (
-                StatusCode::PRECONDITION_FAILED,
-                Json(json!({"error": "cloud not connected — call POST /api/v1/cloud/connect first"})),
-            )
-        })
+    state.cloud_config.read().clone().ok_or_else(|| {
+        (
+            StatusCode::PRECONDITION_FAILED,
+            Json(json!({"error": "cloud not connected — call POST /api/v1/cloud/connect first"})),
+        )
+    })
 }
 
 fn sync_error(message: String) -> (StatusCode, Json<Value>) {
-    (
-        StatusCode::BAD_GATEWAY,
-        Json(json!({"error": message})),
-    )
+    (StatusCode::BAD_GATEWAY, Json(json!({"error": message})))
 }
 
 fn sync_dir(solace_home: &std::path::Path) -> std::path::PathBuf {
@@ -407,10 +392,7 @@ struct MergeResult {
 ///
 /// For evidence: we append cloud entries whose IDs don't already exist locally.
 /// For apps: no-op (we don't auto-install apps from cloud — that's a separate flow).
-fn merge_cloud_state(
-    solace_home: &std::path::Path,
-    cloud: &SyncPayload,
-) -> MergeResult {
+fn merge_cloud_state(solace_home: &std::path::Path, cloud: &SyncPayload) -> MergeResult {
     let local_evidence = crate::evidence::list_evidence(solace_home, usize::MAX);
     let local_ids: std::collections::HashSet<String> = local_evidence
         .iter()

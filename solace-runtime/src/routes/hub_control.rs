@@ -24,6 +24,9 @@ pub fn routes() -> Router<AppState> {
         .route("/api/v1/hub/type", post(hub_type_text))
         .route("/api/v1/hub/key", post(hub_key))
         .route("/api/v1/hub/eval", post(hub_eval))
+        .route("/api/v1/hub/pending-js", get(hub_pending_js))
+        .route("/api/v1/hub/eval-result", get(get_hub_eval_result))
+        .route("/api/v1/hub/eval-result", post(post_hub_eval_result))
         .route("/api/v1/hub/dom", get(hub_dom))
 }
 
@@ -37,7 +40,9 @@ fn find_hub_window() -> Option<String> {
 
     for token in list.split(|c: char| c == ',' || c == ' ' || c == '\n') {
         let wid = token.trim();
-        if !wid.starts_with("0x") { continue; }
+        if !wid.starts_with("0x") {
+            continue;
+        }
 
         let class_out = std::process::Command::new("xprop")
             .args(["-id", wid, "WM_CLASS"])
@@ -61,14 +66,16 @@ fn find_browser_window() -> Option<String> {
 
     for token in list.split(|c: char| c == ',' || c == ' ' || c == '\n') {
         let wid = token.trim();
-        if !wid.starts_with("0x") { continue; }
+        if !wid.starts_with("0x") {
+            continue;
+        }
 
         let class_out = std::process::Command::new("xprop")
             .args(["-id", wid, "WM_CLASS"])
             .output()
             .ok()?;
         let class_str = String::from_utf8_lossy(&class_out.stdout).to_lowercase();
-        if class_str.contains("chromium") || class_str.contains("solace") && !class_str.contains("hub") {
+        if class_str.contains("solace") && !class_str.contains("hub") {
             return Some(wid.to_string());
         }
     }
@@ -85,6 +92,8 @@ async fn hub_status(State(state): State<AppState>) -> Json<Value> {
     Json(json!({
         "hub": "solace-hub",
         "runtime_version": crate::updates::local_version(),
+        "runtime_pid": std::process::id(),
+        "runtime_binary": "solace-runtime",
         "uptime_seconds": state.uptime_seconds(),
         "port": 8888,
         "cloud_connected": cloud.is_some(),
@@ -113,6 +122,8 @@ async fn hub_accessibility(State(state): State<AppState>) -> Json<Value> {
         "window": "solace-hub",
         "tabs": [
             {"id": "overview", "label": "Overview"},
+            {"id": "backoffice", "label": "Backoffice"},
+            {"id": "workers", "label": "Workers"},
             {"id": "sessions", "label": "Sessions"},
             {"id": "events", "label": "Events"},
             {"id": "remote", "label": "Remote"},
@@ -159,7 +170,9 @@ async fn hub_action(
             *state.cloud_config.write() = None;
             let solace_home = crate::utils::solace_home();
             let _ = crate::config::clear_cloud_config(&solace_home);
-            Ok(Json(json!({"action": "sign_out", "result": "disconnected"})))
+            Ok(Json(
+                json!({"action": "sign_out", "result": "disconnected"}),
+            ))
         }
         "launch_browser" => {
             let has_llm = state.cloud_config.read().is_some()
@@ -170,10 +183,19 @@ async fn hub_action(
                     Json(json!({"error": "No AI engine configured", "llm_gate": true})),
                 ));
             }
-            let url = payload.params.get("url").and_then(|v| v.as_str()).unwrap_or("https://solaceagi.com/dashboard");
-            Ok(Json(json!({"action": "launch_browser", "result": "use POST /api/v1/browser/launch instead", "url": url})))
+            let url = payload
+                .params
+                .get("url")
+                .and_then(|v| v.as_str())
+                .unwrap_or("https://solaceagi.com/dashboard");
+            Ok(Json(
+                json!({"action": "launch_browser", "result": "use POST /api/v1/browser/launch instead", "url": url}),
+            ))
         }
-        _ => Err((StatusCode::BAD_REQUEST, Json(json!({"error": format!("Unknown action: {}", payload.action)})))),
+        _ => Err((
+            StatusCode::BAD_REQUEST,
+            Json(json!({"error": format!("Unknown action: {}", payload.action)})),
+        )),
     }
 }
 
@@ -191,12 +213,13 @@ async fn hub_screenshot() -> Result<Json<Value>, (StatusCode, Json<Value>)> {
     match capture {
         Ok(output) if output.status.success() => {
             let bytes = std::fs::read(&path).map_err(|e| {
-                (StatusCode::INTERNAL_SERVER_ERROR, Json(json!({"error": e.to_string()})))
+                (
+                    StatusCode::INTERNAL_SERVER_ERROR,
+                    Json(json!({"error": e.to_string()})),
+                )
             })?;
-            let b64 = ::base64::Engine::encode(
-                &::base64::engine::general_purpose::STANDARD,
-                &bytes,
-            );
+            let b64 =
+                ::base64::Engine::encode(&::base64::engine::general_purpose::STANDARD, &bytes);
             let _ = std::fs::remove_file(&path);
 
             let solace_home = crate::utils::solace_home();
@@ -214,7 +237,10 @@ async fn hub_screenshot() -> Result<Json<Value>, (StatusCode, Json<Value>)> {
                 "format": "png",
             })))
         }
-        _ => Err((StatusCode::INTERNAL_SERVER_ERROR, Json(json!({"error": "Screenshot failed. Install ImageMagick (import command)."})))),
+        _ => Err((
+            StatusCode::INTERNAL_SERVER_ERROR,
+            Json(json!({"error": "Screenshot failed. Install ImageMagick (import command)."})),
+        )),
     }
 }
 
@@ -242,7 +268,8 @@ async fn hub_click(
         find_browser_window()
     } else {
         find_hub_window()
-    }.ok_or((
+    }
+    .ok_or((
         StatusCode::NOT_FOUND,
         Json(json!({"error": format!("{} window not found", payload.target)})),
     ))?;
@@ -258,9 +285,13 @@ async fn hub_click(
     // Move mouse and click relative to window
     let result = std::process::Command::new("xdotool")
         .args([
-            "mousemove", "--window", &window_id,
-            &x.to_string(), &y.to_string(),
-            "click", "1",
+            "mousemove",
+            "--window",
+            &window_id,
+            &x.to_string(),
+            &y.to_string(),
+            "click",
+            "1",
         ])
         .output();
 
@@ -274,10 +305,8 @@ async fn hub_click(
                 .output();
 
             let b64 = std::fs::read(&path).ok().map(|bytes| {
-                let encoded = ::base64::Engine::encode(
-                    &::base64::engine::general_purpose::STANDARD,
-                    &bytes,
-                );
+                let encoded =
+                    ::base64::Engine::encode(&::base64::engine::general_purpose::STANDARD, &bytes);
                 let _ = std::fs::remove_file(&path);
                 encoded
             });
@@ -325,7 +354,8 @@ async fn hub_type_text(
         find_browser_window()
     } else {
         find_hub_window()
-    }.ok_or((
+    }
+    .ok_or((
         StatusCode::NOT_FOUND,
         Json(json!({"error": format!("{} window not found", payload.target)})),
     ))?;
@@ -339,10 +369,13 @@ async fn hub_type_text(
         .output();
 
     match result {
-        Ok(output) if output.status.success() => {
-            Ok(Json(json!({"typed": true, "text": payload.text, "window_id": window_id})))
-        }
-        _ => Err((StatusCode::INTERNAL_SERVER_ERROR, Json(json!({"error": "xdotool type failed"})))),
+        Ok(output) if output.status.success() => Ok(Json(
+            json!({"typed": true, "text": payload.text, "window_id": window_id}),
+        )),
+        _ => Err((
+            StatusCode::INTERNAL_SERVER_ERROR,
+            Json(json!({"error": "xdotool type failed"})),
+        )),
     }
 }
 
@@ -361,7 +394,8 @@ async fn hub_key(
         find_browser_window()
     } else {
         find_hub_window()
-    }.ok_or((
+    }
+    .ok_or((
         StatusCode::NOT_FOUND,
         Json(json!({"error": format!("{} window not found", payload.target)})),
     ))?;
@@ -375,10 +409,13 @@ async fn hub_key(
         .output();
 
     match result {
-        Ok(output) if output.status.success() => {
-            Ok(Json(json!({"key_sent": true, "key": payload.key, "window_id": window_id})))
-        }
-        _ => Err((StatusCode::INTERNAL_SERVER_ERROR, Json(json!({"error": "xdotool key failed"})))),
+        Ok(output) if output.status.success() => Ok(Json(
+            json!({"key_sent": true, "key": payload.key, "window_id": window_id}),
+        )),
+        _ => Err((
+            StatusCode::INTERNAL_SERVER_ERROR,
+            Json(json!({"error": "xdotool key failed"})),
+        )),
     }
 }
 
@@ -395,6 +432,7 @@ async fn hub_eval(
 ) -> Result<Json<Value>, (StatusCode, Json<Value>)> {
     // Store the JS to execute — the Hub's inline script polls this
     *state.pending_js.write() = Some(payload.js.clone());
+    *state.pending_js_result.write() = None;
 
     Ok(Json(json!({
         "queued": true,
@@ -403,22 +441,69 @@ async fn hub_eval(
     })))
 }
 
+async fn hub_pending_js(State(state): State<AppState>) -> Json<Value> {
+    let pending = state.pending_js.write().take();
+    Json(json!({
+        "js": pending,
+    }))
+}
+
+#[derive(Deserialize)]
+struct EvalResultPayload {
+    #[serde(default)]
+    ok: bool,
+    #[serde(default)]
+    result: Value,
+    #[serde(default)]
+    error: Option<String>,
+}
+
+async fn post_hub_eval_result(
+    State(state): State<AppState>,
+    Json(payload): Json<EvalResultPayload>,
+) -> Json<Value> {
+    let value = json!({
+        "ok": payload.ok,
+        "result": payload.result,
+        "error": payload.error,
+    });
+    *state.pending_js_result.write() = Some(value.clone());
+    Json(value)
+}
+
+async fn get_hub_eval_result(State(state): State<AppState>) -> Json<Value> {
+    let result = state.pending_js_result.read().clone();
+    Json(json!({
+        "result": result,
+    }))
+}
+
 /// Get the current DOM structure of a page served by the runtime
 async fn hub_dom() -> Result<Json<Value>, (StatusCode, Json<Value>)> {
     // Fetch the Hub's page from ourselves and extract structure
     let client = reqwest::Client::new();
-    let resp = client.get("http://localhost:8888/")
+    let resp = client
+        .get("http://localhost:8888/")
         .timeout(std::time::Duration::from_secs(3))
         .send()
         .await
-        .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, Json(json!({"error": e.to_string()}))))?;
+        .map_err(|e| {
+            (
+                StatusCode::INTERNAL_SERVER_ERROR,
+                Json(json!({"error": e.to_string()})),
+            )
+        })?;
 
     let html = resp.text().await.map_err(|e| {
-        (StatusCode::INTERNAL_SERVER_ERROR, Json(json!({"error": e.to_string()})))
+        (
+            StatusCode::INTERNAL_SERVER_ERROR,
+            Json(json!({"error": e.to_string()})),
+        )
     })?;
 
     // Extract key elements
-    let tabs: Vec<&str> = html.match_indices("data-tab=\"")
+    let tabs: Vec<&str> = html
+        .match_indices("data-tab=\"")
         .map(|(i, _)| {
             let start = i + 10;
             let end = html[start..].find('"').map(|e| start + e).unwrap_or(start);

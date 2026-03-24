@@ -1,11 +1,22 @@
 // Diagram: 04-hub-lifecycle
-// Global tab switcher (must be outside IIFE for onclick= to reach it)
+function setActiveTab(tabId) {
+  document.querySelectorAll('.sb-tab[data-tab]').forEach(function(tab) {
+    var selected = tab.dataset.tab === tabId;
+    tab.classList.toggle('sb-tab--active', selected);
+    tab.setAttribute('aria-selected', selected ? 'true' : 'false');
+  });
+
+  document.querySelectorAll('.hub-tab-panel').forEach(function(panel) {
+    var selected = panel.id === 'tab-' + tabId;
+    panel.hidden = !selected;
+    panel.style.display = selected ? 'block' : 'none';
+    panel.classList.toggle('sh-tab-panel-hidden', !selected);
+  });
+}
+
+// Global tab switcher kept for compatibility with older hooks.
 function switchTab(btn, tabId) {
-  document.querySelectorAll('.sb-tab').forEach(function(t) { t.classList.remove('sb-tab--active'); });
-  btn.classList.add('sb-tab--active');
-  document.querySelectorAll('.hub-tab-panel').forEach(function(p) { p.style.display = 'none'; });
-  var panel = document.getElementById('tab-' + tabId);
-  if (panel) { panel.style.display = 'block'; }
+  setActiveTab(tabId);
 }
 
 // IIFE for all other functionality
@@ -16,6 +27,114 @@ function switchTab(btn, tabId) {
   function $(id){return document.getElementById(id);}
   function esc(s){var d=document.createElement('div');d.textContent=String(s||'');return d.innerHTML;}
   function toast(m,t){var c=$('toast-container'),e=document.createElement('div');e.className='sb-toast sb-toast--'+(t||'success');e.textContent=m;c.appendChild(e);setTimeout(function(){e.remove();},4000);}
+
+  function normalizeEvalResult(value) {
+    if (typeof value === 'undefined') return null;
+    if (value === null) return null;
+    if (typeof value === 'string' || typeof value === 'number' || typeof value === 'boolean') return value;
+    try {
+      return JSON.parse(JSON.stringify(value));
+    } catch (e) {
+      return String(value);
+    }
+  }
+
+  function postEvalResult(payload) {
+    return fetch(API + '/api/v1/hub/eval-result', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify(payload)
+    }).catch(function(){});
+  }
+
+  function hubStateSnapshot() {
+    var active = document.querySelector('.sb-tab.sb-tab--active[data-tab]');
+    return {
+      active_tab: active ? active.dataset.tab : null,
+      visible_panels: Array.from(document.querySelectorAll('.hub-tab-panel')).filter(function(panel) {
+        return !panel.hidden && panel.style.display !== 'none';
+      }).map(function(panel) {
+        return panel.id;
+      }),
+      topbar_user: $('topbar-user') ? $('topbar-user').textContent : null,
+      version_badge: $('hub-version-badge') ? $('hub-version-badge').textContent : null,
+      theme: document.documentElement.getAttribute('data-theme') || 'dark'
+    };
+  }
+
+  function executeHubCommand(command) {
+    if (!command || typeof command !== 'object') {
+      throw new Error('Hub command must be an object');
+    }
+
+    switch (command.op) {
+      case 'get_state':
+        return hubStateSnapshot();
+      case 'set_active_tab': {
+        var tab = document.querySelector('.sb-tab[data-tab="' + command.tab + '"]');
+        if (!tab) {
+          throw new Error('Unknown tab: ' + command.tab);
+        }
+        tab.click();
+        return hubStateSnapshot();
+      }
+      case 'click_selector': {
+        var element = document.querySelector(command.selector);
+        if (!element) {
+          throw new Error('Selector not found: ' + command.selector);
+        }
+        element.click();
+        return hubStateSnapshot();
+      }
+      case 'get_text': {
+        var target = document.querySelector(command.selector);
+        if (!target) {
+          throw new Error('Selector not found: ' + command.selector);
+        }
+        return {
+          selector: command.selector,
+          text: target.textContent || ''
+        };
+      }
+      default:
+        throw new Error('Unsupported hub command: ' + command.op);
+    }
+  }
+
+  function pollPendingHubJs() {
+    return get('/api/v1/hub/pending-js').then(function(payload) {
+      if (!payload || !payload.js) {
+        return;
+      }
+
+      try {
+        var command = JSON.parse(payload.js);
+        return postEvalResult({ok: true, result: normalizeEvalResult(executeHubCommand(command))});
+      } catch (parseErr) {
+        // Not JSON; fall through to legacy eval path below.
+      }
+
+      try {
+        var value = window.eval(payload.js);
+        if (value && typeof value.then === 'function') {
+          return value.then(function(resolved) {
+            return postEvalResult({ok: true, result: normalizeEvalResult(resolved)});
+          }).catch(function(err) {
+            return postEvalResult({ok: false, error: err ? String(err.message || err) : 'Hub eval failed'});
+          });
+        }
+        return postEvalResult({ok: true, result: normalizeEvalResult(value)});
+      } catch (err) {
+        return postEvalResult({
+          ok: false,
+          error: err ? String(err.message || err) : 'Hub eval failed',
+          result: {
+            hint: 'Prefer JSON commands such as {\"op\":\"set_active_tab\",\"tab\":\"backoffice\"} because CSP blocks arbitrary eval in production.'
+          }
+        });
+      }
+    }).catch(function(){});
+  }
 
   // Theme
   document.querySelectorAll('.sb-theme-btn').forEach(function(b){b.addEventListener('click',function(){document.documentElement.setAttribute('data-theme',b.dataset.theme);document.querySelectorAll('.sb-theme-btn').forEach(function(x){x.classList.toggle('sb-theme-btn--active',x===b);});});});
@@ -153,27 +272,25 @@ function switchTab(btn, tabId) {
       setTimeout(function() {
         showMainUI();
 
-          if (hasLLM) {
-            // Signed in or BYOK set — ready to launch
-            $('llm-card').classList.add('hub-ready');
-            $('llm-card').classList.remove('hub-blocked');
-            // btn-launch stays enabled (hasLLM is true from cloud/byok)
-          } else if (!installed.length) {
-            // No CLIs AND no cloud — show setup prompts
-            $('llm-gate').innerHTML =
-              '<div class="hub-gate">' +
-              '<div class="hub-gate-msg">Solace Browser requires an LLM to power it.</div>' +
-              '<div class="sb-flex sb-gap-sm" style="justify-content:center;flex-wrap:wrap">' +
-              '<button class="sb-btn sb-btn--primary" data-action="promptBYOK">Enter API Key (BYOK)</button>' +
-              '<button class="sb-btn" data-action="openManagedLLM">Sign Up for Managed LLM</button>' +
-              '</div>' +
-              '<div class="sb-text-muted sb-mt-md" style="font-size:0.8rem">Or install claude, codex, or gemini CLI on your PATH</div>' +
-              '</div>';
-            $('llm-card').classList.add('hub-blocked');
-
-          }
-        }, 500);
-      }, 1200);
+        if (hasLLM) {
+          // Signed in or BYOK set — ready to launch
+          $('llm-card').classList.add('hub-ready');
+          $('llm-card').classList.remove('hub-blocked');
+          // btn-launch stays enabled (hasLLM is true from cloud/byok)
+        } else if (!installed.length) {
+          // No CLIs AND no cloud — show setup prompts
+          $('llm-gate').innerHTML =
+            '<div class="hub-gate">' +
+            '<div class="hub-gate-msg">Solace Browser requires an LLM to power it.</div>' +
+            '<div class="sb-flex sb-gap-sm sb-flex-center">' +
+            '<button class="sb-btn sb-btn--primary" data-action="promptBYOK">Enter API Key (BYOK)</button>' +
+            '<button class="sb-btn" data-action="openManagedLLM">Sign Up for Managed LLM</button>' +
+            '</div>' +
+            '<div class="sb-text-muted sb-mt-md sb-text-sm">Or install claude, codex, or gemini CLI on your PATH</div>' +
+            '</div>';
+          $('llm-card').classList.add('hub-blocked');
+        }
+      }, 500);
     });
   }
 
@@ -703,22 +820,28 @@ function switchTab(btn, tabId) {
 
   // ─── Tab Switching ───
   function initTabs() {
-    document.querySelectorAll('.sb-tab').forEach(function(tab) {
+    document.querySelectorAll('.sb-tab[data-tab]').forEach(function(tab) {
+      if (tab.dataset.bound === '1') {
+        return;
+      }
+      tab.dataset.bound = '1';
       tab.addEventListener('click', function(e) {
         e.preventDefault();
-        document.querySelectorAll('.sb-tab').forEach(function(t) { t.classList.remove('sb-tab--active'); t.setAttribute('aria-selected','false'); });
-        tab.classList.add('sb-tab--active');
-        tab.setAttribute('aria-selected','true');
+        e.stopPropagation();
         var target = tab.dataset.tab;
-        document.querySelectorAll('.hub-tab-panel').forEach(function(p) { p.style.display = 'none'; });
-        var panel = $('tab-' + target);
-        if (panel) { panel.style.display = 'block'; panel.classList.remove('sh-tab-panel-hidden'); }
+        setActiveTab(target);
         // Refresh data when switching tabs
         if (target === 'sessions') try { refreshSessionsTab(); } catch(e) {}
         if (target === 'events') try { refreshEvents(); } catch(e) {}
         if (target === 'settings') try { refreshSettings(); } catch(e) {}
       });
     });
+
+    var active = document.querySelector('.sb-tab.sb-tab--active[data-tab]') ||
+      document.querySelector('.sb-tab[data-tab]');
+    if (active) {
+      setActiveTab(active.dataset.tab);
+    }
   }
   // Init tabs — try immediately, also on DOMContentLoaded, also on load
   initTabs();
@@ -795,6 +918,9 @@ function switchTab(btn, tabId) {
   // Signoffs poll every 5s
   setTimeout(refreshSignoffs, 3000);
   setInterval(refreshSignoffs, 5000);
+  // Hub eval poll for runtime-driven agent control
+  setTimeout(pollPendingHubJs, 1000);
+  setInterval(pollPendingHubJs, 1000);
 
   function loadVersionInfo() {
     get('/health').then(function(d) {

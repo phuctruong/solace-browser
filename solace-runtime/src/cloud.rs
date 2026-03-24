@@ -33,7 +33,9 @@ pub async fn run_heartbeat(state: AppState) {
                     // On startup, don't clear config immediately — the bridge from
                     // solaceagi.com may re-send a fresh token. Only clear after
                     // multiple consecutive failures in the heartbeat loop.
-                    tracing::warn!("cloud reconnect: API key validation failed — keeping config, will retry");
+                    tracing::warn!(
+                        "cloud reconnect: API key validation failed — keeping config, will retry"
+                    );
                     consecutive_failures += 1;
                 }
                 Err(error) => {
@@ -78,7 +80,9 @@ pub async fn run_heartbeat(state: AppState) {
                             "heartbeat 401: token rejected — will clear after 3 consecutive failures"
                         );
                         if consecutive_failures >= 3 {
-                            tracing::error!("heartbeat: 3 consecutive 401s — clearing cloud config");
+                            tracing::error!(
+                                "heartbeat: 3 consecutive 401s — clearing cloud config"
+                            );
                             *state.cloud_config.write() = None;
                             let solace_home = crate::utils::solace_home();
                             let _ = crate::config::clear_cloud_config(&solace_home);
@@ -112,8 +116,10 @@ pub async fn run_heartbeat(state: AppState) {
                     if consecutive_failures * HEARTBEAT_INTERVAL_SECS as u32
                         >= OFFLINE_THRESHOLD_SECS as u32
                     {
-                        tracing::warn!("device marked offline after {} consecutive failures",
-                            consecutive_failures);
+                        tracing::warn!(
+                            "device marked offline after {} consecutive failures",
+                            consecutive_failures
+                        );
                     }
                 }
             }

@@ -58,6 +58,8 @@ pub struct AppState {
     pub update_status: Arc<RwLock<crate::updates::UpdateStatus>>,
     /// Pending JS to execute in Hub WebView (polled by Hub).
     pub pending_js: Arc<RwLock<Option<String>>>,
+    /// Last JS eval result returned by the Hub WebView.
+    pub pending_js_result: Arc<RwLock<Option<serde_json::Value>>>,
     /// Live page HTML: the actual currently-rendered full page HTML of the active browser tab.
     /// Updated by the sidebar on every URL change (2s polling via WebSocket url_changed event).
     /// GET /api/v1/browser/page-html returns this. MCP tool browser_page_html reads it.
@@ -267,11 +269,11 @@ pub struct WorkerRun {
     pub app_id: String,
     pub app_name: String,
     pub run_id: String,
-    pub status: String,           // running, done, error
+    pub status: String, // running, done, error
     pub current_step: usize,
     pub total_steps: usize,
     pub step_label: String,
-    pub log_lines: Vec<String>,   // last N log lines
+    pub log_lines: Vec<String>, // last N log lines
     pub started_at: String,
     pub updated_at: String,
 }
@@ -309,9 +311,7 @@ impl AppState {
             notifications: Arc::new(RwLock::new(Vec::new())),
             schedules: Arc::new(RwLock::new(schedules)),
             evidence_count: Arc::new(RwLock::new(0)),
-            app_count: Arc::new(RwLock::new(
-                crate::utils::scan_apps().len() as u32,
-            )),
+            app_count: Arc::new(RwLock::new(crate::utils::scan_apps().len() as u32)),
             budget_usage: Arc::new(RwLock::new(budget_usage)),
             cloud_config: Arc::new(RwLock::new(cloud_config)),
             theme: Arc::new(RwLock::new(settings.theme)),
@@ -335,6 +335,7 @@ impl AppState {
             tunnel: Arc::new(RwLock::new(TunnelState::default())),
             update_status: Arc::new(RwLock::new(crate::updates::UpdateStatus::default())),
             pending_js: Arc::new(RwLock::new(None)),
+            pending_js_result: Arc::new(RwLock::new(None)),
             page_html: Arc::new(RwLock::new(PageHtml::default())),
             browser_tabs: Arc::new(RwLock::new(Vec::new())),
             worker_run: Arc::new(RwLock::new(None)),

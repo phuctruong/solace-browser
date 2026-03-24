@@ -2,12 +2,7 @@
 //! Email sending via SMTP (replaces managed email services).
 //! Uses curl SMTP or system sendmail. No external dependencies.
 
-use axum::{
-    extract::State,
-    http::StatusCode,
-    routing::post,
-    Json, Router,
-};
+use axum::{extract::State, http::StatusCode, routing::post, Json, Router};
 use serde::Deserialize;
 use serde_json::{json, Value};
 use std::process::Command;
@@ -15,8 +10,7 @@ use std::process::Command;
 use crate::state::AppState;
 
 pub fn routes() -> Router<AppState> {
-    Router::new()
-        .route("/api/v1/email/send", post(send_email))
+    Router::new().route("/api/v1/email/send", post(send_email))
 }
 
 #[derive(Deserialize)]
@@ -36,11 +30,16 @@ async fn send_email(
     Json(req): Json<SendEmail>,
 ) -> Result<Json<Value>, (StatusCode, Json<Value>)> {
     if req.to.is_empty() || req.subject.is_empty() {
-        return Err((StatusCode::BAD_REQUEST, Json(json!({"error": "to and subject required"}))));
+        return Err((
+            StatusCode::BAD_REQUEST,
+            Json(json!({"error": "to and subject required"})),
+        ));
     }
 
     let from = if req.from.is_empty() {
-        state.cloud_config.read()
+        state
+            .cloud_config
+            .read()
             .as_ref()
             .map(|c| c.user_email.clone())
             .unwrap_or_else(|| "noreply@solaceagi.com".to_string())
@@ -63,11 +62,19 @@ async fn send_email(
     // Write to temp file for curl
     let tmp = std::env::temp_dir().join(format!("solace-email-{}.eml", uuid::Uuid::new_v4()));
     std::fs::write(&tmp, &email).map_err(|e| {
-        (StatusCode::INTERNAL_SERVER_ERROR, Json(json!({"error": format!("write: {e}")})))
+        (
+            StatusCode::INTERNAL_SERVER_ERROR,
+            Json(json!({"error": format!("write: {e}")})),
+        )
     })?;
 
     // Try sendmail first (most reliable on Linux), then curl SMTP
-    let result = if Command::new("which").arg("sendmail").output().map(|o| o.status.success()).unwrap_or(false) {
+    let result = if Command::new("which")
+        .arg("sendmail")
+        .output()
+        .map(|o| o.status.success())
+        .unwrap_or(false)
+    {
         Command::new("sendmail")
             .arg("-t")
             .arg("-i")
@@ -78,7 +85,8 @@ async fn send_email(
         // For now, just log the email intent
         Ok(std::process::Output {
             status: std::process::ExitStatus::default(),
-            stdout: b"Email queued (no SMTP configured - install sendmail or configure SMTP)".to_vec(),
+            stdout: b"Email queued (no SMTP configured - install sendmail or configure SMTP)"
+                .to_vec(),
             stderr: Vec::new(),
         })
     };
@@ -96,11 +104,15 @@ async fn send_email(
     *state.evidence_count.write() += 1;
 
     // Record in backoffice messages
-    state.event_bus.publish("email.sent", json!({
-        "to": req.to,
-        "subject": req.subject,
-        "from": from,
-    }), "email_worker");
+    state.event_bus.publish(
+        "email.sent",
+        json!({
+            "to": req.to,
+            "subject": req.subject,
+            "from": from,
+        }),
+        "email_worker",
+    );
 
     match result {
         Ok(output) => {

@@ -1,7 +1,11 @@
 // Diagram: 27-prime-wiki-snapshots
 use std::fs;
 
-use axum::{extract::State, routing::{get, post}, Json, Router};
+use axum::{
+    extract::State,
+    routing::{get, post},
+    Json, Router,
+};
 use serde::Deserialize;
 use serde_json::json;
 
@@ -53,7 +57,10 @@ async fn extract_page(
     Json(req): Json<ExtractRequest>,
 ) -> Json<serde_json::Value> {
     // Security: reject non-HTTP URLs (prevent file:// traversal)
-    if !req.url.starts_with("http://") && !req.url.starts_with("https://") && !req.url.starts_with("app://") {
+    if !req.url.starts_with("http://")
+        && !req.url.starts_with("https://")
+        && !req.url.starts_with("app://")
+    {
         return Json(json!({
             "status": "error",
             "error": "URL must start with http://, https://, or app://",
@@ -84,16 +91,44 @@ async fn extract_page(
             // This enables: page reconstruction, regression testing, AI comprehension.
             let section_nodes: String = if decomp.ripple.sections.is_empty() {
                 // If no sections extracted, use headings as nodes
-                decomp.stillwater.headings.iter().enumerate().map(|(i, h)| {
-                    let safe = h.replace('"', "'").replace('\n', " ").chars().take(40).collect::<String>();
-                    format!("    PAGE --> S{}[{}]", i, safe)
-                }).collect::<Vec<_>>().join("\n")
+                decomp
+                    .stillwater
+                    .headings
+                    .iter()
+                    .enumerate()
+                    .map(|(i, h)| {
+                        let safe = h
+                            .replace('"', "'")
+                            .replace('\n', " ")
+                            .chars()
+                            .take(40)
+                            .collect::<String>();
+                        format!("    PAGE --> S{}[{}]", i, safe)
+                    })
+                    .collect::<Vec<_>>()
+                    .join("\n")
             } else {
-                decomp.ripple.sections.iter().enumerate().map(|(i, s)| {
-                    let label = if s.heading.is_empty() { "Section" } else { &s.heading };
-                    let safe = label.replace('"', "'").replace('\n', " ").chars().take(40).collect::<String>();
-                    format!("    PAGE --> S{}[{}]", i, safe)
-                }).collect::<Vec<_>>().join("\n")
+                decomp
+                    .ripple
+                    .sections
+                    .iter()
+                    .enumerate()
+                    .map(|(i, s)| {
+                        let label = if s.heading.is_empty() {
+                            "Section"
+                        } else {
+                            &s.heading
+                        };
+                        let safe = label
+                            .replace('"', "'")
+                            .replace('\n', " ")
+                            .chars()
+                            .take(40)
+                            .collect::<String>();
+                        format!("    PAGE --> S{}[{}]", i, safe)
+                    })
+                    .collect::<Vec<_>>()
+                    .join("\n")
             };
             let title_short = decomp.ripple.title.chars().take(50).collect::<String>();
             let page_label = extract_path(&decomp.url);
@@ -131,7 +166,11 @@ async fn extract_page(
                 sha = decomp.sha256,
                 path = page_label,
                 codec = decomp.codec.name(),
-                ratio = if compressed > 0 { format!("{:.1}:1", content.len() as f64 / compressed as f64) } else { "N/A".to_string() },
+                ratio = if compressed > 0 {
+                    format!("{:.1}:1", content.len() as f64 / compressed as f64)
+                } else {
+                    "N/A".to_string()
+                },
                 orig = content.len(),
                 comp = compressed,
                 title = title_short,
@@ -175,22 +214,30 @@ async fn extract_page(
                         domain = domain,
                         ts = decomp.ripple.timestamp,
                         th = decomp.stillwater.template_hash,
-                        nav = decomp.stillwater.nav_links
+                        nav = decomp
+                            .stillwater
+                            .nav_links
                             .iter()
                             .map(|l| format!("- {l}"))
                             .collect::<Vec<_>>()
                             .join("\n"),
-                        headings = decomp.stillwater.headings
+                        headings = decomp
+                            .stillwater
+                            .headings
                             .iter()
                             .map(|h| format!("- {h}"))
                             .collect::<Vec<_>>()
                             .join("\n"),
-                        css = decomp.stillwater.css_tokens
+                        css = decomp
+                            .stillwater
+                            .css_tokens
                             .iter()
                             .map(|t| format!("- `{t}`"))
                             .collect::<Vec<_>>()
                             .join("\n"),
-                        meta = decomp.stillwater.meta
+                        meta = decomp
+                            .stillwater
+                            .meta
                             .iter()
                             .map(|(k, v)| format!("- {k}: {v}"))
                             .collect::<Vec<_>>()
@@ -268,15 +315,18 @@ async fn extract_page(
             }
 
             // Check screenshot setting
-            let auto_screenshot = crate::config::load_settings(
-                &crate::utils::solace_home(),
-            ).auto_screenshot;
+            let auto_screenshot =
+                crate::config::load_settings(&crate::utils::solace_home()).auto_screenshot;
 
             // Token savings: raw HTML tokens vs compressed snapshot tokens
             let raw_tokens = content.len() / 4;
             let snap_tokens = compressed / 4;
             let tokens_saved = raw_tokens.saturating_sub(snap_tokens);
-            let savings_pct = if raw_tokens > 0 { tokens_saved * 100 / raw_tokens } else { 0 };
+            let savings_pct = if raw_tokens > 0 {
+                tokens_saved * 100 / raw_tokens
+            } else {
+                0
+            };
 
             Json(json!({
                 "status": "extracted",
@@ -483,9 +533,7 @@ async fn capture_screenshot(
     // Decode base64 and write PNG
     match base64_decode(&req.png_base64) {
         Ok(png_bytes) => {
-            let screenshot_hash = crate::utils::sha256_hex(
-                &String::from_utf8_lossy(&png_bytes),
-            );
+            let screenshot_hash = crate::utils::sha256_hex(&String::from_utf8_lossy(&png_bytes));
             let _ = fs::write(&filepath, &png_bytes);
 
             // Record evidence for the screenshot
@@ -525,9 +573,7 @@ async fn capture_screenshot(
 fn base64_decode(input: &str) -> Result<Vec<u8>, String> {
     use ::base64::engine::general_purpose::STANDARD;
     use ::base64::Engine;
-    STANDARD
-        .decode(input)
-        .map_err(|error| format!("{error}"))
+    STANDARD.decode(input).map_err(|error| format!("{error}"))
 }
 
 /// Trigger an async cloud sync push. Called after evidence is sealed for

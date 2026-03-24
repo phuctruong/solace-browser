@@ -223,7 +223,8 @@ async fn chat_message(
         }
         Intent::RunApp => {
             let app = extract_app_name(&payload.message);
-            let preview = format!("Run app '{app}' → will fetch data, render template, write to outbox");
+            let preview =
+                format!("Run app '{app}' → will fetch data, render template, write to outbox");
             if cooldown > 0 {
                 (preview, FsmState::Cooldown, true)
             } else {
@@ -272,7 +273,11 @@ async fn chat_message(
 
     state.notifications.write().push(Notification {
         id: uuid::Uuid::new_v4().to_string(),
-        message: format!("Chat [{:?}]: {}", intent, &payload.message.chars().take(50).collect::<String>()),
+        message: format!(
+            "Chat [{:?}]: {}",
+            intent,
+            &payload.message.chars().take(50).collect::<String>()
+        ),
         level: "info".to_string(),
         read: false,
         created_at: crate::utils::now_iso8601(),
@@ -382,9 +387,13 @@ async fn execute_intent(intent: &Intent, message: &str, state: &AppState) -> Str
                 let cloud = state.cloud_config.read().is_some();
                 format!(
                     "System status: {} active sessions, {} evidence entries, cloud {}.",
-                    sessions, evidence, if cloud { "connected" } else { "disconnected" }
+                    sessions,
+                    evidence,
+                    if cloud { "connected" } else { "disconnected" }
                 )
-            } else if lower.contains("app") && (lower.contains("how many") || lower.contains("list") || lower.contains("count")) {
+            } else if lower.contains("app")
+                && (lower.contains("how many") || lower.contains("list") || lower.contains("count"))
+            {
                 let apps = crate::utils::scan_app_dirs();
                 format!("You have {} apps installed.", apps.len())
             } else {
@@ -404,7 +413,15 @@ async fn execute_intent(intent: &Intent, message: &str, state: &AppState) -> Str
             let lower_msg = message.to_ascii_lowercase();
 
             // QA dispatch: "run visual qa", "qa api", "test security", etc.
-            let qa_types = ["visual", "api", "accessibility", "security", "performance", "evidence", "integration"];
+            let qa_types = [
+                "visual",
+                "api",
+                "accessibility",
+                "security",
+                "performance",
+                "evidence",
+                "integration",
+            ];
             let matched_qa = qa_types.iter().find(|t| lower_msg.contains(*t));
 
             if lower_msg.contains("qa") || lower_msg.starts_with("test ") {
@@ -413,19 +430,40 @@ async fn execute_intent(intent: &Intent, message: &str, state: &AppState) -> Str
                     let target = extract_url(message)
                         .unwrap_or_else(|| "http://localhost:8888/dashboard".to_string());
                     let client = reqwest::Client::new();
-                    match client.post("http://localhost:8888/api/v1/qa/run")
+                    match client
+                        .post("http://localhost:8888/api/v1/qa/run")
                         .json(&serde_json::json!({"qa_type": qa_type, "target": target}))
-                        .send().await
+                        .send()
+                        .await
                     {
                         Ok(resp) => {
                             if let Ok(result) = resp.json::<serde_json::Value>().await {
-                                let passed = result.get("passed").and_then(|v| v.as_bool()).unwrap_or(false);
-                                let total = result.get("total_checks").and_then(|v| v.as_u64()).unwrap_or(0);
-                                let pass_count = result.get("passed_checks").and_then(|v| v.as_u64()).unwrap_or(0);
-                                let run_id = result.get("run_id").and_then(|v| v.as_str()).unwrap_or("unknown");
+                                let passed = result
+                                    .get("passed")
+                                    .and_then(|v| v.as_bool())
+                                    .unwrap_or(false);
+                                let total = result
+                                    .get("total_checks")
+                                    .and_then(|v| v.as_u64())
+                                    .unwrap_or(0);
+                                let pass_count = result
+                                    .get("passed_checks")
+                                    .and_then(|v| v.as_u64())
+                                    .unwrap_or(0);
+                                let run_id = result
+                                    .get("run_id")
+                                    .and_then(|v| v.as_str())
+                                    .unwrap_or("unknown");
                                 let status = if passed { "PASS" } else { "FAIL" };
-                                format!("{} QA on {}: {} ({}/{} checks). Run ID: {}",
-                                    qa_type.to_uppercase(), target, status, pass_count, total, run_id)
+                                format!(
+                                    "{} QA on {}: {} ({}/{} checks). Run ID: {}",
+                                    qa_type.to_uppercase(),
+                                    target,
+                                    status,
+                                    pass_count,
+                                    total,
+                                    run_id
+                                )
                             } else {
                                 format!("{} QA completed but could not parse result.", qa_type)
                             }
@@ -439,15 +477,25 @@ async fn execute_intent(intent: &Intent, message: &str, state: &AppState) -> Str
                     let client = reqwest::Client::new();
                     let mut results = Vec::new();
                     for qt in &qa_types {
-                        if let Ok(resp) = client.post("http://localhost:8888/api/v1/qa/run")
+                        if let Ok(resp) = client
+                            .post("http://localhost:8888/api/v1/qa/run")
                             .json(&serde_json::json!({"qa_type": qt, "target": target}))
-                            .send().await
+                            .send()
+                            .await
                         {
                             if let Ok(r) = resp.json::<serde_json::Value>().await {
                                 let p = r.get("passed").and_then(|v| v.as_bool()).unwrap_or(false);
-                                let pc = r.get("passed_checks").and_then(|v| v.as_u64()).unwrap_or(0);
-                                let tc = r.get("total_checks").and_then(|v| v.as_u64()).unwrap_or(0);
-                                results.push(format!("{}: {}/{} {}", qt, pc, tc, if p { "PASS" } else { "FAIL" }));
+                                let pc =
+                                    r.get("passed_checks").and_then(|v| v.as_u64()).unwrap_or(0);
+                                let tc =
+                                    r.get("total_checks").and_then(|v| v.as_u64()).unwrap_or(0);
+                                results.push(format!(
+                                    "{}: {}/{} {}",
+                                    qt,
+                                    pc,
+                                    tc,
+                                    if p { "PASS" } else { "FAIL" }
+                                ));
                             }
                         }
                     }
@@ -464,10 +512,14 @@ async fn execute_intent(intent: &Intent, message: &str, state: &AppState) -> Str
             format!("Automation '{}' would be dispatched to the browser engine. Not yet wired to Chromium.", message)
         }
         Intent::Configure => {
-            format!("Configuration change '{}' noted. Apply via the appropriate API endpoint.", message)
+            format!(
+                "Configuration change '{}' noted. Apply via the appropriate API endpoint.",
+                message
+            )
         }
         Intent::Unknown => {
-            "I didn't understand that. Try 'run morning brief', 'show status', or ask a question.".to_string()
+            "I didn't understand that. Try 'run morning brief', 'show status', or ask a question."
+                .to_string()
         }
     }
 }
@@ -613,7 +665,10 @@ mod tests {
     #[test]
     fn classify_navigate() {
         assert_eq!(classify_intent("open https://google.com"), Intent::Navigate);
-        assert_eq!(classify_intent("go to https://solaceagi.com"), Intent::Navigate);
+        assert_eq!(
+            classify_intent("go to https://solaceagi.com"),
+            Intent::Navigate
+        );
     }
 
     #[test]
@@ -626,14 +681,23 @@ mod tests {
     #[test]
     fn classify_automate() {
         assert_eq!(classify_intent("click the submit button"), Intent::Automate);
-        assert_eq!(classify_intent("fill in the form with my info"), Intent::Automate);
-        assert_eq!(classify_intent("automate my email workflow"), Intent::Automate);
+        assert_eq!(
+            classify_intent("fill in the form with my info"),
+            Intent::Automate
+        );
+        assert_eq!(
+            classify_intent("automate my email workflow"),
+            Intent::Automate
+        );
     }
 
     #[test]
     fn classify_configure() {
         assert_eq!(classify_intent("set budget to $10/day"), Intent::Configure);
-        assert_eq!(classify_intent("schedule morning brief at 7am"), Intent::Configure);
+        assert_eq!(
+            classify_intent("schedule morning brief at 7am"),
+            Intent::Configure
+        );
     }
 
     #[test]
@@ -653,7 +717,10 @@ mod tests {
 
     #[test]
     fn extract_url_from_message() {
-        assert_eq!(extract_url("open https://google.com"), Some("https://google.com".to_string()));
+        assert_eq!(
+            extract_url("open https://google.com"),
+            Some("https://google.com".to_string())
+        );
         assert_eq!(extract_url("no url here"), None);
     }
 

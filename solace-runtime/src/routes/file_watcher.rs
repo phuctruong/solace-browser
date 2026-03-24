@@ -34,7 +34,8 @@ async fn list_watchers(State(_state): State<AppState>) -> Json<Value> {
     let solace_home = crate::utils::solace_home();
     let path = solace_home.join("runtime").join("watchers.json");
     let watchers: Vec<FileWatcher> = if path.exists() {
-        serde_json::from_str(&std::fs::read_to_string(&path).unwrap_or_default()).unwrap_or_default()
+        serde_json::from_str(&std::fs::read_to_string(&path).unwrap_or_default())
+            .unwrap_or_default()
     } else {
         Vec::new()
     };
@@ -54,13 +55,20 @@ async fn create_watcher(
     Json(body): Json<CreateWatcher>,
 ) -> Result<Json<Value>, (StatusCode, Json<Value>)> {
     if body.path.is_empty() {
-        return Err((StatusCode::BAD_REQUEST, Json(json!({"error": "path required"}))));
+        return Err((
+            StatusCode::BAD_REQUEST,
+            Json(json!({"error": "path required"})),
+        ));
     }
 
     let watcher = FileWatcher {
         id: uuid::Uuid::new_v4().to_string(),
         path: body.path,
-        pattern: if body.pattern.is_empty() { "*".to_string() } else { body.pattern },
+        pattern: if body.pattern.is_empty() {
+            "*".to_string()
+        } else {
+            body.pattern
+        },
         app_id: body.app_id,
         active: true,
         last_scan: String::new(),
@@ -70,12 +78,16 @@ async fn create_watcher(
     let solace_home = crate::utils::solace_home();
     let wpath = solace_home.join("runtime").join("watchers.json");
     let mut watchers: Vec<FileWatcher> = if wpath.exists() {
-        serde_json::from_str(&std::fs::read_to_string(&wpath).unwrap_or_default()).unwrap_or_default()
+        serde_json::from_str(&std::fs::read_to_string(&wpath).unwrap_or_default())
+            .unwrap_or_default()
     } else {
         Vec::new()
     };
     watchers.push(watcher.clone());
-    let _ = std::fs::write(&wpath, serde_json::to_string_pretty(&watchers).unwrap_or_default());
+    let _ = std::fs::write(
+        &wpath,
+        serde_json::to_string_pretty(&watchers).unwrap_or_default(),
+    );
 
     Ok(Json(json!({"created": true, "watcher": watcher})))
 }
@@ -85,14 +97,17 @@ async fn scan_now(State(state): State<AppState>) -> Json<Value> {
     let solace_home = crate::utils::solace_home();
     let wpath = solace_home.join("runtime").join("watchers.json");
     let mut watchers: Vec<FileWatcher> = if wpath.exists() {
-        serde_json::from_str(&std::fs::read_to_string(&wpath).unwrap_or_default()).unwrap_or_default()
+        serde_json::from_str(&std::fs::read_to_string(&wpath).unwrap_or_default())
+            .unwrap_or_default()
     } else {
         Vec::new()
     };
 
     let mut triggered = 0;
     for watcher in watchers.iter_mut() {
-        if !watcher.active { continue; }
+        if !watcher.active {
+            continue;
+        }
         let pattern = format!("{}/{}", watcher.path, watcher.pattern);
         let files: Vec<_> = glob::glob(&pattern)
             .into_iter()
@@ -118,7 +133,10 @@ async fn scan_now(State(state): State<AppState>) -> Json<Value> {
         }
     }
 
-    let _ = std::fs::write(&wpath, serde_json::to_string_pretty(&watchers).unwrap_or_default());
+    let _ = std::fs::write(
+        &wpath,
+        serde_json::to_string_pretty(&watchers).unwrap_or_default(),
+    );
     let count = watchers.len();
     Json(json!({"scanned": count, "triggered": triggered, "watchers": watchers}))
 }

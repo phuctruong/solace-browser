@@ -105,7 +105,10 @@ async fn run_qa(
     let passed = results
         .get("checks")
         .and_then(|c| c.as_array())
-        .map(|arr| arr.iter().all(|c| c.get("passed").and_then(|p| p.as_bool()).unwrap_or(false)))
+        .map(|arr| {
+            arr.iter()
+                .all(|c| c.get("passed").and_then(|p| p.as_bool()).unwrap_or(false))
+        })
         .unwrap_or(false);
 
     let check_count = results
@@ -117,7 +120,11 @@ async fn run_qa(
     let pass_count = results
         .get("checks")
         .and_then(|c| c.as_array())
-        .map(|arr| arr.iter().filter(|c| c.get("passed").and_then(|p| p.as_bool()).unwrap_or(false)).count())
+        .map(|arr| {
+            arr.iter()
+                .filter(|c| c.get("passed").and_then(|p| p.as_bool()).unwrap_or(false))
+                .count()
+        })
         .unwrap_or(0);
 
     // Record in evidence chain
@@ -215,7 +222,11 @@ async fn run_api_qa(target: &str) -> Value {
     for ep in &endpoints {
         let url = format!("{}{}", target, ep);
         let start = std::time::Instant::now();
-        let result = client.get(&url).timeout(std::time::Duration::from_secs(5)).send().await;
+        let result = client
+            .get(&url)
+            .timeout(std::time::Duration::from_secs(5))
+            .send()
+            .await;
         let latency_ms = start.elapsed().as_millis();
 
         match result {
@@ -269,7 +280,9 @@ async fn run_accessibility_qa(target: &str, _state: &AppState) -> Value {
             let has_aria = body.contains("aria-");
             checks.push(json!({"name": "aria_attributes", "passed": has_aria, "detail": "Uses ARIA attributes"}));
 
-            let has_focus_styles = body.contains(":focus") || body.contains("focus-visible") || body.contains("rel=\"stylesheet\"");
+            let has_focus_styles = body.contains(":focus")
+                || body.contains("focus-visible")
+                || body.contains("rel=\"stylesheet\"");
             checks.push(json!({"name": "focus_styles", "passed": has_focus_styles, "detail": "Has :focus/:focus-visible styles (inline or external stylesheet)"}));
         }
     }
@@ -298,7 +311,8 @@ async fn run_security_qa(target: &str) -> Value {
 
         if let Ok(body) = resp.text().await {
             // XSS vector check — no inline event handlers
-            let has_onclick = body.contains("onclick=") || body.contains("onerror=") || body.contains("onload=");
+            let has_onclick =
+                body.contains("onclick=") || body.contains("onerror=") || body.contains("onload=");
             checks.push(json!({"name": "no_inline_handlers", "passed": !has_onclick, "detail": "No inline event handlers (onclick, onerror, onload)"}));
         }
     }
@@ -402,7 +416,11 @@ async fn run_integration_qa(_state: &AppState) -> Value {
         ("apps → recipes", "/api/apps", "/api/v1/recipes"),
         ("apps → evidence", "/api/apps", "/api/v1/evidence"),
         ("health → qa types", "/health", "/api/v1/qa/types"),
-        ("domains → sessions", "/api/v1/domains", "/api/v1/browser/sessions"),
+        (
+            "domains → sessions",
+            "/api/v1/domains",
+            "/api/v1/browser/sessions",
+        ),
     ];
 
     for (name, ep1, ep2) in &flows {
@@ -443,7 +461,11 @@ async fn run_snapshot_qa(target: &str, _state: &AppState) -> Value {
         .into_iter()
         .flatten()
         .filter_map(|e| e.ok())
-        .filter(|e| e.file_name().to_string_lossy().ends_with(".prime-snapshot.md"))
+        .filter(|e| {
+            e.file_name()
+                .to_string_lossy()
+                .ends_with(".prime-snapshot.md")
+        })
         .collect();
     checks.push(json!({"name": "snapshots_exist", "passed": !snapshots.is_empty(), "detail": format!("{} snapshots", snapshots.len())}));
 
@@ -475,7 +497,11 @@ async fn run_snapshot_qa(target: &str, _state: &AppState) -> Value {
     let mut sw_pass = true;
     let mut sw_detail = Vec::new();
     if domains_dir.exists() {
-        for entry in std::fs::read_dir(&domains_dir).into_iter().flatten().filter_map(|e| e.ok()) {
+        for entry in std::fs::read_dir(&domains_dir)
+            .into_iter()
+            .flatten()
+            .filter_map(|e| e.ok())
+        {
             if entry.file_type().map(|t| t.is_dir()).unwrap_or(false) {
                 let domain = entry.file_name().to_string_lossy().to_string();
                 let sw_path = entry.path().join("stillwater.prime-snapshot.md");
@@ -496,9 +522,15 @@ async fn run_snapshot_qa(target: &str, _state: &AppState) -> Value {
     let mut assert_count = 0;
     for snap in &snapshots {
         if let Ok(content) = std::fs::read_to_string(snap.path()) {
-            if content.contains("```mermaid") { mermaid_count += 1; }
-            if content.contains("# DNA:") { dna_count += 1; }
-            if content.contains("ASSERT:") { assert_count += 1; }
+            if content.contains("```mermaid") {
+                mermaid_count += 1;
+            }
+            if content.contains("# DNA:") {
+                dna_count += 1;
+            }
+            if content.contains("ASSERT:") {
+                assert_count += 1;
+            }
         }
     }
     let total = snapshots.len();
@@ -508,10 +540,15 @@ async fn run_snapshot_qa(target: &str, _state: &AppState) -> Value {
 
     // Check 7: If target is an external URL, verify it has been captured
     // Skip localhost — excluded from wiki capture by design (it's ourselves)
-    if target.starts_with("http") && !target.contains("localhost") && !target.contains("127.0.0.1") {
+    if target.starts_with("http") && !target.contains("localhost") && !target.contains("127.0.0.1")
+    {
         let target_domain = target
-            .split("://").nth(1).unwrap_or("")
-            .split('/').next().unwrap_or("")
+            .split("://")
+            .nth(1)
+            .unwrap_or("")
+            .split('/')
+            .next()
+            .unwrap_or("")
             .replace("www.", "");
         let domain_exists = domains_dir.join(&target_domain).exists();
         checks.push(json!({"name": "target_domain_captured", "passed": domain_exists, "detail": format!("Domain '{}' in wiki", target_domain)}));
@@ -520,8 +557,14 @@ async fn run_snapshot_qa(target: &str, _state: &AppState) -> Value {
     // Check 8: Wiki stats via API (self-test)
     if let Ok(resp) = reqwest::get("http://127.0.0.1:8888/api/v1/wiki/stats").await {
         if let Ok(stats) = resp.json::<Value>().await {
-            let count = stats.get("snapshot_count").and_then(|v| v.as_u64()).unwrap_or(0);
-            let community = stats.get("community_browsing").and_then(|v| v.as_bool()).unwrap_or(false);
+            let count = stats
+                .get("snapshot_count")
+                .and_then(|v| v.as_u64())
+                .unwrap_or(0);
+            let community = stats
+                .get("community_browsing")
+                .and_then(|v| v.as_bool())
+                .unwrap_or(false);
             checks.push(json!({"name": "wiki_api_stats", "passed": count > 0 && community, "detail": format!("snapshots={}, community={}", count, community)}));
         }
     }
@@ -539,7 +582,16 @@ async fn get_qa_report(
 
     let solace_home = crate::utils::solace_home();
     // Search for report across all QA app outboxes
-    for qa_type in ["visual", "api", "accessibility", "security", "performance", "evidence", "integration", "snapshot"] {
+    for qa_type in [
+        "visual",
+        "api",
+        "accessibility",
+        "security",
+        "performance",
+        "evidence",
+        "integration",
+        "snapshot",
+    ] {
         let report_path = solace_home
             .join("apps")
             .join("localhost")
@@ -557,14 +609,26 @@ async fn get_qa_report(
         }
     }
 
-    Err((StatusCode::NOT_FOUND, Json(json!({"error": format!("Report {} not found", run_id)}))))
+    Err((
+        StatusCode::NOT_FOUND,
+        Json(json!({"error": format!("Report {} not found", run_id)})),
+    ))
 }
 
 async fn list_qa_reports() -> Json<Value> {
     let solace_home = crate::utils::solace_home();
     let mut reports = Vec::new();
 
-    for qa_type in ["visual", "api", "accessibility", "security", "performance", "evidence", "integration", "snapshot"] {
+    for qa_type in [
+        "visual",
+        "api",
+        "accessibility",
+        "security",
+        "performance",
+        "evidence",
+        "integration",
+        "snapshot",
+    ] {
         let runs_dir = solace_home
             .join("apps")
             .join("localhost")
@@ -606,16 +670,23 @@ async fn qa_status(State(_state): State<AppState>) -> Json<Value> {
     let mut type_counts: HashMap<String, usize> = HashMap::new();
     let mut total_runs = 0;
 
-    for qa_type in ["visual", "api", "accessibility", "security", "performance", "evidence", "integration", "snapshot"] {
+    for qa_type in [
+        "visual",
+        "api",
+        "accessibility",
+        "security",
+        "performance",
+        "evidence",
+        "integration",
+        "snapshot",
+    ] {
         let runs_dir = solace_home
             .join("apps")
             .join("localhost")
             .join(format!("solace-qa-{}", qa_type))
             .join("outbox")
             .join("runs");
-        let count = std::fs::read_dir(&runs_dir)
-            .map(|e| e.count())
-            .unwrap_or(0);
+        let count = std::fs::read_dir(&runs_dir).map(|e| e.count()).unwrap_or(0);
         type_counts.insert(qa_type.to_string(), count);
         total_runs += count;
     }

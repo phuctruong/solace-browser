@@ -210,9 +210,7 @@ pub fn load_run_events(app_id: &str, run_id: &str) -> Result<Vec<Event>, String>
         .join(run_id)
         .join("events.jsonl");
     if !events_path.exists() {
-        return Err(format!(
-            "events.jsonl not found for {app_id} run {run_id}"
-        ));
+        return Err(format!("events.jsonl not found for {app_id} run {run_id}"));
     }
     let log = EventLog::load_from_file(app_id, run_id, &events_path)?;
     Ok(log.events().to_vec())
@@ -232,8 +230,20 @@ mod tests {
             None,
             Some("fetched 42 items".to_string()),
         );
-        log.append_event(EventType::Render, None, None, None, Some("template rendered".to_string()));
-        log.append_event(EventType::Seal, None, None, None, Some("evidence sealed".to_string()));
+        log.append_event(
+            EventType::Render,
+            None,
+            None,
+            None,
+            Some("template rendered".to_string()),
+        );
+        log.append_event(
+            EventType::Seal,
+            None,
+            None,
+            None,
+            Some("evidence sealed".to_string()),
+        );
 
         assert_eq!(log.events().len(), 3);
         // First event prev_hash is empty
@@ -252,16 +262,40 @@ mod tests {
     #[test]
     fn verify_chain_passes_for_valid_log() {
         let mut log = EventLog::new("test-app", "run-002");
-        log.append_event(EventType::Navigate, Some("https://example.com".to_string()), None, None, None);
-        log.append_event(EventType::Click, None, Some("#submit".to_string()), None, None);
-        log.append_event(EventType::Fill, None, Some("#email".to_string()), Some("user@test.com".to_string()), None);
+        log.append_event(
+            EventType::Navigate,
+            Some("https://example.com".to_string()),
+            None,
+            None,
+            None,
+        );
+        log.append_event(
+            EventType::Click,
+            None,
+            Some("#submit".to_string()),
+            None,
+            None,
+        );
+        log.append_event(
+            EventType::Fill,
+            None,
+            Some("#email".to_string()),
+            Some("user@test.com".to_string()),
+            None,
+        );
         assert!(log.verify_chain());
     }
 
     #[test]
     fn verify_chain_fails_on_tampered_event() {
         let mut log = EventLog::new("test-app", "run-003");
-        log.append_event(EventType::Fetch, Some("https://api.example.com".to_string()), None, None, None);
+        log.append_event(
+            EventType::Fetch,
+            Some("https://api.example.com".to_string()),
+            None,
+            None,
+            None,
+        );
         log.append_event(EventType::Render, None, None, None, None);
 
         // Tamper with the first event's URL
@@ -273,13 +307,25 @@ mod tests {
     fn prominent_flag_set_for_preview_and_signoff() {
         let mut log = EventLog::new("test-app", "run-004");
         log.append_event(EventType::Fetch, None, None, None, None);
-        log.append_event(EventType::Preview, None, None, None, Some("proposed action".to_string()));
-        log.append_event(EventType::SignOff, None, None, None, Some("user approved".to_string()));
+        log.append_event(
+            EventType::Preview,
+            None,
+            None,
+            None,
+            Some("proposed action".to_string()),
+        );
+        log.append_event(
+            EventType::SignOff,
+            None,
+            None,
+            None,
+            Some("user approved".to_string()),
+        );
         log.append_event(EventType::Render, None, None, None, None);
 
         assert!(!log.events()[0].prominent); // Fetch
-        assert!(log.events()[1].prominent);  // Preview
-        assert!(log.events()[2].prominent);  // SignOff
+        assert!(log.events()[1].prominent); // Preview
+        assert!(log.events()[2].prominent); // SignOff
         assert!(!log.events()[3].prominent); // Render
     }
 
@@ -289,9 +335,27 @@ mod tests {
         std::fs::create_dir_all(&dir).unwrap();
 
         let mut log = EventLog::new("test-app", "run-005");
-        log.append_event(EventType::Fetch, Some("https://api.example.com".to_string()), None, None, Some("fetched".to_string()));
-        log.append_event(EventType::Render, None, None, None, Some("rendered".to_string()));
-        log.append_event(EventType::Seal, None, None, None, Some("sealed".to_string()));
+        log.append_event(
+            EventType::Fetch,
+            Some("https://api.example.com".to_string()),
+            None,
+            None,
+            Some("fetched".to_string()),
+        );
+        log.append_event(
+            EventType::Render,
+            None,
+            None,
+            None,
+            Some("rendered".to_string()),
+        );
+        log.append_event(
+            EventType::Seal,
+            None,
+            None,
+            None,
+            Some("sealed".to_string()),
+        );
 
         let path = log.save_events(&dir).unwrap();
         assert!(path.exists());

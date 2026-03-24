@@ -58,14 +58,19 @@ struct EvaluateRequest {
 /// Record a browser control evidence event and return the result.
 fn record_browser_event(action: &str, data: Value) -> Result<Value, (StatusCode, Json<Value>)> {
     let solace_home = crate::utils::solace_home();
-    crate::evidence::record_event(&solace_home, &format!("browser_control.{action}"), "runtime", data)
-        .map(|record| json!({"evidence_id": record.id, "hash": record.hash}))
-        .map_err(|error| {
-            (
-                StatusCode::INTERNAL_SERVER_ERROR,
-                Json(json!({"error": format!("evidence recording failed: {error}")})),
-            )
-        })
+    crate::evidence::record_event(
+        &solace_home,
+        &format!("browser_control.{action}"),
+        "runtime",
+        data,
+    )
+    .map(|record| json!({"evidence_id": record.id, "hash": record.hash}))
+    .map_err(|error| {
+        (
+            StatusCode::INTERNAL_SERVER_ERROR,
+            Json(json!({"error": format!("evidence recording failed: {error}")})),
+        )
+    })
 }
 
 /// Validate that a URL is non-empty and starts with http:// or https://.
@@ -97,23 +102,104 @@ fn validate_selector(selector: &str) -> Result<(), (StatusCode, Json<Value>)> {
 }
 
 /// Find the Solace Browser window ID via xdotool.
-fn find_browser_window() -> Option<String> {
+pub(crate) fn find_browser_window() -> Option<String> {
+    find_window_by_class("solace")
+}
+
+fn find_window_by_class(class_name: &str) -> Option<String> {
     let output = std::process::Command::new("xdotool")
-        .args(["search", "--class", "solace"])
+        .args(["search", "--class", class_name])
         .output()
         .ok()?;
     let stdout = String::from_utf8_lossy(&output.stdout);
-    // Also try "chromium" if "solace" doesn't match
-    let wid = stdout.lines().next().map(|s| s.trim().to_string());
-    if wid.is_some() && !wid.as_ref().unwrap().is_empty() {
-        return wid;
+    let ids: Vec<String> = stdout
+        .lines()
+        .map(|line| line.trim().to_string())
+        .filter(|line| !line.is_empty())
+        .collect();
+
+    for id in &ids {
+        let name = std::process::Command::new("xdotool")
+            .args(["getwindowname", id])
+            .output()
+            .ok()
+            .map(|output| String::from_utf8_lossy(&output.stdout).trim().to_string())
+            .unwrap_or_default()
+            .to_ascii_lowercase();
+        let geometry = std::process::Command::new("xdotool")
+            .args(["getwindowgeometry", "--shell", id])
+            .output()
+            .ok()
+            .map(|output| String::from_utf8_lossy(&output.stdout).to_string())
+            .unwrap_or_default();
+        let width = geometry
+            .lines()
+            .find(|line| line.starts_with("WIDTH="))
+            .and_then(|line| line[6..].parse::<i32>().ok())
+            .unwrap_or(0);
+        let height = geometry
+            .lines()
+            .find(|line| line.starts_with("HEIGHT="))
+            .and_then(|line| line[7..].parse::<i32>().ok())
+            .unwrap_or(0);
+
+        if !name.is_empty()
+            && !name.contains("hub")
+            && name != "solace-hub-bin"
+            && width >= 400
+            && height >= 300
+        {
+            return Some(id.clone());
+        }
     }
-    let output = std::process::Command::new("xdotool")
-        .args(["search", "--class", "chromium"])
-        .output()
-        .ok()?;
-    let stdout = String::from_utf8_lossy(&output.stdout);
-    stdout.lines().next().map(|s| s.trim().to_string()).filter(|s| !s.is_empty())
+
+    ids.into_iter().last()
+}
+
+fn browser_candidates() -> Vec<std::path::PathBuf> {
+    let mut candidates = Vec::new();
+
+    if let Ok(exe_path) = std::env::current_exe() {
+        if let Some(exe_dir) = exe_path.parent() {
+            candidates.push(exe_dir.join("solace"));
+            candidates.push(exe_dir.join("solace-browser"));
+            candidates.push(exe_dir.join("solace-browser-release").join("solace"));
+            if let Some(parent) = exe_dir.parent() {
+                candidates.push(parent.join("solace-browser-release").join("solace"));
+            }
+        }
+    }
+
+    candidates.push(
+        std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .parent()
+            .unwrap_or(std::path::Path::new("."))
+            .join("source/src/out/Solace/solace"),
+    );
+    candidates.push(crate::utils::solace_home().join("bin").join("solace"));
+
+    candidates
+}
+
+fn resolve_browser_binary() -> Option<std::path::PathBuf> {
+    browser_candidates()
+        .into_iter()
+        .find(|candidate| candidate.is_file())
+}
+
+fn relay_url_via_browser_singleton(url: &str) -> bool {
+    let Some(browser) = resolve_browser_binary() else {
+        return false;
+    };
+
+    let profile_dir = crate::utils::solace_home().join("sessions").join("default");
+    std::process::Command::new(browser)
+        .arg(format!("--user-data-dir={}", profile_dir.display()))
+        .arg("--profile-directory=default")
+        .arg(url)
+        .spawn()
+        .map(|_| true)
+        .unwrap_or(false)
 }
 
 /// Execute JavaScript in the active browser tab via xdotool + DevTools console.
@@ -121,7 +207,7 @@ fn find_browser_window() -> Option<String> {
 /// Flow: Focus browser → Ctrl+Shift+J (open console) → paste script via xclip → Enter → close
 /// Uses clipboard paste (xclip + Ctrl+V) instead of xdotool type for speed and reliability.
 /// This works cross-origin because DevTools runs in the browser process, not the page context.
-fn execute_js_via_devtools(script: &str) -> bool {
+pub(crate) fn execute_js_via_devtools(script: &str) -> bool {
     let wid = match find_browser_window() {
         Some(w) => w,
         None => return false,
@@ -189,7 +275,14 @@ fn execute_js_via_devtools(script: &str) -> bool {
             let tmp_path = format!("/tmp/solace-eval-{}.js", std::process::id());
             let _ = std::fs::write(&tmp_path, script);
             let _ = std::process::Command::new("xdotool")
-                .args(["type", "--clearmodifiers", "--delay", "2", "--file", &tmp_path])
+                .args([
+                    "type",
+                    "--clearmodifiers",
+                    "--delay",
+                    "2",
+                    "--file",
+                    &tmp_path,
+                ])
                 .output();
             let _ = std::fs::remove_file(&tmp_path);
         }
@@ -209,6 +302,79 @@ fn execute_js_via_devtools(script: &str) -> bool {
         .output();
 
     true
+}
+
+pub(crate) fn navigate_browser_window(url: &str) -> bool {
+    if relay_url_via_browser_singleton(url) {
+        return true;
+    }
+
+    let js_url = serde_json::to_string(url).unwrap_or_else(|_| "\"\"".to_string());
+    let js = format!("window.location.assign({js_url})");
+    if execute_js_via_devtools(&js) {
+        return true;
+    }
+
+    let wid = match find_browser_window() {
+        Some(w) => w,
+        None => return false,
+    };
+
+    let _ = std::process::Command::new("xdotool")
+        .args(["windowactivate", &wid])
+        .output();
+    std::thread::sleep(std::time::Duration::from_millis(300));
+
+    let _ = std::process::Command::new("xdotool")
+        .args(["key", "--window", &wid, "ctrl+l"])
+        .output();
+    std::thread::sleep(std::time::Duration::from_millis(150));
+
+    let clipboard_tools = ["xclip", "xsel"];
+    let mut pasted = false;
+    for tool in &clipboard_tools {
+        let args: Vec<&str> = if *tool == "xclip" {
+            vec!["-selection", "clipboard"]
+        } else {
+            vec!["--clipboard", "--input"]
+        };
+
+        if let Ok(mut child) = std::process::Command::new(tool)
+            .args(&args)
+            .stdin(std::process::Stdio::piped())
+            .spawn()
+        {
+            if let Some(stdin) = child.stdin.as_mut() {
+                use std::io::Write;
+                let _ = stdin.write_all(url.as_bytes());
+            }
+            let _ = child.wait();
+            let _ = std::process::Command::new("xdotool")
+                .args(["key", "--window", &wid, "ctrl+v"])
+                .output();
+            pasted = true;
+            break;
+        }
+    }
+
+    if !pasted {
+        let _ = std::process::Command::new("xdotool")
+            .args(["type", "--clearmodifiers", "--delay", "2", url])
+            .output();
+    }
+
+    std::thread::sleep(std::time::Duration::from_millis(150));
+    std::process::Command::new("xdotool")
+        .args(["key", "--window", &wid, "Return"])
+        .output()
+        .map(|output| output.status.success())
+        .unwrap_or(false)
+}
+
+pub(crate) fn capture_page_html_via_devtools() -> bool {
+    execute_js_via_devtools(
+        "fetch('http://127.0.0.1:8888/api/v1/browser/page-html',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({html:document.documentElement.outerHTML,url:location.href,title:document.title})}).catch(function(){})",
+    )
 }
 
 /// Send a command to the sidebar via WebSocket session channels.
@@ -249,18 +415,47 @@ async fn navigate(
     let msg = serde_json::json!({"command": "navigate", "url": payload.url}).to_string();
     let mut sent = 0;
     for (_, tx) in channels.iter() {
-        if tx.send(msg.clone()).is_ok() { sent += 1; }
+        if tx.send(msg.clone()).is_ok() {
+            sent += 1;
+        }
     }
-    let navigated = sent > 0;
+    drop(channels);
+    let navigated = if sent > 0 {
+        true
+    } else {
+        navigate_browser_window(&payload.url)
+    };
 
     // Store the navigated URL so sidebar can detect current domain
     *state.current_url.write() = payload.url.clone();
+    {
+        let mut sessions = state.sessions.write();
+        if sessions.len() == 1 {
+            if let Some(session) = sessions.values_mut().next() {
+                session.url = payload.url.clone();
+            }
+        }
+    }
 
     // Log to backoffice-browser navigation_history
     if let Ok(config) = crate::routes::backoffice::load_workspace_config("backoffice-browser") {
-        if let Some(table_def) = config.tables.iter().find(|t| t.name == "navigation_history") {
-            if let Ok(conn) = state.backoffice_db.get_connection("backoffice-browser", &config) {
-                let domain = payload.url.split("//").nth(1).unwrap_or("").split('/').next().unwrap_or("");
+        if let Some(table_def) = config
+            .tables
+            .iter()
+            .find(|t| t.name == "navigation_history")
+        {
+            if let Ok(conn) = state
+                .backoffice_db
+                .get_connection("backoffice-browser", &config)
+            {
+                let domain = payload
+                    .url
+                    .split("//")
+                    .nth(1)
+                    .unwrap_or("")
+                    .split('/')
+                    .next()
+                    .unwrap_or("");
                 let data = json!({
                     "url": payload.url,
                     "title": "",
@@ -268,12 +463,17 @@ async fn navigate(
                     "action": "navigate",
                     "source": "api",
                 });
-                let _ = crate::backoffice::crud::insert(&conn.lock(), table_def, &data, "navigate_api");
+                let _ =
+                    crate::backoffice::crud::insert(&conn.lock(), table_def, &data, "navigate_api");
             }
         }
     }
 
-    state.event_bus.publish("browser.navigate", json!({"url": payload.url}), "navigate_api");
+    state.event_bus.publish(
+        "browser.navigate",
+        json!({"url": payload.url}),
+        "navigate_api",
+    );
 
     Ok(Json(json!({
         "status": if navigated { "navigated" } else { "accepted" },
@@ -295,10 +495,7 @@ async fn click(
 ) -> Result<Json<Value>, (StatusCode, Json<Value>)> {
     validate_selector(&payload.selector)?;
 
-    let evidence = record_browser_event(
-        "click",
-        json!({ "selector": payload.selector }),
-    )?;
+    let evidence = record_browser_event("click", json!({ "selector": payload.selector }))?;
 
     *state.evidence_count.write() += 1;
 
@@ -311,14 +508,18 @@ async fn click(
 
     // Execute via xdotool + DevTools (cross-origin capable)
     let js_clone = js.clone();
-    let executed = tokio::task::spawn_blocking(move || {
-        execute_js_via_devtools(&js_clone)
-    }).await.unwrap_or(false);
+    let executed = tokio::task::spawn_blocking(move || execute_js_via_devtools(&js_clone))
+        .await
+        .unwrap_or(false);
 
     // Also relay to sidebar WebSocket (for same-origin pages)
     relay_to_sidebar(&state, "execute", json!({"script": js}));
 
-    state.event_bus.publish("browser.click", json!({"selector": payload.selector}), "click_api");
+    state.event_bus.publish(
+        "browser.click",
+        json!({"selector": payload.selector}),
+        "click_api",
+    );
 
     Ok(Json(json!({
         "status": if executed { "executed" } else { "accepted" },
@@ -407,8 +608,13 @@ async fn fill(
 
             // Click at the chat input position
             let _ = std::process::Command::new("xdotool")
-                .args(["mousemove", "--window", &wid,
-                       &click_x.to_string(), &click_y.to_string()])
+                .args([
+                    "mousemove",
+                    "--window",
+                    &wid,
+                    &click_x.to_string(),
+                    &click_y.to_string(),
+                ])
                 .output();
             std::thread::sleep(std::time::Duration::from_millis(100));
             let _ = std::process::Command::new("xdotool")
@@ -435,7 +641,14 @@ async fn fill(
                 let tmp_path = format!("/tmp/solace-fill-{}.txt", std::process::id());
                 let _ = std::fs::write(&tmp_path, &value);
                 let _ = std::process::Command::new("xdotool")
-                    .args(["type", "--clearmodifiers", "--delay", "5", "--file", &tmp_path])
+                    .args([
+                        "type",
+                        "--clearmodifiers",
+                        "--delay",
+                        "5",
+                        "--file",
+                        &tmp_path,
+                    ])
                     .output();
                 let _ = std::fs::remove_file(&tmp_path);
             }
@@ -446,8 +659,13 @@ async fn fill(
                 // Use --clearmodifiers to ensure clean key state after xdotool type
                 // Also click the input area first to re-assert focus
                 let _ = std::process::Command::new("xdotool")
-                    .args(["mousemove", "--window", &wid,
-                           &click_x.to_string(), &click_y.to_string()])
+                    .args([
+                        "mousemove",
+                        "--window",
+                        &wid,
+                        &click_x.to_string(),
+                        &click_y.to_string(),
+                    ])
                     .output();
                 std::thread::sleep(std::time::Duration::from_millis(100));
                 let _ = std::process::Command::new("xdotool")
@@ -460,7 +678,9 @@ async fn fill(
             }
 
             true
-        }).await.unwrap_or(false)
+        })
+        .await
+        .unwrap_or(false)
     };
 
     let executed = typed;
@@ -468,7 +688,11 @@ async fn fill(
     // Also relay to sidebar WebSocket
     relay_to_sidebar(&state, "execute", json!({"script": ""}));
 
-    state.event_bus.publish("browser.fill", json!({"selector": payload.selector, "value_length": payload.value.len()}), "fill_api");
+    state.event_bus.publish(
+        "browser.fill",
+        json!({"selector": payload.selector, "value_length": payload.value.len()}),
+        "fill_api",
+    );
 
     Ok(Json(json!({
         "status": if typed { "executed" } else { "accepted" },
@@ -497,12 +721,44 @@ async fn press_key(
 
     // Allowlist of safe keys (prevent arbitrary command injection via xdotool)
     let safe_keys = [
-        "Return", "Tab", "Escape", "space", "BackSpace", "Delete",
-        "Up", "Down", "Left", "Right", "Home", "End", "Page_Up", "Page_Down",
-        "F1", "F2", "F3", "F4", "F5", "F6", "F7", "F8", "F9", "F10", "F11", "F12",
-        "ctrl+a", "ctrl+c", "ctrl+v", "ctrl+x", "ctrl+z", "ctrl+y",
-        "ctrl+l", "ctrl+t", "ctrl+w", "ctrl+n",
-        "alt+Tab", "alt+F4",
+        "Return",
+        "Tab",
+        "Escape",
+        "space",
+        "BackSpace",
+        "Delete",
+        "Up",
+        "Down",
+        "Left",
+        "Right",
+        "Home",
+        "End",
+        "Page_Up",
+        "Page_Down",
+        "F1",
+        "F2",
+        "F3",
+        "F4",
+        "F5",
+        "F6",
+        "F7",
+        "F8",
+        "F9",
+        "F10",
+        "F11",
+        "F12",
+        "ctrl+a",
+        "ctrl+c",
+        "ctrl+v",
+        "ctrl+x",
+        "ctrl+z",
+        "ctrl+y",
+        "ctrl+l",
+        "ctrl+t",
+        "ctrl+w",
+        "ctrl+n",
+        "alt+Tab",
+        "alt+F4",
     ];
 
     let key_lower = payload.key.to_lowercase();
@@ -514,10 +770,7 @@ async fn press_key(
         ));
     }
 
-    let evidence = record_browser_event(
-        "key",
-        json!({ "key": payload.key }),
-    )?;
+    let evidence = record_browser_event("key", json!({ "key": payload.key }))?;
 
     *state.evidence_count.write() += 1;
 
@@ -532,9 +785,13 @@ async fn press_key(
             .args(["key", &key])
             .output();
         result.map(|o| o.status.success()).unwrap_or(false)
-    }).await.unwrap_or(false);
+    })
+    .await
+    .unwrap_or(false);
 
-    state.event_bus.publish("browser.key", json!({"key": payload.key}), "key_api");
+    state
+        .event_bus
+        .publish("browser.key", json!({"key": payload.key}), "key_api");
 
     Ok(Json(json!({
         "status": if pressed { "pressed" } else { "no_window" },
@@ -574,14 +831,18 @@ async fn evaluate(
 
     // Execute via xdotool + DevTools
     let script_clone = payload.script.clone();
-    let executed = tokio::task::spawn_blocking(move || {
-        execute_js_via_devtools(&script_clone)
-    }).await.unwrap_or(false);
+    let executed = tokio::task::spawn_blocking(move || execute_js_via_devtools(&script_clone))
+        .await
+        .unwrap_or(false);
 
     // Also relay to sidebar WebSocket
     relay_to_sidebar(&state, "execute", json!({"script": payload.script}));
 
-    state.event_bus.publish("browser.evaluate", json!({"script_length": payload.script.len()}), "evaluate_api");
+    state.event_bus.publish(
+        "browser.evaluate",
+        json!({"script_length": payload.script.len()}),
+        "evaluate_api",
+    );
 
     Ok(Json(json!({
         "status": if executed { "executed" } else { "accepted" },
@@ -596,10 +857,7 @@ async fn evaluate(
 async fn dom_snapshot(
     State(state): State<AppState>,
 ) -> Result<Json<Value>, (StatusCode, Json<Value>)> {
-    let evidence = record_browser_event(
-        "dom_snapshot",
-        json!({"requested": true}),
-    )?;
+    let evidence = record_browser_event("dom_snapshot", json!({"requested": true}))?;
 
     *state.evidence_count.write() += 1;
 
@@ -616,10 +874,7 @@ async fn dom_snapshot(
 async fn aria_snapshot(
     State(state): State<AppState>,
 ) -> Result<Json<Value>, (StatusCode, Json<Value>)> {
-    let evidence = record_browser_event(
-        "aria_snapshot",
-        json!({"requested": true}),
-    )?;
+    let evidence = record_browser_event("aria_snapshot", json!({"requested": true}))?;
 
     *state.evidence_count.write() += 1;
 

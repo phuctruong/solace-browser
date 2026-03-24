@@ -200,19 +200,20 @@ pub fn extract(content: &[u8], content_type: &str, url: &str) -> Result<Decompos
 
 fn extract_semantic_html(content: &[u8]) -> Result<(Stillwater, Ripple)> {
     let html = String::from_utf8_lossy(content);
+    let cleaned = strip_ignored_html_blocks(&html);
 
-    let headings = extract_all_tags(&html, "h1")
+    let headings = extract_all_tags(&cleaned, "h1")
         .into_iter()
-        .chain(extract_all_tags(&html, "h2"))
-        .chain(extract_all_tags(&html, "h3"))
+        .chain(extract_all_tags(&cleaned, "h2"))
+        .chain(extract_all_tags(&cleaned, "h3"))
         .collect();
     let nav_links = extract_nav_links(&html);
     let css_tokens = extract_css_tokens(&html);
     let meta = extract_meta_tags(&html);
     let template_hash = hash_structure(&html, &["nav", "header", "footer"]);
 
-    let title = extract_tag_content(&html, "title").unwrap_or_default();
-    let main_content = extract_between(&html, "<main", "</main>");
+    let title = extract_tag_content(&cleaned, "title").unwrap_or_default();
+    let main_content = extract_between(&cleaned, "<main", "</main>");
     let sections = extract_sections_from_content(&main_content);
 
     Ok((
@@ -236,15 +237,16 @@ fn extract_semantic_html(content: &[u8]) -> Result<(Stillwater, Ripple)> {
 
 fn extract_table_html(content: &[u8]) -> Result<(Stillwater, Ripple)> {
     let html = String::from_utf8_lossy(content);
+    let cleaned = strip_ignored_html_blocks(&html);
 
-    let headings = extract_all_tags(&html, "th");
+    let headings = extract_all_tags(&cleaned, "th");
     let nav_links = extract_nav_links(&html);
     let css_tokens = extract_css_tokens(&html);
     let meta = extract_meta_tags(&html);
     let template_hash = hash_structure(&html, &["table", "thead"]);
 
-    let title = extract_tag_content(&html, "title").unwrap_or_default();
-    let rows = extract_table_rows(&html);
+    let title = extract_tag_content(&cleaned, "title").unwrap_or_default();
+    let rows = extract_table_rows(&cleaned);
 
     Ok((
         Stillwater {
@@ -477,6 +479,34 @@ fn extract_between(html: &str, open_tag: &str, close_tag: &str) -> String {
         }
     }
     String::new()
+}
+
+fn strip_ignored_html_blocks(html: &str) -> String {
+    ["script", "style", "template", "noscript"]
+        .into_iter()
+        .fold(html.to_string(), |acc, tag| strip_tag_block(&acc, tag))
+}
+
+fn strip_tag_block(html: &str, tag: &str) -> String {
+    let lower = html.to_ascii_lowercase();
+    let open = format!("<{tag}");
+    let close = format!("</{tag}>");
+    let mut result = String::with_capacity(html.len());
+    let mut search_from = 0;
+
+    while let Some(pos) = lower[search_from..].find(&open) {
+        let abs = search_from + pos;
+        result.push_str(&html[search_from..abs]);
+        if let Some(end) = lower[abs..].find(&close) {
+            search_from = abs + end + close.len();
+        } else {
+            search_from = html.len();
+            break;
+        }
+    }
+
+    result.push_str(&html[search_from..]);
+    result
 }
 
 fn extract_nav_links(html: &str) -> Vec<String> {
@@ -800,9 +830,7 @@ fn extract_i18n_keys(html: &str) -> Vec<(String, String)> {
     while let Some(pos) = html[search_from..].find("{{ copy.") {
         let start = search_from + pos + 8;
         if let Some(end) = html[start..].find(' ') {
-            let key = html[start..start + end]
-                .trim_end_matches('}')
-                .to_string();
+            let key = html[start..start + end].trim_end_matches('}').to_string();
             if !keys.iter().any(|(k, _)| k == &key) {
                 keys.push((key, "i18n".to_string()));
             }
@@ -909,7 +937,8 @@ mod tests {
 
     #[test]
     fn extract_json_api_decomposition() {
-        let json = br#"[{"id":1,"title":"Hello","score":100},{"id":2,"title":"World","score":200}]"#;
+        let json =
+            br#"[{"id":1,"title":"Hello","score":100},{"id":2,"title":"World","score":200}]"#;
         let decomp = extract(json, "application/json", "https://api.reddit.com/r/rust").unwrap();
         assert_eq!(decomp.codec, Codec::JsonApi);
         assert_eq!(decomp.ripple.data_items.len(), 2);
@@ -977,7 +1006,48 @@ mod tests {
     fn css_token_extraction() {
         let html = br#"<style>body { color: var(--sa-text-primary); background: var(--sa-bg-primary); }</style>"#;
         let decomp = extract(html, "text/html", "https://example.com").unwrap();
-        assert!(decomp.stillwater.css_tokens.contains(&"--sa-text-primary".to_string()));
-        assert!(decomp.stillwater.css_tokens.contains(&"--sa-bg-primary".to_string()));
+        assert!(decomp
+            .stillwater
+            .css_tokens
+            .contains(&"--sa-text-primary".to_string()));
+        assert!(decomp
+            .stillwater
+            .css_tokens
+            .contains(&"--sa-bg-primary".to_string()));
+    }
+
+    #[test]
+    fn script_and_template_content_do_not_leak_into_sections() {
+        let html = br#"
+        <html>
+          <head><title>Dashboard</title></head>
+          <body>
+            <main>
+              <h1>Visible Heading</h1>
+              <p>Real content.</p>
+              <script>var bad = "+ esc(agent.name || agent.id) +"</script>
+              <template><h2>Hidden Template Heading</h2></template>
+              <h2>Second Visible Heading</h2>
+              <p>More real content.</p>
+            </main>
+          </body>
+        </html>
+        "#;
+        let decomp = extract(html, "text/html", "https://example.com/dashboard").unwrap();
+        let headings: Vec<String> = decomp
+            .ripple
+            .sections
+            .iter()
+            .map(|section| section.heading.clone())
+            .collect();
+
+        assert!(headings.contains(&"Visible Heading".to_string()));
+        assert!(headings.contains(&"Second Visible Heading".to_string()));
+        assert!(!headings
+            .iter()
+            .any(|heading| heading.contains("agent.name")));
+        assert!(!headings
+            .iter()
+            .any(|heading| heading.contains("Hidden Template Heading")));
     }
 }

@@ -31,16 +31,16 @@ pub fn routes() -> Router<AppState> {
 // Default cooldowns per action type (seconds)
 fn default_cooldown(action_type: &str) -> i64 {
     match action_type {
-        "delete" => 300,    // 5 min
-        "archive" => 120,   // 2 min
-        "send" => 180,      // 3 min
-        "reply" => 180,     // 3 min
-        "outreach" => 600,  // 10 min
-        "post" => 300,      // 5 min
-        "purchase" => 900,  // 15 min
-        "modify" => 120,    // 2 min
-        "connect" => 300,   // 5 min
-        "create" | "read" => 0,  // instant
+        "delete" => 300,        // 5 min
+        "archive" => 120,       // 2 min
+        "send" => 180,          // 3 min
+        "reply" => 180,         // 3 min
+        "outreach" => 600,      // 10 min
+        "post" => 300,          // 5 min
+        "purchase" => 900,      // 15 min
+        "modify" => 120,        // 2 min
+        "connect" => 300,       // 5 min
+        "create" | "read" => 0, // instant
         _ => 300,
     }
 }
@@ -80,15 +80,25 @@ async fn propose_action(
 ) -> Result<Json<Value>, (StatusCode, Json<Value>)> {
     let config = crate::routes::backoffice::load_workspace_config("backoffice-actions")
         .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, Json(json!({"error": e}))))?;
-    let table = config.tables.iter().find(|t| t.name == "actions")
-        .ok_or((StatusCode::INTERNAL_SERVER_ERROR, Json(json!({"error": "actions table not found"}))))?;
+    let table = config.tables.iter().find(|t| t.name == "actions").ok_or((
+        StatusCode::INTERNAL_SERVER_ERROR,
+        Json(json!({"error": "actions table not found"})),
+    ))?;
 
-    let conn = state.backoffice_db.get_connection("backoffice-actions", &config)
+    let conn = state
+        .backoffice_db
+        .get_connection("backoffice-actions", &config)
         .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, Json(json!({"error": e}))))?;
 
-    let cooldown = req.cooldown_override.unwrap_or_else(|| default_cooldown(&req.action_type));
+    let cooldown = req
+        .cooldown_override
+        .unwrap_or_else(|| default_cooldown(&req.action_type));
     let priority = priority_for(&req.action_type);
-    let status = if cooldown == 0 && priority == "routine" { "approved" } else { "proposed" };
+    let status = if cooldown == 0 && priority == "routine" {
+        "approved"
+    } else {
+        "proposed"
+    };
 
     let data = json!({
         "action_type": req.action_type,
@@ -109,12 +119,16 @@ async fn propose_action(
         .map_err(|e| (StatusCode::BAD_REQUEST, Json(json!({"error": e}))))?;
 
     // Publish event
-    state.event_bus.publish("action.proposed", json!({
-        "action_type": req.action_type,
-        "summary": req.summary,
-        "priority": priority,
-        "cooldown": cooldown,
-    }), &actor);
+    state.event_bus.publish(
+        "action.proposed",
+        json!({
+            "action_type": req.action_type,
+            "summary": req.summary,
+            "priority": priority,
+            "cooldown": cooldown,
+        }),
+        &actor,
+    );
 
     *state.evidence_count.write() += 1;
 
@@ -134,18 +148,26 @@ async fn list_pending(
 ) -> Result<Json<Value>, (StatusCode, Json<Value>)> {
     let config = crate::routes::backoffice::load_workspace_config("backoffice-actions")
         .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, Json(json!({"error": e}))))?;
-    let table = config.tables.iter().find(|t| t.name == "actions")
-        .ok_or((StatusCode::INTERNAL_SERVER_ERROR, Json(json!({"error": "actions table not found"}))))?;
+    let table = config.tables.iter().find(|t| t.name == "actions").ok_or((
+        StatusCode::INTERNAL_SERVER_ERROR,
+        Json(json!({"error": "actions table not found"})),
+    ))?;
 
-    let conn = state.backoffice_db.get_connection("backoffice-actions", &config)
+    let conn = state
+        .backoffice_db
+        .get_connection("backoffice-actions", &config)
         .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, Json(json!({"error": e}))))?;
 
-    let status_filter = params.get("status").cloned().unwrap_or_else(|| "proposed".to_string());
+    let status_filter = params
+        .get("status")
+        .cloned()
+        .unwrap_or_else(|| "proposed".to_string());
     let filters = vec![("status".to_string(), status_filter)];
 
     let c = conn.lock();
-    let result = crate::backoffice::crud::select_list(&c, table, 0, 100, Some("created_at"), &filters)
-        .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, Json(json!({"error": e}))))?;
+    let result =
+        crate::backoffice::crud::select_list(&c, table, 0, 100, Some("created_at"), &filters)
+            .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, Json(json!({"error": e}))))?;
 
     Ok(Json(result))
 }
@@ -157,7 +179,9 @@ async fn action_summary(
     let config = crate::routes::backoffice::load_workspace_config("backoffice-actions")
         .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, Json(json!({"error": e}))))?;
 
-    let conn = state.backoffice_db.get_connection("backoffice-actions", &config)
+    let conn = state
+        .backoffice_db
+        .get_connection("backoffice-actions", &config)
         .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, Json(json!({"error": e}))))?;
 
     let c = conn.lock();
@@ -166,8 +190,10 @@ async fn action_summary(
     let count_sql = |status: &str| -> i64 {
         c.query_row(
             &format!("SELECT COUNT(*) FROM actions WHERE status = '{}'", status),
-            [], |r| r.get(0)
-        ).unwrap_or(0)
+            [],
+            |r| r.get(0),
+        )
+        .unwrap_or(0)
     };
 
     let proposed = count_sql("proposed");
@@ -229,10 +255,14 @@ async fn update_action_status(
 ) -> Result<Json<Value>, (StatusCode, Json<Value>)> {
     let config = crate::routes::backoffice::load_workspace_config("backoffice-actions")
         .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, Json(json!({"error": e}))))?;
-    let table = config.tables.iter().find(|t| t.name == "actions")
-        .ok_or((StatusCode::INTERNAL_SERVER_ERROR, Json(json!({"error": "actions table not found"}))))?;
+    let table = config.tables.iter().find(|t| t.name == "actions").ok_or((
+        StatusCode::INTERNAL_SERVER_ERROR,
+        Json(json!({"error": "actions table not found"})),
+    ))?;
 
-    let conn = state.backoffice_db.get_connection("backoffice-actions", &config)
+    let conn = state
+        .backoffice_db
+        .get_connection("backoffice-actions", &config)
         .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, Json(json!({"error": e}))))?;
 
     let now = chrono::Utc::now().to_rfc3339();
@@ -256,20 +286,24 @@ async fn update_action_status(
     );
     *state.evidence_count.write() += 1;
 
-    state.event_bus.publish(&format!("action.{}", new_status), json!({
-        "action_id": id,
-    }), "human");
+    state.event_bus.publish(
+        &format!("action.{}", new_status),
+        json!({
+            "action_id": id,
+        }),
+        "human",
+    );
 
-    Ok(Json(json!({"updated": true, "status": new_status, "action": record})))
+    Ok(Json(
+        json!({"updated": true, "status": new_status, "action": record}),
+    ))
 }
 
 /// Preview: reconstruct page from PZip for this action
-async fn preview_action(
-    Path(id): Path<String>,
-) -> Result<Json<Value>, (StatusCode, Json<Value>)> {
+async fn preview_action(Path(id): Path<String>) -> Result<Json<Value>, (StatusCode, Json<Value>)> {
     // Look up the action to get its preview_hash
-    let _config = crate::routes::backoffice::load_workspace_config("backoffice-actions")
-        .unwrap_or_default();
+    let _config =
+        crate::routes::backoffice::load_workspace_config("backoffice-actions").unwrap_or_default();
     let _solace_home = crate::utils::solace_home();
 
     // For now return the action's details + any associated wiki snapshot
@@ -415,5 +449,8 @@ async fn signoff_page(State(_state): State<AppState>) -> Html<String> {
 })();
 </script>"#;
 
-    Html(crate::routes::files::hub_page_pub("Sign-Off — Pending Actions", body))
+    Html(crate::routes::files::hub_page_pub(
+        "Sign-Off — Pending Actions",
+        body,
+    ))
 }

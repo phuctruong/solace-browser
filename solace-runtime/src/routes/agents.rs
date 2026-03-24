@@ -64,12 +64,7 @@ async fn generate_handler(
     let timeout = req.timeout;
 
     let result = tokio::task::spawn_blocking(move || {
-        crate::agents::generate(
-            &agent_id,
-            model.as_deref(),
-            &prompt,
-            timeout,
-        )
+        crate::agents::generate(&agent_id, model.as_deref(), &prompt, timeout)
     })
     .await
     .map_err(|e| {
@@ -88,10 +83,7 @@ async fn generate_handler(
             "duration_ms": response.duration_ms,
             "evidence_hash": response.evidence_hash,
         }))),
-        Err(error) => Err((
-            StatusCode::BAD_REQUEST,
-            Json(json!({"error": error})),
-        )),
+        Err(error) => Err((StatusCode::BAD_REQUEST, Json(json!({"error": error})))),
     }
 }
 

@@ -20,13 +20,41 @@ pub fn routes() -> Router<AppState> {
 
 /// Built-in fun packs — personality themes for the sidebar.
 const FUNPACKS: &[(&str, &str, &str)] = &[
-    ("zen", "Zen Garden", "Calm, minimal, meditative responses. Uses nature metaphors."),
-    ("pirate", "Pirate Mode", "Arr! Every response in pirate speak. Treasure = evidence."),
-    ("haiku", "Haiku Master", "Responses in 5-7-5 syllable haiku format when possible."),
-    ("coach", "Motivational Coach", "Energetic, encouraging. Every task is a victory lap."),
-    ("detective", "Detective Noir", "Mysterious, investigative tone. Evidence = clues."),
-    ("chef", "Chef's Kitchen", "Cooking metaphors. Tasks = recipes. Results = dishes served."),
-    ("space", "Mission Control", "NASA-style communications. Tasks = missions. T-minus countdown."),
+    (
+        "zen",
+        "Zen Garden",
+        "Calm, minimal, meditative responses. Uses nature metaphors.",
+    ),
+    (
+        "pirate",
+        "Pirate Mode",
+        "Arr! Every response in pirate speak. Treasure = evidence.",
+    ),
+    (
+        "haiku",
+        "Haiku Master",
+        "Responses in 5-7-5 syllable haiku format when possible.",
+    ),
+    (
+        "coach",
+        "Motivational Coach",
+        "Energetic, encouraging. Every task is a victory lap.",
+    ),
+    (
+        "detective",
+        "Detective Noir",
+        "Mysterious, investigative tone. Evidence = clues.",
+    ),
+    (
+        "chef",
+        "Chef's Kitchen",
+        "Cooking metaphors. Tasks = recipes. Results = dishes served.",
+    ),
+    (
+        "space",
+        "Mission Control",
+        "NASA-style communications. Tasks = missions. T-minus countdown.",
+    ),
 ];
 
 /// GET /api/v1/funpacks

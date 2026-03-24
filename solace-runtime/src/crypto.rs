@@ -43,7 +43,8 @@ pub fn derive_key(secret: &str, salt: &[u8]) -> [u8; 32] {
 }
 
 pub fn encrypt(plaintext: &[u8], key: &[u8; 32]) -> Result<Vec<u8>, String> {
-    let cipher = Aes256Gcm::new_from_slice(key).map_err(|error| format!("cipher init failed: {error}"))?;
+    let cipher =
+        Aes256Gcm::new_from_slice(key).map_err(|error| format!("cipher init failed: {error}"))?;
     let mut nonce_bytes = [0u8; 12];
     rand::thread_rng().fill_bytes(&mut nonce_bytes);
     let nonce = Nonce::from_slice(&nonce_bytes);
@@ -60,7 +61,8 @@ pub fn decrypt(data: &[u8], key: &[u8; 32]) -> Result<Vec<u8>, String> {
         return Err("data too short".to_string());
     }
     let (nonce_bytes, ciphertext) = data.split_at(12);
-    let cipher = Aes256Gcm::new_from_slice(key).map_err(|error| format!("cipher init failed: {error}"))?;
+    let cipher =
+        Aes256Gcm::new_from_slice(key).map_err(|error| format!("cipher init failed: {error}"))?;
     let nonce = Nonce::from_slice(nonce_bytes);
     cipher
         .decrypt(nonce, ciphertext)
@@ -68,7 +70,8 @@ pub fn decrypt(data: &[u8], key: &[u8; 32]) -> Result<Vec<u8>, String> {
 }
 
 pub fn save_vault(tokens: &[OAuthToken], secret: &str) -> Result<PathBuf, String> {
-    let raw = serde_json::to_vec(tokens).map_err(|error| format!("vault encode failed: {error}"))?;
+    let raw =
+        serde_json::to_vec(tokens).map_err(|error| format!("vault encode failed: {error}"))?;
     let encrypted = encrypt(&raw, &key_from_secret(secret))?;
     let path = vault_path();
     if let Some(parent) = path.parent() {

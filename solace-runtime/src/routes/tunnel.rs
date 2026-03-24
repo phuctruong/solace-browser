@@ -24,7 +24,13 @@ use crate::state::AppState;
 /// Valid consent reasons (matches solaceagi tunnel_consent.py).
 const VALID_REASONS: &[&str] = &["support", "demo", "troubleshooting", "training", "custom"];
 /// Valid scope items.
-const VALID_SCOPES: &[&str] = &["browser_control", "cli_dispatch", "evidence_read", "screenshot", "navigate"];
+const VALID_SCOPES: &[&str] = &[
+    "browser_control",
+    "cli_dispatch",
+    "evidence_read",
+    "screenshot",
+    "navigate",
+];
 /// Maximum consent duration in minutes (8 hours).
 const MAX_DURATION_MINUTES: u32 = 480;
 /// Default consent duration.
@@ -100,7 +106,9 @@ async fn sign_consent(
     if !VALID_REASONS.contains(&payload.reason_category.as_str()) {
         return Err((
             StatusCode::BAD_REQUEST,
-            Json(json!({"error": format!("Invalid reason_category '{}'. Valid: {:?}", payload.reason_category, VALID_REASONS)})),
+            Json(
+                json!({"error": format!("Invalid reason_category '{}'. Valid: {:?}", payload.reason_category, VALID_REASONS)}),
+            ),
         ));
     }
 
@@ -109,7 +117,9 @@ async fn sign_consent(
         if !VALID_SCOPES.contains(&scope.as_str()) {
             return Err((
                 StatusCode::BAD_REQUEST,
-                Json(json!({"error": format!("Invalid scope '{}'. Valid: {:?}", scope, VALID_SCOPES)})),
+                Json(
+                    json!({"error": format!("Invalid scope '{}'. Valid: {:?}", scope, VALID_SCOPES)}),
+                ),
             ));
         }
     }
@@ -136,10 +146,7 @@ async fn sign_consent(
     let consent_id = uuid::Uuid::new_v4().to_string();
     let now = crate::utils::now_iso8601();
     let expires_at = compute_expires_at(&now, payload.duration_minutes);
-    let evidence_hash = crate::utils::sha256_hex(&format!(
-        "{}:consent:{}",
-        consent_id, now
-    ));
+    let evidence_hash = crate::utils::sha256_hex(&format!("{}:consent:{}", consent_id, now));
 
     let consent = ConsentRecord {
         consent_id: consent_id.clone(),
@@ -163,10 +170,7 @@ async fn sign_consent(
     let solace_home = crate::utils::solace_home();
     let consent_dir = solace_home.join("tunnel");
     let _ = std::fs::create_dir_all(&consent_dir);
-    let _ = crate::persistence::write_json(
-        &consent_dir.join("active_consent.json"),
-        &consent,
-    );
+    let _ = crate::persistence::write_json(&consent_dir.join("active_consent.json"), &consent);
 
     // Record evidence
     let _ = crate::evidence::record_event(
@@ -187,14 +191,16 @@ async fn sign_consent(
     let timer_consent_id = consent_id.clone();
     let timer_duration = payload.duration_minutes;
     tokio::spawn(async move {
-        tokio::time::sleep(std::time::Duration::from_secs(u64::from(timer_duration) * 60)).await;
+        tokio::time::sleep(std::time::Duration::from_secs(
+            u64::from(timer_duration) * 60,
+        ))
+        .await;
         // Check if this consent is still active
         let should_disconnect = {
             let tunnel = timer_state.tunnel.read();
-            tunnel
-                .consent
-                .as_ref()
-                .map_or(false, |c| c.consent_id == timer_consent_id && c.status == "active")
+            tunnel.consent.as_ref().map_or(false, |c| {
+                c.consent_id == timer_consent_id && c.status == "active"
+            })
         };
         if should_disconnect {
             do_disconnect(&timer_state, "auto_disconnect");
@@ -226,7 +232,9 @@ async fn connect_tunnel(
         if tunnel.consent.is_none() {
             return Err((
                 StatusCode::PRECONDITION_FAILED,
-                Json(json!({"error": "No active consent. Sign consent first via POST /api/v1/tunnel/consent"})),
+                Json(
+                    json!({"error": "No active consent. Sign consent first via POST /api/v1/tunnel/consent"}),
+                ),
             ));
         }
         if tunnel.connected {
@@ -238,16 +246,12 @@ async fn connect_tunnel(
     }
 
     // Require cloud config (API key)
-    let config = state
-        .cloud_config
-        .read()
-        .clone()
-        .ok_or_else(|| {
-            (
-                StatusCode::PRECONDITION_FAILED,
-                Json(json!({"error": "Cloud not connected — call POST /api/v1/cloud/connect first"})),
-            )
-        })?;
+    let config = state.cloud_config.read().clone().ok_or_else(|| {
+        (
+            StatusCode::PRECONDITION_FAILED,
+            Json(json!({"error": "Cloud not connected — call POST /api/v1/cloud/connect first"})),
+        )
+    })?;
 
     let api_key = config.api_key.clone();
     let tunnel_url = format!("{}?token={}", CLOUD_TUNNEL_URL, api_key);
@@ -315,8 +319,13 @@ async fn connect_tunnel(
                     if let Message::Text(text) = msg {
                         let text_str = text.to_string();
                         if let Ok(parsed) = serde_json::from_str::<Value>(&text_str) {
-                            let msg_type = parsed.get("type").and_then(|v| v.as_str()).unwrap_or("");
-                            let msg_id = parsed.get("id").and_then(|v| v.as_str()).unwrap_or("").to_string();
+                            let msg_type =
+                                parsed.get("type").and_then(|v| v.as_str()).unwrap_or("");
+                            let msg_id = parsed
+                                .get("id")
+                                .and_then(|v| v.as_str())
+                                .unwrap_or("")
+                                .to_string();
 
                             match msg_type {
                                 "ping" => {
@@ -326,8 +335,12 @@ async fn connect_tunnel(
                                 }
                                 _ => {
                                     // Handle as proxy command: execute locally, return result
-                                    let method = parsed.get("method").and_then(|v| v.as_str()).unwrap_or("GET");
-                                    let path = parsed.get("path").and_then(|v| v.as_str()).unwrap_or("/");
+                                    let method = parsed
+                                        .get("method")
+                                        .and_then(|v| v.as_str())
+                                        .unwrap_or("GET");
+                                    let path =
+                                        parsed.get("path").and_then(|v| v.as_str()).unwrap_or("/");
 
                                     // Record evidence for this remote action
                                     let solace_home = crate::utils::solace_home();
@@ -347,8 +360,15 @@ async fn connect_tunnel(
                                     let client = reqwest::Client::new();
                                     let local_result = match method {
                                         "POST" => {
-                                            let body = parsed.get("body").and_then(|v| v.as_str()).unwrap_or("");
-                                            client.post(&local_url).body(body.to_string()).send().await
+                                            let body = parsed
+                                                .get("body")
+                                                .and_then(|v| v.as_str())
+                                                .unwrap_or("");
+                                            client
+                                                .post(&local_url)
+                                                .body(body.to_string())
+                                                .send()
+                                                .await
                                         }
                                         "DELETE" => client.delete(&local_url).send().await,
                                         _ => client.get(&local_url).send().await,
@@ -376,7 +396,8 @@ async fn connect_tunnel(
                                     };
 
                                     let mut tx = handler_tx.lock().await;
-                                    let _ = tx.send(Message::Text(response.to_string().into())).await;
+                                    let _ =
+                                        tx.send(Message::Text(response.to_string().into())).await;
                                 }
                             }
                         }
@@ -540,7 +561,11 @@ fn do_disconnect(state: &AppState, reason: &str) {
     let _ = crate::evidence::record_event(
         &solace_home,
         "tunnel.disconnected",
-        if reason == "user_disconnect" { "user" } else { "system" },
+        if reason == "user_disconnect" {
+            "user"
+        } else {
+            "system"
+        },
         json!({
             "reason": reason,
             "consent_id": consent_id,

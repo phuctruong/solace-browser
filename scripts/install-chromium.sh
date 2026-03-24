@@ -106,6 +106,7 @@ Terminal=false
 Type=Application
 Categories=Network;WebBrowser;
 MimeType=x-scheme-handler/http;x-scheme-handler/https;
+StartupWMClass=solace
 DESKTOP
 
 echo ""

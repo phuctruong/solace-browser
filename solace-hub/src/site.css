@@ -97,15 +97,15 @@ body {
   align-items: stretch;
   background:
     linear-gradient(180deg, var(--hub-page-overlay), rgba(9, 17, 26, 0.88)),
-    url("media/dragon-background.jpg") center / cover no-repeat,
+    radial-gradient(circle at top right, rgba(120, 185, 255, 0.16), transparent 38%),
     linear-gradient(135deg, var(--hub-page-top) 0%, var(--hub-page-mid) 48%, var(--hub-page-bottom) 100%);
 }
 
 body[data-theme="light"] {
   background:
-    radial-gradient(circle at top, rgba(255, 255, 255, 0.82), rgba(255, 255, 255, 0.2) 44%, transparent 62%),
-    linear-gradient(180deg, var(--hub-page-overlay), rgba(255, 255, 255, 0.24)),
-    url("media/dragon-background.jpg") center top / cover no-repeat,
+    radial-gradient(circle at top left, rgba(255, 255, 255, 0.92), rgba(255, 255, 255, 0.24) 42%, transparent 68%),
+    radial-gradient(circle at top right, rgba(15, 122, 168, 0.08), transparent 34%),
+    linear-gradient(180deg, rgba(255, 250, 244, 0.96), rgba(247, 241, 233, 0.98)),
     linear-gradient(135deg, var(--hub-page-top) 0%, var(--hub-page-mid) 52%, var(--hub-page-bottom) 100%);
 }
 

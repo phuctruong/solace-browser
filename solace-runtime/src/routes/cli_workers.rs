@@ -26,22 +26,87 @@ pub fn routes() -> Router<AppState> {
 /// Known CLI tools that can be wrapped as workers.
 const CLI_REGISTRY: &[CliDef] = &[
     // Reasoning (LLM agents)
-    CliDef { id: "claude-worker", detect: &["claude"], category: "reasoning", description: "Claude Code — AI coding + analysis" },
-    CliDef { id: "codex-worker", detect: &["codex"], category: "reasoning", description: "OpenAI Codex — GPT-5.4 code generation" },
-    CliDef { id: "gemini-worker", detect: &["gemini"], category: "reasoning", description: "Google Gemini — multimodal AI" },
-    CliDef { id: "ollama-worker", detect: &["ollama"], category: "reasoning", description: "Ollama — local LLM inference" },
+    CliDef {
+        id: "claude-worker",
+        detect: &["claude"],
+        category: "reasoning",
+        description: "Claude Code — AI coding + analysis",
+    },
+    CliDef {
+        id: "codex-worker",
+        detect: &["codex"],
+        category: "reasoning",
+        description: "OpenAI Codex — GPT-5.4 code generation",
+    },
+    CliDef {
+        id: "gemini-worker",
+        detect: &["gemini"],
+        category: "reasoning",
+        description: "Google Gemini — multimodal AI",
+    },
+    CliDef {
+        id: "ollama-worker",
+        detect: &["ollama"],
+        category: "reasoning",
+        description: "Ollama — local LLM inference",
+    },
     // Perception
-    CliDef { id: "transcriber", detect: &["whisper"], category: "perception", description: "Whisper — speech-to-text" },
-    CliDef { id: "web-scraper", detect: &["curl"], category: "perception", description: "Web page fetcher + text extractor" },
-    CliDef { id: "doc-reader", detect: &["pandoc"], category: "perception", description: "Universal doc converter (PDF/DOCX → markdown)" },
+    CliDef {
+        id: "transcriber",
+        detect: &["whisper"],
+        category: "perception",
+        description: "Whisper — speech-to-text",
+    },
+    CliDef {
+        id: "web-scraper",
+        detect: &["curl"],
+        category: "perception",
+        description: "Web page fetcher + text extractor",
+    },
+    CliDef {
+        id: "doc-reader",
+        detect: &["pandoc"],
+        category: "perception",
+        description: "Universal doc converter (PDF/DOCX → markdown)",
+    },
     // Action
-    CliDef { id: "git-worker", detect: &["git"], category: "action", description: "Git — commit, branch, merge, diff" },
-    CliDef { id: "gh-worker", detect: &["gh"], category: "action", description: "GitHub CLI — issues, PRs, releases" },
-    CliDef { id: "file-converter", detect: &["ffmpeg"], category: "action", description: "FFmpeg — video/audio conversion" },
-    CliDef { id: "docker-worker", detect: &["docker"], category: "action", description: "Docker — container management" },
+    CliDef {
+        id: "git-worker",
+        detect: &["git"],
+        category: "action",
+        description: "Git — commit, branch, merge, diff",
+    },
+    CliDef {
+        id: "gh-worker",
+        detect: &["gh"],
+        category: "action",
+        description: "GitHub CLI — issues, PRs, releases",
+    },
+    CliDef {
+        id: "file-converter",
+        detect: &["ffmpeg"],
+        category: "action",
+        description: "FFmpeg — video/audio conversion",
+    },
+    CliDef {
+        id: "docker-worker",
+        detect: &["docker"],
+        category: "action",
+        description: "Docker — container management",
+    },
     // Utility
-    CliDef { id: "image-processor", detect: &["convert", "magick"], category: "utility", description: "ImageMagick — image manipulation" },
-    CliDef { id: "data-analyst", detect: &["python3"], category: "utility", description: "Python — data analysis + scripting" },
+    CliDef {
+        id: "image-processor",
+        detect: &["convert", "magick"],
+        category: "utility",
+        description: "ImageMagick — image manipulation",
+    },
+    CliDef {
+        id: "data-analyst",
+        detect: &["python3"],
+        category: "utility",
+        description: "Python — data analysis + scripting",
+    },
 ];
 
 struct CliDef {
@@ -62,7 +127,13 @@ fn detect_cli(names: &[&str]) -> Option<(String, String)> {
                     .arg("--version")
                     .output()
                     .ok()
-                    .map(|o| String::from_utf8_lossy(&o.stdout).lines().next().unwrap_or("").to_string())
+                    .map(|o| {
+                        String::from_utf8_lossy(&o.stdout)
+                            .lines()
+                            .next()
+                            .unwrap_or("")
+                            .to_string()
+                    })
                     .unwrap_or_default();
                 return Some((path, version));
             }
@@ -90,11 +161,17 @@ async fn list_cli_workers(State(_state): State<AppState>) -> Json<Value> {
             "api": format!("/api/v1/cli/{}/run", def.id),
         });
 
-        by_category.entry(def.category).or_default().push(worker.clone());
+        by_category
+            .entry(def.category)
+            .or_default()
+            .push(worker.clone());
         workers.push(worker);
     }
 
-    let installed_count = workers.iter().filter(|w| w["installed"].as_bool().unwrap_or(false)).count();
+    let installed_count = workers
+        .iter()
+        .filter(|w| w["installed"].as_bool().unwrap_or(false))
+        .count();
 
     Json(json!({
         "workers": workers,
@@ -108,9 +185,15 @@ async fn worker_status(
     State(_state): State<AppState>,
     Path(worker_id): Path<String>,
 ) -> Result<Json<Value>, (StatusCode, Json<Value>)> {
-    let def = CLI_REGISTRY.iter().find(|d| d.id == worker_id).ok_or_else(|| {
-        (StatusCode::NOT_FOUND, Json(json!({"error": format!("unknown worker '{}'", worker_id)})))
-    })?;
+    let def = CLI_REGISTRY
+        .iter()
+        .find(|d| d.id == worker_id)
+        .ok_or_else(|| {
+            (
+                StatusCode::NOT_FOUND,
+                Json(json!({"error": format!("unknown worker '{}'", worker_id)})),
+            )
+        })?;
 
     let detected = detect_cli(def.detect);
     let (path, version) = detected.clone().unwrap_or_default();
@@ -137,15 +220,15 @@ struct RunRequest {
     timeout: u64,
 }
 
-fn default_timeout() -> u64 { 60 }
+fn default_timeout() -> u64 {
+    60
+}
 
 /// ALLOWLIST: only these CLI commands can be executed.
 /// This prevents arbitrary command injection.
 const ALLOWED_COMMANDS: &[&str] = &[
-    "claude", "codex", "gemini", "ollama",
-    "whisper", "curl", "pandoc",
-    "git", "gh", "ffmpeg", "docker",
-    "convert", "magick", "python3",
+    "claude", "codex", "gemini", "ollama", "whisper", "curl", "pandoc", "git", "gh", "ffmpeg",
+    "docker", "convert", "magick", "python3",
 ];
 
 async fn run_worker(
@@ -153,13 +236,22 @@ async fn run_worker(
     Path(worker_id): Path<String>,
     Json(req): Json<RunRequest>,
 ) -> Result<Json<Value>, (StatusCode, Json<Value>)> {
-    let def = CLI_REGISTRY.iter().find(|d| d.id == worker_id).ok_or_else(|| {
-        (StatusCode::NOT_FOUND, Json(json!({"error": format!("unknown worker '{}'", worker_id)})))
-    })?;
+    let def = CLI_REGISTRY
+        .iter()
+        .find(|d| d.id == worker_id)
+        .ok_or_else(|| {
+            (
+                StatusCode::NOT_FOUND,
+                Json(json!({"error": format!("unknown worker '{}'", worker_id)})),
+            )
+        })?;
 
     // Verify installed
     let (path, _version) = detect_cli(def.detect).ok_or_else(|| {
-        (StatusCode::SERVICE_UNAVAILABLE, Json(json!({"error": format!("'{}' not installed", def.detect[0])})))
+        (
+            StatusCode::SERVICE_UNAVAILABLE,
+            Json(json!({"error": format!("'{}' not installed", def.detect[0])})),
+        )
     })?;
 
     // Security: only allow known commands
@@ -168,7 +260,10 @@ async fn run_worker(
         .and_then(|f| f.to_str())
         .unwrap_or("");
     if !ALLOWED_COMMANDS.contains(&cmd_name) {
-        return Err((StatusCode::FORBIDDEN, Json(json!({"error": "command not in allowlist"}))));
+        return Err((
+            StatusCode::FORBIDDEN,
+            Json(json!({"error": "command not in allowlist"})),
+        ));
     }
 
     // Clamp timeout
@@ -179,15 +274,22 @@ async fn run_worker(
     for arg in &req.args {
         // Basic injection prevention: no shell metacharacters in args
         if arg.contains(';') || arg.contains('|') || arg.contains('`') || arg.contains('$') {
-            return Err((StatusCode::BAD_REQUEST, Json(json!({"error": "shell metacharacters not allowed in args"}))));
+            return Err((
+                StatusCode::BAD_REQUEST,
+                Json(json!({"error": "shell metacharacters not allowed in args"})),
+            ));
         }
         cmd.arg(arg);
     }
 
     // For some workers, input goes as stdin; for others, as an arg
     match def.id {
-        "web-scraper" => { cmd.arg("-sf").arg(&req.input); }
-        "doc-reader" => { cmd.arg(&req.input).arg("-t").arg("markdown"); }
+        "web-scraper" => {
+            cmd.arg("-sf").arg(&req.input);
+        }
+        "doc-reader" => {
+            cmd.arg(&req.input).arg("-t").arg("markdown");
+        }
         "git-worker" => {
             // Git commands: input is the subcommand
             let parts: Vec<&str> = req.input.split_whitespace().collect();
@@ -209,12 +311,20 @@ async fn run_worker(
     }
 
     let start = Instant::now();
-    let output = tokio::task::spawn_blocking(move || {
-        cmd.output()
-    })
-    .await
-    .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, Json(json!({"error": format!("spawn: {e}")}))))?
-    .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, Json(json!({"error": format!("exec: {e}")}))))?;
+    let output = tokio::task::spawn_blocking(move || cmd.output())
+        .await
+        .map_err(|e| {
+            (
+                StatusCode::INTERNAL_SERVER_ERROR,
+                Json(json!({"error": format!("spawn: {e}")})),
+            )
+        })?
+        .map_err(|e| {
+            (
+                StatusCode::INTERNAL_SERVER_ERROR,
+                Json(json!({"error": format!("exec: {e}")})),
+            )
+        })?;
 
     let duration_ms = start.elapsed().as_millis() as u64;
     let stdout = String::from_utf8_lossy(&output.stdout).to_string();

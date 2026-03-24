@@ -11,6 +11,7 @@ use axum::{
 use serde::Deserialize;
 use serde_json::{json, Value};
 use std::collections::HashMap;
+use std::time::Duration;
 
 use crate::state::AppState;
 
@@ -21,7 +22,10 @@ pub fn routes() -> Router<AppState> {
         // Chrome.send bridge — routes sidebar chrome.send calls to C++ handlers via runtime
         .route("/api/v1/browser/chrome-send", post(chrome_send_bridge))
         // Worker run progress — live step tracking for sidebar display
-        .route("/api/v1/worker/run", get(get_worker_run).post(update_worker_run))
+        .route(
+            "/api/v1/worker/run",
+            get(get_worker_run).post(update_worker_run),
+        )
         // Browser tabs — the ACTUAL open tabs from the C++ layer
         .route("/api/v1/browser/tabs", get(get_tabs).post(update_tabs))
         // Tab management — close tabs via WebSocket relay to sidebar
@@ -29,7 +33,10 @@ pub fn routes() -> Router<AppState> {
         .route("/api/v1/browser/tabs/:tab_id/close", post(close_tab_by_id))
         .route("/api/v1/browser/tabs/active", get(get_active_tab))
         // Live page HTML — the ACTUAL currently-rendered full page HTML of the active tab
-        .route("/api/v1/browser/page-html", get(get_page_html).post(push_page_html))
+        .route(
+            "/api/v1/browser/page-html",
+            get(get_page_html).post(push_page_html),
+        )
         // Screenshot
         .route("/api/v1/browser/screenshot", post(take_screenshot))
         // DOM snapshot
@@ -38,7 +45,10 @@ pub fn routes() -> Router<AppState> {
         .route("/api/v1/browser/evaluate", post(evaluate_js))
         // Cookie vault
         .route("/api/v1/browser/cookies", get(list_cookies))
-        .route("/api/v1/browser/cookies/:domain", get(domain_cookies).post(set_cookie))
+        .route(
+            "/api/v1/browser/cookies/:domain",
+            get(domain_cookies).post(set_cookie),
+        )
         // Session persistence
         .route("/api/v1/browser/session/save", post(save_session))
         .route("/api/v1/browser/session/restore", post(restore_session))
@@ -70,8 +80,16 @@ async fn take_screenshot(
     Json(req): Json<ScreenshotRequest>,
 ) -> Json<Value> {
     // Use xdotool/import for now, native CaptureWebContents() on C++ rebuild
-    let format = if req.format.is_empty() { "png" } else { &req.format };
-    let filename = format!("screenshot-{}.{}", chrono::Utc::now().format("%Y%m%d-%H%M%S"), format);
+    let format = if req.format.is_empty() {
+        "png"
+    } else {
+        &req.format
+    };
+    let filename = format!(
+        "screenshot-{}.{}",
+        chrono::Utc::now().format("%Y%m%d-%H%M%S"),
+        format
+    );
     let solace_home = crate::utils::solace_home();
     let path = solace_home.join("screenshots").join(&filename);
     let _ = std::fs::create_dir_all(solace_home.join("screenshots"));
@@ -85,7 +103,9 @@ async fn take_screenshot(
 
     // Evidence
     let _ = crate::evidence::record_event(
-        &solace_home, "browser.screenshot", "system",
+        &solace_home,
+        "browser.screenshot",
+        "system",
         json!({"filename": filename, "format": format}),
     );
     *state.evidence_count.write() += 1;
@@ -106,7 +126,11 @@ async fn capture_dom(State(state): State<AppState>) -> Json<Value> {
     // The sidebar auto-captures DOM via wiki/extract on every URL change.
     // This endpoint returns the latest captured snapshot for the active session.
     let sessions = state.sessions.read();
-    let active_url = sessions.values().next().map(|s| s.url.clone()).unwrap_or_default();
+    let active_url = sessions
+        .values()
+        .next()
+        .map(|s| s.url.clone())
+        .unwrap_or_default();
 
     let solace_home = crate::utils::solace_home();
     let wiki_dir = solace_home.join("wiki");
@@ -115,7 +139,11 @@ async fn capture_dom(State(state): State<AppState>) -> Json<Value> {
     let mut snapshot = String::new();
     if let Ok(entries) = std::fs::read_dir(&wiki_dir) {
         for entry in entries.flatten() {
-            if entry.file_name().to_string_lossy().ends_with(".prime-snapshot.md") {
+            if entry
+                .file_name()
+                .to_string_lossy()
+                .ends_with(".prime-snapshot.md")
+            {
                 if let Ok(content) = std::fs::read_to_string(entry.path()) {
                     if content.contains(&active_url) {
                         snapshot = content;
@@ -144,10 +172,7 @@ struct EvalRequest {
     session_id: String,
 }
 
-async fn evaluate_js(
-    State(state): State<AppState>,
-    Json(req): Json<EvalRequest>,
-) -> Json<Value> {
+async fn evaluate_js(State(state): State<AppState>, Json(req): Json<EvalRequest>) -> Json<Value> {
     // Send JS to the browser via WebSocket session channel
     let channels = state.session_channels.read();
     let mut sent = false;
@@ -158,11 +183,19 @@ async fn evaluate_js(
             break;
         }
     }
+    drop(channels);
+
+    let method = if sent {
+        "websocket_session_channel".to_string()
+    } else {
+        sent = crate::routes::browser_control::execute_js_via_devtools(&req.script);
+        "devtools_console".to_string()
+    };
 
     Json(json!({
         "sent": sent,
         "script_length": req.script.len(),
-        "method": "websocket_session_channel",
+        "method": method,
     }))
 }
 
@@ -172,17 +205,20 @@ async fn list_cookies(State(_state): State<AppState>) -> Json<Value> {
     let solace_home = crate::utils::solace_home();
     let vault_path = solace_home.join("vault").join("cookies.json");
     let cookies: Value = if vault_path.exists() {
-        serde_json::from_str(&std::fs::read_to_string(&vault_path).unwrap_or_default()).unwrap_or(json!({}))
+        serde_json::from_str(&std::fs::read_to_string(&vault_path).unwrap_or_default())
+            .unwrap_or(json!({}))
     } else {
         json!({})
     };
-    Json(json!({"cookies": cookies, "encrypted": false, "note": "Encryption via AES-256-GCM available with OAuth3 vault"}))
+    Json(
+        json!({"cookies": cookies, "encrypted": false, "note": "Encryption via AES-256-GCM available with OAuth3 vault"}),
+    )
 }
 
-async fn domain_cookies(
-    Path(domain): Path<String>,
-) -> Json<Value> {
-    Json(json!({"domain": domain, "cookies": [], "note": "Per-domain cookies available after Chromium C++ integration"}))
+async fn domain_cookies(Path(domain): Path<String>) -> Json<Value> {
+    Json(
+        json!({"domain": domain, "cookies": [], "note": "Per-domain cookies available after Chromium C++ integration"}),
+    )
 }
 
 #[derive(Deserialize)]
@@ -192,17 +228,15 @@ struct SetCookie {
     domain: String,
 }
 
-async fn set_cookie(
-    Path(domain): Path<String>,
-    Json(req): Json<SetCookie>,
-) -> Json<Value> {
+async fn set_cookie(Path(domain): Path<String>, Json(req): Json<SetCookie>) -> Json<Value> {
     let solace_home = crate::utils::solace_home();
     let vault_dir = solace_home.join("vault");
     let _ = std::fs::create_dir_all(&vault_dir);
     let vault_path = vault_dir.join("cookies.json");
 
     let mut cookies: HashMap<String, Vec<Value>> = if vault_path.exists() {
-        serde_json::from_str(&std::fs::read_to_string(&vault_path).unwrap_or_default()).unwrap_or_default()
+        serde_json::from_str(&std::fs::read_to_string(&vault_path).unwrap_or_default())
+            .unwrap_or_default()
     } else {
         HashMap::new()
     };
@@ -211,7 +245,10 @@ async fn set_cookie(
         "name": req.name, "value": req.value, "set_at": chrono::Utc::now().to_rfc3339()
     }));
 
-    let _ = std::fs::write(&vault_path, serde_json::to_string_pretty(&cookies).unwrap_or_default());
+    let _ = std::fs::write(
+        &vault_path,
+        serde_json::to_string_pretty(&cookies).unwrap_or_default(),
+    );
 
     Json(json!({"set": true, "domain": domain, "cookie": req.name}))
 }
@@ -222,10 +259,18 @@ async fn save_session(State(state): State<AppState>) -> Json<Value> {
     let sessions = state.sessions.read();
     let solace_home = crate::utils::solace_home();
     let path = solace_home.join("runtime").join("saved_session.json");
-    let session_data: Vec<Value> = sessions.values().map(|s| json!({
-        "session_id": s.session_id, "url": s.url, "profile": s.profile,
-    })).collect();
-    let _ = std::fs::write(&path, serde_json::to_string_pretty(&session_data).unwrap_or_default());
+    let session_data: Vec<Value> = sessions
+        .values()
+        .map(|s| {
+            json!({
+                "session_id": s.session_id, "url": s.url, "profile": s.profile,
+            })
+        })
+        .collect();
+    let _ = std::fs::write(
+        &path,
+        serde_json::to_string_pretty(&session_data).unwrap_or_default(),
+    );
     Json(json!({"saved": true, "sessions": session_data.len(), "path": path.display().to_string()}))
 }
 
@@ -235,7 +280,9 @@ async fn restore_session(State(_state): State<AppState>) -> Json<Value> {
     if !path.exists() {
         return Json(json!({"restored": false, "error": "no saved session"}));
     }
-    let data: Vec<Value> = serde_json::from_str(&std::fs::read_to_string(&path).unwrap_or_default()).unwrap_or_default();
+    let data: Vec<Value> =
+        serde_json::from_str(&std::fs::read_to_string(&path).unwrap_or_default())
+            .unwrap_or_default();
     Json(json!({"restored": true, "sessions": data.len(), "urls": data}))
 }
 
@@ -243,7 +290,11 @@ async fn restore_session(State(_state): State<AppState>) -> Json<Value> {
 
 async fn print_to_pdf(State(state): State<AppState>) -> Json<Value> {
     let sessions = state.sessions.read();
-    let url = sessions.values().next().map(|s| s.url.clone()).unwrap_or_default();
+    let url = sessions
+        .values()
+        .next()
+        .map(|s| s.url.clone())
+        .unwrap_or_default();
     let filename = format!("page-{}.pdf", chrono::Utc::now().format("%Y%m%d-%H%M%S"));
     let solace_home = crate::utils::solace_home();
     let path = solace_home.join("exports").join(&filename);
@@ -257,12 +308,16 @@ async fn print_to_pdf(State(state): State<AppState>) -> Json<Value> {
     let success = result.map(|o| o.status.success()).unwrap_or(false);
 
     let _ = crate::evidence::record_event(
-        &solace_home, "browser.print_pdf", "system",
+        &solace_home,
+        "browser.print_pdf",
+        "system",
         json!({"url": url, "filename": filename}),
     );
     *state.evidence_count.write() += 1;
 
-    Json(json!({"printed": success, "url": url, "filename": filename, "path": path.display().to_string()}))
+    Json(
+        json!({"printed": success, "url": url, "filename": filename, "path": path.display().to_string()}),
+    )
 }
 
 // ── Form Fill ──
@@ -272,10 +327,7 @@ struct FillRequest {
     fields: HashMap<String, String>,
 }
 
-async fn fill_form(
-    State(state): State<AppState>,
-    Json(req): Json<FillRequest>,
-) -> Json<Value> {
+async fn fill_form(State(state): State<AppState>, Json(req): Json<FillRequest>) -> Json<Value> {
     // Send fill commands to browser via WebSocket
     let channels = state.session_channels.read();
     let mut sent = false;
@@ -316,12 +368,19 @@ async fn network_log() -> Json<Value> {
     // For now, return evidence entries that are network-related.
     let solace_home = crate::utils::solace_home();
     let evidence = crate::evidence::list_evidence(&solace_home, 100);
-    let network_events: Vec<_> = evidence.iter()
-        .filter(|e| e.event.contains("navigate") || e.event.contains("fetch") || e.event.contains("wiki.extract"))
+    let network_events: Vec<_> = evidence
+        .iter()
+        .filter(|e| {
+            e.event.contains("navigate")
+                || e.event.contains("fetch")
+                || e.event.contains("wiki.extract")
+        })
         .take(50)
         .collect();
     let count = network_events.len();
-    Json(json!({"events": network_events, "count": count, "note": "Full network intercept available after Chromium C++ integration"}))
+    Json(
+        json!({"events": network_events, "count": count, "note": "Full network intercept available after Chromium C++ integration"}),
+    )
 }
 
 // ── Tab Freeze/Resume ──
@@ -331,7 +390,9 @@ async fn freeze_tab(State(state): State<AppState>) -> Json<Value> {
     for (_, tx) in channels.iter() {
         let _ = tx.send(json!({"type": "execute", "script": "debugger;"}).to_string());
     }
-    Json(json!({"frozen": true, "method": "debugger_statement", "note": "Native renderer freeze available after C++ integration"}))
+    Json(
+        json!({"frozen": true, "method": "debugger_statement", "note": "Native renderer freeze available after C++ integration"}),
+    )
 }
 
 async fn resume_tab(State(state): State<AppState>) -> Json<Value> {
@@ -344,8 +405,12 @@ async fn resume_tab(State(state): State<AppState>) -> Json<Value> {
 
 /// Extract domain from a URL string.
 fn extract_domain_from_url(url: &str) -> String {
-    url.split("//").nth(1).unwrap_or("")
-        .split('/').next().unwrap_or("")
+    url.split("//")
+        .nth(1)
+        .unwrap_or("")
+        .split('/')
+        .next()
+        .unwrap_or("")
         .to_string()
 }
 
@@ -359,8 +424,15 @@ async fn chrome_send_bridge(
     State(state): State<AppState>,
     Json(payload): Json<Value>,
 ) -> Json<Value> {
-    let handler = payload.get("handler").and_then(|v| v.as_str()).unwrap_or("");
-    let args = payload.get("args").and_then(|v| v.as_array()).cloned().unwrap_or_default();
+    let handler = payload
+        .get("handler")
+        .and_then(|v| v.as_str())
+        .unwrap_or("");
+    let args = payload
+        .get("args")
+        .and_then(|v| v.as_array())
+        .cloned()
+        .unwrap_or_default();
 
     match handler {
         "solaceNavigateTab" => {
@@ -377,27 +449,25 @@ async fn chrome_send_bridge(
             }
             Json(json!({"error": "url required"}))
         }
-        "solaceCloseOtherTabs" => {
-            Json(json!({"ok": true, "action": "close_other_tabs"}))
-        }
+        "solaceCloseOtherTabs" => Json(json!({"ok": true, "action": "close_other_tabs"})),
         "solaceGetTabs" => {
             let tabs = state.browser_tabs.read();
             Json(json!({"ok": true, "tabs": *tabs}))
         }
-        "solaceCloseTab" => {
-            Json(json!({"ok": true, "action": "close_tab"}))
-        }
+        "solaceCloseTab" => Json(json!({"ok": true, "action": "close_tab"})),
         "solaceEvaluateInPage" => {
             // Execute JS in the active tab — this is the key handler
             // The C++ does this natively after rebuild; for now log the request
             if let Some(script) = args.first().and_then(|v| v.as_str()) {
-                return Json(json!({"ok": true, "action": "evaluate", "script_length": script.len(), "note": "Requires Chromium rebuild for native execution"}));
+                return Json(
+                    json!({"ok": true, "action": "evaluate", "script_length": script.len(), "note": "Requires Chromium rebuild for native execution"}),
+                );
             }
             Json(json!({"error": "script required"}))
         }
-        "solaceCapturePageHtml" => {
-            Json(json!({"ok": true, "action": "capture_page_html", "note": "Requires Chromium rebuild"}))
-        }
+        "solaceCapturePageHtml" => Json(
+            json!({"ok": true, "action": "capture_page_html", "note": "Requires Chromium rebuild"}),
+        ),
         _ => Json(json!({"error": format!("unknown handler: {}", handler)})),
     }
 }
@@ -421,9 +491,16 @@ async fn get_current_url(State(state): State<AppState>) -> Json<Value> {
     }
 
     // Extract domain from URL (e.g., "https://claude.ai/new" → "claude.ai")
-    let domain = url.split("://").nth(1).unwrap_or("")
-        .split('/').next().unwrap_or("")
-        .split(':').next().unwrap_or("")
+    let domain = url
+        .split("://")
+        .nth(1)
+        .unwrap_or("")
+        .split('/')
+        .next()
+        .unwrap_or("")
+        .split(':')
+        .next()
+        .unwrap_or("")
         .to_string();
     let icon = crate::routes::files::domain_icon_path_pub(&domain);
 
@@ -433,33 +510,52 @@ async fn get_current_url(State(state): State<AppState>) -> Json<Value> {
         || url.contains("/signin")
         || url.contains("/auth/")
         || url.contains("/challenge/");
-    let is_logged_in = !is_auth_page && !domain.is_empty()
-        && domain != "localhost" && domain != "127.0.0.1";
+    let is_logged_in =
+        !is_auth_page && !domain.is_empty() && domain != "localhost" && domain != "127.0.0.1";
 
     // Track domain auth state — including detecting sign-in redirects
     // If on an auth page with a continue/redirect URL, mark that target domain as needing auth
     if is_auth_page {
         // Extract the target domain from continue= or redirect= params
-        if let Some(continue_url) = url.split("continue=").nth(1)
+        if let Some(continue_url) = url
+            .split("continue=")
+            .nth(1)
             .or_else(|| url.split("redirect=").nth(1))
             .or_else(|| url.split("followup=").nth(1))
         {
-            let decoded = continue_url.split('&').next().unwrap_or("")
-                .replace("%3A", ":").replace("%2F", "/");
-            let target_domain = decoded.split("://").nth(1).unwrap_or("")
-                .split('/').next().unwrap_or("").to_string();
+            let decoded = continue_url
+                .split('&')
+                .next()
+                .unwrap_or("")
+                .replace("%3A", ":")
+                .replace("%2F", "/");
+            let target_domain = decoded
+                .split("://")
+                .nth(1)
+                .unwrap_or("")
+                .split('/')
+                .next()
+                .unwrap_or("")
+                .to_string();
             if !target_domain.is_empty() {
                 let auth_path = crate::utils::solace_home().join("sessions/domain_auth.json");
                 let mut auth_data: serde_json::Value = std::fs::read_to_string(&auth_path)
-                    .ok().and_then(|s| serde_json::from_str(&s).ok()).unwrap_or(json!({}));
+                    .ok()
+                    .and_then(|s| serde_json::from_str(&s).ok())
+                    .unwrap_or(json!({}));
                 auth_data[&target_domain] = json!({
                     "status": "expired",
                     "last_verified": crate::utils::now_iso8601(),
                     "url": decoded,
                     "reason": "redirected to sign-in page",
                 });
-                let _ = std::fs::create_dir_all(auth_path.parent().unwrap_or(std::path::Path::new(".")));
-                let _ = std::fs::write(&auth_path, serde_json::to_string_pretty(&auth_data).unwrap_or_default());
+                let _ = std::fs::create_dir_all(
+                    auth_path.parent().unwrap_or(std::path::Path::new(".")),
+                );
+                let _ = std::fs::write(
+                    &auth_path,
+                    serde_json::to_string_pretty(&auth_data).unwrap_or_default(),
+                );
             }
         }
     }
@@ -476,7 +572,10 @@ async fn get_current_url(State(state): State<AppState>) -> Json<Value> {
             "url": url,
         });
         let _ = std::fs::create_dir_all(auth_path.parent().unwrap_or(std::path::Path::new(".")));
-        let _ = std::fs::write(&auth_path, serde_json::to_string_pretty(&auth_data).unwrap_or_default());
+        let _ = std::fs::write(
+            &auth_path,
+            serde_json::to_string_pretty(&auth_data).unwrap_or_default(),
+        );
     }
 
     Json(json!({"url": url, "domain": domain, "icon": icon, "logged_in": is_logged_in}))
@@ -499,7 +598,10 @@ async fn update_worker_run(
     Json(payload): Json<Value>,
 ) -> Json<Value> {
     let now = crate::utils::now_iso8601();
-    let status = payload.get("status").and_then(|v| v.as_str()).unwrap_or("running");
+    let status = payload
+        .get("status")
+        .and_then(|v| v.as_str())
+        .unwrap_or("running");
 
     if status == "done" || status == "error" {
         // Clear the run after a delay (let sidebar show final state)
@@ -511,7 +613,9 @@ async fn update_worker_run(
             run.updated_at = now.clone();
             if let Some(log) = payload.get("log").and_then(|v| v.as_str()) {
                 run.log_lines.push(log.to_string());
-                if run.log_lines.len() > 20 { run.log_lines.remove(0); }
+                if run.log_lines.len() > 20 {
+                    run.log_lines.remove(0);
+                }
             }
         }
         // Clear after 10s
@@ -527,24 +631,55 @@ async fn update_worker_run(
 
     if let Some(r) = existing {
         // Update existing run
-        r.current_step = payload.get("current_step").and_then(|v| v.as_u64()).unwrap_or(r.current_step as u64) as usize;
-        r.step_label = payload.get("step_label").and_then(|v| v.as_str()).unwrap_or(&r.step_label).to_string();
+        r.current_step = payload
+            .get("current_step")
+            .and_then(|v| v.as_u64())
+            .unwrap_or(r.current_step as u64) as usize;
+        r.step_label = payload
+            .get("step_label")
+            .and_then(|v| v.as_str())
+            .unwrap_or(&r.step_label)
+            .to_string();
         r.status = status.to_string();
         r.updated_at = now;
         if let Some(log) = payload.get("log").and_then(|v| v.as_str()) {
             r.log_lines.push(log.to_string());
-            if r.log_lines.len() > 20 { r.log_lines.remove(0); }
+            if r.log_lines.len() > 20 {
+                r.log_lines.remove(0);
+            }
         }
     } else {
         // Start new run
         *run = Some(crate::state::WorkerRun {
-            app_id: payload.get("app_id").and_then(|v| v.as_str()).unwrap_or("unknown").to_string(),
-            app_name: payload.get("app_name").and_then(|v| v.as_str()).unwrap_or("Worker").to_string(),
-            run_id: payload.get("run_id").and_then(|v| v.as_str()).unwrap_or("").to_string(),
+            app_id: payload
+                .get("app_id")
+                .and_then(|v| v.as_str())
+                .unwrap_or("unknown")
+                .to_string(),
+            app_name: payload
+                .get("app_name")
+                .and_then(|v| v.as_str())
+                .unwrap_or("Worker")
+                .to_string(),
+            run_id: payload
+                .get("run_id")
+                .and_then(|v| v.as_str())
+                .unwrap_or("")
+                .to_string(),
             status: "running".to_string(),
-            current_step: payload.get("current_step").and_then(|v| v.as_u64()).unwrap_or(1) as usize,
-            total_steps: payload.get("total_steps").and_then(|v| v.as_u64()).unwrap_or(5) as usize,
-            step_label: payload.get("step_label").and_then(|v| v.as_str()).unwrap_or("Starting").to_string(),
+            current_step: payload
+                .get("current_step")
+                .and_then(|v| v.as_u64())
+                .unwrap_or(1) as usize,
+            total_steps: payload
+                .get("total_steps")
+                .and_then(|v| v.as_u64())
+                .unwrap_or(5) as usize,
+            step_label: payload
+                .get("step_label")
+                .and_then(|v| v.as_str())
+                .unwrap_or("Starting")
+                .to_string(),
             log_lines: vec![],
             started_at: now.clone(),
             updated_at: now,
@@ -557,7 +692,7 @@ async fn update_worker_run(
 // ── Browser Tabs ──
 
 /// GET /api/v1/browser/tabs — get all open browser tabs.
-/// Priority: (1) AppState (WebSocket), (2) backoffice-browser DB, (3) browser_tabs.json file.
+/// Priority: (1) AppState (WebSocket), (2) live tracked sessions, (3) fresh browser_tabs.json file.
 async fn get_tabs(State(state): State<AppState>) -> Json<Value> {
     let tabs = state.browser_tabs.read();
     if !tabs.is_empty() {
@@ -565,36 +700,54 @@ async fn get_tabs(State(state): State<AppState>) -> Json<Value> {
     }
     drop(tabs);
 
-    // Fallback 1: read from backoffice-browser SQLite (the persistent memory substrate)
-    if let Ok(config) = crate::routes::backoffice::load_workspace_config("backoffice-browser") {
-        if let Some(table_def) = config.tables.iter().find(|t| t.name == "tabs") {
-            if let Ok(conn) = state.backoffice_db.get_connection("backoffice-browser", &config) {
-                let conn_guard = conn.lock();
-                let filters = vec![("status".to_string(), "open".to_string())];
-                if let Ok(result) = crate::backoffice::crud::select_list(&conn_guard, table_def, 0, 100, None, &filters) {
-                    if let Some(items) = result.get("items").and_then(|v| v.as_array()) {
-                        if !items.is_empty() {
-                            *state.browser_tabs.write() = items.clone();
-                            return Json(json!({"tabs": items, "count": items.len(), "source": "backoffice"}));
-                        }
-                    }
+    // Fallback 1: derive tab state from the live session table.
+    let live_sessions: Vec<Value> = state
+        .sessions
+        .read()
+        .values()
+        .filter(|session| !session.url.is_empty())
+        .enumerate()
+        .map(|(index, session)| {
+            json!({
+                "id": session.session_id,
+                "index": index,
+                "url": session.url,
+                "title": "",
+                "active": index == 0,
+                "source": "session",
+            })
+        })
+        .collect();
+    if !live_sessions.is_empty() {
+        return Json(
+            json!({"tabs": live_sessions, "count": live_sessions.len(), "source": "sessions"}),
+        );
+    }
+
+    // Fallback 2: read browser_tabs.json only if it looks fresh enough to be live.
+    let tabs_file = crate::utils::solace_home().join("browser_tabs.json");
+    let fresh_file = std::fs::metadata(&tabs_file)
+        .and_then(|meta| meta.modified())
+        .ok()
+        .and_then(|modified| modified.elapsed().ok())
+        .map(|age| age <= Duration::from_secs(120))
+        .unwrap_or(false);
+    if fresh_file {
+        if let Ok(content) = std::fs::read_to_string(&tabs_file) {
+            if let Ok(file_tabs) = serde_json::from_str::<Vec<Value>>(&content) {
+                if !file_tabs.is_empty() {
+                    *state.browser_tabs.write() = file_tabs.clone();
+                    return Json(
+                        json!({"tabs": file_tabs, "count": file_tabs.len(), "source": "file"}),
+                    );
                 }
             }
         }
     }
 
-    // Fallback 2: read browser_tabs.json file
-    let tabs_file = crate::utils::solace_home().join("browser_tabs.json");
-    if let Ok(content) = std::fs::read_to_string(&tabs_file) {
-        if let Ok(file_tabs) = serde_json::from_str::<Vec<Value>>(&content) {
-            if !file_tabs.is_empty() {
-                *state.browser_tabs.write() = file_tabs.clone();
-                return Json(json!({"tabs": file_tabs, "count": file_tabs.len(), "source": "file"}));
-            }
-        }
-    }
-
-    Json(json!({"tabs": [], "count": 0, "source": "none", "note": "No tabs reported. Use POST /api/v1/browser/tabs or backoffice-browser."}))
+    Json(
+        json!({"tabs": [], "count": 0, "source": "none", "note": "No live tabs reported yet. Sidebar should connect and POST /api/v1/browser/tabs."}),
+    )
 }
 
 /// POST /api/v1/browser/tabs — update tab list (called by sidebar when C++ reports tabs).
@@ -611,15 +764,23 @@ async fn update_tabs(
     *state.browser_tabs.write() = payload.tabs.clone();
     // Persist to file
     let tabs_file = crate::utils::solace_home().join("browser_tabs.json");
-    let _ = std::fs::write(&tabs_file, serde_json::to_string_pretty(&payload.tabs).unwrap_or_default());
+    let _ = std::fs::write(
+        &tabs_file,
+        serde_json::to_string_pretty(&payload.tabs).unwrap_or_default(),
+    );
     // Persist to backoffice-browser DB
     if let Ok(config) = crate::routes::backoffice::load_workspace_config("backoffice-browser") {
         if let Some(table_def) = config.tables.iter().find(|t| t.name == "tabs") {
-            if let Ok(conn) = state.backoffice_db.get_connection("backoffice-browser", &config) {
+            if let Ok(conn) = state
+                .backoffice_db
+                .get_connection("backoffice-browser", &config)
+            {
                 let conn_guard = conn.lock();
                 // Mark all existing tabs as closed, then insert/update current ones
-                let _ = conn_guard.execute("UPDATE tabs SET status = 'closed', closed_at = ?1 WHERE status = 'open'",
-                    rusqlite::params![crate::utils::now_iso8601()]);
+                let _ = conn_guard.execute(
+                    "UPDATE tabs SET status = 'closed', closed_at = ?1 WHERE status = 'open'",
+                    rusqlite::params![crate::utils::now_iso8601()],
+                );
                 for tab in &payload.tabs {
                     let data = json!({
                         "tab_id": tab.get("id").and_then(|v| v.as_str()).unwrap_or("unknown"),
@@ -630,7 +791,8 @@ async fn update_tabs(
                         "status": "open",
                         "last_navigated": crate::utils::now_iso8601(),
                     });
-                    let _ = crate::backoffice::crud::insert(&conn_guard, table_def, &data, "sidebar");
+                    let _ =
+                        crate::backoffice::crud::insert(&conn_guard, table_def, &data, "sidebar");
                 }
             }
         }
@@ -646,7 +808,9 @@ async fn close_all_tabs(State(state): State<AppState>) -> Json<Value> {
     let msg = json!({"command": "close_other_tabs"}).to_string();
     let mut sent = 0;
     for (_, tx) in channels.iter() {
-        if tx.send(msg.clone()).is_ok() { sent += 1; }
+        if tx.send(msg.clone()).is_ok() {
+            sent += 1;
+        }
     }
     drop(channels);
 
@@ -668,16 +832,15 @@ async fn close_all_tabs(State(state): State<AppState>) -> Json<Value> {
 
 /// POST /api/v1/browser/tabs/:tab_id/close — close a specific tab by ID.
 /// Uses 3 delivery methods: (1) WebSocket relay, (2) file command, (3) state update.
-async fn close_tab_by_id(
-    State(state): State<AppState>,
-    Path(tab_id): Path<String>,
-) -> Json<Value> {
+async fn close_tab_by_id(State(state): State<AppState>, Path(tab_id): Path<String>) -> Json<Value> {
     // Method 1: WebSocket relay
     let channels = state.session_channels.read();
     let msg = json!({"command": "close_tab", "tab_id": tab_id}).to_string();
     let mut sent = 0;
     for (_, tx) in channels.iter() {
-        if tx.send(msg.clone()).is_ok() { sent += 1; }
+        if tx.send(msg.clone()).is_ok() {
+            sent += 1;
+        }
     }
     drop(channels);
 
@@ -691,12 +854,16 @@ async fn close_tab_by_id(
     let _ = std::fs::write(&cmd_file, serde_json::to_string(&cmd).unwrap_or_default());
 
     // Method 3: Remove from cached state + file
-    state.browser_tabs.write().retain(|t| {
-        t.get("id").and_then(|v| v.as_str()) != Some(&tab_id)
-    });
+    state
+        .browser_tabs
+        .write()
+        .retain(|t| t.get("id").and_then(|v| v.as_str()) != Some(&tab_id));
     let tabs_file = crate::utils::solace_home().join("browser_tabs.json");
     let current_tabs = state.browser_tabs.read().clone();
-    let _ = std::fs::write(&tabs_file, serde_json::to_string_pretty(&current_tabs).unwrap_or_default());
+    let _ = std::fs::write(
+        &tabs_file,
+        serde_json::to_string_pretty(&current_tabs).unwrap_or_default(),
+    );
 
     Json(json!({"ok": true, "tab_id": tab_id, "channels_notified": sent}))
 }
@@ -704,13 +871,17 @@ async fn close_tab_by_id(
 /// GET /api/v1/browser/tabs/active — get the currently active tab.
 async fn get_active_tab(State(state): State<AppState>) -> Json<Value> {
     let tabs = state.browser_tabs.read();
-    let active = tabs.iter().find(|t| t.get("active").and_then(|v| v.as_bool()).unwrap_or(false));
+    let active = tabs
+        .iter()
+        .find(|t| t.get("active").and_then(|v| v.as_bool()).unwrap_or(false));
     match active {
         Some(tab) => Json(json!({"tab": tab, "found": true})),
         None => {
             // Fallback: use current_url from state
             let url = state.current_url.read().clone();
-            Json(json!({"found": false, "current_url": url, "note": "No tabs reported by sidebar yet"}))
+            Json(
+                json!({"found": false, "current_url": url, "note": "No tabs reported by sidebar yet"}),
+            )
         }
     }
 }
@@ -736,33 +907,75 @@ async fn get_page_html(
     axum::extract::Query(params): axum::extract::Query<std::collections::HashMap<String, String>>,
 ) -> Json<Value> {
     let mut page = state.page_html.read().clone();
+    let current_url = state.current_url.read().clone();
+    let file_path = crate::utils::solace_home().join("browser_page_content.json");
 
-    // Fallback: check browser_page_content.json written by C++ SolaceTabUrlReporter
-    if page.html.is_empty() {
-        let file_path = crate::utils::solace_home().join("browser_page_content.json");
-        if let Ok(content) = std::fs::read_to_string(&file_path) {
-            // Parse safely — the file may contain any UTF-8 content
-            match serde_json::from_str::<serde_json::Value>(&content) {
-                Ok(data) => {
-                    let html = data.get("html").and_then(|v| v.as_str()).unwrap_or("").to_string();
-                    let url = data.get("url").and_then(|v| v.as_str()).unwrap_or("").to_string();
-                    let title = data.get("title").and_then(|v| v.as_str()).unwrap_or("").to_string();
-                    if !html.is_empty() {
-                        let mut w = state.page_html.write();
-                        w.html = html.clone();
-                        w.url = url.clone();
-                        w.title = title.clone();
-                        w.captured_at = crate::utils::now_iso8601();
-                        drop(w);
-                        page = crate::state::PageHtml {
-                            html, url, title,
-                            captured_at: crate::utils::now_iso8601(),
-                        };
-                    }
+    if page.html.is_empty() || (!current_url.is_empty() && page.url != current_url) {
+        let _ = tokio::task::spawn_blocking(
+            crate::routes::browser_control::capture_page_html_via_devtools,
+        )
+        .await;
+        tokio::time::sleep(std::time::Duration::from_millis(700)).await;
+        page = state.page_html.read().clone();
+    }
+
+    if let Ok(content) = std::fs::read_to_string(&file_path) {
+        // Parse safely — the file may contain any UTF-8 content
+        match serde_json::from_str::<serde_json::Value>(&content) {
+            Ok(data) => {
+                let html = data
+                    .get("html")
+                    .and_then(|v| v.as_str())
+                    .unwrap_or("")
+                    .to_string();
+                let url = data
+                    .get("url")
+                    .and_then(|v| v.as_str())
+                    .unwrap_or("")
+                    .to_string();
+                let title = data
+                    .get("title")
+                    .and_then(|v| v.as_str())
+                    .unwrap_or("")
+                    .to_string();
+                let should_prefer_file = !html.is_empty()
+                    && (page.html.is_empty()
+                        || (!current_url.is_empty()
+                            && url == current_url
+                            && page.url != current_url));
+
+                if should_prefer_file {
+                    let captured_at = crate::utils::now_iso8601();
+                    let mut w = state.page_html.write();
+                    w.html = html.clone();
+                    w.url = url.clone();
+                    w.title = title.clone();
+                    w.captured_at = captured_at.clone();
+                    drop(w);
+                    *state.current_url.write() = url.clone();
+                    page = crate::state::PageHtml {
+                        html: html.clone(),
+                        url: url.clone(),
+                        title: title.clone(),
+                        captured_at,
+                    };
+
+                    // File-backed page capture still needs the Prime Wiki/PZip step.
+                    let wiki_url = url.clone();
+                    let wiki_html = html.clone();
+                    let _wiki_task = tokio::spawn(async move {
+                        let client = reqwest::Client::new();
+                        let _ = client
+                            .post("http://127.0.0.1:8888/api/v1/wiki/extract")
+                            .json(&serde_json::json!({"url": wiki_url, "content": wiki_html}))
+                            .timeout(std::time::Duration::from_secs(10))
+                            .send()
+                            .await;
+                    });
                 }
-                Err(_) => {
-                    // JSON parse failed — file may have partial write. Skip.
-                }
+            }
+            Err(_) => {
+                // JSON parse failed — file may have partial write. Skip.
             }
         }
     }
@@ -775,11 +988,15 @@ async fn get_page_html(
         }));
     }
 
-    let text_only = params.get("text_only").map(|v| v == "true").unwrap_or(false);
+    let text_only = params
+        .get("text_only")
+        .map(|v| v == "true")
+        .unwrap_or(false);
 
     let content = if text_only {
         // Strip HTML tags — return visible text only
-        let re = regex::Regex::new(r"<[^>]+>").unwrap_or_else(|_| regex::Regex::new(r"$^").unwrap());
+        let re =
+            regex::Regex::new(r"<[^>]+>").unwrap_or_else(|_| regex::Regex::new(r"$^").unwrap());
         let text = re.replace_all(&page.html, "");
         // Collapse whitespace
         let ws = regex::Regex::new(r"\s+").unwrap_or_else(|_| regex::Regex::new(r"$^").unwrap());
@@ -841,7 +1058,9 @@ async fn push_page_html(
     // Record evidence
     let solace_home = crate::utils::solace_home();
     let _ = crate::evidence::record_event(
-        &solace_home, "browser.page_html_captured", "runtime",
+        &solace_home,
+        "browser.page_html_captured",
+        "runtime",
         serde_json::json!({
             "url": payload.url,
             "title": payload.title,
@@ -858,17 +1077,23 @@ async fn push_page_html(
     let wiki_url2 = wiki_url.clone();
     let _wiki_task = tokio::spawn(async move {
         let client = reqwest::Client::new();
-        let _ = client.post("http://127.0.0.1:8888/api/v1/wiki/extract")
+        let _ = client
+            .post("http://127.0.0.1:8888/api/v1/wiki/extract")
             .json(&serde_json::json!({"url": wiki_url2, "content": wiki_html}))
             .timeout(std::time::Duration::from_secs(10))
-            .send().await;
+            .send()
+            .await;
     });
 
     let wiki_status = "submitted";
 
-    state.event_bus.publish("browser.page_captured", serde_json::json!({
-        "url": payload.url, "html_length": payload.html.len(),
-    }), "page_html_api");
+    state.event_bus.publish(
+        "browser.page_captured",
+        serde_json::json!({
+            "url": payload.url, "html_length": payload.html.len(),
+        }),
+        "page_html_api",
+    );
 
     Json(json!({
         "stored": true,

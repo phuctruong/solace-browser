@@ -82,10 +82,7 @@ fn agent_defs() -> Vec<AgentDef> {
                 "-p".to_string(),
                 "{prompt}".to_string(),
             ],
-            models: vec![
-                "gemini-2.5-pro".to_string(),
-                "gemini-2.5-flash".to_string(),
-            ],
+            models: vec!["gemini-2.5-pro".to_string(), "gemini-2.5-flash".to_string()],
             default_model: "gemini-2.5-pro".to_string(),
             provider: "google".to_string(),
             installed: false,
@@ -118,21 +115,19 @@ pub fn detect_agents() -> Vec<AgentDef> {
 /// Check if a specific agent is still on PATH.
 pub fn check_agent_health(agent_id: &str) -> Option<AgentDef> {
     let mut defs = agent_defs();
-    defs.iter_mut()
-        .find(|d| d.id == agent_id)
-        .map(|def| {
-            match which_agent(&def.cmd) {
-                Some(path) => {
-                    def.installed = true;
-                    def.path = Some(path);
-                }
-                None => {
-                    def.installed = false;
-                    def.path = None;
-                }
+    defs.iter_mut().find(|d| d.id == agent_id).map(|def| {
+        match which_agent(&def.cmd) {
+            Some(path) => {
+                def.installed = true;
+                def.path = Some(path);
             }
-            def.clone()
-        })
+            None => {
+                def.installed = false;
+                def.path = None;
+            }
+        }
+        def.clone()
+    })
 }
 
 /// Maximum timeout for agent invocations (120 seconds, per forbidden states).
@@ -183,13 +178,19 @@ pub fn generate(
     let args = &argv[1..];
 
     let timeout = std::time::Duration::from_secs(
-        timeout_secs.unwrap_or(MAX_TIMEOUT_SECS).min(MAX_TIMEOUT_SECS),
+        timeout_secs
+            .unwrap_or(MAX_TIMEOUT_SECS)
+            .min(MAX_TIMEOUT_SECS),
     );
     let start = std::time::Instant::now();
 
     // For large prompts (>1000 chars), pipe via stdin to avoid CLI arg limits
     let use_stdin = prompt.len() > 1000;
-    let stdin_mode = if use_stdin { std::process::Stdio::piped() } else { std::process::Stdio::null() };
+    let stdin_mode = if use_stdin {
+        std::process::Stdio::piped()
+    } else {
+        std::process::Stdio::null()
+    };
 
     let mut child = Command::new(binary)
         .args(args)

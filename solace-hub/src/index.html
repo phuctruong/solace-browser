@@ -1,6 +1,6 @@
 <!-- Diagram: 04-hub-lifecycle -->
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="dark">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -423,10 +423,10 @@
       font-family: var(--sb-font-mono);
     }
     /* ─── Utility classes (replaces inline styles) ─── */
-    .sb-text-2xs { font-size: 0.65rem; }
-    .sb-text-3xs { font-size: 0.6rem; }
-    .sb-text-xs { font-size: 0.75rem; }
-    .sb-text-sm { font-size: 0.8rem; }
+    .sb-text-2xs { font-size: 0.72rem; }
+    .sb-text-3xs { font-size: 0.68rem; }
+    .sb-text-xs { font-size: 0.82rem; }
+    .sb-text-sm { font-size: 0.9rem; }
     .sb-text-mono-xs { font-family: var(--sb-font-mono); font-size: 0.7rem; }
     .sb-icon-md { height: 48px; width: auto; vertical-align: middle; }
     .sb-flex-center { justify-content: center; flex-wrap: wrap; }
@@ -443,7 +443,7 @@
     .sh-notification-row { display: flex; align-items: center; justify-content: space-between; padding: 0.4rem 0; border-bottom: 1px solid var(--sb-border); }
   </style>
 </head>
-<body>
+<body data-theme="dark">
 
 <a href="#main-content" class="sh-skip-link">Skip to main content</a>
 
@@ -528,15 +528,6 @@
       <button class="sb-tab" data-tab="remote" role="tab">Remote</button>
       <button class="sb-tab" data-tab="settings" role="tab">Settings</button>
     </div>
-    <script>
-    function switchTab(btn, tabId) {
-      document.querySelectorAll('.sb-tab').forEach(function(t) { t.classList.remove('sb-tab--active'); });
-      btn.classList.add('sb-tab--active');
-      document.querySelectorAll('.hub-tab-panel').forEach(function(p) { p.style.display = 'none'; p.classList.add('sh-tab-panel-hidden'); });
-      var panel = document.getElementById('tab-' + tabId);
-      if (panel) { panel.style.display = 'block'; panel.classList.remove('sh-tab-panel-hidden'); }
-    }
-    </script>
   </div>
 
   <!-- TAB: OVERVIEW (default — gate + launch + status) -->
@@ -823,19 +814,48 @@
 <script>
 // Inline hub-app.js
 // Diagram: 04-hub-lifecycle
-// Tab switcher — no inline onclick (security QA compliance)
-function switchTab(btn, tabId) {
-  document.querySelectorAll('.sb-tab').forEach(function(t) { t.classList.remove('sb-tab--active'); t.setAttribute('aria-selected', 'false'); });
-  btn.classList.add('sb-tab--active');
-  btn.setAttribute('aria-selected', 'true');
-  document.querySelectorAll('.hub-tab-panel').forEach(function(p) { p.style.display = 'none'; });
-  var panel = document.getElementById('tab-' + tabId);
-  if (panel) { panel.style.display = 'block'; }
+function setActiveTab(tabId) {
+  document.querySelectorAll('.sb-tab[data-tab]').forEach(function(tab) {
+    var selected = tab.dataset.tab === tabId;
+    tab.classList.toggle('sb-tab--active', selected);
+    tab.setAttribute('aria-selected', selected ? 'true' : 'false');
+  });
+
+  document.querySelectorAll('.hub-tab-panel').forEach(function(panel) {
+    var selected = panel.id === 'tab-' + tabId;
+    panel.hidden = !selected;
+    panel.style.display = selected ? 'block' : 'none';
+    panel.classList.toggle('sh-tab-panel-hidden', !selected);
+  });
 }
-// Wire up tabs via addEventListener (no inline onclick)
-document.querySelectorAll('.sb-tab[data-tab]').forEach(function(btn) {
-  btn.addEventListener('click', function() { switchTab(this, this.dataset.tab); });
-});
+
+// Global for compatibility with older hooks and Hub control tooling.
+function switchTab(btn, tabId) {
+  setActiveTab(tabId);
+}
+
+function initTabs() {
+  document.querySelectorAll('.sb-tab[data-tab]').forEach(function(tab) {
+    if (tab.dataset.bound === '1') {
+      return;
+    }
+    tab.dataset.bound = '1';
+    tab.addEventListener('click', function(e) {
+      e.preventDefault();
+      e.stopPropagation();
+      setActiveTab(tab.dataset.tab);
+      if (tab.dataset.tab === 'sessions') try { refreshSessionsTab(); } catch(e) {}
+      if (tab.dataset.tab === 'events') try { refreshEvents(); } catch(e) {}
+      if (tab.dataset.tab === 'settings') try { refreshSettings(); } catch(e) {}
+    });
+  });
+
+  var active = document.querySelector('.sb-tab.sb-tab--active[data-tab]') ||
+    document.querySelector('.sb-tab[data-tab]');
+  if (active) {
+    setActiveTab(active.dataset.tab);
+  }
+}
 
 // IIFE for all other functionality
 (function() {
@@ -846,8 +866,116 @@ document.querySelectorAll('.sb-tab[data-tab]').forEach(function(btn) {
   function esc(s){var d=document.createElement('div');d.textContent=String(s||'');return d.innerHTML;}
   function toast(m,t){var c=$('toast-container'),e=document.createElement('div');e.className='sb-toast sb-toast--'+(t||'success');e.textContent=m;c.appendChild(e);setTimeout(function(){e.remove();},4000);}
 
+  function normalizeEvalResult(value) {
+    if (typeof value === 'undefined') return null;
+    if (value === null) return null;
+    if (typeof value === 'string' || typeof value === 'number' || typeof value === 'boolean') return value;
+    try {
+      return JSON.parse(JSON.stringify(value));
+    } catch (e) {
+      return String(value);
+    }
+  }
+
+  function postEvalResult(payload) {
+    return fetch(API + '/api/v1/hub/eval-result', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify(payload)
+    }).catch(function(){});
+  }
+
+  function hubStateSnapshot() {
+    var active = document.querySelector('.sb-tab.sb-tab--active[data-tab]');
+    return {
+      active_tab: active ? active.dataset.tab : null,
+      visible_panels: Array.from(document.querySelectorAll('.hub-tab-panel')).filter(function(panel) {
+        return !panel.hidden && panel.style.display !== 'none';
+      }).map(function(panel) {
+        return panel.id;
+      }),
+      topbar_user: $('topbar-user') ? $('topbar-user').textContent : null,
+      version_badge: $('hub-version-badge') ? $('hub-version-badge').textContent : null,
+      theme: document.documentElement.getAttribute('data-theme') || 'dark'
+    };
+  }
+
+  function executeHubCommand(command) {
+    if (!command || typeof command !== 'object') {
+      throw new Error('Hub command must be an object');
+    }
+
+    switch (command.op) {
+      case 'get_state':
+        return hubStateSnapshot();
+      case 'set_active_tab': {
+        var tab = document.querySelector('.sb-tab[data-tab="' + command.tab + '"]');
+        if (!tab) {
+          throw new Error('Unknown tab: ' + command.tab);
+        }
+        tab.click();
+        return hubStateSnapshot();
+      }
+      case 'click_selector': {
+        var element = document.querySelector(command.selector);
+        if (!element) {
+          throw new Error('Selector not found: ' + command.selector);
+        }
+        element.click();
+        return hubStateSnapshot();
+      }
+      case 'get_text': {
+        var target = document.querySelector(command.selector);
+        if (!target) {
+          throw new Error('Selector not found: ' + command.selector);
+        }
+        return {
+          selector: command.selector,
+          text: target.textContent || ''
+        };
+      }
+      default:
+        throw new Error('Unsupported hub command: ' + command.op);
+    }
+  }
+
+  function pollPendingHubJs() {
+    return get('/api/v1/hub/pending-js').then(function(payload) {
+      if (!payload || !payload.js) {
+        return;
+      }
+
+      try {
+        var command = JSON.parse(payload.js);
+        return postEvalResult({ok: true, result: normalizeEvalResult(executeHubCommand(command))});
+      } catch (parseErr) {
+        // Not JSON; fall through to legacy eval path below.
+      }
+
+      try {
+        var value = window.eval(payload.js);
+        if (value && typeof value.then === 'function') {
+          return value.then(function(resolved) {
+            return postEvalResult({ok: true, result: normalizeEvalResult(resolved)});
+          }).catch(function(err) {
+            return postEvalResult({ok: false, error: err ? String(err.message || err) : 'Hub eval failed'});
+          });
+        }
+        return postEvalResult({ok: true, result: normalizeEvalResult(value)});
+      } catch (err) {
+        return postEvalResult({
+          ok: false,
+          error: err ? String(err.message || err) : 'Hub eval failed',
+          result: {
+            hint: 'Prefer JSON commands such as {\"op\":\"set_active_tab\",\"tab\":\"backoffice\"} because CSP blocks arbitrary eval in production.'
+          }
+        });
+      }
+    }).catch(function(){});
+  }
+
   // Theme
-  document.querySelectorAll('.sb-theme-btn').forEach(function(b){b.addEventListener('click',function(){document.documentElement.setAttribute('data-theme',b.dataset.theme);document.querySelectorAll('.sb-theme-btn').forEach(function(x){x.classList.toggle('sb-theme-btn--active',x===b);});});});
+  document.querySelectorAll('.sb-theme-btn').forEach(function(b){b.addEventListener('click',function(){document.documentElement.setAttribute('data-theme',b.dataset.theme);if(document.body){document.body.setAttribute('data-theme',b.dataset.theme);}document.querySelectorAll('.sb-theme-btn').forEach(function(x){x.classList.toggle('sb-theme-btn--active',x===b);});});});
 
   // Language
   var lt=$('languageToggle'),lm=$('languageMenu');
@@ -992,27 +1120,25 @@ document.querySelectorAll('.sb-tab[data-tab]').forEach(function(btn) {
       setTimeout(function() {
         showMainUI();
 
-          if (hasLLM) {
-            // Signed in or BYOK set — ready to launch
-            $('llm-card').classList.add('hub-ready');
-            $('llm-card').classList.remove('hub-blocked');
-            // btn-launch stays enabled (hasLLM is true from cloud/byok)
-          } else if (!installed.length) {
-            // No CLIs AND no cloud — show setup prompts
-            $('llm-gate').innerHTML =
-              '<div class="hub-gate">' +
-              '<div class="hub-gate-msg">Solace Browser requires an LLM to power it.</div>' +
-              '<div class="sb-flex sb-gap-sm" class="sb-flex-center">' +
-              '<button class="sb-btn sb-btn--primary" data-action="promptBYOK">Enter API Key (BYOK)</button>' +
-              '<button class="sb-btn" data-action="openManagedLLM">Sign Up for Managed LLM</button>' +
-              '</div>' +
-              '<div class="sb-text-muted sb-mt-md" class="sb-text-sm">Or install claude, codex, or gemini CLI on your PATH</div>' +
-              '</div>';
-            $('llm-card').classList.add('hub-blocked');
-
-          }
-        }, 500);
-      }, 1200);
+        if (hasLLM) {
+          // Signed in or BYOK set — ready to launch
+          $('llm-card').classList.add('hub-ready');
+          $('llm-card').classList.remove('hub-blocked');
+          // btn-launch stays enabled (hasLLM is true from cloud/byok)
+        } else if (!installed.length) {
+          // No CLIs AND no cloud — show setup prompts
+          $('llm-gate').innerHTML =
+            '<div class="hub-gate">' +
+            '<div class="hub-gate-msg">Solace Browser requires an LLM to power it.</div>' +
+            '<div class="sb-flex sb-gap-sm sb-flex-center">' +
+            '<button class="sb-btn sb-btn--primary" data-action="promptBYOK">Enter API Key (BYOK)</button>' +
+            '<button class="sb-btn" data-action="openManagedLLM">Sign Up for Managed LLM</button>' +
+            '</div>' +
+            '<div class="sb-text-muted sb-mt-md sb-text-sm">Or install claude, codex, or gemini CLI on your PATH</div>' +
+            '</div>';
+          $('llm-card').classList.add('hub-blocked');
+        }
+      }, 500);
     });
   }
 
@@ -1531,9 +1657,10 @@ document.querySelectorAll('.sb-tab[data-tab]').forEach(function(btn) {
 
   // ─── Settings Tab ───
   function refreshSettings() {
-    get('/health').then(function(d) {
-      if (d.pid) $('settings-pid').textContent = d.pid;
-      if (d.server) $('settings-binary').textContent = d.server;
+    get('/api/v1/hub/status').then(function(d) {
+      if (d.runtime_pid) $('settings-pid').textContent = d.runtime_pid;
+      if (d.runtime_binary) $('settings-binary').textContent = d.runtime_binary;
+      if (d.runtime_version && $('settings-version')) $('settings-version').textContent = d.runtime_version;
     });
     get('/api/v1/agents').then(function(d) {
       var agents = d.agents || [];
@@ -1546,25 +1673,6 @@ document.querySelectorAll('.sb-tab[data-tab]').forEach(function(btn) {
     });
   }
 
-  // ─── Tab Switching ───
-  function initTabs() {
-    document.querySelectorAll('.sb-tab').forEach(function(tab) {
-      tab.addEventListener('click', function(e) {
-        e.preventDefault();
-        document.querySelectorAll('.sb-tab').forEach(function(t) { t.classList.remove('sb-tab--active'); t.setAttribute('aria-selected','false'); });
-        tab.classList.add('sb-tab--active');
-        tab.setAttribute('aria-selected','true');
-        var target = tab.dataset.tab;
-        document.querySelectorAll('.hub-tab-panel').forEach(function(p) { p.style.display = 'none'; });
-        var panel = $('tab-' + target);
-        if (panel) { panel.style.display = 'block'; panel.classList.remove('sh-tab-panel-hidden'); }
-        // Refresh data when switching tabs
-        if (target === 'sessions') try { refreshSessionsTab(); } catch(e) {}
-        if (target === 'events') try { refreshEvents(); } catch(e) {}
-        if (target === 'settings') try { refreshSettings(); } catch(e) {}
-      });
-    });
-  }
   // Init tabs — try immediately, also on DOMContentLoaded, also on load
   initTabs();
   document.addEventListener('DOMContentLoaded', initTabs);
@@ -1642,6 +1750,9 @@ document.querySelectorAll('.sb-tab[data-tab]').forEach(function(btn) {
   // Signoffs poll every 5s
   setTimeout(refreshSignoffs, 3000);
   setInterval(refreshSignoffs, 5000);
+  // Hub eval poll for runtime-driven agent control
+  setTimeout(pollPendingHubJs, 1000);
+  setInterval(pollPendingHubJs, 1000);
 
   // ── BACKOFFICE TAB ──
   function loadBackoffice() {

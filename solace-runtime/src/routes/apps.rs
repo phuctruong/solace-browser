@@ -75,9 +75,6 @@ async fn get_run_events(
                 "chain_valid": chain_valid,
             })))
         }
-        Err(error) => Err((
-            StatusCode::NOT_FOUND,
-            Json(json!({"error": error})),
-        )),
+        Err(error) => Err((StatusCode::NOT_FOUND, Json(json!({"error": error})))),
     }
 }

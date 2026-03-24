@@ -116,9 +116,18 @@ pub fn routes() -> Router<AppState> {
         .route("/styleguide", get(styleguide_page))
         .route("/styleguide.css", get(styleguide_css))
         .nest_service("/assets", tower_http::services::ServeDir::new("templates"))
-        .nest_service("/icons", tower_http::services::ServeDir::new(hub_assets_dir("icons")))
-        .nest_service("/media", tower_http::services::ServeDir::new(hub_assets_dir("media")))
-        .nest_service("/vendor", tower_http::services::ServeDir::new(hub_assets_dir("vendor")))
+        .nest_service(
+            "/icons",
+            tower_http::services::ServeDir::new(hub_assets_dir("icons")),
+        )
+        .nest_service(
+            "/media",
+            tower_http::services::ServeDir::new(hub_assets_dir("media")),
+        )
+        .nest_service(
+            "/vendor",
+            tower_http::services::ServeDir::new(hub_assets_dir("vendor")),
+        )
 }
 
 async fn index() -> Redirect {
@@ -126,31 +135,35 @@ async fn index() -> Redirect {
 }
 
 // ---------------------------------------------------------------------------
-// GET /dashboard — full Solace Dashboard (app cards, events, sessions, evidence)
+// GET /dashboard — local control plane dashboard
 // ---------------------------------------------------------------------------
 async fn dashboard_page(State(state): State<AppState>) -> Html<String> {
     let apps = crate::app_engine::scan_installed_apps();
     let sessions = state.sessions.read().clone();
     let events = state.runtime_events.read().clone();
     let uptime = state.uptime_seconds();
-    let _theme = state.theme.read().clone();
     let delight = state.delight.read().clone();
     let notifications = state.notifications.read().clone();
     let solace_home = crate::utils::solace_home();
     let part11 = crate::evidence::part11_status(&solace_home);
 
-    // Greeting
     let greeting = delight.warm_greeting();
-    let _celebration = delight
+    let celebration_banner = delight
         .celebration_message()
-        .map(|m| format!("<p class=\"sb-pill sb-pill--success\">{m}</p>"))
+        .map(|message| {
+            format!(
+                r#"<div class="sb-card" style="margin-bottom:1rem"><span class="sb-pill sb-pill--success">{}</span></div>"#,
+                html_escape::encode_text(&message)
+            )
+        })
         .unwrap_or_default();
 
-    // App status cards
     let mut app_cards = String::new();
+    let mut total_runs = 0usize;
     for app in &apps {
         let app_dir = crate::utils::find_app_dir(&app.id);
         let run_count = app_dir.as_ref().map(|d| count_runs(d)).unwrap_or(0);
+        total_runs += run_count;
         let last_run = app_dir
             .as_ref()
             .and_then(|d| latest_run_time(d))
@@ -186,10 +199,11 @@ async fn dashboard_page(State(state): State<AppState>) -> Html<String> {
         ));
     }
     if app_cards.is_empty() {
-        app_cards = r#"<div class="sb-empty"><div class="sb-empty-icon">&#x1F4E6;</div><p>No apps installed yet.</p></div>"#.to_string();
+        app_cards =
+            r#"<div class="sb-empty"><div class="sb-empty-icon">&#x1F4E6;</div><p>No apps installed yet.</p></div>"#
+                .to_string();
     }
 
-    // Session cards
     let mut session_rows = String::new();
     for (sid, info) in &sessions {
         session_rows.push_str(&format!(
@@ -202,16 +216,19 @@ async fn dashboard_page(State(state): State<AppState>) -> Html<String> {
         ));
     }
     if session_rows.is_empty() {
-        session_rows = "<tr><td colspan=\"5\" class=\"sb-text-muted\">No active browser sessions.</td></tr>".to_string();
+        session_rows =
+            "<tr><td colspan=\"5\" class=\"sb-text-muted\">No active browser sessions.</td></tr>"
+                .to_string();
     }
 
-    // Recent events (last 25)
     let mut event_rows = String::new();
     let recent_events: Vec<_> = events.iter().rev().take(25).collect();
     for evt in &recent_events {
         let ts = evt.get("timestamp").and_then(|v| v.as_str()).unwrap_or("—");
         let etype = evt.get("type").and_then(|v| v.as_str()).unwrap_or("event");
-        let detail = evt.get("detail").and_then(|v| v.as_str())
+        let detail = evt
+            .get("detail")
+            .and_then(|v| v.as_str())
             .or_else(|| evt.get("message").and_then(|v| v.as_str()))
             .unwrap_or("—");
         let level = evt.get("level").and_then(|v| v.as_str()).unwrap_or("L1");
@@ -232,10 +249,11 @@ async fn dashboard_page(State(state): State<AppState>) -> Html<String> {
         ));
     }
     if event_rows.is_empty() {
-        event_rows = "<tr><td colspan=\"4\" class=\"sb-text-muted\">No events yet. Run an app to generate events.</td></tr>".to_string();
+        event_rows =
+            "<tr><td colspan=\"4\" class=\"sb-text-muted\">No events yet. Run an app to generate events.</td></tr>"
+                .to_string();
     }
 
-    // Evidence summary
     let chain_badge = if part11.chain_valid {
         "<span class=\"sb-pill sb-pill--success\">Chain Valid</span>"
     } else if part11.record_count > 0 {
@@ -244,15 +262,7 @@ async fn dashboard_page(State(state): State<AppState>) -> Html<String> {
         "<span class=\"sb-pill sb-pill--info\">No Records</span>"
     };
 
-    // Unread notifications
     let unread = notifications.iter().filter(|n| !n.read).count();
-    let _notif_badge = if unread > 0 {
-        format!("<span class=\"sb-pill sb-pill--warning\">{unread} unread</span>")
-    } else {
-        String::new()
-    };
-
-    // Format uptime
     let hours = uptime / 3600;
     let mins = (uptime % 3600) / 60;
     let uptime_str = if hours > 0 {
@@ -261,40 +271,146 @@ async fn dashboard_page(State(state): State<AppState>) -> Html<String> {
         format!("{}m", mins)
     };
 
-    // Categorize apps
     let role_apps: Vec<_> = apps.iter().filter(|a| a.category == "role").collect();
-    let _backoffice_apps: Vec<_> = apps.iter().filter(|a| a.category == "backoffice").collect();
-    let _qa_apps: Vec<_> = apps.iter().filter(|a| a.category == "qa").collect();
-    let domain_apps: Vec<_> = apps.iter().filter(|a| a.category == "domain").collect();
+    let backoffice_apps: Vec<_> = apps.iter().filter(|a| a.category == "backoffice").collect();
+    let qa_apps: Vec<_> = apps.iter().filter(|a| a.category == "qa").collect();
 
-    let body = format!(
-        r#"<!-- Local/Cloud toggle + auth status -->
-<div class="sb-status-bar">
+    let mut domain_map: BTreeMap<String, Vec<&crate::app_engine::AppManifest>> = BTreeMap::new();
+    for app in &apps {
+        domain_map.entry(app.domain.clone()).or_default().push(app);
+    }
+
+    let role_cards = if role_apps.is_empty() {
+        r#"<div class="sb-empty"><p>No AI workers installed yet. Hire one to start local orchestration.</p></div>"#
+            .to_string()
+    } else {
+        role_apps
+            .iter()
+            .map(|app| {
+                format!(
+                    r#"<div class="sb-card" id="worker-{id}">
+  <div class="sb-card-header">
+    <h3 class="sb-card-title"><a href="/apps/{id}">{name}</a></h3>
+    <span class="sb-pill sb-pill--info">{persona}</span>
+  </div>
+  <div class="sb-card-body">
+    <p class="sb-text-sm">{desc}</p>
+    <div class="sb-app-meta">
+      <button class="sb-btn sb-btn--approve sb-btn--sm" onclick="runWorker('{id}', this)">Run</button>
+      <a href="/apps/{id}" class="sb-btn sb-btn--sm" style="background:transparent;border:1px solid var(--sb-border);color:var(--sb-text-muted)">Manage</a>
+    </div>
+  </div>
+</div>"#,
+                    id = html_escape::encode_text(&app.id),
+                    name = html_escape::encode_text(&app.name),
+                    desc = html_escape::encode_text(&app.description),
+                    persona = html_escape::encode_text(if app.persona.is_empty() {
+                        "AI Worker"
+                    } else {
+                        &app.persona
+                    }),
+                )
+            })
+            .collect::<Vec<_>>()
+            .join("\n")
+    };
+
+    let domain_cards = if domain_map.is_empty() {
+        r#"<div class="sb-empty"><p>No domains discovered yet. Install an app or open the browser to seed domain surfaces.</p></div>"#
+            .to_string()
+    } else {
+        domain_map
+            .iter()
+            .map(|(domain, domain_apps)| {
+                let app_names: Vec<_> = domain_apps.iter().map(|app| app.name.as_str()).take(3).collect();
+                let more = if domain_apps.len() > 3 {
+                    format!(" +{} more", domain_apps.len() - 3)
+                } else {
+                    String::new()
+                };
+                format!(
+                    r#"<a href="/domains/{domain}" class="sb-card sb-domain-link">
+  <div class="sb-card-header">
+    <h3 class="sb-card-title sb-app-name"><img class="sb-app-icon" src="{icon}" alt="{domain} icon" loading="lazy">{domain}</h3>
+    <span class="sb-pill sb-pill--info">{count} apps</span>
+  </div>
+  <div class="sb-card-body">
+    <p class="sb-text-sm">{preview}{more}</p>
+    <p class="sb-text-xs sb-text-muted">Open domain workspace</p>
+  </div>
+</a>"#,
+                    domain = html_escape::encode_text(domain),
+                    icon = html_escape::encode_text(&domain_icon_path(domain)),
+                    count = domain_apps.len(),
+                    preview = html_escape::encode_text(&app_names.join(", ")),
+                    more = html_escape::encode_text(&more),
+                )
+            })
+            .collect::<Vec<_>>()
+            .join("\n")
+    };
+
+    let backoffice_cards = if backoffice_apps.is_empty() {
+        r#"<div class="sb-empty"><p>No backoffice workspaces detected yet.</p></div>"#.to_string()
+    } else {
+        backoffice_apps
+            .iter()
+            .map(|app| {
+                format!(
+                    r#"<a href="/backoffice/{id}" class="sb-card sb-domain-link">
+  <div class="sb-card-header">
+    <h3 class="sb-card-title">{name}</h3>
+    <span class="sb-pill sb-pill--info">Workspace</span>
+  </div>
+  <div class="sb-card-body">
+    <p class="sb-text-sm">{desc}</p>
+    <p class="sb-text-xs sb-text-muted">Open {short_name}</p>
+  </div>
+</a>"#,
+                    id = html_escape::encode_text(&app.id),
+                    name = html_escape::encode_text(&app.name),
+                    desc = html_escape::encode_text(&app.description),
+                    short_name = html_escape::encode_text(
+                        app.id.strip_prefix("backoffice-").unwrap_or(&app.id),
+                    ),
+                )
+            })
+            .collect::<Vec<_>>()
+            .join("\n")
+    };
+
+    let mut body = String::new();
+    body.push_str(&format!(
+        r#"<div class="sb-status-bar">
   <div class="sb-card sb-stat-card">
     <div class="sb-kicker">Dashboard</div>
     <div>
-      <a href="/dashboard" class="sb-btn sb-btn--sm sb-btn--primary">Local</a>
+      <a href="/dashboard#overview" class="sb-btn sb-btn--sm sb-btn--primary">Local</a>
       <a href="https://solaceagi.com/dashboard" class="sb-btn sb-btn--sm">Cloud</a>
     </div>
     <div id="auth-status" class="sb-text-xs" style="color:var(--sb-text-muted);margin-top:0.2rem">Checking...</div>
   </div>
-  <div class="sb-card sb-stat-card" id="llm-status-card">
+  <div class="sb-card sb-stat-card">
     <div class="sb-kicker">AI Engine</div>
     <div id="llm-status-pill"><span class="sb-pill sb-pill--warning">Scanning...</span></div>
     <div><a href="/llms" class="sb-text-xs" style="color:var(--sb-accent)">Configure</a></div>
   </div>
-  <div class="sb-card sb-stat-card" id="browser-status-card">
+  <div class="sb-card sb-stat-card">
     <div class="sb-kicker">Browser</div>
-    <div id="browser-status-pill"><span class="sb-pill sb-pill--info">—</span></div>
+    <div id="browser-status-pill"><span class="sb-pill sb-pill--info">Checking...</span></div>
     <div><button class="sb-btn sb-btn--sm" id="btn-launch" onclick="launchBrowser()">Launch</button></div>
   </div>
 </div>
 
-<!-- Status bar -->
 <div class="sb-status-bar">
   <div class="sb-card sb-stat-card">
-    <div class="sb-kicker">AI Workers</div>
+    <div class="sb-kicker">Workers</div>
     <div class="sb-stat-value">{role_count}</div>
+  </div>
+  <div class="sb-card sb-stat-card">
+    <div class="sb-kicker">Apps</div>
+    <div class="sb-stat-value">{app_count}</div>
+    <div class="sb-text-xs" style="color:var(--sb-text-muted)">{domain_count} domains</div>
   </div>
   <div class="sb-card sb-stat-card" id="pending-stat">
     <div class="sb-kicker">Pending</div>
@@ -302,513 +418,534 @@ async fn dashboard_page(State(state): State<AppState>) -> Html<String> {
     <div><a href="/signoff" class="sb-text-xs" style="color:var(--sb-accent)">Sign Off</a></div>
   </div>
   <div class="sb-card sb-stat-card">
-    <div class="sb-kicker">Completed</div>
+    <div class="sb-kicker">Runs</div>
     <div class="sb-stat-value">{total_runs}</div>
-    <div class="sb-text-xs" style="color:var(--sb-text-muted)">tasks</div>
+    <div class="sb-text-xs" style="color:var(--sb-text-muted)">completed</div>
   </div>
   <div class="sb-card sb-stat-card">
     <div class="sb-kicker">Trust</div>
     <div>{chain_badge}</div>
     <div class="sb-text-xs" style="color:var(--sb-text-muted)">{evidence_count} evidence</div>
   </div>
+  <div class="sb-card sb-stat-card">
+    <div class="sb-kicker">Uptime</div>
+    <div class="sb-stat-value">{uptime}</div>
+    <div class="sb-text-xs" style="color:var(--sb-text-muted)">{unread} unread notifications</div>
+  </div>
 </div>
 
-<!-- Dashboard Tabs (Claude feedback: collapse to 5 + More dropdown) -->
 <div class="sb-tabs" role="tablist" id="dash-tabs">
-  <button class="sb-tab sb-tab--active" data-tab="workers" role="tab" aria-selected="true">AI Workers</button>
-  <button class="sb-tab" data-tab="crm" role="tab">CRM</button>
-  <button class="sb-tab" data-tab="messages" role="tab">Messages</button>
-  <button class="sb-tab" data-tab="tasks" role="tab">Tasks</button>
-  <button class="sb-tab" data-tab="domains-tab" role="tab">Domains</button>
-  <details style="display:inline-block;position:relative;vertical-align:middle">
-    <summary class="sb-tab" style="list-style:none;cursor:pointer">More &#9662;</summary>
-    <div style="position:absolute;top:100%;left:0;background:var(--sb-surface,#fff);border:1px solid var(--sb-border);border-radius:var(--sb-radius);padding:0.25rem;z-index:10;min-width:130px;box-shadow:var(--sb-shadow)">
-      <button class="sb-tab" data-tab="docs" role="tab" style="display:block;width:100%;text-align:left;margin:2px 0">Docs</button>
-      <button class="sb-tab" data-tab="email-tab" role="tab" style="display:block;width:100%;text-align:left;margin:2px 0">Email</button>
-      <button class="sb-tab" data-tab="support" role="tab" style="display:block;width:100%;text-align:left;margin:2px 0">Support</button>
-      <button class="sb-tab" data-tab="invoicing" role="tab" style="display:block;width:100%;text-align:left;margin:2px 0">Invoicing</button>
-      <button class="sb-tab" data-tab="all-apps" role="tab" style="display:block;width:100%;text-align:left;margin:2px 0">All Apps</button>
-    </div>
-  </details>
-</div>
+  <button class="sb-tab sb-tab--active" data-tab="overview" role="tab" aria-selected="true">Overview</button>
+  <button class="sb-tab" data-tab="workers" role="tab" aria-selected="false">Workers</button>
+  <button class="sb-tab" data-tab="apps" role="tab" aria-selected="false">Apps</button>
+  <button class="sb-tab" data-tab="backoffice" role="tab" aria-selected="false">Backoffice</button>
+  <button class="sb-tab" data-tab="trust" role="tab" aria-selected="false">Trust</button>
+  <button class="sb-tab" data-tab="platform" role="tab" aria-selected="false">Platform</button>
+</div>"#,
+        role_count = role_apps.len(),
+        app_count = apps.len(),
+        domain_count = domain_map.len(),
+        total_runs = total_runs,
+        chain_badge = chain_badge,
+        evidence_count = part11.record_count,
+        uptime = uptime_str,
+        unread = unread,
+    ));
 
-<!-- TAB: AI Workers (default) -->
-<div id="tab-workers" class="dash-tab-panel">
+    body.push_str(&format!(
+        r#"<div id="tab-overview" class="dash-tab-panel">
+  {celebration_banner}
   <div class="sb-section-header">
-    <h2 class="sb-heading">My AI Workers</h2>
+    <h2 class="sb-heading">Overview</h2>
+    <a href="/dashboard#workers" class="sb-btn sb-btn--sm">Open Workers</a>
+  </div>
+  <p class="sb-text-muted">Local-first control plane for workers, approvals, backoffice work, and platform status.</p>
+
+  <div class="sb-card-grid" style="margin-bottom:1rem">
+    <a href="/dashboard#workers" class="sb-card sb-domain-link">
+      <div class="sb-card-header"><h3 class="sb-card-title">Workers</h3><span class="sb-pill sb-pill--info">{role_count}</span></div>
+      <div class="sb-card-body"><p class="sb-text-sm">Hire, run, and manage AI employees.</p></div>
+    </a>
+    <a href="/dashboard#backoffice" class="sb-card sb-domain-link">
+      <div class="sb-card-header"><h3 class="sb-card-title">Backoffice</h3><span class="sb-pill sb-pill--info">{backoffice_count}</span></div>
+      <div class="sb-card-body"><p class="sb-text-sm">CRM, tasks, messages, docs, email, support, invoicing, and more.</p></div>
+    </a>
+    <a href="/signoff" class="sb-card sb-domain-link">
+      <div class="sb-card-header"><h3 class="sb-card-title">Approvals</h3><span class="sb-pill sb-pill--warning" id="overview-pending-pill">Checking</span></div>
+      <div class="sb-card-body"><p class="sb-text-sm" id="pending-summary">Loading pending actions.</p></div>
+    </a>
+    <a href="/settings" class="sb-card sb-domain-link">
+      <div class="sb-card-header"><h3 class="sb-card-title">Platform</h3><span class="sb-pill sb-pill--info">Hub</span></div>
+      <div class="sb-card-body"><p class="sb-text-sm">Tune LLMs, OAuth3, budgets, tunnel, and device settings.</p></div>
+    </a>
+  </div>
+
+  <div class="sb-section-header">
+    <h3 class="sb-heading">Browser Sessions</h3>
+    <a href="/sidebar" class="sb-btn sb-btn--sm">Sidebar</a>
+  </div>
+  <table class="sb-table">
+    <thead><tr><th>Session</th><th>Profile</th><th>URL</th><th>Process</th><th>Started</th></tr></thead>
+    <tbody>{session_rows}</tbody>
+  </table>
+
+  <div class="sb-section-header" style="margin-top:1rem">
+    <h3 class="sb-heading">Recent Events</h3>
+    <a href="/evidence" class="sb-btn sb-btn--sm">Evidence</a>
+  </div>
+  <table class="sb-table">
+    <thead><tr><th>Time</th><th>Level</th><th>Type</th><th>Detail</th></tr></thead>
+    <tbody>{event_rows}</tbody>
+  </table>
+</div>"#,
+        celebration_banner = celebration_banner,
+        role_count = role_apps.len(),
+        backoffice_count = backoffice_apps.len(),
+        session_rows = session_rows,
+        event_rows = event_rows,
+    ));
+
+    body.push_str(&format!(
+        r#"<div id="tab-workers" class="dash-tab-panel" style="display:none">
+  <div class="sb-section-header">
+    <h2 class="sb-heading">AI Workers</h2>
     <a href="/hire" class="sb-btn sb-btn--sm">Hire New Worker</a>
   </div>
+  <p class="sb-text-muted">Workers are role apps that operate locally, post evidence, and use approvals when trust gates require it.</p>
+  <div class="sb-status-bar">
+    <div class="sb-card sb-stat-card">
+      <div class="sb-kicker">Installed</div>
+      <div class="sb-stat-value">{role_count}</div>
+    </div>
+    <div class="sb-card sb-stat-card">
+      <div class="sb-kicker">QA Apps</div>
+      <div class="sb-stat-value">{qa_count}</div>
+    </div>
+    <div class="sb-card sb-stat-card">
+      <div class="sb-kicker">Messages</div>
+      <div class="sb-stat-value">{unread}</div>
+      <div class="sb-text-xs" style="color:var(--sb-text-muted)">unread</div>
+    </div>
+  </div>
   <div class="sb-card-grid">{role_cards}</div>
-  <h3 class="sb-heading sb-mt-md">QA + System</h3>
-  <div id="dash-system"></div>
-</div>
+</div>"#,
+        role_count = role_apps.len(),
+        qa_count = qa_apps.len(),
+        unread = unread,
+        role_cards = role_cards,
+    ));
 
-<!-- TAB: CRM -->
-<div id="tab-crm" class="dash-tab-panel" style="display:none">
+    body.push_str(&format!(
+        r#"<div id="tab-apps" class="dash-tab-panel" style="display:none">
   <div class="sb-section-header">
-    <h2 class="sb-heading">CRM — Contacts &amp; Pipeline</h2>
-    <a href="/backoffice/backoffice-crm" class="sb-btn sb-btn--sm">Full CRM</a>
+    <h2 class="sb-heading">Apps</h2>
+    <div>
+      <a href="/domains" class="sb-btn sb-btn--sm">Domains</a>
+      <a href="/appstore" class="sb-btn sb-btn--sm">App Store</a>
+      <a href="/recipes" class="sb-btn sb-btn--sm">Recipes</a>
+    </div>
   </div>
-  <div id="dash-crm"></div>
-</div>
-
-<!-- TAB: Messages -->
-<div id="tab-messages" class="dash-tab-panel" style="display:none">
-  <div class="sb-section-header">
-    <h2 class="sb-heading">Messages — Agent &amp; Human</h2>
-    <a href="/backoffice/backoffice-messages" class="sb-btn sb-btn--sm">All Messages</a>
-  </div>
-  <div id="dash-messages"></div>
-</div>
-
-<!-- TAB: Tasks -->
-<div id="tab-tasks" class="dash-tab-panel" style="display:none">
-  <div class="sb-section-header">
-    <h2 class="sb-heading">Tasks — Kanban Board</h2>
-    <a href="/backoffice/backoffice-tasks" class="sb-btn sb-btn--sm">Full Board</a>
-  </div>
-  <div id="dash-tasks"></div>
-</div>
-
-<!-- TAB: Domains -->
-<!-- TAB: Docs -->
-<div id="tab-docs" class="dash-tab-panel" style="display:none">
-  <div class="sb-section-header">
-    <h2 class="sb-heading">Docs &amp; Knowledge Base</h2>
-    <a href="/backoffice/backoffice-docs" class="sb-btn sb-btn--sm">Full Docs</a>
-  </div>
-  <div id="dash-docs"></div>
-</div>
-
-<!-- TAB: Email -->
-<div id="tab-email-tab" class="dash-tab-panel" style="display:none">
-  <div class="sb-section-header">
-    <h2 class="sb-heading">Email Campaigns &amp; Sequences</h2>
-    <a href="/backoffice/backoffice-email" class="sb-btn sb-btn--sm">Full Email</a>
-  </div>
-  <div id="dash-email"></div>
-</div>
-
-<!-- TAB: Support -->
-<div id="tab-support" class="dash-tab-panel" style="display:none">
-  <div class="sb-section-header">
-    <h2 class="sb-heading">Support Tickets</h2>
-    <a href="/backoffice/backoffice-support" class="sb-btn sb-btn--sm">Full Support</a>
-  </div>
-  <div id="dash-support"></div>
-</div>
-
-<!-- TAB: Invoicing -->
-<div id="tab-invoicing" class="dash-tab-panel" style="display:none">
-  <div class="sb-section-header">
-    <h2 class="sb-heading">Invoicing &amp; Expenses</h2>
-    <a href="/backoffice/backoffice-invoicing" class="sb-btn sb-btn--sm">Full Invoicing</a>
-  </div>
-  <div id="dash-invoicing"></div>
-</div>
-
-<!-- TAB: Domains -->
-<div id="tab-domains-tab" class="dash-tab-panel" style="display:none">
-  <div class="sb-section-header">
-    <h2 class="sb-heading">Domains &amp; Domain Apps</h2>
-  </div>
+  <p class="sb-text-muted">Domain surfaces activate apps; installed apps define the local operating surface the browser can use.</p>
+  <h3 class="sb-heading">Domains</h3>
   <div class="sb-card-grid">{domain_cards}</div>
-</div>
-
-<!-- TAB: All Apps -->
-<div id="tab-all-apps" class="dash-tab-panel" style="display:none">
-  <div class="sb-section-header">
-    <h2 class="sb-heading">All Installed Apps</h2>
-    <a href="/domains" class="sb-btn sb-btn--sm">All Domains</a>
-  </div>
+  <h3 class="sb-heading" style="margin-top:1rem">Installed Apps</h3>
   <div class="sb-card-grid">{app_cards}</div>
-</section>
+</div>"#,
+        domain_cards = domain_cards,
+        app_cards = app_cards,
+    ));
 
-<!-- Dashboard JS: tabs + live backoffice data -->
-<script>
-(function() {{
-  function ge(id) {{ return document.getElementById(id); }}
-  function fetchJson(url) {{ return fetch(url).then(function(r){{ return r.json(); }}); }}
-  function esc(s) {{ var d=document.createElement('div'); d.textContent=s; return d.innerHTML; }}
+    body.push_str(&format!(
+        r#"<div id="tab-backoffice" class="dash-tab-panel" style="display:none">
+  <div class="sb-section-header">
+    <h2 class="sb-heading">Backoffice</h2>
+    <a href="/backoffice" class="sb-btn sb-btn--sm">Open Workspace</a>
+  </div>
+  <p class="sb-text-muted">Backoffice is one workspace family, not seven top-level tabs. Human and AI workspaces live here.</p>
+  <div class="sb-card-grid">{backoffice_cards}</div>
+</div>"#,
+        backoffice_cards = backoffice_cards,
+    ));
 
-  // Tab switching (handles both top-level tabs and More dropdown buttons)
-  document.querySelectorAll('#dash-tabs .sb-tab[data-tab]').forEach(function(btn) {{
-    btn.addEventListener('click', function(e) {{
-      e.stopPropagation(); // Prevent <details> from toggling
-      var tab = btn.dataset.tab;
-      if (!tab) return;
-      // Deactivate all tabs
-      document.querySelectorAll('#dash-tabs .sb-tab').forEach(function(t) {{ t.classList.remove('sb-tab--active'); t.setAttribute('aria-selected','false'); }});
-      btn.classList.add('sb-tab--active'); btn.setAttribute('aria-selected','true');
-      // Hide all panels, show selected
-      document.querySelectorAll('.dash-tab-panel').forEach(function(p) {{ p.style.display='none'; }});
-      var panel = ge('tab-' + tab);
-      if (panel) panel.style.display = 'block';
-      // Close the More dropdown if it's open
-      var details = document.querySelector('#dash-tabs details');
-      if (details) details.removeAttribute('open');
-    }});
-  }});
+    body.push_str(&format!(
+        r#"<div id="tab-trust" class="dash-tab-panel" style="display:none">
+  <div class="sb-section-header">
+    <h2 class="sb-heading">Trust</h2>
+    <a href="/signoff" class="sb-btn sb-btn--sm">Open Sign Off</a>
+  </div>
+  <p class="sb-text-muted">Approvals, evidence, QA, and wiki snapshots are the trust surface for local execution.</p>
 
-  // Load CRM contacts
-  fetchJson('/api/v1/backoffice/backoffice-crm/contacts').then(function(d) {{
-    var items = d.items || [];
-    // Pipeline stats by stage
-    var stages = {{}};
-    items.forEach(function(c) {{ var s = c.stage || 'unknown'; stages[s] = (stages[s]||0) + 1; }});
-    var stageOrder = ['lead','contacted','qualified','proposal','negotiation','won','lost'];
-    var html = '<div class="bo-stats">';
-    html += '<div class="bo-stat-card"><div class="bo-stat-value">' + items.length + '</div><div class="bo-stat-label">Total Contacts</div></div>';
-    stageOrder.forEach(function(s) {{
-      if (stages[s]) {{
-        var cls = s === 'won' ? 'bo-stat-trend--up' : s === 'lost' ? 'bo-stat-trend--down' : '';
-        html += '<div class="bo-stat-card"><div class="bo-stat-value">' + stages[s] + '</div><div class="bo-stat-label ' + cls + '">' + s + '</div></div>';
-      }}
-    }});
-    html += '</div>';
+  <div class="sb-status-bar">
+    <div class="sb-card sb-stat-card">
+      <div class="sb-kicker">Review Queue</div>
+      <div class="sb-stat-value" id="trust-review-count">—</div>
+      <div class="sb-text-xs" style="color:var(--sb-text-muted)">needs review</div>
+    </div>
+    <div class="sb-card sb-stat-card">
+      <div class="sb-kicker">Evidence Chain</div>
+      <div>{chain_badge}</div>
+      <div class="sb-text-xs" style="color:var(--sb-text-muted)">{evidence_count} records</div>
+    </div>
+    <div class="sb-card sb-stat-card">
+      <div class="sb-kicker">QA Types</div>
+      <div class="sb-stat-value" id="qa-type-count">{qa_count}</div>
+      <div class="sb-text-xs" style="color:var(--sb-text-muted)">available</div>
+    </div>
+  </div>
 
-    // Pipeline chart placeholder
-    html += '<div id="crm-pipeline-chart" class="bo-chart" style="height:200px;margin-bottom:1rem"></div>';
+  <div class="sb-card-grid" style="margin-bottom:1rem">
+    <a href="/signoff" class="sb-card sb-domain-link">
+      <div class="sb-card-header"><h3 class="sb-card-title">Approvals</h3><span class="sb-pill sb-pill--warning">Human Gate</span></div>
+      <div class="sb-card-body"><p class="sb-text-sm">Review, approve, reject, or do-now pending actions.</p></div>
+    </a>
+    <a href="/evidence" class="sb-card sb-domain-link">
+      <div class="sb-card-header"><h3 class="sb-card-title">Evidence</h3><span class="sb-pill sb-pill--success">Part 11</span></div>
+      <div class="sb-card-body"><p class="sb-text-sm">Inspect the local evidence chain and audit trail.</p></div>
+    </a>
+    <a href="/wiki-hub" class="sb-card sb-domain-link">
+      <div class="sb-card-header"><h3 class="sb-card-title">Prime Wiki</h3><span class="sb-pill sb-pill--info">Knowledge</span></div>
+      <div class="sb-card-body"><p class="sb-text-sm">Review living docs, snapshots, and local product memory.</p></div>
+    </a>
+    <a href="/esign" class="sb-card sb-domain-link">
+      <div class="sb-card-header"><h3 class="sb-card-title">E-Sign</h3><span class="sb-pill sb-pill--info">Trust Tool</span></div>
+      <div class="sb-card-body"><p class="sb-text-sm">Prepare regulated signatures and signed artifacts.</p></div>
+    </a>
+  </div>
 
-    // Contacts table with DataTables
-    if (items.length) {{
-      html += '<table class="sb-table" id="crm-table"><thead><tr><th>Name</th><th>Email</th><th>Stage</th><th>Source</th><th>Notes</th></tr></thead><tbody>';
-      items.forEach(function(c) {{
-        var cls = c.stage === 'won' ? 'success' : c.stage === 'lost' ? 'danger' : c.stage === 'qualified' ? 'warning' : 'info';
-        html += '<tr><td><strong>' + esc(c.name||'') + '</strong></td><td>' + esc(c.email||'') + '</td>';
-        html += '<td><span class="sb-pill sb-pill--' + cls + '">' + esc(c.stage||'—') + '</span></td>';
-        html += '<td>' + esc(c.source||'') + '</td>';
-        html += '<td class="sb-text-xs">' + esc((c.notes||'').substring(0,60)) + '</td></tr>';
-      }});
-      html += '</tbody></table>';
-    }} else {{
-      html += '<p class="sb-text-muted">No contacts yet.</p>';
-      html += '<div class="sb-card" style="margin-top:0.75rem"><h3>Quick Add Contact</h3>';
-      html += '<div class="bo-form-grid"><div class="bo-form-field"><label>Name</label><input id="qc-name" class="sb-input" placeholder="Jane Smith"></div>';
-      html += '<div class="bo-form-field"><label>Email</label><input id="qc-email" class="sb-input" placeholder="jane@company.com"></div>';
-      html += '<div class="bo-form-field"><label>Stage</label><select id="qc-stage" class="sb-input"><option>lead</option><option>contacted</option><option>qualified</option><option>proposal</option><option>won</option></select></div>';
-      html += '<div class="bo-form-field"><label>Source</label><input id="qc-source" class="sb-input" placeholder="web_research"></div></div>';
-      html += '<button class="sb-btn sb-btn--sm" style="margin-top:0.5rem" id="qc-submit">Add Contact</button></div>';
-      // Wire quick-create
-      setTimeout(function(){{
-        var btn = document.getElementById('qc-submit');
-        if(btn) btn.addEventListener('click', function(){{
-          fetchJson('/api/v1/backoffice/backoffice-crm/contacts').then(function(){{}});
-          fetch('/api/v1/backoffice/backoffice-crm/contacts',{{method:'POST',headers:{{'Content-Type':'application/json'}},
-            body:JSON.stringify({{name:document.getElementById('qc-name').value,email:document.getElementById('qc-email').value,stage:document.getElementById('qc-stage').value,source:document.getElementById('qc-source').value}})
-          }}).then(function(r){{return r.json()}}).then(function(d){{
-            if(d.created) {{ alert('Contact added!'); location.reload(); }}
-          }});
-        }});
-      }}, 100);
-    }}
+  <div class="sb-section-header">
+    <h3 class="sb-heading">QA</h3>
+    <div id="trust-qa-summary" class="sb-text-xs" style="color:var(--sb-text-muted)">Loading QA types...</div>
+  </div>
+  <div id="trust-qa-grid" class="sb-card-grid"></div>
+  <div id="qa-run-output" class="sb-card" style="display:none;margin-top:1rem"></div>
+</div>"#,
+        chain_badge = chain_badge,
+        evidence_count = part11.record_count,
+        qa_count = qa_apps.len(),
+    ));
 
-    // Deals section
-    html += '<h3 class="sb-heading" style="margin-top:1.5rem">Deals Pipeline</h3>';
-    html += '<div id="crm-deals"></div>';
+    body.push_str(
+        r#"<div id="tab-platform" class="dash-tab-panel" style="display:none">
+  <div class="sb-section-header">
+    <h2 class="sb-heading">Platform</h2>
+    <a href="/settings" class="sb-btn sb-btn--sm">Open Settings</a>
+  </div>
+  <p class="sb-text-muted">LLM sources, CLI wrappers, OAuth3, budget, cloud, and runtime configuration live here.</p>
 
-    ge('dash-crm').innerHTML = html;
+  <div class="sb-card-grid">
+    <a href="/llms" class="sb-card sb-domain-link">
+      <div class="sb-card-header"><h3 class="sb-card-title">LLMs</h3><span class="sb-pill sb-pill--info">Model Gate</span></div>
+      <div class="sb-card-body"><p class="sb-text-sm">Configure managed AI, BYOK, local CLIs, and local models.</p></div>
+    </a>
+    <a href="/oauth3" class="sb-card sb-domain-link">
+      <div class="sb-card-header"><h3 class="sb-card-title">OAuth3</h3><span class="sb-pill sb-pill--info">Delegation</span></div>
+      <div class="sb-card-body"><p class="sb-text-sm">Review account scopes and domain credential state.</p></div>
+    </a>
+    <a href="/budget" class="sb-card sb-domain-link">
+      <div class="sb-card-header"><h3 class="sb-card-title">Budget</h3><span class="sb-pill sb-pill--warning">Gate</span></div>
+      <div class="sb-card-body"><p class="sb-text-sm">Tune budget policy, spend controls, and fail-closed limits.</p></div>
+    </a>
+    <a href="/settings" class="sb-card sb-domain-link">
+      <div class="sb-card-header"><h3 class="sb-card-title">Settings</h3><span class="sb-pill sb-pill--info">Runtime</span></div>
+      <div class="sb-card-body"><p class="sb-text-sm">Device, tunnel, runtime, and local bundle settings.</p></div>
+    </a>
+  </div>
 
-    // Init DataTables on CRM table
-    if (typeof jQuery !== 'undefined' && jQuery.fn.DataTable) {{
-      jQuery.fn.dataTable.ext.errMode = 'none';
-      try {{ jQuery('#crm-table').DataTable({{paging:true,searching:true,ordering:true,pageLength:10,dom:'ftip'}}); }} catch(e) {{}}
-    }}
+  <div class="sb-section-header" style="margin-top:1rem">
+    <h3 class="sb-heading">Detected CLI Wrappers</h3>
+    <span id="platform-agent-summary" class="sb-text-xs" style="color:var(--sb-text-muted)">Scanning...</span>
+  </div>
+  <div id="platform-agent-list" class="sb-card-grid"></div>
 
-    // Load deals and render pipeline chart
-    fetchJson('/api/v1/backoffice/backoffice-crm/deals').then(function(dd) {{
-      var deals = dd.items || [];
-      if (!deals.length) {{ ge('crm-deals').innerHTML = '<p class="sb-text-muted">No deals yet.</p>'; return; }}
-      var dealHtml = '<div class="bo-kanban">';
-      var dealStages = {{'discovery':[],'demo':[],'proposal':[],'negotiation':[],'closed_won':[],'closed_lost':[]}};
-      deals.forEach(function(d) {{ if(dealStages[d.stage]) dealStages[d.stage].push(d); }});
-      ['discovery','demo','proposal','negotiation','closed_won','closed_lost'].forEach(function(s) {{
-        dealHtml += '<div class="bo-kanban-column"><div class="bo-kanban-column-header">' + s.replace('_',' ').toUpperCase();
-        dealHtml += ' <span class="sb-pill sb-pill--info sb-text-2xs">' + dealStages[s].length + '</span></div>';
-        dealStages[s].forEach(function(d) {{
-          dealHtml += '<div class="bo-kanban-card"><strong>' + esc(d.title||'?') + '</strong>';
-          if (d.value) dealHtml += '<div class="sb-text-xs">$' + Number(d.value).toLocaleString() + '</div>';
-          dealHtml += '</div>';
-        }});
-        dealHtml += '</div>';
-      }});
-      dealHtml += '</div>';
-      ge('crm-deals').innerHTML = dealHtml;
-    }}).catch(function(){{}});
+  <div class="sb-section-header" style="margin-top:1rem">
+    <h3 class="sb-heading">Cloud + Runtime</h3>
+    <span id="platform-cloud-summary" class="sb-text-xs" style="color:var(--sb-text-muted)">Checking cloud state...</span>
+  </div>
+  <div class="sb-card-grid">
+    <div class="sb-card">
+      <div class="sb-card-header"><h3 class="sb-card-title">Cloud</h3><span class="sb-pill sb-pill--info" id="platform-cloud-pill">Checking</span></div>
+      <div class="sb-card-body"><p class="sb-text-sm" id="platform-cloud-copy">Loading cloud status.</p></div>
+    </div>
+    <div class="sb-card">
+      <div class="sb-card-header"><h3 class="sb-card-title">Sidebar Gate</h3><span class="sb-pill sb-pill--info" id="platform-sidebar-pill">Checking</span></div>
+      <div class="sb-card-body"><p class="sb-text-sm" id="platform-sidebar-copy">Loading model source status.</p></div>
+    </div>
+  </div>
+</div>"#,
+    );
 
-  }}).catch(function(){{ ge('dash-crm').innerHTML = '<p class="sb-text-muted">CRM not initialized yet.</p>'; }});
+    body.push_str(
+        r#"<script>
+(function() {
+  var VALID_TABS = ['overview', 'workers', 'apps', 'backoffice', 'trust', 'platform'];
 
-  // Load Messages
-  fetchJson('/api/v1/backoffice/backoffice-messages/messages').then(function(d) {{
-    var items = d.items || [];
-    var html = '<div class="bo-stats"><div class="bo-stat-card"><div class="bo-stat-value">' + items.length + '</div><div class="bo-stat-label">Messages</div></div></div>';
-    if (items.length) {{
-      items.forEach(function(m) {{
-        var isAgent = m.sender_type === 'agent';
-        html += '<div class="bo-message' + (isAgent ? ' bo-message--agent' : ' bo-message--human') + '">';
-        html += '<div class="bo-message-avatar">' + (isAgent ? 'AI' : 'H') + '</div>';
-        html += '<div class="bo-message-body"><div class="bo-message-sender">' + esc(m.sender||'?') + '</div>';
-        html += '<div class="bo-message-text">' + esc(m.content||'') + '</div>';
-        html += '<div class="bo-message-time">' + esc((m.created_at||'').substring(0,19)) + '</div></div></div>';
-      }});
-    }} else {{
-      html += '<p class="sb-text-muted">No messages yet. Agents will post updates here.</p>';
-    }}
-    ge('dash-messages').innerHTML = html;
-  }}).catch(function(){{ ge('dash-messages').innerHTML = '<p class="sb-text-muted">Messages not initialized yet.</p>'; }});
+  function ge(id) { return document.getElementById(id); }
+  function esc(value) {
+    var d = document.createElement('div');
+    d.textContent = String(value == null ? '' : value);
+    return d.innerHTML;
+  }
+  function fetchJson(url, options) {
+    return fetch(url, options).then(function(response) {
+      if (!response.ok) {
+        throw new Error('HTTP ' + response.status);
+      }
+      return response.json();
+    });
+  }
+  function normalizeTab(hash) {
+    var tab = String(hash || '').replace(/^#/, '');
+    return VALID_TABS.indexOf(tab) !== -1 ? tab : 'overview';
+  }
+  function activateTab(tab) {
+    var active = normalizeTab(tab);
+    document.querySelectorAll('#dash-tabs .sb-tab[data-tab]').forEach(function(btn) {
+      var selected = btn.dataset.tab === active;
+      btn.classList.toggle('sb-tab--active', selected);
+      btn.setAttribute('aria-selected', selected ? 'true' : 'false');
+    });
+    document.querySelectorAll('.dash-tab-panel').forEach(function(panel) {
+      panel.style.display = panel.id === 'tab-' + active ? 'block' : 'none';
+    });
+  }
 
-  // Load Tasks (kanban-style)
-  fetchJson('/api/v1/backoffice/backoffice-tasks/tasks').then(function(d) {{
-    var items = d.items || [];
-    var columns = {{'backlog':[],'open':[],'in_progress':[],'review':[],'done':[]}};
-    items.forEach(function(t) {{ if (columns[t.status]) columns[t.status].push(t); else if(columns.open) columns.open.push(t); }});
-    var html = '<div class="bo-kanban">';
-    ['backlog','open','in_progress','review','done'].forEach(function(col) {{
-      html += '<div class="bo-kanban-column"><div class="bo-kanban-column-header">' + col.replace('_',' ').toUpperCase();
-      html += ' <span class="sb-pill sb-pill--info sb-text-2xs">' + columns[col].length + '</span></div>';
-      columns[col].forEach(function(t) {{
-        html += '<div class="bo-kanban-card"><strong>' + esc(t.title||'?') + '</strong>';
-        if (t.assigned_to) html += '<div class="sb-text-xs sb-text-muted">' + esc(t.assigned_to) + '</div>';
-        if (t.priority === 'high' || t.priority === 'critical') html += '<span class="sb-pill sb-pill--danger sb-text-2xs">' + esc(t.priority) + '</span>';
-        html += '</div>';
-      }});
-      html += '</div>';
-    }});
-    html += '</div>';
-    ge('dash-tasks').innerHTML = html;
-  }}).catch(function(){{ ge('dash-tasks').innerHTML = '<p class="sb-text-muted">Tasks not initialized yet.</p>'; }});
+  document.querySelectorAll('#dash-tabs .sb-tab[data-tab]').forEach(function(btn) {
+    btn.addEventListener('click', function() {
+      var target = btn.dataset.tab || 'overview';
+      if (location.hash !== '#' + target) {
+        location.hash = target;
+      }
+      activateTab(target);
+    });
+  });
+  window.addEventListener('hashchange', function() {
+    activateTab(location.hash);
+  });
+  activateTab(location.hash);
 
-  // Quick-create task form (always visible at top of Tasks tab)
-  var taskFormHtml = '<div class="sb-card" style="margin-bottom:1rem"><h3>Assign New Task</h3>';
-  taskFormHtml += '<div class="bo-form-grid"><div class="bo-form-field"><label>Title</label><input id="qt-title" class="sb-input" placeholder="Research Series A fintech companies"></div>';
-  taskFormHtml += '<div class="bo-form-field"><label>Assign To</label><select id="qt-assign" class="sb-input"><option value="phuc">Human (phuc)</option>';
-  taskFormHtml += '<option value="market-analyst">Market Analyst</option><option value="competitor-research">Competitor Research</option>';
-  taskFormHtml += '<option value="bizdev">BizDev</option><option value="content">Content Marketing</option></select></div>';
-  taskFormHtml += '<div class="bo-form-field" style="grid-column:span 2"><label>Description</label><textarea id="qt-desc" class="sb-input" rows="2" placeholder="Describe what you want done..."></textarea></div></div>';
-  taskFormHtml += '<button class="sb-btn sb-btn--sm" id="qt-submit" style="margin-top:0.5rem">Create Task</button></div>';
-  var tasksEl = ge('dash-tasks');
-  if (tasksEl) tasksEl.insertAdjacentHTML('afterbegin', taskFormHtml);
-  setTimeout(function(){{
-    var btn = document.getElementById('qt-submit');
-    if(btn) btn.addEventListener('click', function(){{
-      fetch('/api/v1/backoffice/backoffice-tasks/tasks',{{method:'POST',headers:{{'Content-Type':'application/json'}},
-        body:JSON.stringify({{title:document.getElementById('qt-title').value,description:document.getElementById('qt-desc').value,
-          status:'open',priority:'normal',assigned_to:document.getElementById('qt-assign').value,
-          assigned_type:document.getElementById('qt-assign').value==='phuc'?'human':'agent'}})
-      }}).then(function(r){{return r.json()}}).then(function(d){{
-        if(d.created) {{ alert('Task created!'); location.reload(); }}
-      }});
-    }});
-  }}, 200);
+  function renderPendingSummary(summary) {
+    var count = summary.needs_review || 0;
+    var countEl = ge('pending-count');
+    if (countEl) {
+      countEl.textContent = count;
+      countEl.style.color = count > 0 ? 'var(--sb-warning)' : 'var(--sb-success)';
+    }
+    var trustCount = ge('trust-review-count');
+    if (trustCount) trustCount.textContent = count;
+    var stat = ge('pending-stat');
+    if (stat) stat.style.borderColor = count > 0 ? 'var(--sb-warning)' : 'var(--sb-border)';
+    var overviewPill = ge('overview-pending-pill');
+    if (overviewPill) {
+      overviewPill.className = 'sb-pill ' + (count > 0 ? 'sb-pill--warning' : 'sb-pill--success');
+      overviewPill.textContent = count > 0 ? count + ' pending' : 'All clear';
+    }
+    var summaryEl = ge('pending-summary');
+    if (summaryEl) {
+      summaryEl.textContent = count > 0
+        ? count + ' actions need review before execution.'
+        : 'No actions are waiting on human approval.';
+    }
+  }
 
-  // Load system stats (QA + CLI workers + jobs)
-  Promise.all([fetchJson('/api/v1/cli'), fetchJson('/api/v1/jobs/stats')]).then(function(r) {{
-    var cli = r[0], jobs = r[1];
-    var html = '<div class="sb-card-grid">';
-    html += '<div class="sb-card"><div class="sb-kicker">CLI Workers</div><div class="sb-stat-value">' + (cli.installed||0) + '/' + (cli.total||0) + '</div></div>';
-    html += '<div class="sb-card"><div class="sb-kicker">Job Queue</div><div class="sb-stat-value">' + (jobs.total||0) + '</div>';
-    if (jobs.running) html += '<span class="sb-pill sb-pill--warning">' + jobs.running + ' running</span>';
-    html += '</div>';
-    html += '<div class="sb-card"><div class="sb-kicker">QA</div><div class="sb-stat-value">8/8</div><span class="sb-pill sb-pill--success">All PASS</span></div>';
-    html += '</div>';
-    ge('dash-system').innerHTML = html;
-  }});
+  function renderAgentList(payload) {
+    var agents = (payload && payload.agents) || [];
+    var installed = agents.filter(function(agent) { return !!agent.installed; });
+    var summary = ge('platform-agent-summary');
+    if (summary) {
+      summary.textContent = installed.length + ' detected of ' + agents.length + ' known wrappers';
+    }
+    var container = ge('platform-agent-list');
+    if (!container) return;
+    if (!agents.length) {
+      container.innerHTML = '<div class="sb-empty"><p>No CLI wrappers reported.</p></div>';
+      return;
+    }
+    container.innerHTML = agents.map(function(agent) {
+      var cls = agent.installed ? 'success' : 'info';
+      var label = agent.installed ? 'Detected' : 'Not found';
+      var version = agent.version ? '<p class="sb-text-xs sb-text-muted">Version: ' + esc(agent.version) + '</p>' : '';
+      return '<div class="sb-card"><div class="sb-card-header"><h3 class="sb-card-title">' + esc(agent.name || agent.id) + '</h3><span class="sb-pill sb-pill--' + cls + '">' + label + '</span></div><div class="sb-card-body"><p class="sb-text-sm">' + esc(agent.description || 'Local CLI wrapper') + '</p>' + version + '</div></div>';
+    }).join('');
+  }
 
-  // Generic backoffice tab loader — shows table from any backoffice app
-  function loadBackofficeTab(appId, tableName, elementId, emptyMsg) {{
-    fetchJson('/api/v1/backoffice/' + appId + '/' + tableName).then(function(d) {{
-      var items = d.items || [];
-      if (!items.length) {{ ge(elementId).innerHTML = '<p class="sb-text-muted">' + emptyMsg + '</p>'; return; }}
-      var cols = Object.keys(items[0]).filter(function(k){{ return k !== 'evidence_hash'; }});
-      var html = '<table class="sb-table"><thead><tr>';
-      cols.forEach(function(c) {{ html += '<th>' + c + '</th>'; }});
-      html += '</tr></thead><tbody>';
-      items.forEach(function(row) {{
-        html += '<tr>';
-        cols.forEach(function(c) {{
-          var val = row[c] || '';
-          if (c === 'status' || c === 'stage' || c === 'priority') {{
-            var cls = val === 'done' || val === 'paid' || val === 'published' ? 'success' : val === 'failed' || val === 'overdue' || val === 'urgent' ? 'danger' : 'info';
-            html += '<td><span class="sb-pill sb-pill--' + cls + '">' + esc(val) + '</span></td>';
-          }} else if (c === 'id' || c === 'created_at' || c === 'updated_at') {{
-            html += '<td class="sb-text-xs sb-text-muted">' + esc(String(val).substring(0,16)) + '</td>';
-          }} else {{
-            html += '<td>' + esc(String(val).substring(0,80)) + '</td>';
-          }}
-        }});
-        html += '</tr>';
-      }});
-      html += '</tbody></table>';
-      ge(elementId).innerHTML = html;
-      // Init DataTables
-      if (typeof jQuery !== 'undefined' && jQuery.fn.DataTable) {{
-        jQuery.fn.dataTable.ext.errMode = 'none';
-        try {{ jQuery('#' + elementId + ' table').DataTable({{paging:true,searching:true,ordering:true,pageLength:10,dom:'ftip'}}); }} catch(e) {{}}
-      }}
-    }}).catch(function(){{ ge(elementId).innerHTML = '<p class="sb-text-muted">Not initialized yet. Data will appear as agents work.</p>'; }});
-  }}
+  function renderQaTypes(payload) {
+    var qaTypes = (payload && payload.qa_types) || [];
+    var summary = ge('trust-qa-summary');
+    if (summary) {
+      summary.textContent = qaTypes.length + ' QA app types available for local validation.';
+    }
+    var typeCount = ge('qa-type-count');
+    if (typeCount) typeCount.textContent = qaTypes.length;
+    var container = ge('trust-qa-grid');
+    if (!container) return;
+    if (!qaTypes.length) {
+      container.innerHTML = '<div class="sb-empty"><p>No QA types available.</p></div>';
+      return;
+    }
+    container.innerHTML = qaTypes.map(function(qa) {
+      return '<div class="sb-card"><div class="sb-card-header"><h3 class="sb-card-title">' + esc(qa.name || qa.id) + '</h3><span class="sb-pill sb-pill--info">' + esc(qa.tier || 'local') + '</span></div><div class="sb-card-body"><p class="sb-text-sm">' + esc(qa.description || '') + '</p><div class="sb-app-meta"><button class="sb-btn sb-btn--sm sb-btn--approve" onclick="runQaType(\'' + esc(qa.id) + '\', this)">Run QA</button></div></div></div>';
+    }).join('');
+  }
 
-  // Load new backoffice tabs
-  loadBackofficeTab('backoffice-docs', 'pages', 'dash-docs', 'No docs yet. Create pages in the knowledge base.');
-  loadBackofficeTab('backoffice-email', 'campaigns', 'dash-email', 'No email campaigns yet.');
-  loadBackofficeTab('backoffice-support', 'tickets', 'dash-support', 'No support tickets yet.');
-  loadBackofficeTab('backoffice-invoicing', 'invoices', 'dash-invoicing', 'No invoices yet.');
-  // Load pending actions count for stats bar
-  fetchJson('/api/v1/actions/summary').then(function(d) {{
-    var count = d.needs_review || 0;
-    var el = ge('pending-count');
-    if (el) {{
-      el.textContent = count;
-      if (count > 0) {{
-        el.style.color = 'var(--sb-warning)';
-        ge('pending-stat').style.borderColor = 'var(--sb-warning)';
-      }} else {{
-        el.style.color = 'var(--sb-success)';
-      }}
-    }}
-  }}).catch(function(){{}});
+  function scanStatus() {
+    fetchJson('/api/v1/sidebar/state').then(function(sidebar) {
+      var llmPill = ge('llm-status-pill');
+      var sidebarPill = ge('platform-sidebar-pill');
+      var sidebarCopy = ge('platform-sidebar-copy');
+      if (sidebar.gate === 'paid') {
+        if (llmPill) llmPill.innerHTML = '<span class="sb-pill sb-pill--success">Managed LLM</span>';
+      } else if (sidebar.gate === 'byok') {
+        if (llmPill) llmPill.innerHTML = '<span class="sb-pill sb-pill--success">BYOK Active</span>';
+      } else {
+        fetchJson('/api/v1/agents').then(function(agentsPayload) {
+          var installed = ((agentsPayload && agentsPayload.agents) || []).filter(function(agent) { return !!agent.installed; }).length;
+          if (llmPill) {
+            llmPill.innerHTML = installed > 0
+              ? '<span class="sb-pill sb-pill--info">' + installed + ' CLIs</span>'
+              : '<span class="sb-pill sb-pill--warning">Not configured</span>';
+          }
+        }).catch(function() {
+          if (llmPill) llmPill.innerHTML = '<span class="sb-pill sb-pill--danger">Offline</span>';
+        });
+      }
+      if (sidebarPill) sidebarPill.textContent = String(sidebar.gate || 'unknown').toUpperCase();
+      if (sidebarCopy) {
+        sidebarCopy.textContent = sidebar.apps_enabled
+          ? 'Apps are enabled for the current device.'
+          : 'Apps are still gated; sign in or configure a source to unlock them.';
+      }
+    }).catch(function() {
+      var llmPill = ge('llm-status-pill');
+      if (llmPill) llmPill.innerHTML = '<span class="sb-pill sb-pill--danger">Offline</span>';
+    });
 
-  // Run worker: POST to app run API, show result, post to backoffice
-  window.runWorker = function(appId, btn) {{
-    btn.textContent = 'Running...';
-    btn.disabled = true;
-    fetch('/api/v1/apps/run/' + appId, {{method: 'POST'}})
-      .then(function(r) {{ return r.json(); }})
-      .then(function(d) {{
-        btn.textContent = 'Done ✓';
-        btn.style.background = 'var(--sb-success, #22c55e)';
-        btn.style.color = 'var(--sb-bg, #0f172a)';
-        // Post result to messages
-        fetch('/api/v1/backoffice/backoffice-messages/messages', {{
-          method: 'POST',
-          headers: {{'Content-Type': 'application/json'}},
-          body: JSON.stringify({{
-            channel_id: 'general',
-            sender: appId,
-            sender_type: 'agent',
-            content: 'Run complete. ' + (d.report ? 'Report: ' + d.report.split('/').pop() : 'Done.'),
-            message_type: 'result',
-            priority: 'normal'
-          }})
-        }}).catch(function(){{}});
-        // Reset button after 3s
-        setTimeout(function() {{
-          btn.textContent = 'Run';
-          btn.disabled = false;
-          btn.style.background = '';
-          btn.style.color = '';
-        }}, 3000);
-      }})
-      .catch(function(e) {{
-        btn.textContent = 'Error';
-        btn.style.background = 'var(--sb-danger, #ef4444)';
-        setTimeout(function() {{ btn.textContent = 'Run'; btn.disabled = false; btn.style.background = ''; }}, 3000);
-      }});
-  }};
-}})();
+    fetchJson('/api/v1/browser/sessions').then(function(payload) {
+      var sessions = Array.isArray(payload) ? payload : (payload.sessions || []);
+      var pill = ge('browser-status-pill');
+      var btn = ge('btn-launch');
+      if (pill) {
+        pill.innerHTML = sessions.length > 0
+          ? '<span class="sb-pill sb-pill--success">Running</span>'
+          : '<span class="sb-pill sb-pill--info">Stopped</span>';
+      }
+      if (btn) btn.textContent = sessions.length > 0 ? 'Open' : 'Launch';
+    }).catch(function() {});
 
-  // ─── Dashboard status: LLM engine + browser status (compact) ───
-  // Full engine config is at /llms — this just shows status summary
-  (function() {{
-    function eget(p) {{ return fetch('http://localhost:8888'+p).then(function(r){{ return r.json(); }}); }}
+    fetchJson('/api/v1/cloud/status').then(function(cloud) {
+      var auth = ge('auth-status');
+      var cloudPill = ge('platform-cloud-pill');
+      var cloudCopy = ge('platform-cloud-copy');
+      var cloudSummary = ge('platform-cloud-summary');
+      if (cloud.connected && cloud.config) {
+        if (auth) auth.innerHTML = '<span style="color:var(--sb-success)">● ' + esc(cloud.config.user_email || 'Connected') + '</span>';
+        if (cloudPill) cloudPill.className = 'sb-pill sb-pill--success';
+        if (cloudPill) cloudPill.textContent = 'Connected';
+        if (cloudCopy) cloudCopy.textContent = 'Authenticated as ' + (cloud.config.user_email || 'Connected device') + '.';
+        if (cloudSummary) cloudSummary.textContent = 'Cloud sync path is configured for this device.';
+      } else {
+        if (auth) auth.innerHTML = 'Not signed in · <a href="https://solaceagi.com/auth/login" style="color:var(--sb-accent)">Sign in</a>';
+        if (cloudPill) cloudPill.className = 'sb-pill sb-pill--warning';
+        if (cloudPill) cloudPill.textContent = 'Local only';
+        if (cloudCopy) cloudCopy.textContent = 'Cloud account not connected; local runtime still works.';
+        if (cloudSummary) cloudSummary.textContent = 'Running local-first without a cloud session.';
+      }
+    }).catch(function() {});
+  }
 
-    function scanStatus() {{
-      var llmPill = document.getElementById('llm-status-pill');
-      var browserPill = document.getElementById('browser-status-pill');
-
-      // LLM status: check sidebar state for gate
-      eget('/api/v1/sidebar/state').then(function(ss) {{
-        if (ss.gate === 'paid') {{
-          llmPill.innerHTML = '<span class="sb-pill sb-pill--success">Managed LLM</span>';
-        }} else if (ss.gate === 'byok') {{
-          llmPill.innerHTML = '<span class="sb-pill sb-pill--success">BYOK Active</span>';
-        }} else {{
-          // Check CLIs
-          eget('/api/v1/agents').then(function(d) {{
-            var installed = (d.agents||[]).filter(function(a){{ return a.installed; }}).length;
-            if (installed > 0) {{
-              llmPill.innerHTML = '<span class="sb-pill sb-pill--info">' + installed + ' CLIs</span>';
-            }} else {{
-              llmPill.innerHTML = '<span class="sb-pill sb-pill--warning">Not configured</span>';
-            }}
-          }}).catch(function(){{ llmPill.innerHTML = '<span class="sb-pill sb-pill--danger">Error</span>'; }});
-        }}
-      }}).catch(function(){{ llmPill.innerHTML = '<span class="sb-pill sb-pill--danger">Offline</span>'; }});
-
-      // Browser status
-      eget('/api/v1/browser/sessions').then(function(d) {{
-        var sessions = Array.isArray(d) ? d : (d.sessions || []);
-        if (sessions.length > 0) {{
-          browserPill.innerHTML = '<span class="sb-pill sb-pill--success">Running</span>';
-          document.getElementById('btn-launch').textContent = 'Open';
-        }} else {{
-          browserPill.innerHTML = '<span class="sb-pill sb-pill--info">Stopped</span>';
-          document.getElementById('btn-launch').textContent = 'Launch';
-        }}
-      }}).catch(function(){{}});
-    }}
-
-    window.launchBrowser = function() {{
-      var btn = document.getElementById('btn-launch');
+  window.launchBrowser = function() {
+    var btn = ge('btn-launch');
+    if (btn) {
       btn.textContent = '...';
       btn.disabled = true;
-      fetch('http://localhost:8888/api/v1/browser/launch', {{
-        method:'POST', headers:{{'Content-Type':'application/json'}}, body:'{{}}'
-      }}).then(function(r){{ return r.json(); }}).then(function(d) {{
-        if (d.session) {{
-          btn.textContent = 'Open';
-          document.getElementById('browser-status-pill').innerHTML = '<span class="sb-pill sb-pill--success">Running</span>';
-        }} else {{
-          btn.textContent = 'Launch';
-          btn.disabled = false;
-        }}
-      }}).catch(function() {{ btn.textContent = 'Launch'; btn.disabled = false; }});
-    }};
+    }
+    fetchJson('/api/v1/browser/launch', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: '{}'
+    }).then(function(payload) {
+      if (payload.session) {
+        var pill = ge('browser-status-pill');
+        if (pill) pill.innerHTML = '<span class="sb-pill sb-pill--success">Running</span>';
+        if (btn) btn.textContent = 'Open';
+      } else if (btn) {
+        btn.textContent = 'Launch';
+      }
+    }).catch(function() {
+      if (btn) btn.textContent = 'Launch';
+    }).finally(function() {
+      if (btn) btn.disabled = false;
+    });
+  };
 
-    // Auth status
-    eget('/api/v1/cloud/status').then(function(c) {{
-      var el = document.getElementById('auth-status');
-      if (c.connected && c.config) {{
-        el.innerHTML = '<span style="color:var(--sb-success)">● ' + (c.config.user_email || 'Connected') + '</span>';
-      }} else {{
-        el.innerHTML = 'Not signed in · <a href="https://solaceagi.com/auth/login" style="color:var(--sb-accent)">Sign in</a>';
-      }}
-    }}).catch(function(){{}});
+  window.runWorker = function(appId, btn) {
+    if (!btn) return;
+    btn.textContent = 'Running...';
+    btn.disabled = true;
+    fetchJson('/api/v1/apps/run/' + appId, { method: 'POST' }).then(function(payload) {
+      btn.textContent = 'Done ✓';
+      btn.style.background = 'var(--sb-success, #22c55e)';
+      btn.style.color = 'var(--sb-bg, #0f172a)';
+      fetch('/api/v1/backoffice/backoffice-messages/messages', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          channel_id: 'general',
+          sender: appId,
+          sender_type: 'agent',
+          content: 'Run complete. ' + (payload.report ? 'Report: ' + payload.report.split('/').pop() : 'Done.'),
+          message_type: 'result',
+          priority: 'normal'
+        })
+      }).catch(function() {});
+    }).catch(function() {
+      btn.textContent = 'Error';
+      btn.style.background = 'var(--sb-danger, #ef4444)';
+    }).finally(function() {
+      setTimeout(function() {
+        btn.textContent = 'Run';
+        btn.disabled = false;
+        btn.style.background = '';
+        btn.style.color = '';
+      }, 2500);
+    });
+  };
 
-    scanStatus();
-    setInterval(scanStatus, 30000);
-  }})();
+  window.runQaType = function(qaType, btn) {
+    if (btn) {
+      btn.disabled = true;
+      btn.textContent = 'Running...';
+    }
+    fetchJson('/api/v1/qa/run', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ qa_type: qaType, target: 'http://localhost:8888' })
+    }).then(function(result) {
+      var output = ge('qa-run-output');
+      if (output) {
+        output.style.display = 'block';
+        output.innerHTML = '<div class="sb-card-header"><h3 class="sb-card-title">' + esc(result.qa_type) + ' QA</h3><span class="sb-pill ' + (result.passed ? 'sb-pill--success' : 'sb-pill--warning') + '">' + (result.passed ? 'PASS' : 'CHECK') + '</span></div><div class="sb-card-body"><p class="sb-text-sm">Target: ' + esc(result.target || 'http://localhost:8888') + '</p><p class="sb-text-sm">' + esc(String(result.passed_checks || 0)) + ' of ' + esc(String(result.total_checks || 0)) + ' checks passed.</p></div>';
+      }
+    }).catch(function(error) {
+      var output = ge('qa-run-output');
+      if (output) {
+        output.style.display = 'block';
+        output.innerHTML = '<div class="sb-card-body"><p class="sb-text-sm">QA run failed: ' + esc(error.message || 'unknown error') + '</p></div>';
+      }
+    }).finally(function() {
+      if (btn) {
+        btn.disabled = false;
+        btn.textContent = 'Run QA';
+      }
+    });
+  };
+
+  fetchJson('/api/v1/actions/summary').then(renderPendingSummary).catch(function() {});
+  fetchJson('/api/v1/agents').then(renderAgentList).catch(function() {});
+  fetchJson('/api/v1/qa/types').then(renderQaTypes).catch(function() {});
+  scanStatus();
+  setInterval(scanStatus, 30000);
+})();
 </script>"#,
-        role_count = role_apps.len(),
-        total_runs = {
-            let mut count = 0usize;
-            for app in &apps {
-                if let Some(dir) = crate::utils::find_app_dir(&app.id) {
-                    let runs_dir = dir.join("outbox").join("runs");
-                    if runs_dir.exists() {
-                        count += std::fs::read_dir(&runs_dir).into_iter().flatten().filter_map(|e| e.ok()).count();
-                    }
-                }
-            }
-            count
-        },
-        evidence_count = part11.record_count,
-        role_cards = role_apps.iter().map(|a| format!(
-            r#"<div class="sb-card" id="worker-{id}"><div class="sb-card-header"><h3 class="sb-card-title"><a href="/apps/{id}">{name}</a></h3><span class="sb-pill sb-pill--info">{persona}</span></div><div class="sb-card-body"><p class="sb-text-sm">{desc}</p><div class="sb-app-meta"><button class="sb-btn sb-btn--approve sb-btn--sm" onclick="runWorker('{id}',this)">Run</button> <a href="/apps/{id}" class="sb-btn sb-btn--sm" style="background:transparent;border:1px solid var(--sb-border);color:var(--sb-text-muted)">Manage</a></div></div></div>"#,
-            id = html_escape::encode_text(&a.id),
-            name = html_escape::encode_text(&a.name),
-            desc = html_escape::encode_text(&a.description),
-            persona = html_escape::encode_text(if a.persona.is_empty() { "AI Worker" } else { &a.persona }),
-        )).collect::<Vec<_>>().join("\n"),
-        domain_cards = domain_apps.iter().map(|a| format!(
-            r#"<div class="sb-card"><div class="sb-card-header"><h3 class="sb-card-title"><img class="sb-app-icon" src="{icon}" alt="" loading="lazy">{name}</h3><span class="sb-pill sb-pill--info">{domain}</span></div><div class="sb-card-body"><p class="sb-text-sm">{desc}</p><p class="sb-text-xs">{triggers} triggers, {actions} actions</p></div></div>"#,
-            icon = html_escape::encode_text(&domain_icon_path(&a.domain)),
-            name = html_escape::encode_text(&a.name),
-            domain = html_escape::encode_text(&a.domain),
-            desc = html_escape::encode_text(&a.description),
-            triggers = a.triggers.len(),
-            actions = a.actions.len(),
-        )).collect::<Vec<_>>().join("\n"),
     );
 
     let title = format!("{}, Dragon Rider", greeting);
@@ -824,29 +961,46 @@ async fn onboarding_page() -> Html<String> {
 
 async fn sidebar_page() -> (axum::http::HeaderMap, Html<String>) {
     let mut headers = axum::http::HeaderMap::new();
-    headers.insert("cache-control", "no-cache, no-store, must-revalidate".parse().unwrap());
+    headers.insert(
+        "cache-control",
+        "no-cache, no-store, must-revalidate".parse().unwrap(),
+    );
     if let Some(content) = sidebar_asset("sidepanel.html") {
         return (headers, Html(content));
     }
-    (headers, Html(page(
-        "Sidebar",
-        "Yinyang sidebar — sidepanel.html not found. Build Solace Browser first.",
-    ).to_string()))
+    (
+        headers,
+        Html(
+            page(
+                "Sidebar",
+                "Yinyang sidebar — sidepanel.html not found. Build Solace Browser first.",
+            )
+            .to_string(),
+        ),
+    )
 }
 
 async fn sidebar_js() -> (axum::http::HeaderMap, String) {
     let mut headers = axum::http::HeaderMap::new();
     headers.insert("content-type", "application/javascript".parse().unwrap());
-    headers.insert("cache-control", "no-cache, no-store, must-revalidate".parse().unwrap());
-    let content = sidebar_asset("sidepanel.js").unwrap_or_else(|| "// sidepanel.js not found".to_string());
+    headers.insert(
+        "cache-control",
+        "no-cache, no-store, must-revalidate".parse().unwrap(),
+    );
+    let content =
+        sidebar_asset("sidepanel.js").unwrap_or_else(|| "// sidepanel.js not found".to_string());
     (headers, content)
 }
 
 async fn sidebar_css() -> (axum::http::HeaderMap, String) {
     let mut headers = axum::http::HeaderMap::new();
     headers.insert("content-type", "text/css".parse().unwrap());
-    headers.insert("cache-control", "no-cache, no-store, must-revalidate".parse().unwrap());
-    let content = sidebar_asset("sidepanel.css").unwrap_or_else(|| "/* sidepanel.css not found */".to_string());
+    headers.insert(
+        "cache-control",
+        "no-cache, no-store, must-revalidate".parse().unwrap(),
+    );
+    let content = sidebar_asset("sidepanel.css")
+        .unwrap_or_else(|| "/* sidepanel.css not found */".to_string());
     (headers, content)
 }
 
@@ -872,7 +1026,11 @@ async fn domains_page() -> Html<String> {
             .max()
             .unwrap_or_else(|| "Never".to_string());
         let icon = domain_icon_path(domain);
-        let app_names: Vec<_> = domain_apps.iter().map(|a| a.name.as_str()).take(3).collect();
+        let app_names: Vec<_> = domain_apps
+            .iter()
+            .map(|a| a.name.as_str())
+            .take(3)
+            .collect();
         let app_preview = app_names.join(", ");
         let more = if domain_apps.len() > 3 {
             format!(" +{} more", domain_apps.len() - 3)
@@ -954,10 +1112,7 @@ async fn domain_detail_page(
     let mut app_rows = String::new();
     for app in &apps {
         let app_dir = crate::utils::find_app_dir(&app.id);
-        let run_count = app_dir
-            .as_ref()
-            .map(|d| count_runs(d))
-            .unwrap_or(0);
+        let run_count = app_dir.as_ref().map(|d| count_runs(d)).unwrap_or(0);
         let last_run = app_dir
             .as_ref()
             .and_then(|d| latest_run_time(d))
@@ -1004,13 +1159,15 @@ async fn domain_detail_page(
         let tabs = state.domain_tabs.read();
         if let Some(tab) = tabs.get(&domain) {
             if tab.tab_state == crate::state::TabState::Idle {
-                "<span class=\"sb-pill sb-pill--success\">Idle</span> — tab available for next app".to_string()
+                "<span class=\"sb-pill sb-pill--success\">Idle</span> — tab available for next app"
+                    .to_string()
             } else {
                 format!("<span class=\"sb-pill sb-pill--warning\">Working</span> — active app: <strong>{}</strong>",
                     html_escape::encode_text(tab.active_app_id.as_deref().unwrap_or("unknown")))
             }
         } else {
-            "<span class=\"sb-pill sb-pill--success\">Idle</span> — no tab registered yet".to_string()
+            "<span class=\"sb-pill sb-pill--success\">Idle</span> — no tab registered yet"
+                .to_string()
         }
     };
 
@@ -1065,9 +1222,19 @@ async fn domain_detail_page(
     // Wiki snapshot count
     let wiki_dir = solace_home.join("wiki").join("domains").join(&domain);
     let snapshot_count = if wiki_dir.exists() {
-        std::fs::read_dir(&wiki_dir).into_iter().flatten().filter_map(|e| e.ok())
-            .filter(|e| e.file_name().to_string_lossy().ends_with(".prime-snapshot.md")).count()
-    } else { 0 };
+        std::fs::read_dir(&wiki_dir)
+            .into_iter()
+            .flatten()
+            .filter_map(|e| e.ok())
+            .filter(|e| {
+                e.file_name()
+                    .to_string_lossy()
+                    .ends_with(".prime-snapshot.md")
+            })
+            .count()
+    } else {
+        0
+    };
 
     let body = format!(
         r#"<p><a href="/domains">&larr; All Domains</a> | <a href="/dashboard">Dashboard</a></p>
@@ -1210,10 +1377,7 @@ async fn app_detail_page(
     );
 
     // Recent runs
-    let runs = app_dir
-        .as_ref()
-        .map(|d| list_runs(d))
-        .unwrap_or_default();
+    let runs = app_dir.as_ref().map(|d| list_runs(d)).unwrap_or_default();
 
     let mut run_rows = String::new();
     for (run_id, ts) in runs.iter().rev().take(20) {
@@ -1268,11 +1432,27 @@ async fn app_detail_page(
     }
 
     let run_count = runs.len();
-    let persona_display = if app.persona.is_empty() { "AI Worker" } else { &app.persona };
-    let category_display = if app.category.is_empty() { "standard" } else { &app.category };
-    let tags_html = app.tags.iter()
-        .map(|t| format!("<span class=\"sb-pill sb-pill--info sb-text-2xs\">{}</span>", html_escape::encode_text(t)))
-        .collect::<Vec<_>>().join(" ");
+    let persona_display = if app.persona.is_empty() {
+        "AI Worker"
+    } else {
+        &app.persona
+    };
+    let category_display = if app.category.is_empty() {
+        "standard"
+    } else {
+        &app.category
+    };
+    let tags_html = app
+        .tags
+        .iter()
+        .map(|t| {
+            format!(
+                "<span class=\"sb-pill sb-pill--info sb-text-2xs\">{}</span>",
+                html_escape::encode_text(t)
+            )
+        })
+        .collect::<Vec<_>>()
+        .join(" ");
 
     let body = format!(
         r#"<p><a href="/dashboard">&larr; Dashboard</a> | <a href="/domains/{domain}">{domain}</a></p>
@@ -1417,8 +1597,7 @@ async fn run_detail_page(
                         .or(event.url.as_deref())
                         .or(event.selector.as_deref())
                         .unwrap_or("—");
-                    let type_str =
-                        serde_json::to_string(&event.event_type).unwrap_or_default();
+                    let type_str = serde_json::to_string(&event.event_type).unwrap_or_default();
                     let type_display = type_str.trim_matches('"');
                     rows.push_str(&format!(
                         "<tr class=\"{css_class}\">\
@@ -1639,16 +1818,26 @@ async fn llms_page(State(state): State<AppState>) -> Html<String> {
     let agents: Vec<serde_json::Value> = serde_json::from_str(&agents_json)
         .or_else(|_| {
             serde_json::from_str::<serde_json::Value>(&agents_json)
-                .map(|v| v.get("agents").cloned().unwrap_or(serde_json::Value::Array(vec![])))
+                .map(|v| {
+                    v.get("agents")
+                        .cloned()
+                        .unwrap_or(serde_json::Value::Array(vec![]))
+                })
                 .and_then(|v| serde_json::from_value(v))
         })
         .unwrap_or_default();
 
     let mut agent_rows = String::new();
     for agent in &agents {
-        let name = agent.get("name").and_then(|v| v.as_str()).unwrap_or("unknown");
+        let name = agent
+            .get("name")
+            .and_then(|v| v.as_str())
+            .unwrap_or("unknown");
         let path = agent.get("path").and_then(|v| v.as_str()).unwrap_or("—");
-        let status = agent.get("available").and_then(|v| v.as_bool()).unwrap_or(false);
+        let status = agent
+            .get("available")
+            .and_then(|v| v.as_bool())
+            .unwrap_or(false);
         let pill = if status {
             "<span class=\"sb-pill sb-pill--success\">Available</span>"
         } else {
@@ -1731,8 +1920,20 @@ async fn budget_page(State(state): State<AppState>) -> Html<String> {
         0.0
     };
 
-    let daily_bar_class = if daily_pct > 80.0 { "sb-progress-bar--danger" } else if daily_pct > 50.0 { "sb-progress-bar--warning" } else { "sb-progress-bar--success" };
-    let monthly_bar_class = if monthly_pct > 80.0 { "sb-progress-bar--danger" } else if monthly_pct > 50.0 { "sb-progress-bar--warning" } else { "sb-progress-bar--success" };
+    let daily_bar_class = if daily_pct > 80.0 {
+        "sb-progress-bar--danger"
+    } else if daily_pct > 50.0 {
+        "sb-progress-bar--warning"
+    } else {
+        "sb-progress-bar--success"
+    };
+    let monthly_bar_class = if monthly_pct > 80.0 {
+        "sb-progress-bar--danger"
+    } else if monthly_pct > 50.0 {
+        "sb-progress-bar--warning"
+    } else {
+        "sb-progress-bar--success"
+    };
 
     let pause_status = if config.enforce {
         "<span class=\"sb-pill sb-pill--success\">Fail-Closed</span> — apps pause when budget exceeded"
@@ -1791,15 +1992,30 @@ async fn recipes_page() -> Html<String> {
 
     let mut recipe_cards = String::new();
     for recipe in &recipes {
-        let name = recipe.get("name").and_then(|v| v.as_str()).unwrap_or("Unnamed");
+        let name = recipe
+            .get("name")
+            .and_then(|v| v.as_str())
+            .unwrap_or("Unnamed");
         let domain = recipe.get("domain").and_then(|v| v.as_str()).unwrap_or("—");
-        let hit_rate = recipe.get("hit_rate").and_then(|v| v.as_f64()).unwrap_or(0.0);
+        let hit_rate = recipe
+            .get("hit_rate")
+            .and_then(|v| v.as_f64())
+            .unwrap_or(0.0);
         let hit_pill = if hit_rate >= 0.7 {
-            format!("<span class=\"sb-pill sb-pill--success\">{:.0}% hit</span>", hit_rate * 100.0)
+            format!(
+                "<span class=\"sb-pill sb-pill--success\">{:.0}% hit</span>",
+                hit_rate * 100.0
+            )
         } else if hit_rate >= 0.4 {
-            format!("<span class=\"sb-pill sb-pill--warning\">{:.0}% hit</span>", hit_rate * 100.0)
+            format!(
+                "<span class=\"sb-pill sb-pill--warning\">{:.0}% hit</span>",
+                hit_rate * 100.0
+            )
         } else {
-            format!("<span class=\"sb-pill sb-pill--danger\">{:.0}% hit</span>", hit_rate * 100.0)
+            format!(
+                "<span class=\"sb-pill sb-pill--danger\">{:.0}% hit</span>",
+                hit_rate * 100.0
+            )
         };
         recipe_cards.push_str(&format!(
             r#"<div class="sb-card"><div class="sb-card-header"><h3 class="sb-card-title">{name}</h3>{hit_pill}</div>
@@ -1843,8 +2059,14 @@ async fn oauth3_page() -> Html<String> {
     for token in &tokens {
         let scope = token.get("scope").and_then(|v| v.as_str()).unwrap_or("—");
         let app = token.get("app_id").and_then(|v| v.as_str()).unwrap_or("—");
-        let expires = token.get("expires_at").and_then(|v| v.as_str()).unwrap_or("—");
-        let status = token.get("revoked").and_then(|v| v.as_bool()).unwrap_or(false);
+        let expires = token
+            .get("expires_at")
+            .and_then(|v| v.as_str())
+            .unwrap_or("—");
+        let status = token
+            .get("revoked")
+            .and_then(|v| v.as_bool())
+            .unwrap_or(false);
         let pill = if status {
             "<span class=\"sb-pill sb-pill--danger\">Revoked</span>"
         } else {
@@ -1880,7 +2102,10 @@ async fn oauth3_page() -> Html<String> {
 // ---------------------------------------------------------------------------
 async fn esign_page(State(state): State<AppState>) -> Html<String> {
     let notifications = state.notifications.read().clone();
-    let pending: Vec<_> = notifications.iter().filter(|n| n.level == "signoff" || n.level == "L3" || n.level == "L4" || n.level == "L5").collect();
+    let pending: Vec<_> = notifications
+        .iter()
+        .filter(|n| n.level == "signoff" || n.level == "L3" || n.level == "L4" || n.level == "L5")
+        .collect();
 
     let mut pending_rows = String::new();
     for note in &pending {
@@ -1937,9 +2162,16 @@ async fn wiki_page() -> Html<String> {
         Ok(resp) => resp.text().await.unwrap_or_default(),
         Err(_) => String::new(),
     };
-    let stats: serde_json::Value = serde_json::from_str(&wiki_json).unwrap_or(serde_json::json!({}));
-    let snapshot_count = stats.get("snapshot_count").and_then(|v| v.as_u64()).unwrap_or(0);
-    let domain_count = stats.get("domain_count").and_then(|v| v.as_u64()).unwrap_or(0);
+    let stats: serde_json::Value =
+        serde_json::from_str(&wiki_json).unwrap_or(serde_json::json!({}));
+    let snapshot_count = stats
+        .get("snapshot_count")
+        .and_then(|v| v.as_u64())
+        .unwrap_or(0);
+    let domain_count = stats
+        .get("domain_count")
+        .and_then(|v| v.as_u64())
+        .unwrap_or(0);
 
     let body = format!(
         r#"<div class="sb-flex" class="sb-status-bar">
@@ -2039,8 +2271,16 @@ async fn settings_page(State(state): State<AppState>) -> Html<String> {
   <p class="sb-section sb-text-muted">MCP: <code>solace-runtime --mcp</code> (stdio, 8 tools + 2 resources)</p>
 </div>"#,
         theme = html_escape::encode_text(&theme),
-        dark_active = if theme == "dark" { "sb-theme-btn--active" } else { "" },
-        light_active = if theme == "light" { "sb-theme-btn--active" } else { "" },
+        dark_active = if theme == "dark" {
+            "sb-theme-btn--active"
+        } else {
+            ""
+        },
+        light_active = if theme == "light" {
+            "sb-theme-btn--active"
+        } else {
+            ""
+        },
         platform = std::env::consts::OS,
         hours = uptime / 3600,
         mins = (uptime % 3600) / 60,
@@ -2064,7 +2304,11 @@ async fn hire_page(State(_state): State<AppState>) -> Html<String> {
             "<tr><td><strong>{name}</strong></td><td>{id}</td><td>{sched}</td><td>{runs}</td></tr>",
             name = html_escape::encode_text(&app.name),
             id = html_escape::encode_text(&app.id),
-            sched = if app.schedule.is_empty() { "Manual" } else { &app.schedule },
+            sched = if app.schedule.is_empty() {
+                "Manual"
+            } else {
+                &app.schedule
+            },
             runs = run_count,
         ));
     }
@@ -2141,7 +2385,10 @@ async fn hire_page(State(_state): State<AppState>) -> Html<String> {
 pub fn domain_icon_filename(domain: &str) -> String {
     let path = domain_icon_path(domain);
     // Strip any leading path — return just the filename
-    path.rsplit('/').next().unwrap_or("yinyang-logo.png").to_string()
+    path.rsplit('/')
+        .next()
+        .unwrap_or("yinyang-logo.png")
+        .to_string()
 }
 
 pub fn domain_icon_path_pub(domain: &str) -> String {
@@ -2222,8 +2469,8 @@ fn list_runs(app_dir: &std::path::Path) -> Vec<(String, String)> {
         .filter(|entry| entry.path().is_dir())
         .filter_map(|entry| {
             let name = entry.file_name().to_string_lossy().to_string();
-            let ts = crate::utils::modified_iso8601(&entry.path())
-                .unwrap_or_else(|| "—".to_string());
+            let ts =
+                crate::utils::modified_iso8601(&entry.path()).unwrap_or_else(|| "—".to_string());
             Some((name, ts))
         })
         .collect();
@@ -2253,8 +2500,7 @@ fn latest_run_time(app_dir: &std::path::Path) -> Option<String> {
         .map(|entry| entry.path())
         .collect();
     dirs.sort();
-    dirs.last()
-        .and_then(|p| crate::utils::modified_iso8601(p))
+    dirs.last().and_then(|p| crate::utils::modified_iso8601(p))
 }
 
 /// Serve the styleguide page from the Hub frontend directory (cross-platform).
@@ -2272,16 +2518,32 @@ async fn styleguide_page() -> Html<String> {
 }
 
 /// Serve the styleguide CSS from the Hub frontend directory (cross-platform).
-async fn styleguide_css() -> (StatusCode, [(axum::http::header::HeaderName, &'static str); 1], String) {
+async fn styleguide_css() -> (
+    StatusCode,
+    [(axum::http::header::HeaderName, &'static str); 1],
+    String,
+) {
     let path = hub_assets_dir(".").join("styleguide.css");
     if let Ok(content) = fs::read_to_string(&path) {
-        return (StatusCode::OK, [(axum::http::header::CONTENT_TYPE, "text/css")], content);
+        return (
+            StatusCode::OK,
+            [(axum::http::header::CONTENT_TYPE, "text/css")],
+            content,
+        );
     }
     let alt = hub_assets_dir("..").join("styleguide.css");
     if let Ok(content) = fs::read_to_string(&alt) {
-        return (StatusCode::OK, [(axum::http::header::CONTENT_TYPE, "text/css")], content);
+        return (
+            StatusCode::OK,
+            [(axum::http::header::CONTENT_TYPE, "text/css")],
+            content,
+        );
     }
-    (StatusCode::NOT_FOUND, [(axum::http::header::CONTENT_TYPE, "text/css")], String::new())
+    (
+        StatusCode::NOT_FOUND,
+        [(axum::http::header::CONTENT_TYPE, "text/css")],
+        String::new(),
+    )
 }
 
 /// Simple stub page (legacy — used by index, onboarding, sidebar).

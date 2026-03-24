@@ -34,7 +34,8 @@ async fn list_webhooks(State(_state): State<AppState>) -> Json<Value> {
     let solace_home = crate::utils::solace_home();
     let path = solace_home.join("runtime").join("webhooks.json");
     let hooks: Vec<Webhook> = if path.exists() {
-        serde_json::from_str(&std::fs::read_to_string(&path).unwrap_or_default()).unwrap_or_default()
+        serde_json::from_str(&std::fs::read_to_string(&path).unwrap_or_default())
+            .unwrap_or_default()
     } else {
         Vec::new()
     };
@@ -55,7 +56,10 @@ async fn create_webhook(
     Json(body): Json<CreateWebhook>,
 ) -> Result<Json<Value>, (StatusCode, Json<Value>)> {
     if body.url.is_empty() || body.event.is_empty() {
-        return Err((StatusCode::BAD_REQUEST, Json(json!({"error": "url and event required"}))));
+        return Err((
+            StatusCode::BAD_REQUEST,
+            Json(json!({"error": "url and event required"})),
+        ));
     }
 
     let hook = Webhook {
@@ -70,31 +74,36 @@ async fn create_webhook(
     let solace_home = crate::utils::solace_home();
     let path = solace_home.join("runtime").join("webhooks.json");
     let mut hooks: Vec<Webhook> = if path.exists() {
-        serde_json::from_str(&std::fs::read_to_string(&path).unwrap_or_default()).unwrap_or_default()
+        serde_json::from_str(&std::fs::read_to_string(&path).unwrap_or_default())
+            .unwrap_or_default()
     } else {
         Vec::new()
     };
     hooks.push(hook.clone());
-    let _ = std::fs::write(&path, serde_json::to_string_pretty(&hooks).unwrap_or_default());
+    let _ = std::fs::write(
+        &path,
+        serde_json::to_string_pretty(&hooks).unwrap_or_default(),
+    );
 
     Ok(Json(json!({"created": true, "webhook": hook})))
 }
 
 /// Delete a webhook
-async fn delete_webhook(
-    State(_state): State<AppState>,
-    Path(id): Path<String>,
-) -> Json<Value> {
+async fn delete_webhook(State(_state): State<AppState>, Path(id): Path<String>) -> Json<Value> {
     let solace_home = crate::utils::solace_home();
     let path = solace_home.join("runtime").join("webhooks.json");
     let mut hooks: Vec<Webhook> = if path.exists() {
-        serde_json::from_str(&std::fs::read_to_string(&path).unwrap_or_default()).unwrap_or_default()
+        serde_json::from_str(&std::fs::read_to_string(&path).unwrap_or_default())
+            .unwrap_or_default()
     } else {
         Vec::new()
     };
     let before = hooks.len();
     hooks.retain(|h| h.id != id);
-    let _ = std::fs::write(&path, serde_json::to_string_pretty(&hooks).unwrap_or_default());
+    let _ = std::fs::write(
+        &path,
+        serde_json::to_string_pretty(&hooks).unwrap_or_default(),
+    );
     Json(json!({"deleted": before != hooks.len(), "remaining": hooks.len()}))
 }
 
@@ -106,17 +115,22 @@ async fn test_webhook(
     let solace_home = crate::utils::solace_home();
     let path = solace_home.join("runtime").join("webhooks.json");
     let hooks: Vec<Webhook> = if path.exists() {
-        serde_json::from_str(&std::fs::read_to_string(&path).unwrap_or_default()).unwrap_or_default()
+        serde_json::from_str(&std::fs::read_to_string(&path).unwrap_or_default())
+            .unwrap_or_default()
     } else {
         Vec::new()
     };
 
     let hook = hooks.iter().find(|h| h.id == id).ok_or_else(|| {
-        (StatusCode::NOT_FOUND, Json(json!({"error": "webhook not found"})))
+        (
+            StatusCode::NOT_FOUND,
+            Json(json!({"error": "webhook not found"})),
+        )
     })?;
 
     let client = reqwest::Client::new();
-    let result = client.post(&hook.url)
+    let result = client
+        .post(&hook.url)
         .json(&json!({
             "event": hook.event,
             "webhook_id": hook.id,

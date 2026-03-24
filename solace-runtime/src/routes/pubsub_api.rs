@@ -40,13 +40,17 @@ struct PublishRequest {
     #[serde(default = "default_publisher")]
     publisher: String,
 }
-fn default_publisher() -> String { "system".to_string() }
+fn default_publisher() -> String {
+    "system".to_string()
+}
 
 async fn publish_event(
     State(state): State<AppState>,
     Json(req): Json<PublishRequest>,
 ) -> Json<Value> {
-    let event = state.event_bus.publish(&req.topic, req.payload, &req.publisher);
+    let event = state
+        .event_bus
+        .publish(&req.topic, req.payload, &req.publisher);
     Json(json!({
         "published": true,
         "event_id": event.id,
@@ -87,7 +91,10 @@ async fn get_topic_events(
     Path(topic): Path<String>,
     Query(params): Query<HashMap<String, String>>,
 ) -> Json<Value> {
-    let limit: usize = params.get("limit").and_then(|l| l.parse().ok()).unwrap_or(50);
+    let limit: usize = params
+        .get("limit")
+        .and_then(|l| l.parse().ok())
+        .unwrap_or(50);
     let events = state.event_bus.recent(&topic, limit);
     Json(json!({
         "topic": topic,
@@ -113,19 +120,31 @@ struct EnqueueRequest {
     assigned_to: String,
     parent_job_id: Option<String>,
 }
-fn default_priority() -> i32 { 1 }
+fn default_priority() -> i32 {
+    1
+}
 
 async fn enqueue_job(
     State(state): State<AppState>,
     Json(req): Json<EnqueueRequest>,
 ) -> Result<Json<Value>, (StatusCode, Json<Value>)> {
-    let job = state.job_queue.enqueue(
-        &req.job_type, req.payload, req.priority,
-        &req.assigned_to, req.parent_job_id.as_deref(),
-    ).map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, Json(json!({"error": e}))))?;
+    let job = state
+        .job_queue
+        .enqueue(
+            &req.job_type,
+            req.payload,
+            req.priority,
+            &req.assigned_to,
+            req.parent_job_id.as_deref(),
+        )
+        .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, Json(json!({"error": e}))))?;
 
     // Publish event
-    state.event_bus.publish("job.enqueued", json!({"job_id": job.id, "type": job.job_type}), "job_queue");
+    state.event_bus.publish(
+        "job.enqueued",
+        json!({"job_id": job.id, "type": job.job_type}),
+        "job_queue",
+    );
 
     Ok(Json(json!({"enqueued": true, "job": job})))
 }
@@ -134,17 +153,28 @@ async fn claim_job(
     State(state): State<AppState>,
     Json(body): Json<Value>,
 ) -> Result<Json<Value>, (StatusCode, Json<Value>)> {
-    let worker_id = body.get("worker_id").and_then(|v| v.as_str()).unwrap_or("default");
+    let worker_id = body
+        .get("worker_id")
+        .and_then(|v| v.as_str())
+        .unwrap_or("default");
 
-    let job = state.job_queue.claim(worker_id)
+    let job = state
+        .job_queue
+        .claim(worker_id)
         .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, Json(json!({"error": e}))))?;
 
     match job {
         Some(j) => {
-            state.event_bus.publish("job.claimed", json!({"job_id": j.id, "worker": worker_id}), "job_queue");
+            state.event_bus.publish(
+                "job.claimed",
+                json!({"job_id": j.id, "worker": worker_id}),
+                "job_queue",
+            );
             Ok(Json(json!({"claimed": true, "job": j})))
         }
-        None => Ok(Json(json!({"claimed": false, "message": "no jobs available"}))),
+        None => Ok(Json(
+            json!({"claimed": false, "message": "no jobs available"}),
+        )),
     }
 }
 
@@ -152,9 +182,16 @@ async fn get_job(
     State(state): State<AppState>,
     Path(job_id): Path<String>,
 ) -> Result<Json<Value>, (StatusCode, Json<Value>)> {
-    let job = state.job_queue.get(&job_id)
+    let job = state
+        .job_queue
+        .get(&job_id)
         .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, Json(json!({"error": e}))))?
-        .ok_or_else(|| (StatusCode::NOT_FOUND, Json(json!({"error": "job not found"}))))?;
+        .ok_or_else(|| {
+            (
+                StatusCode::NOT_FOUND,
+                Json(json!({"error": "job not found"})),
+            )
+        })?;
     Ok(Json(json!({"job": job})))
 }
 
@@ -168,9 +205,13 @@ async fn complete_job(
     Path(job_id): Path<String>,
     Json(req): Json<CompleteRequest>,
 ) -> Result<Json<Value>, (StatusCode, Json<Value>)> {
-    state.job_queue.complete(&job_id, req.result)
+    state
+        .job_queue
+        .complete(&job_id, req.result)
         .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, Json(json!({"error": e}))))?;
-    state.event_bus.publish("job.completed", json!({"job_id": job_id}), "job_queue");
+    state
+        .event_bus
+        .publish("job.completed", json!({"job_id": job_id}), "job_queue");
     Ok(Json(json!({"completed": true, "job_id": job_id})))
 }
 
@@ -184,9 +225,15 @@ async fn fail_job(
     Path(job_id): Path<String>,
     Json(req): Json<FailRequest>,
 ) -> Result<Json<Value>, (StatusCode, Json<Value>)> {
-    state.job_queue.fail(&job_id, &req.error)
+    state
+        .job_queue
+        .fail(&job_id, &req.error)
         .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, Json(json!({"error": e}))))?;
-    state.event_bus.publish("job.failed", json!({"job_id": job_id, "error": req.error}), "job_queue");
+    state.event_bus.publish(
+        "job.failed",
+        json!({"job_id": job_id, "error": req.error}),
+        "job_queue",
+    );
     Ok(Json(json!({"failed": true, "job_id": job_id})))
 }
 
@@ -195,7 +242,10 @@ async fn list_jobs(
     Query(params): Query<HashMap<String, String>>,
 ) -> Json<Value> {
     let status = params.get("status").map(|s| s.as_str());
-    let limit: u32 = params.get("limit").and_then(|l| l.parse().ok()).unwrap_or(50);
+    let limit: u32 = params
+        .get("limit")
+        .and_then(|l| l.parse().ok())
+        .unwrap_or(50);
 
     let jobs = state.job_queue.list(status, limit).unwrap_or_default();
     Json(json!({"jobs": jobs, "count": jobs.len()}))

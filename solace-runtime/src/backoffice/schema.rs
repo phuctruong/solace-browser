@@ -115,11 +115,7 @@ impl ColumnDef {
         // Enum check constraint
         if self.col_type == "enum" && !self.values.is_empty() {
             let vals: Vec<String> = self.values.iter().map(|v| format!("'{}'", v)).collect();
-            parts.push(format!(
-                "CHECK(\"{}\" IN ({}))",
-                self.name,
-                vals.join(", ")
-            ));
+            parts.push(format!("CHECK(\"{}\" IN ({}))", self.name, vals.join(", ")));
         }
 
         parts.join(" ")
@@ -129,9 +125,7 @@ impl ColumnDef {
 /// Generate CREATE TABLE DDL for a table definition.
 /// Every table auto-gets: id, created_at, updated_at, created_by, evidence_hash.
 pub fn generate_ddl(table: &TableDef) -> String {
-    let mut columns = vec![
-        "\"id\" TEXT PRIMARY KEY".to_string(),
-    ];
+    let mut columns = vec!["\"id\" TEXT PRIMARY KEY".to_string()];
 
     for col in &table.columns {
         columns.push(col.to_ddl());

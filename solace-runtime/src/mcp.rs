@@ -178,7 +178,11 @@ pub async fn run_mcp_server(state: AppState) {
             }
         };
 
-        if stdout.write_all(response.to_string().as_bytes()).await.is_err() {
+        if stdout
+            .write_all(response.to_string().as_bytes())
+            .await
+            .is_err()
+        {
             break;
         }
         if stdout.write_all(b"\n").await.is_err() {
@@ -231,7 +235,10 @@ async fn handle_tools_call(params: &Value, state: &AppState) -> Result<Value, (i
         .get("name")
         .and_then(Value::as_str)
         .ok_or_else(|| (-32602, "tools/call requires params.name".to_string()))?;
-    let arguments = params.get("arguments").cloned().unwrap_or_else(|| json!({}));
+    let arguments = params
+        .get("arguments")
+        .cloned()
+        .unwrap_or_else(|| json!({}));
 
     let payload = match name {
         "run_app" => {
@@ -239,8 +246,8 @@ async fn handle_tools_call(params: &Value, state: &AppState) -> Result<Value, (i
             let result = crate::app_engine::runner::run_app(&app_id, state)
                 .await
                 .map_err(|error| (-32000, error))?;
-            let value = serde_json::to_value(&result)
-                .map_err(|error| (-32000, error.to_string()))?;
+            let value =
+                serde_json::to_value(&result).map_err(|error| (-32000, error.to_string()))?;
             if value.is_object() {
                 value
             } else {
@@ -251,11 +258,14 @@ async fn handle_tools_call(params: &Value, state: &AppState) -> Result<Value, (i
         "browser_launch" => {
             let session = SessionInfo {
                 session_id: uuid::Uuid::new_v4().to_string(),
-                profile: optional_string(&arguments, "profile").unwrap_or_else(|| "default".to_string()),
-                url: optional_string(&arguments, "url").unwrap_or_else(|| "https://solaceagi.com".to_string()),
+                profile: optional_string(&arguments, "profile")
+                    .unwrap_or_else(|| "default".to_string()),
+                url: optional_string(&arguments, "url")
+                    .unwrap_or_else(|| "https://solaceagi.com".to_string()),
                 pid: rand::random::<u32>() % 89_999 + 10_000,
                 started_at: crate::utils::now_iso8601(),
-                mode: optional_string(&arguments, "mode").unwrap_or_else(|| "local-dev".to_string()),
+                mode: optional_string(&arguments, "mode")
+                    .unwrap_or_else(|| "local-dev".to_string()),
             };
             state
                 .sessions
@@ -273,10 +283,7 @@ async fn handle_tools_call(params: &Value, state: &AppState) -> Result<Value, (i
             json!({"closed": session.session_id, "profile": session.profile})
         }
         "evidence_list" => {
-            let limit = arguments
-                .get("limit")
-                .and_then(Value::as_u64)
-                .unwrap_or(25) as usize;
+            let limit = arguments.get("limit").and_then(Value::as_u64).unwrap_or(25) as usize;
             let entries = crate::evidence::list_evidence(&crate::utils::solace_home(), limit);
             json!({"entries": entries})
         }
@@ -336,11 +343,16 @@ async fn handle_tools_call(params: &Value, state: &AppState) -> Result<Value, (i
             if page.html.is_empty() {
                 json!({"error": "no_page_captured", "message": "No page HTML captured yet. Navigate to a page first."})
             } else {
-                let text_only = arguments.get("text_only").and_then(Value::as_bool).unwrap_or(false);
+                let text_only = arguments
+                    .get("text_only")
+                    .and_then(Value::as_bool)
+                    .unwrap_or(false);
                 let content = if text_only {
-                    let re = regex::Regex::new(r"<[^>]+>").unwrap_or_else(|_| regex::Regex::new(r"$^").unwrap());
+                    let re = regex::Regex::new(r"<[^>]+>")
+                        .unwrap_or_else(|_| regex::Regex::new(r"$^").unwrap());
                     let text = re.replace_all(&page.html, "");
-                    let ws = regex::Regex::new(r"\s+").unwrap_or_else(|_| regex::Regex::new(r"$^").unwrap());
+                    let ws = regex::Regex::new(r"\s+")
+                        .unwrap_or_else(|_| regex::Regex::new(r"$^").unwrap());
                     ws.replace_all(&text, " ").trim().to_string()
                 } else {
                     page.html.clone()
@@ -361,9 +373,19 @@ async fn handle_tools_call(params: &Value, state: &AppState) -> Result<Value, (i
             let table_name = require_string(&arguments, "table")?;
             let config = crate::routes::backoffice::load_workspace_config(&app_id)
                 .map_err(|e| (-32000, e))?;
-            let table_def = config.tables.iter().find(|t| t.name == table_name)
-                .ok_or_else(|| (-32000, format!("table '{}' not found in app '{}'", table_name, app_id)))?;
-            let conn = state.backoffice_db.get_connection(&app_id, &config)
+            let table_def = config
+                .tables
+                .iter()
+                .find(|t| t.name == table_name)
+                .ok_or_else(|| {
+                    (
+                        -32000,
+                        format!("table '{}' not found in app '{}'", table_name, app_id),
+                    )
+                })?;
+            let conn = state
+                .backoffice_db
+                .get_connection(&app_id, &config)
                 .map_err(|e| (-32000, e))?;
             let conn_guard = conn.lock();
             crate::backoffice::crud::select_list(&conn_guard, table_def, 0, 50, None, &[])
@@ -375,13 +397,24 @@ async fn handle_tools_call(params: &Value, state: &AppState) -> Result<Value, (i
             let data = arguments.get("data").cloned().unwrap_or_else(|| json!({}));
             let config = crate::routes::backoffice::load_workspace_config(&app_id)
                 .map_err(|e| (-32000, e))?;
-            let table_def = config.tables.iter().find(|t| t.name == table_name)
-                .ok_or_else(|| (-32000, format!("table '{}' not found in app '{}'", table_name, app_id)))?;
-            let conn = state.backoffice_db.get_connection(&app_id, &config)
+            let table_def = config
+                .tables
+                .iter()
+                .find(|t| t.name == table_name)
+                .ok_or_else(|| {
+                    (
+                        -32000,
+                        format!("table '{}' not found in app '{}'", table_name, app_id),
+                    )
+                })?;
+            let conn = state
+                .backoffice_db
+                .get_connection(&app_id, &config)
                 .map_err(|e| (-32000, e))?;
             let conn_guard = conn.lock();
-            let record = crate::backoffice::crud::insert(&conn_guard, table_def, &data, "mcp_client")
-                .map_err(|e| (-32000, e))?;
+            let record =
+                crate::backoffice::crud::insert(&conn_guard, table_def, &data, "mcp_client")
+                    .map_err(|e| (-32000, e))?;
             state.event_bus.publish(
                 crate::pubsub::topics::BACKOFFICE_WRITE,
                 json!({"app_id": app_id, "table": table_name, "action": "create"}),
@@ -393,13 +426,48 @@ async fn handle_tools_call(params: &Value, state: &AppState) -> Result<Value, (i
         "cli_list" => {
             let mut workers = Vec::new();
             let registry = [
-                ("claude-worker", "claude", "reasoning", "Claude Code — AI coding + analysis"),
-                ("codex-worker", "codex", "reasoning", "OpenAI Codex — GPT-5.4 code generation"),
-                ("gemini-worker", "gemini", "reasoning", "Google Gemini — multimodal AI"),
-                ("web-scraper", "curl", "perception", "Web page fetcher + text extractor"),
-                ("git-worker", "git", "action", "Git — commit, branch, merge, diff"),
-                ("gh-worker", "gh", "action", "GitHub CLI — issues, PRs, releases"),
-                ("data-analyst", "python3", "utility", "Python — data analysis + scripting"),
+                (
+                    "claude-worker",
+                    "claude",
+                    "reasoning",
+                    "Claude Code — AI coding + analysis",
+                ),
+                (
+                    "codex-worker",
+                    "codex",
+                    "reasoning",
+                    "OpenAI Codex — GPT-5.4 code generation",
+                ),
+                (
+                    "gemini-worker",
+                    "gemini",
+                    "reasoning",
+                    "Google Gemini — multimodal AI",
+                ),
+                (
+                    "web-scraper",
+                    "curl",
+                    "perception",
+                    "Web page fetcher + text extractor",
+                ),
+                (
+                    "git-worker",
+                    "git",
+                    "action",
+                    "Git — commit, branch, merge, diff",
+                ),
+                (
+                    "gh-worker",
+                    "gh",
+                    "action",
+                    "GitHub CLI — issues, PRs, releases",
+                ),
+                (
+                    "data-analyst",
+                    "python3",
+                    "utility",
+                    "Python — data analysis + scripting",
+                ),
             ];
             for (id, cmd, category, description) in &registry {
                 let installed = std::process::Command::new("which")
@@ -412,7 +480,10 @@ async fn handle_tools_call(params: &Value, state: &AppState) -> Result<Value, (i
                     "description": description, "installed": installed,
                 }));
             }
-            let installed_count = workers.iter().filter(|w| w["installed"].as_bool().unwrap_or(false)).count();
+            let installed_count = workers
+                .iter()
+                .filter(|w| w["installed"].as_bool().unwrap_or(false))
+                .count();
             json!({"workers": workers, "total": workers.len(), "installed": installed_count})
         }
         "cli_run" => {
@@ -458,16 +529,23 @@ async fn handle_tools_call(params: &Value, state: &AppState) -> Result<Value, (i
         // ── Jobs ──
         "job_enqueue" => {
             let job_type = require_string(&arguments, "job_type")?;
-            let payload = arguments.get("payload").cloned().unwrap_or_else(|| json!({}));
-            let priority = arguments.get("priority").and_then(Value::as_i64).unwrap_or(1) as i32;
-            let job = state.job_queue.enqueue(&job_type, payload, priority, "mcp_client", None)
+            let payload = arguments
+                .get("payload")
+                .cloned()
+                .unwrap_or_else(|| json!({}));
+            let priority = arguments
+                .get("priority")
+                .and_then(Value::as_i64)
+                .unwrap_or(1) as i32;
+            let job = state
+                .job_queue
+                .enqueue(&job_type, payload, priority, "mcp_client", None)
                 .map_err(|e| (-32000, e))?;
             json!({"enqueued": true, "job": job})
         }
         "job_claim" => {
             let worker_id = require_string(&arguments, "worker_id")?;
-            let job = state.job_queue.claim(&worker_id)
-                .map_err(|e| (-32000, e))?;
+            let job = state.job_queue.claim(&worker_id).map_err(|e| (-32000, e))?;
             match job {
                 Some(j) => json!({"claimed": true, "job": j}),
                 None => json!({"claimed": false, "message": "no jobs available"}),
@@ -476,7 +554,10 @@ async fn handle_tools_call(params: &Value, state: &AppState) -> Result<Value, (i
         // ── Events ──
         "event_publish" => {
             let topic = require_string(&arguments, "topic")?;
-            let payload = arguments.get("payload").cloned().unwrap_or_else(|| json!({}));
+            let payload = arguments
+                .get("payload")
+                .cloned()
+                .unwrap_or_else(|| json!({}));
             let event = state.event_bus.publish(&topic, payload, "mcp_client");
             json!({"published": true, "event_id": event.id, "topic": event.topic, "evidence_hash": event.evidence_hash})
         }
@@ -488,9 +569,11 @@ async fn handle_tools_call(params: &Value, state: &AppState) -> Result<Value, (i
                 .unwrap_or(0);
             let total_size: u64 = std::fs::read_dir(&wiki_dir)
                 .map(|entries| {
-                    entries.flatten()
+                    entries
+                        .flatten()
                         .filter_map(|e| std::fs::metadata(e.path()).ok())
-                        .map(|m| m.len()).sum()
+                        .map(|m| m.len())
+                        .sum()
                 })
                 .unwrap_or(0);
             json!({
@@ -504,8 +587,14 @@ async fn handle_tools_call(params: &Value, state: &AppState) -> Result<Value, (i
             let url = require_string(&arguments, "url")?;
             let content = require_string(&arguments, "content")?;
             // Security: reject non-HTTP URLs
-            if !url.starts_with("http://") && !url.starts_with("https://") && !url.starts_with("app://") {
-                return Err((-32000, "URL must start with http://, https://, or app://".to_string()));
+            if !url.starts_with("http://")
+                && !url.starts_with("https://")
+                && !url.starts_with("app://")
+            {
+                return Err((
+                    -32000,
+                    "URL must start with http://, https://, or app://".to_string(),
+                ));
             }
             match crate::pzip::stillwater::extract(content.as_bytes(), "text/html", &url) {
                 Ok(decomp) => {
@@ -533,23 +622,42 @@ async fn handle_tools_call(params: &Value, state: &AppState) -> Result<Value, (i
         "domain_status" => {
             let domain = require_string(&arguments, "domain")?;
             let apps = crate::utils::scan_apps();
-            let domain_apps: Vec<_> = apps.iter()
-                .filter(|a| a.domain == domain || a.triggers.iter().any(|t| domain.contains(&t.domain)))
+            let domain_apps: Vec<_> = apps
+                .iter()
+                .filter(|a| {
+                    a.domain == domain || a.triggers.iter().any(|t| domain.contains(&t.domain))
+                })
                 .collect();
             let solace_home = crate::utils::solace_home();
             let vault_path = solace_home.join("vault").join("oauth3.json");
             let oauth3_status = if vault_path.exists() {
                 if let Ok(c) = std::fs::read_to_string(&vault_path) {
-                    if c.contains(&domain) { "active" } else { "not_configured" }
-                } else { "not_configured" }
-            } else { "not_configured" };
+                    if c.contains(&domain) {
+                        "active"
+                    } else {
+                        "not_configured"
+                    }
+                } else {
+                    "not_configured"
+                }
+            } else {
+                "not_configured"
+            };
             let wiki_dir = solace_home.join("wiki").join("domains").join(&domain);
             let snapshot_count = if wiki_dir.exists() {
-                std::fs::read_dir(&wiki_dir).into_iter().flatten()
+                std::fs::read_dir(&wiki_dir)
+                    .into_iter()
+                    .flatten()
                     .filter_map(|e| e.ok())
-                    .filter(|e| e.file_name().to_string_lossy().ends_with(".prime-snapshot.md"))
+                    .filter(|e| {
+                        e.file_name()
+                            .to_string_lossy()
+                            .ends_with(".prime-snapshot.md")
+                    })
                     .count()
-            } else { 0 };
+            } else {
+                0
+            };
             json!({
                 "domain": domain,
                 "oauth3_status": oauth3_status,
@@ -569,11 +677,14 @@ async fn handle_tools_call(params: &Value, state: &AppState) -> Result<Value, (i
             for app in &apps {
                 for trigger in &app.triggers {
                     let trigger_domain = &trigger.domain;
-                    if !domain.contains(trigger_domain) && trigger_domain != &domain { continue; }
+                    if !domain.contains(trigger_domain) && trigger_domain != &domain {
+                        continue;
+                    }
                     let path_pattern = &trigger.path;
                     let path_matches = path_pattern == "/*"
                         || path_pattern == &url_path
-                        || (path_pattern.ends_with('*') && url_path.starts_with(&path_pattern[..path_pattern.len()-1]));
+                        || (path_pattern.ends_with('*')
+                            && url_path.starts_with(&path_pattern[..path_pattern.len() - 1]));
                     if path_matches {
                         matched.push(json!({
                             "app_id": app.id, "app_name": app.name,
@@ -595,15 +706,21 @@ async fn handle_tools_call(params: &Value, state: &AppState) -> Result<Value, (i
             let path = solace_home.join("runtime").join("webhooks.json");
             let _ = std::fs::create_dir_all(solace_home.join("runtime"));
             let mut hooks: Vec<Value> = if path.exists() {
-                serde_json::from_str(&std::fs::read_to_string(&path).unwrap_or_default()).unwrap_or_default()
-            } else { Vec::new() };
+                serde_json::from_str(&std::fs::read_to_string(&path).unwrap_or_default())
+                    .unwrap_or_default()
+            } else {
+                Vec::new()
+            };
             let hook = json!({
                 "id": uuid::Uuid::new_v4().to_string(),
                 "name": name, "url": url, "event": event,
                 "active": true, "created_at": crate::utils::now_iso8601(),
             });
             hooks.push(hook.clone());
-            let _ = std::fs::write(&path, serde_json::to_string_pretty(&hooks).unwrap_or_default());
+            let _ = std::fs::write(
+                &path,
+                serde_json::to_string_pretty(&hooks).unwrap_or_default(),
+            );
             json!({"created": true, "webhook": hook})
         }
         // ── File Watch ──
@@ -615,15 +732,21 @@ async fn handle_tools_call(params: &Value, state: &AppState) -> Result<Value, (i
             let wpath = solace_home.join("runtime").join("watchers.json");
             let _ = std::fs::create_dir_all(solace_home.join("runtime"));
             let mut watchers: Vec<Value> = if wpath.exists() {
-                serde_json::from_str(&std::fs::read_to_string(&wpath).unwrap_or_default()).unwrap_or_default()
-            } else { Vec::new() };
+                serde_json::from_str(&std::fs::read_to_string(&wpath).unwrap_or_default())
+                    .unwrap_or_default()
+            } else {
+                Vec::new()
+            };
             let watcher = json!({
                 "id": uuid::Uuid::new_v4().to_string(),
                 "path": watch_path, "pattern": pattern, "app_id": app_id,
                 "active": true, "last_scan": "", "files_found": 0,
             });
             watchers.push(watcher.clone());
-            let _ = std::fs::write(&wpath, serde_json::to_string_pretty(&watchers).unwrap_or_default());
+            let _ = std::fs::write(
+                &wpath,
+                serde_json::to_string_pretty(&watchers).unwrap_or_default(),
+            );
             json!({"created": true, "watcher": watcher})
         }
         // ── P0: Browser Visibility ──
@@ -649,7 +772,10 @@ async fn handle_tools_call(params: &Value, state: &AppState) -> Result<Value, (i
         "browser_navigate" => {
             let url = require_string(&arguments, "url")?;
             if !url.starts_with("http://") && !url.starts_with("https://") {
-                return Err((-32602, "url must start with http:// or https://".to_string()));
+                return Err((
+                    -32602,
+                    "url must start with http:// or https://".to_string(),
+                ));
             }
             *state.evidence_count.write() += 1;
             // Navigate via WebSocket relay to sidebar ONLY.
@@ -659,10 +785,14 @@ async fn handle_tools_call(params: &Value, state: &AppState) -> Result<Value, (i
             let msg = json!({"command": "navigate", "url": &url}).to_string();
             let mut sent = 0;
             for (_, tx) in channels.iter() {
-                if tx.send(msg.clone()).is_ok() { sent += 1; }
+                if tx.send(msg.clone()).is_ok() {
+                    sent += 1;
+                }
             }
             *state.current_url.write() = url.clone();
-            state.event_bus.publish("browser.navigate", json!({"url": &url}), "mcp_client");
+            state
+                .event_bus
+                .publish("browser.navigate", json!({"url": &url}), "mcp_client");
             json!({"sent": sent > 0, "url": url, "channels": sent,
                     "note": if sent == 0 { "no sidebar connected — open browser first" } else { "navigated via sidebar" }})
         }
@@ -674,18 +804,29 @@ async fn handle_tools_call(params: &Value, state: &AppState) -> Result<Value, (i
         "domain_tab_acquire" => {
             let domain = require_string(&arguments, "domain")?;
             let app_id = optional_string(&arguments, "app_id").unwrap_or_default();
-            let url = optional_string(&arguments, "url").unwrap_or_else(|| format!("https://{}", domain));
+            let url =
+                optional_string(&arguments, "url").unwrap_or_else(|| format!("https://{}", domain));
             let mut tabs = state.domain_tabs.write();
             if let Some(existing) = tabs.get(&domain) {
                 if existing.tab_state == crate::state::TabState::Working {
-                    return Err((-32000, format!("domain '{}' tab is busy (app: {:?})", domain, existing.active_app_id)));
+                    return Err((
+                        -32000,
+                        format!(
+                            "domain '{}' tab is busy (app: {:?})",
+                            domain, existing.active_app_id
+                        ),
+                    ));
                 }
             }
             let tab = crate::state::DomainTab {
                 domain: domain.clone(),
                 current_url: url,
                 session_id: uuid::Uuid::new_v4().to_string(),
-                active_app_id: if app_id.is_empty() { None } else { Some(app_id) },
+                active_app_id: if app_id.is_empty() {
+                    None
+                } else {
+                    Some(app_id)
+                },
                 last_activity: crate::utils::now_iso8601(),
                 tab_state: crate::state::TabState::Working,
             };
@@ -743,24 +884,41 @@ async fn handle_tools_call(params: &Value, state: &AppState) -> Result<Value, (i
             let msg = json!({"command": "click", "selector": selector}).to_string();
             let mut sent = 0;
             for (_, tx) in channels.iter() {
-                if tx.send(msg.clone()).is_ok() { sent += 1; }
+                if tx.send(msg.clone()).is_ok() {
+                    sent += 1;
+                }
             }
             *state.evidence_count.write() += 1;
-            state.event_bus.publish("browser.click", json!({"selector": &selector}), "mcp_client");
+            state.event_bus.publish(
+                "browser.click",
+                json!({"selector": &selector}),
+                "mcp_client",
+            );
             json!({"sent": sent > 0, "selector": selector, "channels": sent})
         }
         "browser_fill" => {
             let selector = require_string(&arguments, "selector")?;
             let value = require_string(&arguments, "value")?;
-            let submit = arguments.get("submit").and_then(Value::as_bool).unwrap_or(false);
+            let submit = arguments
+                .get("submit")
+                .and_then(Value::as_bool)
+                .unwrap_or(false);
             let channels = state.session_channels.read();
-            let msg = json!({"command": "fill", "selector": selector, "value": value, "submit": submit}).to_string();
+            let msg =
+                json!({"command": "fill", "selector": selector, "value": value, "submit": submit})
+                    .to_string();
             let mut sent = 0;
             for (_, tx) in channels.iter() {
-                if tx.send(msg.clone()).is_ok() { sent += 1; }
+                if tx.send(msg.clone()).is_ok() {
+                    sent += 1;
+                }
             }
             *state.evidence_count.write() += 1;
-            state.event_bus.publish("browser.fill", json!({"selector": &selector, "submit": submit}), "mcp_client");
+            state.event_bus.publish(
+                "browser.fill",
+                json!({"selector": &selector, "submit": submit}),
+                "mcp_client",
+            );
             json!({"sent": sent > 0, "selector": selector, "submit": submit, "channels": sent})
         }
         "browser_key" => {
@@ -769,7 +927,9 @@ async fn handle_tools_call(params: &Value, state: &AppState) -> Result<Value, (i
             let msg = json!({"command": "key", "key": key}).to_string();
             let mut sent = 0;
             for (_, tx) in channels.iter() {
-                if tx.send(msg.clone()).is_ok() { sent += 1; }
+                if tx.send(msg.clone()).is_ok() {
+                    sent += 1;
+                }
             }
             *state.evidence_count.write() += 1;
             json!({"sent": sent > 0, "key": key, "channels": sent})
@@ -784,10 +944,14 @@ async fn handle_tools_call(params: &Value, state: &AppState) -> Result<Value, (i
             let latest = std::fs::read_dir(&screenshots_dir)
                 .ok()
                 .and_then(|entries| {
-                    entries.flatten()
+                    entries
+                        .flatten()
                         .filter_map(|e| {
                             let meta = e.metadata().ok()?;
-                            Some((e.file_name().to_string_lossy().to_string(), meta.modified().ok()?))
+                            Some((
+                                e.file_name().to_string_lossy().to_string(),
+                                meta.modified().ok()?,
+                            ))
                         })
                         .max_by_key(|(_, t)| *t)
                         .map(|(name, _)| name)
@@ -806,12 +970,18 @@ async fn handle_tools_call(params: &Value, state: &AppState) -> Result<Value, (i
             let msg = json!({"command": "close_other_tabs"}).to_string();
             let mut sent = 0;
             for (_, tx) in channels.iter() {
-                if tx.send(msg.clone()).is_ok() { sent += 1; }
+                if tx.send(msg.clone()).is_ok() {
+                    sent += 1;
+                }
             }
             drop(channels);
             // File command fallback
             let cmd_file = crate::utils::solace_home().join("browser_commands.json");
-            let _ = std::fs::write(&cmd_file, json!({"command":"close_other_tabs","timestamp":crate::utils::now_iso8601()}).to_string());
+            let _ = std::fs::write(
+                &cmd_file,
+                json!({"command":"close_other_tabs","timestamp":crate::utils::now_iso8601()})
+                    .to_string(),
+            );
             // Clear state + file
             state.browser_tabs.write().retain(|_| false);
             let _ = std::fs::write(crate::utils::solace_home().join("browser_tabs.json"), "[]");
@@ -823,21 +993,29 @@ async fn handle_tools_call(params: &Value, state: &AppState) -> Result<Value, (i
             let msg = json!({"command": "close_tab", "tab_id": tab_id}).to_string();
             let mut sent = 0;
             for (_, tx) in channels.iter() {
-                if tx.send(msg.clone()).is_ok() { sent += 1; }
+                if tx.send(msg.clone()).is_ok() {
+                    sent += 1;
+                }
             }
             drop(channels);
             let cmd_file = crate::utils::solace_home().join("browser_commands.json");
             let _ = std::fs::write(&cmd_file, json!({"command":"close_tab","tab_id":tab_id,"timestamp":crate::utils::now_iso8601()}).to_string());
-            state.browser_tabs.write().retain(|t| {
-                t.get("id").and_then(|v| v.as_str()) != Some(&tab_id)
-            });
+            state
+                .browser_tabs
+                .write()
+                .retain(|t| t.get("id").and_then(|v| v.as_str()) != Some(&tab_id));
             let tabs = state.browser_tabs.read().clone();
-            let _ = std::fs::write(crate::utils::solace_home().join("browser_tabs.json"), serde_json::to_string_pretty(&tabs).unwrap_or_default());
+            let _ = std::fs::write(
+                crate::utils::solace_home().join("browser_tabs.json"),
+                serde_json::to_string_pretty(&tabs).unwrap_or_default(),
+            );
             json!({"ok": true, "tab_id": tab_id, "channels_notified": sent})
         }
         "browser_active_tab" => {
             let tabs = state.browser_tabs.read();
-            let active = tabs.iter().find(|t| t.get("active").and_then(|v| v.as_bool()).unwrap_or(false));
+            let active = tabs
+                .iter()
+                .find(|t| t.get("active").and_then(|v| v.as_bool()).unwrap_or(false));
             match active {
                 Some(tab) => json!({"tab": tab, "found": true}),
                 None => {
@@ -865,7 +1043,9 @@ async fn handle_tools_call(params: &Value, state: &AppState) -> Result<Value, (i
                             s.update_available = false;
                             json!({"action":"updated","old_version":current,"new_version":new_version,"result":result,"restart_required":true})
                         }
-                        Err(err) => json!({"action":"update_failed","current_version":current,"new_version":new_version,"error":err}),
+                        Err(err) => {
+                            json!({"action":"update_failed","current_version":current,"new_version":new_version,"error":err})
+                        }
                     }
                 }
                 Ok(None) => {
@@ -884,13 +1064,18 @@ async fn handle_tools_call(params: &Value, state: &AppState) -> Result<Value, (i
                 return Err((-32602, "decision must be 'approve' or 'reject'".to_string()));
             }
             let solace_home = crate::utils::solace_home();
-            let event_type = if decision == "approve" { "esign.mcp_approve" } else { "esign.mcp_reject" };
+            let event_type = if decision == "approve" {
+                "esign.mcp_approve"
+            } else {
+                "esign.mcp_reject"
+            };
             let evidence = crate::evidence::record_event(
                 &solace_home,
                 event_type,
                 "mcp_client",
                 json!({"action_id": action_id, "decision": decision, "feedback": feedback}),
-            ).map_err(|e| (-32000, e))?;
+            )
+            .map_err(|e| (-32000, e))?;
             json!({
                 "signed": true, "action_id": action_id, "decision": decision,
                 "evidence_hash": evidence.hash,

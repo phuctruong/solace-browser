@@ -85,11 +85,7 @@ async fn handle_yinyang_ws(socket: WebSocket, state: AppState, session_id: Strin
     let tx_session = session_id.clone();
     let send_task = tokio::spawn(async move {
         while let Some(cmd) = cmd_rx.recv().await {
-            if ws_tx
-                .send(Message::Text(cmd.into()))
-                .await
-                .is_err()
-            {
+            if ws_tx.send(Message::Text(cmd.into())).await.is_err() {
                 break;
             }
         }
@@ -107,10 +103,19 @@ async fn handle_yinyang_ws(socket: WebSocket, state: AppState, session_id: Strin
                 match msg_type {
                     "url_changed" => {
                         // Browser navigated — update session's current URL
-                        let nav_url = parsed.get("url").and_then(|v| v.as_str()).unwrap_or("").to_string();
+                        let nav_url = parsed
+                            .get("url")
+                            .and_then(|v| v.as_str())
+                            .unwrap_or("")
+                            .to_string();
+                        if !nav_url.is_empty() {
+                            *state.current_url.write() = nav_url.clone();
+                        }
                         if !nav_url.is_empty() && !session_id.is_empty() {
                             let mut sessions = state.sessions.write();
-                            if let Some(session) = sessions.values_mut().find(|s| s.session_id == session_id) {
+                            if let Some(session) =
+                                sessions.values_mut().find(|s| s.session_id == session_id)
+                            {
                                 session.url = nav_url.clone();
                             }
                         }
@@ -127,9 +132,7 @@ async fn handle_yinyang_ws(socket: WebSocket, state: AppState, session_id: Strin
                                 page.captured_at = crate::utils::now_iso8601();
                             }
                             // Also send to wiki/extract for Stillwater compression + Prime Wiki snapshot
-                            if !nav_url.is_empty() && content.len() > 100
-                                && !nav_url.contains("localhost") && !nav_url.contains("127.0.0.1")
-                            {
+                            if !nav_url.is_empty() && content.len() > 100 {
                                 let wiki_url = nav_url.clone();
                                 let wiki_content = content.to_string();
                                 let _handle = tokio::spawn(async move {
@@ -149,7 +152,9 @@ async fn handle_yinyang_ws(socket: WebSocket, state: AppState, session_id: Strin
                         ) {
                             if !session_id.is_empty() {
                                 let mut sessions = state.sessions.write();
-                                if let Some(session) = sessions.values_mut().find(|s| s.session_id == session_id) {
+                                if let Some(session) =
+                                    sessions.values_mut().find(|s| s.session_id == session_id)
+                                {
                                     session.url = url.to_string();
                                 }
                             }
@@ -161,7 +166,8 @@ async fn handle_yinyang_ws(socket: WebSocket, state: AppState, session_id: Strin
                         if let Some(url) = parsed.get("url").and_then(|v| v.as_str()) {
                             let channels = state.session_channels.read();
                             for (_, tx) in channels.iter() {
-                                let cmd = serde_json::json!({"type": "navigate", "url": url}).to_string();
+                                let cmd =
+                                    serde_json::json!({"type": "navigate", "url": url}).to_string();
                                 let _ = tx.send(cmd);
                             }
                         }
@@ -184,7 +190,12 @@ async fn handle_yinyang_ws(socket: WebSocket, state: AppState, session_id: Strin
                             let handshake_token = token.to_string();
                             let handshake_email = email.to_string();
                             tokio::spawn(async move {
-                                handle_auth_handshake(&handshake_state, &handshake_token, &handshake_email).await;
+                                handle_auth_handshake(
+                                    &handshake_state,
+                                    &handshake_token,
+                                    &handshake_email,
+                                )
+                                .await;
                             });
                         }
                     }
@@ -273,13 +284,16 @@ async fn handle_auth_handshake(state: &AppState, token: &str, email: &str) {
     );
 
     // Push notification
-    state.notifications.write().push(crate::state::Notification {
-        id: uuid::Uuid::new_v4().to_string(),
-        message: format!("Connected as {}", email),
-        level: "info".to_string(),
-        read: false,
-        created_at: crate::utils::now_iso8601(),
-    });
+    state
+        .notifications
+        .write()
+        .push(crate::state::Notification {
+            id: uuid::Uuid::new_v4().to_string(),
+            message: format!("Connected as {}", email),
+            level: "info".to_string(),
+            read: false,
+            created_at: crate::utils::now_iso8601(),
+        });
 
     // Download default apps from solaceagi.com if missing
     let app_count = crate::utils::scan_apps().len();
@@ -302,7 +316,10 @@ async fn handle_auth_handshake(state: &AppState, token: &str, email: &str) {
                                     let _ = std::fs::create_dir_all(&app_dir);
                                     // Write manifest
                                     if let Ok(manifest_str) = serde_json::to_string_pretty(app) {
-                                        let _ = std::fs::write(app_dir.join("manifest.json"), manifest_str);
+                                        let _ = std::fs::write(
+                                            app_dir.join("manifest.json"),
+                                            manifest_str,
+                                        );
                                     }
                                 }
                             }

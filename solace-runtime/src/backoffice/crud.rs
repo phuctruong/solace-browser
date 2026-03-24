@@ -37,7 +37,13 @@ pub fn insert(
             let str_val = match val {
                 Value::String(s) => s.clone(),
                 Value::Number(n) => n.to_string(),
-                Value::Bool(b) => if *b { "1".to_string() } else { "0".to_string() },
+                Value::Bool(b) => {
+                    if *b {
+                        "1".to_string()
+                    } else {
+                        "0".to_string()
+                    }
+                }
                 Value::Null => String::new(),
                 other => other.to_string(),
             };
@@ -81,8 +87,11 @@ pub fn insert(
         placeholders.join(", ")
     );
 
-    conn.execute(&sql, params_from_iter(values.iter().map(|v| v as &dyn rusqlite::types::ToSql)))
-        .map_err(|e| format!("insert: {e}"))?;
+    conn.execute(
+        &sql,
+        params_from_iter(values.iter().map(|v| v as &dyn rusqlite::types::ToSql)),
+    )
+    .map_err(|e| format!("insert: {e}"))?;
 
     // Audit record
     let record = json!({
@@ -181,7 +190,9 @@ pub fn select_list(
         table.name, where_sql, order_sql, page_size, offset
     );
 
-    let mut stmt = conn.prepare(&sql).map_err(|e| format!("prepare list: {e}"))?;
+    let mut stmt = conn
+        .prepare(&sql)
+        .map_err(|e| format!("prepare list: {e}"))?;
     let col_names: Vec<String> = stmt.column_names().iter().map(|s| s.to_string()).collect();
 
     // Collect results into Vec (avoids type mismatch between query_map branches)
@@ -191,8 +202,10 @@ pub fn select_list(
         let mut rows = if params.is_empty() {
             stmt.query([]).map_err(|e| format!("query: {e}"))?
         } else {
-            stmt.query(params_from_iter(params.iter().map(|v| v as &dyn rusqlite::types::ToSql)))
-                .map_err(|e| format!("query: {e}"))?
+            stmt.query(params_from_iter(
+                params.iter().map(|v| v as &dyn rusqlite::types::ToSql),
+            ))
+            .map_err(|e| format!("query: {e}"))?
         };
         while let Some(row) = rows.next().map_err(|e| format!("row: {e}"))? {
             let mut obj = serde_json::Map::new();
@@ -236,7 +249,13 @@ pub fn update(
             let str_val = match val {
                 Value::String(s) => s.clone(),
                 Value::Number(n) => n.to_string(),
-                Value::Bool(b) => if *b { "1".to_string() } else { "0".to_string() },
+                Value::Bool(b) => {
+                    if *b {
+                        "1".to_string()
+                    } else {
+                        "0".to_string()
+                    }
+                }
                 Value::Null => String::new(),
                 other => other.to_string(),
             };
@@ -275,7 +294,10 @@ pub fn update(
     );
 
     let affected = conn
-        .execute(&sql, params_from_iter(values.iter().map(|v| v as &dyn rusqlite::types::ToSql)))
+        .execute(
+            &sql,
+            params_from_iter(values.iter().map(|v| v as &dyn rusqlite::types::ToSql)),
+        )
         .map_err(|e| format!("update: {e}"))?;
 
     if affected == 0 {
@@ -298,12 +320,7 @@ pub fn update(
 }
 
 /// Delete a record by ID.
-pub fn delete(
-    conn: &Connection,
-    table: &TableDef,
-    id: &str,
-    actor: &str,
-) -> Result<Value, String> {
+pub fn delete(conn: &Connection, table: &TableDef, id: &str, actor: &str) -> Result<Value, String> {
     let now = Utc::now().to_rfc3339();
 
     // Get before state for audit
@@ -348,7 +365,9 @@ pub fn search(
         table.name, fts_table, fts_table
     );
 
-    let mut stmt = conn.prepare(&sql).map_err(|e| format!("fts prepare: {e}"))?;
+    let mut stmt = conn
+        .prepare(&sql)
+        .map_err(|e| format!("fts prepare: {e}"))?;
     let col_names: Vec<String> = stmt.column_names().iter().map(|s| s.to_string()).collect();
 
     let rows = stmt

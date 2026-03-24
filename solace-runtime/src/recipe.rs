@@ -134,7 +134,10 @@ impl RecipeCache {
         let _ = std::fs::create_dir_all(&dir);
         for (hash, recipe) in &self.cache {
             let path = dir.join(format!("{}.json", &hash[..16]));
-            let _ = std::fs::write(&path, serde_json::to_string_pretty(recipe).unwrap_or_default());
+            let _ = std::fs::write(
+                &path,
+                serde_json::to_string_pretty(recipe).unwrap_or_default(),
+            );
         }
     }
 
@@ -144,7 +147,10 @@ impl RecipeCache {
         if self.cache.remove(task_hash).is_some() {
             // Remove the on-disk file too
             let dir = Self::recipes_dir();
-            let path = dir.join(format!("{}.json", &task_hash[..std::cmp::min(16, task_hash.len())]));
+            let path = dir.join(format!(
+                "{}.json",
+                &task_hash[..std::cmp::min(16, task_hash.len())]
+            ));
             let _ = std::fs::remove_file(&path);
             true
         } else {
@@ -173,7 +179,12 @@ pub fn execute_recipe(task: &str, cache: &mut RecipeCache) -> RecipeResult {
     // INTAKE → CACHE_LOOKUP
     // Extract data from immutable borrow first, then mutate
     let cached = cache.lookup(&task_hash).map(|r| {
-        (r.recipe_id.clone(), r.steps.len(), r.verified, r.replay_count)
+        (
+            r.recipe_id.clone(),
+            r.steps.len(),
+            r.verified,
+            r.replay_count,
+        )
     });
 
     if let Some((existing_id, existing_steps, verified, existing_replays)) = cached {
@@ -272,20 +283,51 @@ fn generate_recipe(task: &str, task_hash: &str, recipe_id: &str) -> Recipe {
     let (intent, _confidence) = classify_intent(task);
     let steps = if intent == "orchestrate" {
         vec![
-            RecipeStep { action: "fetch".into(), selector: None, value: Some("hackernews-feed".into()), expected: Some("200".into()) },
-            RecipeStep { action: "fetch".into(), selector: None, value: Some("google-search-trends".into()), expected: Some("200".into()) },
-            RecipeStep { action: "fetch".into(), selector: None, value: Some("reddit-scanner".into()), expected: Some("200".into()) },
-            RecipeStep { action: "render".into(), selector: Some("morning-brief".into()), value: None, expected: Some("report.html".into()) },
-            RecipeStep { action: "seal".into(), selector: None, value: None, expected: Some("sha256".into()) },
+            RecipeStep {
+                action: "fetch".into(),
+                selector: None,
+                value: Some("hackernews-feed".into()),
+                expected: Some("200".into()),
+            },
+            RecipeStep {
+                action: "fetch".into(),
+                selector: None,
+                value: Some("google-search-trends".into()),
+                expected: Some("200".into()),
+            },
+            RecipeStep {
+                action: "fetch".into(),
+                selector: None,
+                value: Some("reddit-scanner".into()),
+                expected: Some("200".into()),
+            },
+            RecipeStep {
+                action: "render".into(),
+                selector: Some("morning-brief".into()),
+                value: None,
+                expected: Some("report.html".into()),
+            },
+            RecipeStep {
+                action: "seal".into(),
+                selector: None,
+                value: None,
+                expected: Some("sha256".into()),
+            },
         ]
     } else if intent == "navigate" {
-        vec![
-            RecipeStep { action: "navigate".into(), selector: None, value: Some(task.to_string()), expected: Some("200".into()) },
-        ]
+        vec![RecipeStep {
+            action: "navigate".into(),
+            selector: None,
+            value: Some(task.to_string()),
+            expected: Some("200".into()),
+        }]
     } else {
-        vec![
-            RecipeStep { action: "process".into(), selector: None, value: Some(task.to_string()), expected: None },
-        ]
+        vec![RecipeStep {
+            action: "process".into(),
+            selector: None,
+            value: Some(task.to_string()),
+            expected: None,
+        }]
     };
 
     Recipe {
@@ -320,7 +362,11 @@ mod tests {
 
         // Mark as verified for replay
         cache.cache.get_mut(&result1.task_hash).unwrap().verified = true;
-        cache.cache.get_mut(&result1.task_hash).unwrap().replay_count = 1;
+        cache
+            .cache
+            .get_mut(&result1.task_hash)
+            .unwrap()
+            .replay_count = 1;
 
         let result2 = execute_recipe("test task alpha", &mut cache);
         assert!(result2.cache_hit);
@@ -393,7 +439,11 @@ mod tests {
 
         // Manually verify the recipe
         cache.cache.get_mut(&result1.task_hash).unwrap().verified = true;
-        cache.cache.get_mut(&result1.task_hash).unwrap().replay_count = 1;
+        cache
+            .cache
+            .get_mut(&result1.task_hash)
+            .unwrap()
+            .replay_count = 1;
 
         // Now it should replay (cache hit)
         let result2 = execute_recipe("replay test", &mut cache);

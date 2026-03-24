@@ -1,6 +1,6 @@
 // Diagram: 19-oauth3-vault
 use axum::{
-    extract::{State, Path},
+    extract::{Path, State},
     http::StatusCode,
     routing::post,
     Json, Router,
@@ -14,16 +14,17 @@ use crate::state::AppState;
 pub fn routes() -> Router<AppState> {
     Router::new()
         .route("/api/v1/oauth3/tokens", axum::routing::get(list_tokens))
-        .route("/api/v1/oauth3/domain/:domain", axum::routing::get(domain_auth_status))
+        .route(
+            "/api/v1/oauth3/domain/:domain",
+            axum::routing::get(domain_auth_status),
+        )
         .route("/api/v1/oauth3/validate", post(validate_token))
         .route("/api/v1/oauth3/revoke", post(revoke_token))
 }
 
 /// GET /api/v1/oauth3/domain/:domain — Check auth/session status for a domain.
 /// Returns whether the browser has an active session (cookies) for the domain.
-async fn domain_auth_status(
-    Path(domain): Path<String>,
-) -> Json<serde_json::Value> {
+async fn domain_auth_status(Path(domain): Path<String>) -> Json<serde_json::Value> {
     let solace_home = crate::utils::solace_home();
 
     // Check browser cookie DB for this domain
@@ -32,11 +33,19 @@ async fn domain_auth_status(
         // Simple heuristic: check if cookie DB was modified recently
         if let Ok(metadata) = std::fs::metadata(&cookie_db) {
             if let Ok(modified) = metadata.modified() {
-                let age = std::time::SystemTime::now().duration_since(modified).unwrap_or_default();
+                let age = std::time::SystemTime::now()
+                    .duration_since(modified)
+                    .unwrap_or_default();
                 age.as_secs() < 86400 // Modified in last 24h
-            } else { false }
-        } else { false }
-    } else { false };
+            } else {
+                false
+            }
+        } else {
+            false
+        }
+    } else {
+        false
+    };
 
     // Check domain-specific auth state file
     let auth_file = solace_home.join("sessions/domain_auth.json");
@@ -46,8 +55,16 @@ async fn domain_auth_status(
     if let Ok(content) = std::fs::read_to_string(&auth_file) {
         if let Ok(data) = serde_json::from_str::<serde_json::Value>(&content) {
             if let Some(entry) = data.get(&domain) {
-                domain_status = entry.get("status").and_then(|v| v.as_str()).unwrap_or("unknown").to_string();
-                last_verified = entry.get("last_verified").and_then(|v| v.as_str()).unwrap_or("").to_string();
+                domain_status = entry
+                    .get("status")
+                    .and_then(|v| v.as_str())
+                    .unwrap_or("unknown")
+                    .to_string();
+                last_verified = entry
+                    .get("last_verified")
+                    .and_then(|v| v.as_str())
+                    .unwrap_or("")
+                    .to_string();
             }
         }
     }
@@ -68,9 +85,7 @@ async fn domain_auth_status(
 
 /// List all OAuth3 tokens in the vault (without exposing secrets).
 /// Returns domain, scopes, created_at, expires_at, and status for each token.
-async fn list_tokens(
-    State(_state): State<AppState>,
-) -> Json<serde_json::Value> {
+async fn list_tokens(State(_state): State<AppState>) -> Json<serde_json::Value> {
     let solace_home = crate::utils::solace_home();
     let vault_path = solace_home.join("vault").join("oauth3.enc");
 
@@ -90,7 +105,9 @@ async fn list_tokens(
 
     if let Ok(entries) = std::fs::read_dir(&apps_dir) {
         for entry in entries.flatten() {
-            if !entry.path().is_dir() { continue; }
+            if !entry.path().is_dir() {
+                continue;
+            }
             let domain = entry.file_name().to_string_lossy().to_string();
             // Check for oauth3.json in domain dir
             let oauth3_path = entry.path().join("oauth3.json");
@@ -175,8 +192,12 @@ async fn revoke_token(
         ));
     }
 
-    crypto::save_vault(&tokens, &payload.vault_secret)
-        .map_err(|error| (StatusCode::INTERNAL_SERVER_ERROR, Json(json!({"error": error}))))?;
+    crypto::save_vault(&tokens, &payload.vault_secret).map_err(|error| {
+        (
+            StatusCode::INTERNAL_SERVER_ERROR,
+            Json(json!({"error": error})),
+        )
+    })?;
 
     // BROWSER_REVOKE: Clear browser sessions associated with the revoked token.
     // When a token is revoked, any browser sessions using that domain must be

@@ -144,14 +144,18 @@ impl JobQueue {
         let now = Utc::now().to_rfc3339();
 
         // Atomic claim: SELECT + UPDATE in one transaction
-        let tx = conn.unchecked_transaction().map_err(|e| format!("tx: {e}"))?;
+        let tx = conn
+            .unchecked_transaction()
+            .map_err(|e| format!("tx: {e}"))?;
 
-        let maybe_id: Option<String> = tx.query_row(
-            "SELECT id FROM jobs WHERE status IN ('queued', 'retrying')
+        let maybe_id: Option<String> = tx
+            .query_row(
+                "SELECT id FROM jobs WHERE status IN ('queued', 'retrying')
              ORDER BY priority DESC, created_at ASC LIMIT 1",
-            [],
-            |row| row.get(0),
-        ).ok();
+                [],
+                |row| row.get(0),
+            )
+            .ok();
 
         if let Some(job_id) = maybe_id {
             tx.execute(
@@ -173,7 +177,8 @@ impl JobQueue {
         conn.execute(
             "UPDATE jobs SET status = 'done', result = ?1, completed_at = ?2 WHERE id = ?3",
             rusqlite::params![result.to_string(), now, job_id],
-        ).map_err(|e| format!("complete: {e}"))?;
+        )
+        .map_err(|e| format!("complete: {e}"))?;
         Ok(())
     }
 
@@ -183,11 +188,13 @@ impl JobQueue {
         let now = Utc::now().to_rfc3339();
 
         // Check retry count
-        let (retry_count, max_retries): (i32, i32) = conn.query_row(
-            "SELECT retry_count, max_retries FROM jobs WHERE id = ?1",
-            rusqlite::params![job_id],
-            |row| Ok((row.get(0)?, row.get(1)?)),
-        ).map_err(|e| format!("query: {e}"))?;
+        let (retry_count, max_retries): (i32, i32) = conn
+            .query_row(
+                "SELECT retry_count, max_retries FROM jobs WHERE id = ?1",
+                rusqlite::params![job_id],
+                |row| Ok((row.get(0)?, row.get(1)?)),
+            )
+            .map_err(|e| format!("query: {e}"))?;
 
         if retry_count < max_retries {
             conn.execute(
@@ -198,7 +205,8 @@ impl JobQueue {
             conn.execute(
                 "UPDATE jobs SET status = 'failed', error = ?1, completed_at = ?2 WHERE id = ?3",
                 rusqlite::params![error, now, job_id],
-            ).map_err(|e| format!("fail: {e}"))?;
+            )
+            .map_err(|e| format!("fail: {e}"))?;
         }
         Ok(())
     }
@@ -254,14 +262,21 @@ impl JobQueue {
             jobs.push(Job {
                 id: row.get(0).unwrap_or_default(),
                 job_type: row.get(1).unwrap_or_default(),
-                payload: serde_json::from_str::<Value>(&row.get::<_, String>(2).unwrap_or_default()).unwrap_or(json!(null)),
+                payload: serde_json::from_str::<Value>(
+                    &row.get::<_, String>(2).unwrap_or_default(),
+                )
+                .unwrap_or(json!(null)),
                 status: row.get(3).unwrap_or_default(),
                 priority: row.get(4).unwrap_or(1),
                 assigned_to: row.get(5).unwrap_or_default(),
                 parent_job_id: row.get(6).ok(),
                 retry_count: row.get(7).unwrap_or(0),
                 max_retries: row.get(8).unwrap_or(3),
-                result: row.get::<_, Option<String>>(9).ok().flatten().and_then(|s| serde_json::from_str(&s).ok()),
+                result: row
+                    .get::<_, Option<String>>(9)
+                    .ok()
+                    .flatten()
+                    .and_then(|s| serde_json::from_str(&s).ok()),
                 error: row.get(10).ok().flatten(),
                 created_at: row.get(11).unwrap_or_default(),
                 started_at: row.get(12).ok().flatten(),
@@ -276,11 +291,31 @@ impl JobQueue {
     /// Queue stats.
     pub fn stats(&self) -> Result<Value, String> {
         let conn = self.conn()?;
-        let total: i64 = conn.query_row("SELECT COUNT(*) FROM jobs", [], |r| r.get(0)).unwrap_or(0);
-        let queued: i64 = conn.query_row("SELECT COUNT(*) FROM jobs WHERE status='queued'", [], |r| r.get(0)).unwrap_or(0);
-        let running: i64 = conn.query_row("SELECT COUNT(*) FROM jobs WHERE status='running'", [], |r| r.get(0)).unwrap_or(0);
-        let done: i64 = conn.query_row("SELECT COUNT(*) FROM jobs WHERE status='done'", [], |r| r.get(0)).unwrap_or(0);
-        let failed: i64 = conn.query_row("SELECT COUNT(*) FROM jobs WHERE status='failed'", [], |r| r.get(0)).unwrap_or(0);
+        let total: i64 = conn
+            .query_row("SELECT COUNT(*) FROM jobs", [], |r| r.get(0))
+            .unwrap_or(0);
+        let queued: i64 = conn
+            .query_row("SELECT COUNT(*) FROM jobs WHERE status='queued'", [], |r| {
+                r.get(0)
+            })
+            .unwrap_or(0);
+        let running: i64 = conn
+            .query_row(
+                "SELECT COUNT(*) FROM jobs WHERE status='running'",
+                [],
+                |r| r.get(0),
+            )
+            .unwrap_or(0);
+        let done: i64 = conn
+            .query_row("SELECT COUNT(*) FROM jobs WHERE status='done'", [], |r| {
+                r.get(0)
+            })
+            .unwrap_or(0);
+        let failed: i64 = conn
+            .query_row("SELECT COUNT(*) FROM jobs WHERE status='failed'", [], |r| {
+                r.get(0)
+            })
+            .unwrap_or(0);
 
         Ok(json!({
             "total": total, "queued": queued, "running": running,

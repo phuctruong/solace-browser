@@ -83,6 +83,37 @@ fn scan_solace_pids() -> Vec<u32> {
         .collect()
 }
 
+fn browser_candidates() -> Vec<std::path::PathBuf> {
+    let mut candidates = Vec::new();
+
+    if let Ok(exe_path) = std::env::current_exe() {
+        if let Some(exe_dir) = exe_path.parent() {
+            candidates.push(exe_dir.join("solace"));
+            candidates.push(exe_dir.join("solace-browser"));
+            candidates.push(exe_dir.join("solace-browser-release").join("solace"));
+            if let Some(parent) = exe_dir.parent() {
+                candidates.push(parent.join("solace-browser-release").join("solace"));
+            }
+        }
+    }
+
+    candidates.push(
+        std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .parent()
+            .unwrap_or(std::path::Path::new("."))
+            .join("source/src/out/Solace/solace"),
+    );
+    candidates.push(crate::utils::solace_home().join("bin").join("solace"));
+
+    candidates
+}
+
+fn resolve_browser_binary() -> Option<std::path::PathBuf> {
+    browser_candidates()
+        .into_iter()
+        .find(|candidate| candidate.is_file())
+}
+
 async fn list_sessions(State(state): State<AppState>) -> Json<serde_json::Value> {
     let live_pids = scan_solace_pids();
 
@@ -140,13 +171,17 @@ fn kill_all_sessions(state: &AppState) -> Vec<String> {
     let mut sessions = state.sessions.write();
     for (sid, info) in sessions.drain() {
         if info.pid > 0 && is_process_alive(info.pid) {
-            let _ = std::process::Command::new("kill").arg(info.pid.to_string()).output();
+            let _ = std::process::Command::new("kill")
+                .arg(info.pid.to_string())
+                .output();
             killed.push(format!("{}(pid={})", sid, info.pid));
         }
     }
     // Also kill any untracked solace browser processes
     for pid in scan_solace_pids() {
-        let _ = std::process::Command::new("kill").arg(pid.to_string()).output();
+        let _ = std::process::Command::new("kill")
+            .arg(pid.to_string())
+            .output();
     }
     // Clear all dedup guards
     let mut dedup = state.launch_dedup.write();
@@ -234,8 +269,7 @@ async fn launch_session(
         {
             let mut dedup = state.launch_dedup.write();
             dedup.cleanup();
-            let cutoff =
-                Instant::now() - std::time::Duration::from_secs(LAUNCH_DEDUP_WINDOW_SECS);
+            let cutoff = Instant::now() - std::time::Duration::from_secs(LAUNCH_DEDUP_WINDOW_SECS);
 
             if let Some(started_at) = dedup.inflight_launches.get(&key) {
                 if *started_at >= cutoff {
@@ -266,22 +300,12 @@ async fn launch_session(
         }
 
         // Actually launch the browser binary
-        let browser_candidates = [
-            // Dev build output (relative to CARGO_MANIFEST_DIR for portability)
-            std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-                .parent()
-                .unwrap_or(std::path::Path::new("."))
-                .join("source/src/out/Solace/solace"),
-            crate::utils::solace_home().join("bin").join("solace"),
-        ];
-        let browser_path = browser_candidates.iter().find(|p| p.is_file());
+        let browser_path = resolve_browser_binary();
 
         let pid = if let Some(solace_bin) = browser_path {
-            let user_data_dir = crate::utils::solace_home()
-                .join("sessions")
-                .join(&profile);
+            let user_data_dir = crate::utils::solace_home().join("sessions").join(&profile);
             let _ = std::fs::create_dir_all(&user_data_dir);
-            match std::process::Command::new(solace_bin)
+            match std::process::Command::new(&solace_bin)
                 .arg(&url)
                 .arg(format!("--user-data-dir={}", user_data_dir.display()))
                 .arg(format!("--profile-directory={}", &profile))
@@ -294,7 +318,10 @@ async fn launch_session(
                 .arg("--disable-client-side-phishing-detection")
                 .arg("--disable-component-update")
                 .arg("--disable-default-apps")
-                .env("DISPLAY", std::env::var("DISPLAY").unwrap_or_else(|_| ":1".to_string()))
+                .env(
+                    "DISPLAY",
+                    std::env::var("DISPLAY").unwrap_or_else(|_| ":1".to_string()),
+                )
                 .env("GOOGLE_API_KEY", "no")
                 .env("GOOGLE_DEFAULT_CLIENT_ID", "no")
                 .env("GOOGLE_DEFAULT_CLIENT_SECRET", "no")
@@ -319,7 +346,7 @@ async fn launch_session(
             // No Solace binary found — return error
             return Ok(Json(json!({
                 "error": "Solace Browser binary not found. Build with: cd source/src && autoninja -C out/Solace solace",
-                "searched": browser_candidates.iter().map(|p| p.display().to_string()).collect::<Vec<_>>(),
+                "searched": browser_candidates().iter().map(|p| p.display().to_string()).collect::<Vec<_>>(),
             })));
         };
 
@@ -347,22 +374,12 @@ async fn launch_session(
         Ok(Json(json!({"session": session})))
     } else {
         // allow_duplicate = true: skip all dedup, spawn unconditionally
-        let browser_candidates = [
-            // Dev build output (relative to CARGO_MANIFEST_DIR for portability)
-            std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-                .parent()
-                .unwrap_or(std::path::Path::new("."))
-                .join("source/src/out/Solace/solace"),
-            crate::utils::solace_home().join("bin").join("solace"),
-        ];
-        let browser_path = browser_candidates.iter().find(|p| p.is_file());
+        let browser_path = resolve_browser_binary();
 
         let pid = if let Some(solace_bin) = browser_path {
-            let user_data_dir = crate::utils::solace_home()
-                .join("sessions")
-                .join(&profile);
+            let user_data_dir = crate::utils::solace_home().join("sessions").join(&profile);
             let _ = std::fs::create_dir_all(&user_data_dir);
-            match std::process::Command::new(solace_bin)
+            match std::process::Command::new(&solace_bin)
                 .arg(&url)
                 .arg(format!("--user-data-dir={}", user_data_dir.display()))
                 .arg(format!("--profile-directory={}", &profile))
@@ -375,7 +392,10 @@ async fn launch_session(
                 .arg("--disable-client-side-phishing-detection")
                 .arg("--disable-component-update")
                 .arg("--disable-default-apps")
-                .env("DISPLAY", std::env::var("DISPLAY").unwrap_or_else(|_| ":1".to_string()))
+                .env(
+                    "DISPLAY",
+                    std::env::var("DISPLAY").unwrap_or_else(|_| ":1".to_string()),
+                )
                 .env("GOOGLE_API_KEY", "no")
                 .env("GOOGLE_DEFAULT_CLIENT_ID", "no")
                 .env("GOOGLE_DEFAULT_CLIENT_SECRET", "no")
@@ -398,7 +418,7 @@ async fn launch_session(
         } else {
             return Ok(Json(json!({
                 "error": "Solace Browser binary not found. Build with: cd source/src && autoninja -C out/Solace solace",
-                "searched": browser_candidates.iter().map(|p| p.display().to_string()).collect::<Vec<_>>(),
+                "searched": browser_candidates().iter().map(|p| p.display().to_string()).collect::<Vec<_>>(),
             })));
         };
 
@@ -475,13 +495,22 @@ async fn send_command(
 
     // Send command via WebSocket channel
     let channels = state.session_channels.read();
-    if let Some(tx) = channels.get(&session_id) {
+    let tx = channels.get(&session_id).or_else(|| {
+        if channels.len() == 1 {
+            channels.values().next()
+        } else {
+            None
+        }
+    });
+
+    if let Some(tx) = tx {
         let cmd = payload.to_string();
         if tx.send(cmd).is_ok() {
             Ok(Json(json!({
                 "sent": true,
                 "session_id": session_id,
                 "command": payload.get("command").and_then(|v| v.as_str()).unwrap_or("?"),
+                "fallback_channel": !channels.contains_key(&session_id),
             })))
         } else {
             Err((
@@ -490,23 +519,87 @@ async fn send_command(
             ))
         }
     } else {
-        Err((
-            StatusCode::SERVICE_UNAVAILABLE,
-            Json(json!({
-                "error": "browser not connected via WebSocket yet — sidebar must connect to ws://localhost:8888/ws/yinyang?session=SESSION_ID",
+        let command = payload
+            .get("command")
+            .or_else(|| payload.get("type"))
+            .and_then(|value| value.as_str())
+            .unwrap_or("");
+
+        let fallback_ok = match command {
+            "navigate" => payload
+                .get("url")
+                .and_then(|value| value.as_str())
+                .map(crate::routes::browser_control::navigate_browser_window)
+                .unwrap_or(false),
+            "execute" => payload
+                .get("code")
+                .or_else(|| payload.get("script"))
+                .and_then(|value| value.as_str())
+                .map(crate::routes::browser_control::execute_js_via_devtools)
+                .unwrap_or(false),
+            _ => false,
+        };
+
+        if fallback_ok {
+            if command == "navigate" {
+                if let Some(url) = payload.get("url").and_then(|value| value.as_str()) {
+                    *state.current_url.write() = url.to_string();
+                    let mut sessions = state.sessions.write();
+                    if let Some(session) =
+                        sessions.values_mut().find(|s| s.session_id == session_id)
+                    {
+                        session.url = url.to_string();
+                    }
+                }
+            }
+            Ok(Json(json!({
+                "sent": true,
                 "session_id": session_id,
-            })),
-        ))
+                "command": command,
+                "fallback_channel": true,
+                "method": "browser_window_fallback",
+            })))
+        } else {
+            Err((
+                StatusCode::SERVICE_UNAVAILABLE,
+                Json(json!({
+                    "error": "browser not connected via WebSocket yet — sidebar must connect to ws://localhost:8888/ws/yinyang?session=SESSION_ID",
+                    "session_id": session_id,
+                })),
+            ))
+        }
     }
 }
 
-async fn close_all_sessions(
-    State(state): State<AppState>,
-) -> Json<serde_json::Value> {
+async fn close_all_sessions(State(state): State<AppState>) -> Json<serde_json::Value> {
     let killed = kill_all_sessions(&state);
     Json(json!({"closed": killed.len(), "details": killed}))
 }
 
 async fn list_profiles() -> Json<serde_json::Value> {
     Json(json!({"profiles": ["default", "work", "research", "automation"]}))
+}
+
+#[cfg(test)]
+mod tests {
+    #[test]
+    fn installed_bundle_path_stays_ahead_of_dev_candidates() {
+        let base =
+            std::env::temp_dir().join(format!("solace-browser-path-test-{}", std::process::id()));
+        let exe_dir = base.join("bundle");
+        let _ = std::fs::create_dir_all(&exe_dir);
+        let installed = exe_dir.join("solace");
+        let _ = std::fs::write(&installed, "");
+
+        let fake_exe = exe_dir.join("solace-runtime");
+        let mut candidates = Vec::new();
+        if let Some(dir) = fake_exe.parent() {
+            candidates.push(dir.join("solace"));
+            candidates.push(dir.join("solace-browser"));
+            candidates.push(dir.join("solace-browser-release").join("solace"));
+        }
+
+        assert_eq!(candidates[0], installed);
+        let _ = std::fs::remove_dir_all(&base);
+    }
 }

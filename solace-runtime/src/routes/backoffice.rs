@@ -22,8 +22,14 @@ pub fn routes() -> Router<AppState> {
         .route("/api/v1/backoffice/:app_id/:table", post(create_record))
         .route("/api/v1/backoffice/:app_id/:table/:id", get(get_record))
         .route("/api/v1/backoffice/:app_id/:table/:id", put(update_record))
-        .route("/api/v1/backoffice/:app_id/:table/:id", delete(delete_record))
-        .route("/api/v1/backoffice/:app_id/:table/search", get(search_records))
+        .route(
+            "/api/v1/backoffice/:app_id/:table/:id",
+            delete(delete_record),
+        )
+        .route(
+            "/api/v1/backoffice/:app_id/:table/search",
+            get(search_records),
+        )
         .route("/api/v1/backoffice/:app_id/schema", get(get_schema))
         .route("/api/v1/backoffice", get(list_backoffice_apps))
         // HTML pages
@@ -38,14 +44,25 @@ pub fn load_workspace_config(app_id: &str) -> Result<WorkspaceConfig, String> {
 
     // Search in multiple locations
     let candidates = [
-        solace_home.join("apps").join("localhost").join(app_id).join("manifest.yaml"),
+        solace_home
+            .join("apps")
+            .join("localhost")
+            .join(app_id)
+            .join("manifest.yaml"),
         std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-            .parent().unwrap_or(std::path::Path::new("."))
-            .parent().unwrap_or(std::path::Path::new("."))
-            .join("solace-cli/data/default/apps").join(app_id).join("manifest.yaml"),
+            .parent()
+            .unwrap_or(std::path::Path::new("."))
+            .parent()
+            .unwrap_or(std::path::Path::new("."))
+            .join("solace-cli/data/default/apps")
+            .join(app_id)
+            .join("manifest.yaml"),
         // Installed .deb path
-        std::path::PathBuf::from("/usr/lib/solace-browser/solace-browser-release/data/default/apps")
-            .join(app_id).join("manifest.yaml"),
+        std::path::PathBuf::from(
+            "/usr/lib/solace-browser/solace-browser-release/data/default/apps",
+        )
+        .join(app_id)
+        .join("manifest.yaml"),
     ];
 
     for path in &candidates {
@@ -54,7 +71,7 @@ pub fn load_workspace_config(app_id: &str) -> Result<WorkspaceConfig, String> {
                 if let Ok(manifest) = serde_yaml::from_str::<Value>(&content) {
                     if let Some(bo) = manifest.get("backoffice") {
                         if let Ok(config) = serde_json::from_value::<WorkspaceConfig>(
-                            serde_json::to_value(bo).unwrap_or_default()
+                            serde_json::to_value(bo).unwrap_or_default(),
                         ) {
                             return Ok(config);
                         }
@@ -68,8 +85,14 @@ pub fn load_workspace_config(app_id: &str) -> Result<WorkspaceConfig, String> {
 }
 
 /// Find a table definition by name within a workspace config
-fn find_table<'a>(config: &'a WorkspaceConfig, table_name: &str) -> Result<&'a crate::backoffice::schema::TableDef, String> {
-    config.tables.iter().find(|t| t.name == table_name)
+fn find_table<'a>(
+    config: &'a WorkspaceConfig,
+    table_name: &str,
+) -> Result<&'a crate::backoffice::schema::TableDef, String> {
+    config
+        .tables
+        .iter()
+        .find(|t| t.name == table_name)
         .ok_or_else(|| format!("table '{}' not found", table_name))
 }
 
@@ -77,7 +100,18 @@ fn find_table<'a>(config: &'a WorkspaceConfig, table_name: &str) -> Result<&'a c
 
 async fn list_backoffice_apps(State(_state): State<AppState>) -> Json<Value> {
     // Find all apps with category: backoffice
-    let known = ["backoffice-messages", "backoffice-tasks", "backoffice-crm", "backoffice-docs", "backoffice-email", "backoffice-analytics", "backoffice-support", "backoffice-invoicing", "backoffice-scheduling", "backoffice-forms"];
+    let known = [
+        "backoffice-messages",
+        "backoffice-tasks",
+        "backoffice-crm",
+        "backoffice-docs",
+        "backoffice-email",
+        "backoffice-analytics",
+        "backoffice-support",
+        "backoffice-invoicing",
+        "backoffice-scheduling",
+        "backoffice-forms",
+    ];
     let mut apps = Vec::new();
 
     for app_id in &known {
@@ -97,9 +131,8 @@ async fn get_schema(
     State(_state): State<AppState>,
     Path(app_id): Path<String>,
 ) -> Result<Json<Value>, (StatusCode, Json<Value>)> {
-    let config = load_workspace_config(&app_id).map_err(|e| {
-        (StatusCode::NOT_FOUND, Json(json!({"error": e})))
-    })?;
+    let config = load_workspace_config(&app_id)
+        .map_err(|e| (StatusCode::NOT_FOUND, Json(json!({"error": e}))))?;
 
     Ok(Json(json!({
         "app_id": app_id,
@@ -114,30 +147,34 @@ async fn list_records(
     Path((app_id, table)): Path<(String, String)>,
     Query(params): Query<HashMap<String, String>>,
 ) -> Result<Json<Value>, (StatusCode, Json<Value>)> {
-    let config = load_workspace_config(&app_id).map_err(|e| {
-        (StatusCode::NOT_FOUND, Json(json!({"error": e})))
-    })?;
-    let table_def = find_table(&config, &table).map_err(|e| {
-        (StatusCode::NOT_FOUND, Json(json!({"error": e})))
-    })?;
+    let config = load_workspace_config(&app_id)
+        .map_err(|e| (StatusCode::NOT_FOUND, Json(json!({"error": e}))))?;
+    let table_def = find_table(&config, &table)
+        .map_err(|e| (StatusCode::NOT_FOUND, Json(json!({"error": e}))))?;
 
-    let conn = state.backoffice_db.get_connection(&app_id, &config).map_err(|e| {
-        (StatusCode::INTERNAL_SERVER_ERROR, Json(json!({"error": e})))
-    })?;
+    let conn = state
+        .backoffice_db
+        .get_connection(&app_id, &config)
+        .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, Json(json!({"error": e}))))?;
 
     let page: u32 = params.get("page").and_then(|p| p.parse().ok()).unwrap_or(0);
-    let page_size: u32 = params.get("page_size").and_then(|p| p.parse().ok()).unwrap_or(25);
+    let page_size: u32 = params
+        .get("page_size")
+        .and_then(|p| p.parse().ok())
+        .unwrap_or(25);
     let sort_by = params.get("sort_by").map(|s| s.as_str());
 
     // Collect filter params (any param that matches a column name)
-    let filters: Vec<(String, String)> = params.iter()
+    let filters: Vec<(String, String)> = params
+        .iter()
         .filter(|(k, _)| !["page", "page_size", "sort_by", "q"].contains(&k.as_str()))
         .map(|(k, v)| (k.clone(), v.clone()))
         .collect();
 
     let c = conn.lock();
-    let result = crate::backoffice::crud::select_list(&c, table_def, page, page_size, sort_by, &filters)
-        .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, Json(json!({"error": e}))))?;
+    let result =
+        crate::backoffice::crud::select_list(&c, table_def, page, page_size, sort_by, &filters)
+            .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, Json(json!({"error": e}))))?;
 
     Ok(Json(result))
 }
@@ -147,19 +184,20 @@ async fn create_record(
     Path((app_id, table)): Path<(String, String)>,
     Json(body): Json<Value>,
 ) -> Result<Json<Value>, (StatusCode, Json<Value>)> {
-    let config = load_workspace_config(&app_id).map_err(|e| {
-        (StatusCode::NOT_FOUND, Json(json!({"error": e})))
-    })?;
-    let table_def = find_table(&config, &table).map_err(|e| {
-        (StatusCode::NOT_FOUND, Json(json!({"error": e})))
-    })?;
+    let config = load_workspace_config(&app_id)
+        .map_err(|e| (StatusCode::NOT_FOUND, Json(json!({"error": e}))))?;
+    let table_def = find_table(&config, &table)
+        .map_err(|e| (StatusCode::NOT_FOUND, Json(json!({"error": e}))))?;
 
-    let conn = state.backoffice_db.get_connection(&app_id, &config).map_err(|e| {
-        (StatusCode::INTERNAL_SERVER_ERROR, Json(json!({"error": e})))
-    })?;
+    let conn = state
+        .backoffice_db
+        .get_connection(&app_id, &config)
+        .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, Json(json!({"error": e}))))?;
 
     // Determine actor from cloud config or default
-    let actor = state.cloud_config.read()
+    let actor = state
+        .cloud_config
+        .read()
         .as_ref()
         .map(|c| c.user_email.clone())
         .unwrap_or_else(|| "system".to_string());
@@ -185,16 +223,15 @@ async fn get_record(
     State(state): State<AppState>,
     Path((app_id, table, id)): Path<(String, String, String)>,
 ) -> Result<Json<Value>, (StatusCode, Json<Value>)> {
-    let config = load_workspace_config(&app_id).map_err(|e| {
-        (StatusCode::NOT_FOUND, Json(json!({"error": e})))
-    })?;
-    let table_def = find_table(&config, &table).map_err(|e| {
-        (StatusCode::NOT_FOUND, Json(json!({"error": e})))
-    })?;
+    let config = load_workspace_config(&app_id)
+        .map_err(|e| (StatusCode::NOT_FOUND, Json(json!({"error": e}))))?;
+    let table_def = find_table(&config, &table)
+        .map_err(|e| (StatusCode::NOT_FOUND, Json(json!({"error": e}))))?;
 
-    let conn = state.backoffice_db.get_connection(&app_id, &config).map_err(|e| {
-        (StatusCode::INTERNAL_SERVER_ERROR, Json(json!({"error": e})))
-    })?;
+    let conn = state
+        .backoffice_db
+        .get_connection(&app_id, &config)
+        .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, Json(json!({"error": e}))))?;
 
     let c = conn.lock();
     let record = crate::backoffice::crud::select_one(&c, table_def, &id)
@@ -208,18 +245,19 @@ async fn update_record(
     Path((app_id, table, id)): Path<(String, String, String)>,
     Json(body): Json<Value>,
 ) -> Result<Json<Value>, (StatusCode, Json<Value>)> {
-    let config = load_workspace_config(&app_id).map_err(|e| {
-        (StatusCode::NOT_FOUND, Json(json!({"error": e})))
-    })?;
-    let table_def = find_table(&config, &table).map_err(|e| {
-        (StatusCode::NOT_FOUND, Json(json!({"error": e})))
-    })?;
+    let config = load_workspace_config(&app_id)
+        .map_err(|e| (StatusCode::NOT_FOUND, Json(json!({"error": e}))))?;
+    let table_def = find_table(&config, &table)
+        .map_err(|e| (StatusCode::NOT_FOUND, Json(json!({"error": e}))))?;
 
-    let conn = state.backoffice_db.get_connection(&app_id, &config).map_err(|e| {
-        (StatusCode::INTERNAL_SERVER_ERROR, Json(json!({"error": e})))
-    })?;
+    let conn = state
+        .backoffice_db
+        .get_connection(&app_id, &config)
+        .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, Json(json!({"error": e}))))?;
 
-    let actor = state.cloud_config.read()
+    let actor = state
+        .cloud_config
+        .read()
         .as_ref()
         .map(|c| c.user_email.clone())
         .unwrap_or_else(|| "system".to_string());
@@ -244,18 +282,19 @@ async fn delete_record(
     State(state): State<AppState>,
     Path((app_id, table, id)): Path<(String, String, String)>,
 ) -> Result<Json<Value>, (StatusCode, Json<Value>)> {
-    let config = load_workspace_config(&app_id).map_err(|e| {
-        (StatusCode::NOT_FOUND, Json(json!({"error": e})))
-    })?;
-    let table_def = find_table(&config, &table).map_err(|e| {
-        (StatusCode::NOT_FOUND, Json(json!({"error": e})))
-    })?;
+    let config = load_workspace_config(&app_id)
+        .map_err(|e| (StatusCode::NOT_FOUND, Json(json!({"error": e}))))?;
+    let table_def = find_table(&config, &table)
+        .map_err(|e| (StatusCode::NOT_FOUND, Json(json!({"error": e}))))?;
 
-    let conn = state.backoffice_db.get_connection(&app_id, &config).map_err(|e| {
-        (StatusCode::INTERNAL_SERVER_ERROR, Json(json!({"error": e})))
-    })?;
+    let conn = state
+        .backoffice_db
+        .get_connection(&app_id, &config)
+        .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, Json(json!({"error": e}))))?;
 
-    let actor = state.cloud_config.read()
+    let actor = state
+        .cloud_config
+        .read()
         .as_ref()
         .map(|c| c.user_email.clone())
         .unwrap_or_else(|| "system".to_string());
@@ -281,21 +320,23 @@ async fn search_records(
     Path((app_id, table)): Path<(String, String)>,
     Query(params): Query<HashMap<String, String>>,
 ) -> Result<Json<Value>, (StatusCode, Json<Value>)> {
-    let config = load_workspace_config(&app_id).map_err(|e| {
-        (StatusCode::NOT_FOUND, Json(json!({"error": e})))
-    })?;
-    let table_def = find_table(&config, &table).map_err(|e| {
-        (StatusCode::NOT_FOUND, Json(json!({"error": e})))
-    })?;
+    let config = load_workspace_config(&app_id)
+        .map_err(|e| (StatusCode::NOT_FOUND, Json(json!({"error": e}))))?;
+    let table_def = find_table(&config, &table)
+        .map_err(|e| (StatusCode::NOT_FOUND, Json(json!({"error": e}))))?;
 
     let query = params.get("q").cloned().unwrap_or_default();
     if query.is_empty() {
-        return Err((StatusCode::BAD_REQUEST, Json(json!({"error": "q parameter required"}))));
+        return Err((
+            StatusCode::BAD_REQUEST,
+            Json(json!({"error": "q parameter required"})),
+        ));
     }
 
-    let conn = state.backoffice_db.get_connection(&app_id, &config).map_err(|e| {
-        (StatusCode::INTERNAL_SERVER_ERROR, Json(json!({"error": e})))
-    })?;
+    let conn = state
+        .backoffice_db
+        .get_connection(&app_id, &config)
+        .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, Json(json!({"error": e}))))?;
 
     let c = conn.lock();
     let result = crate::backoffice::crud::search(&c, table_def, &query, 50)
@@ -307,7 +348,18 @@ async fn search_records(
 // ── HTML Page Handlers ──
 
 async fn backoffice_home(State(_state): State<AppState>) -> Html<String> {
-    let known = ["backoffice-messages", "backoffice-tasks", "backoffice-crm", "backoffice-docs", "backoffice-email", "backoffice-analytics", "backoffice-support", "backoffice-invoicing", "backoffice-scheduling", "backoffice-forms"];
+    let known = [
+        "backoffice-messages",
+        "backoffice-tasks",
+        "backoffice-crm",
+        "backoffice-docs",
+        "backoffice-email",
+        "backoffice-analytics",
+        "backoffice-support",
+        "backoffice-invoicing",
+        "backoffice-scheduling",
+        "backoffice-forms",
+    ];
     let mut cards = String::new();
 
     for app_id in &known {
@@ -336,7 +388,10 @@ async fn backoffice_app_home(
     Path(app_id): Path<String>,
 ) -> Result<Html<String>, (StatusCode, Html<String>)> {
     let config = load_workspace_config(&app_id).map_err(|e| {
-        (StatusCode::NOT_FOUND, Html(format!("<h1>Not found: {e}</h1>")))
+        (
+            StatusCode::NOT_FOUND,
+            Html(format!("<h1>Not found: {e}</h1>")),
+        )
     })?;
 
     let name = app_id.replace("backoffice-", "").to_uppercase();
@@ -357,7 +412,10 @@ async fn backoffice_app_home(
 <h1>{name}</h1>
 <div class="sb-card-grid">{table_links}</div>"#
     );
-    Ok(Html(crate::routes::files::hub_page_pub(&format!("{} — Backoffice", name), &body)))
+    Ok(Html(crate::routes::files::hub_page_pub(
+        &format!("{} — Backoffice", name),
+        &body,
+    )))
 }
 
 async fn backoffice_table_view(
@@ -365,11 +423,13 @@ async fn backoffice_table_view(
     Path((app_id, table)): Path<(String, String)>,
 ) -> Result<Html<String>, (StatusCode, Html<String>)> {
     let config = load_workspace_config(&app_id).map_err(|e| {
-        (StatusCode::NOT_FOUND, Html(format!("<h1>Not found: {e}</h1>")))
+        (
+            StatusCode::NOT_FOUND,
+            Html(format!("<h1>Not found: {e}</h1>")),
+        )
     })?;
-    let table_def = find_table(&config, &table).map_err(|e| {
-        (StatusCode::NOT_FOUND, Html(format!("<h1>{e}</h1>")))
-    })?;
+    let table_def = find_table(&config, &table)
+        .map_err(|e| (StatusCode::NOT_FOUND, Html(format!("<h1>{e}</h1>"))))?;
 
     let name = app_id.replace("backoffice-", "").to_uppercase();
 
@@ -387,8 +447,15 @@ async fn backoffice_table_view(
         if let Ok(result) = crate::backoffice::crud::select_list(&c, table_def, 0, 100, None, &[]) {
             if let Some(items) = result.get("items").and_then(|v| v.as_array()) {
                 for item in items {
-                    let mut row = format!("<td class=\"sb-text-mono sb-text-xs\">{}</td>",
-                        item.get("id").and_then(|v| v.as_str()).unwrap_or("").chars().take(8).collect::<String>());
+                    let mut row = format!(
+                        "<td class=\"sb-text-mono sb-text-xs\">{}</td>",
+                        item.get("id")
+                            .and_then(|v| v.as_str())
+                            .unwrap_or("")
+                            .chars()
+                            .take(8)
+                            .collect::<String>()
+                    );
                     for col in &table_def.columns {
                         let val = item.get(&col.name).and_then(|v| v.as_str()).unwrap_or("");
                         let display = if col.col_type == "enum" && !val.is_empty() {
@@ -398,8 +465,14 @@ async fn backoffice_table_view(
                         };
                         row.push_str(&format!("<td>{display}</td>"));
                     }
-                    let created = item.get("created_at").and_then(|v| v.as_str()).unwrap_or("");
-                    row.push_str(&format!("<td class=\"sb-text-muted sb-text-xs\">{}</td>", &created[..std::cmp::min(19, created.len())]));
+                    let created = item
+                        .get("created_at")
+                        .and_then(|v| v.as_str())
+                        .unwrap_or("");
+                    row.push_str(&format!(
+                        "<td class=\"sb-text-muted sb-text-xs\">{}</td>",
+                        &created[..std::cmp::min(19, created.len())]
+                    ));
                     rows_html.push_str(&format!("<tr>{row}</tr>"));
                 }
             }
@@ -416,5 +489,8 @@ async fn backoffice_table_view(
   <tbody>{rows_html}</tbody>
 </table>"#
     );
-    Ok(Html(crate::routes::files::hub_page_pub(&format!("{} — {}", table, name), &body)))
+    Ok(Html(crate::routes::files::hub_page_pub(
+        &format!("{} — {}", table, name),
+        &body,
+    )))
 }

@@ -78,7 +78,11 @@ fn parse_prime_mermaid_manifest(path: &Path) -> Result<AppManifest, String> {
         } else if let Some(rest) = trimmed.strip_prefix("**Binary**:") {
             manifest.binary = rest.trim().to_string();
         } else if let Some(rest) = trimmed.strip_prefix("**Args**:") {
-            manifest.args = rest.split(',').map(|s| s.trim().to_string()).filter(|s| !s.is_empty()).collect();
+            manifest.args = rest
+                .split(',')
+                .map(|s| s.trim().to_string())
+                .filter(|s| !s.is_empty())
+                .collect();
         } else if let Some(rest) = trimmed.strip_prefix("**Input Type**:") {
             manifest.input_type = rest.trim().to_string();
         } else if let Some(rest) = trimmed.strip_prefix("**Timeout**:") {
@@ -159,7 +163,11 @@ fn parse_prime_mermaid_manifest(path: &Path) -> Result<AppManifest, String> {
                 }
             }
             current_source = Some(super::DataSource {
-                name: trimmed.strip_prefix("- name:").unwrap_or("").trim().to_string(),
+                name: trimmed
+                    .strip_prefix("- name:")
+                    .unwrap_or("")
+                    .trim()
+                    .to_string(),
                 url: String::new(),
                 source_type: "json".to_string(),
                 limit: 25,
@@ -229,7 +237,9 @@ mod tests {
         let dir = tempfile::tempdir().unwrap();
         let manifest = dir.path().join("manifest.md");
         let mut f = std::fs::File::create(&manifest).unwrap();
-        write!(f, r#"<!-- Diagram: 12-app-engine-pipeline -->
+        write!(
+            f,
+            r#"<!-- Diagram: 12-app-engine-pipeline -->
 # App: Test App
 # DNA: `test = fetch → render → seal`
 # Auth: 65537 | Status: installed | Tier: free
@@ -247,7 +257,9 @@ schedule: "0 8 * * *"
 tier: free
 report_template: feed-digest
 ```
-"#).unwrap();
+"#
+        )
+        .unwrap();
 
         let result = parse_prime_mermaid_manifest(&manifest).unwrap();
         assert_eq!(result.id, "test-app");
@@ -264,7 +276,9 @@ report_template: feed-digest
         let dir = tempfile::tempdir().unwrap();
         let manifest = dir.path().join("manifest.md");
         let mut f = std::fs::File::create(&manifest).unwrap();
-        write!(f, r#"# App: Feed App
+        write!(
+            f,
+            r#"# App: Feed App
 
 ## Identity
 - **ID**: feed-app
@@ -281,12 +295,17 @@ sources:
     type: rss
     limit: 10
 ```
-"#).unwrap();
+"#
+        )
+        .unwrap();
 
         let result = parse_prime_mermaid_manifest(&manifest).unwrap();
         assert_eq!(result.data_sources.len(), 2);
         assert_eq!(result.data_sources[0].name, "api-data");
-        assert_eq!(result.data_sources[0].url, "https://api.example.com/items.json");
+        assert_eq!(
+            result.data_sources[0].url,
+            "https://api.example.com/items.json"
+        );
         assert_eq!(result.data_sources[0].limit, 50);
         assert_eq!(result.data_sources[1].name, "rss-feed");
         assert_eq!(result.data_sources[1].url, "https://example.com/feed.rss");
@@ -310,7 +329,11 @@ sources:
         let dir = tempfile::tempdir().unwrap();
         let manifest = dir.path().join("manifest.md");
         let mut f = std::fs::File::create(&manifest).unwrap();
-        write!(f, "# App: MD App\n\n## Identity\n- **ID**: md-app\n- **Version**: 3.0.0\n").unwrap();
+        write!(
+            f,
+            "# App: MD App\n\n## Identity\n- **ID**: md-app\n- **Version**: 3.0.0\n"
+        )
+        .unwrap();
 
         let result = load_manifest(dir.path()).unwrap();
         assert_eq!(result.id, "md-app");

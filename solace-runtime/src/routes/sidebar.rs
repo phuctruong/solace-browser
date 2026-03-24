@@ -54,9 +54,7 @@ async fn sidebar_ws(
 }
 
 async fn sidebar_socket(mut socket: WebSocket, initial: serde_json::Value) {
-    let _ = socket
-        .send(Message::Text(initial.to_string().into()))
-        .await;
+    let _ = socket.send(Message::Text(initial.to_string().into())).await;
 
     // WebSocket keep-alive: respond to ping with pong, echo text messages
     while let Some(Ok(message)) = socket.recv().await {
@@ -66,9 +64,7 @@ async fn sidebar_socket(mut socket: WebSocket, initial: serde_json::Value) {
                 // Handle ping/pong for keep-alive (client sends "ping" every 30s)
                 if text_str == "ping" {
                     let pong = json!({"type": "pong", "time": crate::utils::now_iso8601()});
-                    let _ = socket
-                        .send(Message::Text(pong.to_string().into()))
-                        .await;
+                    let _ = socket.send(Message::Text(pong.to_string().into())).await;
                     continue;
                 }
                 let response = json!({

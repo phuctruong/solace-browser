@@ -29,11 +29,11 @@ struct TestContext {
 
 impl TestContext {
     fn new(name: &str) -> Self {
-        let guard = test_lock().lock().unwrap_or_else(|error| error.into_inner());
-        let home = std::env::temp_dir().join(format!(
-            "solace-runtime-{name}-{}",
-            uuid::Uuid::new_v4()
-        ));
+        let guard = test_lock()
+            .lock()
+            .unwrap_or_else(|error| error.into_inner());
+        let home =
+            std::env::temp_dir().join(format!("solace-runtime-{name}-{}", uuid::Uuid::new_v4()));
         fs::create_dir_all(&home).unwrap();
         std::env::set_var("SOLACE_HOME", &home);
         seed_fixture(&home, true);
@@ -210,7 +210,10 @@ async fn run_app_writes_outbox_and_evidence() {
     let body = parse_body(response).await;
     let report_path = PathBuf::from(body["report"].as_str().unwrap());
     assert!(report_path.exists());
-    assert!(ctx.home.join("apps/weather-bot/outbox/evidence-chain.json").exists());
+    assert!(ctx
+        .home
+        .join("apps/weather-bot/outbox/evidence-chain.json")
+        .exists());
 }
 
 #[tokio::test(flavor = "current_thread")]
@@ -343,7 +346,9 @@ async fn evidence_list_starts_empty() {
     let app = ctx.app();
     let response = send(
         &app,
-        Request::get("/api/v1/evidence").body(Body::empty()).unwrap(),
+        Request::get("/api/v1/evidence")
+            .body(Body::empty())
+            .unwrap(),
     )
     .await;
     let body = parse_body(response).await;
@@ -442,9 +447,7 @@ async fn domains_list_groups_apps() {
     let app = ctx.app();
     let response = send(
         &app,
-        Request::get("/api/v1/domains")
-            .body(Body::empty())
-            .unwrap(),
+        Request::get("/api/v1/domains").body(Body::empty()).unwrap(),
     )
     .await;
     let body = parse_body(response).await;
@@ -524,7 +527,10 @@ async fn domain_config_rejects_invalid_auth_type() {
     )
     .await;
     assert_eq!(status, StatusCode::BAD_REQUEST);
-    assert!(body["error"].as_str().unwrap().contains("invalid auth_type"));
+    assert!(body["error"]
+        .as_str()
+        .unwrap()
+        .contains("invalid auth_type"));
 }
 
 #[tokio::test(flavor = "current_thread")]
@@ -594,9 +600,11 @@ async fn recipe_get_returns_404_for_unknown_hash() {
     let app = ctx.app();
     let response = send(
         &app,
-        Request::get("/api/v1/recipes/0000000000000000000000000000000000000000000000000000000000000000")
-            .body(Body::empty())
-            .unwrap(),
+        Request::get(
+            "/api/v1/recipes/0000000000000000000000000000000000000000000000000000000000000000",
+        )
+        .body(Body::empty())
+        .unwrap(),
     )
     .await;
     assert_eq!(response.status(), StatusCode::NOT_FOUND);
@@ -748,13 +756,7 @@ async fn cloud_disconnect_clears_state() {
         }),
     )
     .await;
-    let (status, body) = send_json(
-        &app,
-        Method::POST,
-        "/api/v1/cloud/disconnect",
-        json!({}),
-    )
-    .await;
+    let (status, body) = send_json(&app, Method::POST, "/api/v1/cloud/disconnect", json!({})).await;
     assert_eq!(status, StatusCode::OK);
     assert_eq!(body["connected"], false);
 }
@@ -986,8 +988,7 @@ async fn budget_usage_persisted_to_disk() {
     // Verify usage file was written to disk
     let usage_path = ctx.home.join("budget_usage.json");
     assert!(usage_path.exists(), "budget_usage.json should be persisted");
-    let usage: config::BudgetUsage =
-        solace_runtime::persistence::read_json(&usage_path).unwrap();
+    let usage: config::BudgetUsage = solace_runtime::persistence::read_json(&usage_path).unwrap();
     assert_eq!(usage.daily_count, 1);
     assert_eq!(usage.monthly_count, 1);
 }
@@ -1068,11 +1069,26 @@ fn cron_field_matches_supports_lists_and_ranges() {
 fn stillwater_detect_all_codecs() {
     use solace_runtime::pzip::stillwater::{detect_codec, Codec};
 
-    assert_eq!(detect_codec(b"<main>content</main>", "text/html"), Codec::SemanticHtml);
-    assert_eq!(detect_codec(b"<table><tr></tr></table>", "text/html"), Codec::TableHtml);
-    assert_eq!(detect_codec(b"{\"data\":1}", "application/json"), Codec::JsonApi);
-    assert_eq!(detect_codec(b"<rss><channel></channel></rss>", "application/xml"), Codec::RssXml);
-    assert_eq!(detect_codec(b"{% extends \"base.html\" %}", "text/html"), Codec::JinjaTemplate);
+    assert_eq!(
+        detect_codec(b"<main>content</main>", "text/html"),
+        Codec::SemanticHtml
+    );
+    assert_eq!(
+        detect_codec(b"<table><tr></tr></table>", "text/html"),
+        Codec::TableHtml
+    );
+    assert_eq!(
+        detect_codec(b"{\"data\":1}", "application/json"),
+        Codec::JsonApi
+    );
+    assert_eq!(
+        detect_codec(b"<rss><channel></channel></rss>", "application/xml"),
+        Codec::RssXml
+    );
+    assert_eq!(
+        detect_codec(b"{% extends \"base.html\" %}", "text/html"),
+        Codec::JinjaTemplate
+    );
 }
 
 #[test]
@@ -1085,7 +1101,11 @@ fn stillwater_extract_solaceagi_template() {
     assert_eq!(decomp.ripple.title, "base.html");
     assert!(decomp.stillwater.headings.contains(&"title".to_string()));
     assert!(decomp.stillwater.headings.contains(&"content".to_string()));
-    assert!(decomp.stillwater.meta.iter().any(|(k, _)| k == "hero_title"));
+    assert!(decomp
+        .stillwater
+        .meta
+        .iter()
+        .any(|(k, _)| k == "hero_title"));
 }
 
 #[test]
@@ -1100,7 +1120,10 @@ fn stillwater_roundtrip_compression() {
     assert_eq!(restored.sha256, decomp.sha256);
     assert_eq!(restored.ripple.title, "RTC");
     assert_eq!(restored.ripple.sections.len(), decomp.ripple.sections.len());
-    assert_eq!(restored.stillwater.template_hash, decomp.stillwater.template_hash);
+    assert_eq!(
+        restored.stillwater.template_hash,
+        decomp.stillwater.template_hash
+    );
 }
 
 #[test]
@@ -1142,8 +1165,11 @@ async fn wiki_codecs_lists_all_six() {
     let app = ctx.app();
     let response = send(
         &app,
-        Request::get("/api/v1/wiki/codecs").body(Body::empty()).unwrap(),
-    ).await;
+        Request::get("/api/v1/wiki/codecs")
+            .body(Body::empty())
+            .unwrap(),
+    )
+    .await;
     let body = parse_body(response).await;
     assert_eq!(body["codecs"].as_array().unwrap().len(), 6);
 }
@@ -1154,8 +1180,11 @@ async fn wiki_stats_returns_community_browsing() {
     let app = ctx.app();
     let response = send(
         &app,
-        Request::get("/api/v1/wiki/stats").body(Body::empty()).unwrap(),
-    ).await;
+        Request::get("/api/v1/wiki/stats")
+            .body(Body::empty())
+            .unwrap(),
+    )
+    .await;
     let body = parse_body(response).await;
     assert_eq!(body["community_browsing"], true);
     assert_eq!(body["codecs_available"], 6);
@@ -1185,8 +1214,13 @@ async fn wiki_extract_creates_domain_stillwater_on_first_visit() {
     assert_eq!(body["domain_stillwater_created"], true);
 
     // Verify stillwater file was created on disk
-    let stillwater_path = ctx.home.join("wiki/domains/example.com/stillwater.prime-snapshot.md");
-    assert!(stillwater_path.exists(), "stillwater.prime-snapshot.md should be created on first visit");
+    let stillwater_path = ctx
+        .home
+        .join("wiki/domains/example.com/stillwater.prime-snapshot.md");
+    assert!(
+        stillwater_path.exists(),
+        "stillwater.prime-snapshot.md should be created on first visit"
+    );
     let content = fs::read_to_string(&stillwater_path).unwrap();
     assert!(content.contains("Domain Stillwater: example.com"));
     assert!(content.contains("Template hash:"));
@@ -1220,7 +1254,8 @@ async fn wiki_extract_reports_auto_screenshot_setting() {
             "content": "<html><body><main><h1>Test</h1></main></body></html>",
             "content_type": "text/html"
         }),
-    ).await;
+    )
+    .await;
     assert_eq!(status, StatusCode::OK);
     // Default setting is false
     assert_eq!(body["auto_screenshot"], false);
@@ -1239,7 +1274,8 @@ async fn screenshot_endpoint_skips_when_disabled() {
         json!({
             "url": "https://example.com/page",
         }),
-    ).await;
+    )
+    .await;
     assert_eq!(status, StatusCode::OK);
     assert_eq!(body["status"], "skipped");
     assert!(body["reason"].as_str().unwrap().contains("disabled"));
@@ -1257,7 +1293,8 @@ async fn screenshot_endpoint_delegates_when_enabled_and_no_data() {
             telemetry: false,
             auto_screenshot: true,
         },
-    ).unwrap();
+    )
+    .unwrap();
 
     let app = ctx.app();
     let (status, body) = send_json(
@@ -1267,7 +1304,8 @@ async fn screenshot_endpoint_delegates_when_enabled_and_no_data() {
         json!({
             "url": "https://example.com/page",
         }),
-    ).await;
+    )
+    .await;
     assert_eq!(status, StatusCode::OK);
     assert_eq!(body["status"], "delegate_to_browser");
     assert!(body["message"].as_str().unwrap().contains("browser"));
@@ -1285,7 +1323,8 @@ async fn screenshot_endpoint_stores_png_when_provided() {
             telemetry: false,
             auto_screenshot: true,
         },
-    ).unwrap();
+    )
+    .unwrap();
 
     let app = ctx.app();
 
@@ -1302,7 +1341,8 @@ async fn screenshot_endpoint_stores_png_when_provided() {
             "url": "https://example.com/page",
             "png_base64": fake_png,
         }),
-    ).await;
+    )
+    .await;
     assert_eq!(status, StatusCode::OK);
     assert_eq!(body["status"], "captured");
     assert!(body["sha256"].as_str().is_some());
@@ -1312,10 +1352,7 @@ async fn screenshot_endpoint_stores_png_when_provided() {
     // Verify screenshot file was written to disk
     let screenshots_dir = ctx.home.join("screenshots");
     assert!(screenshots_dir.exists());
-    let files: Vec<_> = fs::read_dir(&screenshots_dir)
-        .unwrap()
-        .flatten()
-        .collect();
+    let files: Vec<_> = fs::read_dir(&screenshots_dir).unwrap().flatten().collect();
     assert_eq!(files.len(), 1);
 }
 
@@ -1852,30 +1889,24 @@ async fn sync_status_no_cloud_shows_disconnected() {
 async fn sync_up_requires_cloud_connection() {
     let ctx = TestContext::new("sync_up_requires_cloud");
     let app = ctx.app();
-    let (status, body) = send_json(
-        &app,
-        Method::POST,
-        "/api/v1/cloud/sync/up",
-        json!({}),
-    )
-    .await;
+    let (status, body) = send_json(&app, Method::POST, "/api/v1/cloud/sync/up", json!({})).await;
     assert_eq!(status, StatusCode::PRECONDITION_FAILED);
-    assert!(body["error"].as_str().unwrap().contains("cloud not connected"));
+    assert!(body["error"]
+        .as_str()
+        .unwrap()
+        .contains("cloud not connected"));
 }
 
 #[tokio::test(flavor = "current_thread")]
 async fn sync_down_requires_cloud_connection() {
     let ctx = TestContext::new("sync_down_requires_cloud");
     let app = ctx.app();
-    let (status, body) = send_json(
-        &app,
-        Method::POST,
-        "/api/v1/cloud/sync/down",
-        json!({}),
-    )
-    .await;
+    let (status, body) = send_json(&app, Method::POST, "/api/v1/cloud/sync/down", json!({})).await;
     assert_eq!(status, StatusCode::PRECONDITION_FAILED);
-    assert!(body["error"].as_str().unwrap().contains("cloud not connected"));
+    assert!(body["error"]
+        .as_str()
+        .unwrap()
+        .contains("cloud not connected"));
 }
 
 #[tokio::test(flavor = "current_thread")]
@@ -1898,13 +1929,7 @@ async fn sync_up_returns_error_when_cloud_unreachable() {
     .await;
 
     // Attempt sync up — cloud endpoint doesn't exist, expect graceful error
-    let (status, body) = send_json(
-        &app,
-        Method::POST,
-        "/api/v1/cloud/sync/up",
-        json!({}),
-    )
-    .await;
+    let (status, body) = send_json(&app, Method::POST, "/api/v1/cloud/sync/up", json!({})).await;
     // Should be BAD_GATEWAY (502) because cloud is unreachable
     assert_eq!(status, StatusCode::BAD_GATEWAY);
     let error = body["error"].as_str().unwrap();
@@ -1934,13 +1959,7 @@ async fn sync_down_returns_error_when_cloud_unreachable() {
     .await;
 
     // Attempt sync down — cloud endpoint doesn't exist, expect graceful error
-    let (status, body) = send_json(
-        &app,
-        Method::POST,
-        "/api/v1/cloud/sync/down",
-        json!({}),
-    )
-    .await;
+    let (status, body) = send_json(&app, Method::POST, "/api/v1/cloud/sync/down", json!({})).await;
     assert_eq!(status, StatusCode::BAD_GATEWAY);
     let error = body["error"].as_str().unwrap();
     assert!(
@@ -2033,11 +2052,16 @@ async fn agents_list_returns_array_with_installed_field() {
     .await;
     assert_eq!(response.status(), StatusCode::OK);
     let body = parse_body(response).await;
-    let agents = body["agents"].as_array().expect("agents should be an array");
+    let agents = body["agents"]
+        .as_array()
+        .expect("agents should be an array");
     assert_eq!(agents.len(), 3);
     // Every agent must have an installed field (bool)
     for agent in agents {
-        assert!(agent.get("installed").is_some(), "agent missing 'installed' field");
+        assert!(
+            agent.get("installed").is_some(),
+            "agent missing 'installed' field"
+        );
         assert!(agent["installed"].is_boolean());
         assert!(agent.get("id").is_some());
         assert!(agent.get("name").is_some());
@@ -2063,7 +2087,9 @@ async fn agents_models_returns_per_agent() {
     .await;
     assert_eq!(response.status(), StatusCode::OK);
     let body = parse_body(response).await;
-    let models = body["models"].as_array().expect("models should be an array");
+    let models = body["models"]
+        .as_array()
+        .expect("models should be an array");
     assert_eq!(models.len(), 3);
     for entry in models {
         assert!(entry.get("agent_id").is_some());
@@ -2071,7 +2097,10 @@ async fn agents_models_returns_per_agent() {
         assert!(entry.get("default_model").is_some());
         assert!(entry.get("installed").is_some());
         let model_list = entry["models"].as_array().unwrap();
-        assert!(!model_list.is_empty(), "each agent should have at least 1 model");
+        assert!(
+            !model_list.is_empty(),
+            "each agent should have at least 1 model"
+        );
     }
 }
 
@@ -2430,13 +2459,7 @@ async fn browser_navigate_with_wait_for() {
 async fn browser_navigate_rejects_empty_url() {
     let ctx = TestContext::new("browser_navigate_empty_url");
     let app = ctx.app();
-    let (status, body) = send_json(
-        &app,
-        Method::POST,
-        "/api/navigate",
-        json!({"url": ""}),
-    )
-    .await;
+    let (status, body) = send_json(&app, Method::POST, "/api/navigate", json!({"url": ""})).await;
     assert_eq!(status, StatusCode::BAD_REQUEST);
     assert!(body["error"].as_str().unwrap().contains("empty"));
 }
@@ -2479,13 +2502,8 @@ async fn browser_click_accepted() {
 async fn browser_click_rejects_empty_selector() {
     let ctx = TestContext::new("browser_click_empty_selector");
     let app = ctx.app();
-    let (status, body) = send_json(
-        &app,
-        Method::POST,
-        "/api/click",
-        json!({"selector": "  "}),
-    )
-    .await;
+    let (status, body) =
+        send_json(&app, Method::POST, "/api/click", json!({"selector": "  "})).await;
     assert_eq!(status, StatusCode::BAD_REQUEST);
     assert!(body["error"].as_str().unwrap().contains("selector"));
 }
@@ -2580,7 +2598,9 @@ async fn browser_dom_snapshot_delegates() {
     let app = ctx.app();
     let response = send(
         &app,
-        Request::get("/api/dom-snapshot").body(Body::empty()).unwrap(),
+        Request::get("/api/dom-snapshot")
+            .body(Body::empty())
+            .unwrap(),
     )
     .await;
     assert_eq!(response.status(), StatusCode::OK);
@@ -2596,7 +2616,9 @@ async fn browser_aria_snapshot_delegates() {
     let app = ctx.app();
     let response = send(
         &app,
-        Request::get("/api/aria-snapshot").body(Body::empty()).unwrap(),
+        Request::get("/api/aria-snapshot")
+            .body(Body::empty())
+            .unwrap(),
     )
     .await;
     assert_eq!(response.status(), StatusCode::OK);
@@ -2612,7 +2634,9 @@ async fn browser_page_snapshot_delegates_to_wiki() {
     let app = ctx.app();
     let response = send(
         &app,
-        Request::get("/api/page-snapshot").body(Body::empty()).unwrap(),
+        Request::get("/api/page-snapshot")
+            .body(Body::empty())
+            .unwrap(),
     )
     .await;
     assert_eq!(response.status(), StatusCode::OK);
@@ -2630,11 +2654,7 @@ async fn browser_page_snapshot_delegates_to_wiki() {
 async fn hub_domains_page_lists_domains() {
     let ctx = TestContext::new("hub_domains_page");
     let app = ctx.app();
-    let response = send(
-        &app,
-        Request::get("/domains").body(Body::empty()).unwrap(),
-    )
-    .await;
+    let response = send(&app, Request::get("/domains").body(Body::empty()).unwrap()).await;
     assert_eq!(response.status(), StatusCode::OK);
     let html = parse_html(response).await;
     assert!(html.contains("Solace Hub"), "should contain nav brand");
@@ -2642,7 +2662,10 @@ async fn hub_domains_page_lists_domains() {
     // Fixture apps have domains "research" and "automation"
     assert!(html.contains("research"), "should list research domain");
     assert!(html.contains("automation"), "should list automation domain");
-    assert!(html.contains("/domains/research"), "should link to domain detail");
+    assert!(
+        html.contains("/domains/research"),
+        "should link to domain detail"
+    );
 }
 
 #[tokio::test(flavor = "current_thread")]
@@ -2651,14 +2674,22 @@ async fn hub_domain_detail_shows_apps() {
     let app = ctx.app();
     let response = send(
         &app,
-        Request::get("/domains/research").body(Body::empty()).unwrap(),
+        Request::get("/domains/research")
+            .body(Body::empty())
+            .unwrap(),
     )
     .await;
     assert_eq!(response.status(), StatusCode::OK);
     let html = parse_html(response).await;
     assert!(html.contains("Domain: research"), "should show domain name");
-    assert!(html.contains("Weather Bot"), "should list the weather-bot app");
-    assert!(html.contains("/apps/weather-bot"), "should link to app detail");
+    assert!(
+        html.contains("Weather Bot"),
+        "should list the weather-bot app"
+    );
+    assert!(
+        html.contains("/apps/weather-bot"),
+        "should link to app detail"
+    );
 }
 
 #[tokio::test(flavor = "current_thread")]
@@ -2667,7 +2698,9 @@ async fn hub_domain_detail_returns_404_for_unknown() {
     let app = ctx.app();
     let response = send(
         &app,
-        Request::get("/domains/nonexistent-domain").body(Body::empty()).unwrap(),
+        Request::get("/domains/nonexistent-domain")
+            .body(Body::empty())
+            .unwrap(),
     )
     .await;
     assert_eq!(response.status(), StatusCode::NOT_FOUND);
@@ -2681,7 +2714,9 @@ async fn hub_app_detail_shows_manifest() {
     let app = ctx.app();
     let response = send(
         &app,
-        Request::get("/apps/weather-bot").body(Body::empty()).unwrap(),
+        Request::get("/apps/weather-bot")
+            .body(Body::empty())
+            .unwrap(),
     )
     .await;
     assert_eq!(response.status(), StatusCode::OK);
@@ -2697,7 +2732,9 @@ async fn hub_app_detail_returns_404_for_unknown() {
     let app = ctx.app();
     let response = send(
         &app,
-        Request::get("/apps/nonexistent-app").body(Body::empty()).unwrap(),
+        Request::get("/apps/nonexistent-app")
+            .body(Body::empty())
+            .unwrap(),
     )
     .await;
     assert_eq!(response.status(), StatusCode::NOT_FOUND);
@@ -2793,8 +2830,14 @@ async fn hub_run_detail_shows_events() {
     assert!(html.contains("PREVIEW"), "should show PREVIEW event type");
     assert!(html.contains("SIGN_OFF"), "should show SIGN_OFF event type");
     assert!(html.contains("SEAL"), "should show SEAL event type");
-    assert!(html.contains("event-preview"), "should have preview CSS class");
-    assert!(html.contains("event-signoff"), "should have signoff CSS class");
+    assert!(
+        html.contains("event-preview"),
+        "should have preview CSS class"
+    );
+    assert!(
+        html.contains("event-signoff"),
+        "should have signoff CSS class"
+    );
     assert!(html.contains("Chain Valid"), "chain should be valid");
     assert!(html.contains("/evidence"), "should link to evidence page");
 }
@@ -2817,11 +2860,7 @@ async fn hub_evidence_page_shows_chain() {
     );
 
     let app = ctx.app();
-    let response = send(
-        &app,
-        Request::get("/evidence").body(Body::empty()).unwrap(),
-    )
-    .await;
+    let response = send(&app, Request::get("/evidence").body(Body::empty()).unwrap()).await;
     assert_eq!(response.status(), StatusCode::OK);
     let html = parse_html(response).await;
     assert!(html.contains("Evidence Chain"), "should show page title");
@@ -2836,11 +2875,7 @@ async fn hub_evidence_page_shows_chain() {
 async fn hub_evidence_page_empty_shows_no_records() {
     let ctx = TestContext::new("hub_evidence_empty");
     let app = ctx.app();
-    let response = send(
-        &app,
-        Request::get("/evidence").body(Body::empty()).unwrap(),
-    )
-    .await;
+    let response = send(&app, Request::get("/evidence").body(Body::empty()).unwrap()).await;
     assert_eq!(response.status(), StatusCode::OK);
     let html = parse_html(response).await;
     assert!(html.contains("No Records") || html.contains("No evidence records"));
@@ -2865,8 +2900,13 @@ async fn delight_status_returns_defaults() {
     // Greeting should be one of the time-of-day greetings
     let greeting = body["greeting"].as_str().unwrap();
     assert!(
-        ["Good morning", "Good afternoon", "Good evening", "Welcome back"]
-            .contains(&greeting),
+        [
+            "Good morning",
+            "Good afternoon",
+            "Good evening",
+            "Welcome back"
+        ]
+        .contains(&greeting),
         "unexpected greeting: {greeting}"
     );
     // No celebration at streak 0

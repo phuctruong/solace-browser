@@ -88,9 +88,18 @@ fn app_search_paths() -> Vec<PathBuf> {
                 // Flat MSI: <install_dir>/data/default/apps/
                 bin_dir.join("data").join("default").join("apps"),
                 // Bundle subdir: <install_dir>/solace-browser-release/data/default/apps/
-                bin_dir.join("solace-browser-release").join("data").join("default").join("apps"),
+                bin_dir
+                    .join("solace-browser-release")
+                    .join("data")
+                    .join("default")
+                    .join("apps"),
                 // Linux .deb: <install_dir>/../data/default/apps/
-                bin_dir.parent().unwrap_or(bin_dir).join("data").join("default").join("apps"),
+                bin_dir
+                    .parent()
+                    .unwrap_or(bin_dir)
+                    .join("data")
+                    .join("default")
+                    .join("apps"),
                 // Windows Program Files: check if apps are alongside the binary
                 bin_dir.join("apps"),
             ];
@@ -104,7 +113,10 @@ fn app_search_paths() -> Vec<PathBuf> {
 
     // Development: SOLACE_CLI_ROOT env var
     if let Ok(cli_root) = std::env::var("SOLACE_CLI_ROOT") {
-        let dev = PathBuf::from(cli_root).join("data").join("default").join("apps");
+        let dev = PathBuf::from(cli_root)
+            .join("data")
+            .join("default")
+            .join("apps");
         if dev.is_dir() {
             paths.push(dev);
         }

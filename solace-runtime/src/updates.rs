@@ -61,18 +61,9 @@ impl Default for UpdateStatus {
 /// Read local version from VERSION file or manifest.json
 pub fn local_version() -> String {
     let solace_home = crate::utils::solace_home();
+    let current_exe = std::env::current_exe().ok();
 
-    // Try VERSION file in bundle dir
-    for candidate in &[
-        solace_home.join("bin").join("VERSION"),
-        solace_home.join("VERSION"),
-        std::env::current_exe()
-            .unwrap_or_default()
-            .parent()
-            .unwrap_or(Path::new("."))
-            .join("VERSION"),
-        PathBuf::from("/usr/lib/solace-browser/solace-browser-release/VERSION"),
-    ] {
+    for candidate in version_candidates(&solace_home, current_exe.as_deref()) {
         if let Ok(v) = std::fs::read_to_string(candidate) {
             let trimmed = v.trim().to_string();
             if !trimmed.is_empty() {
@@ -82,6 +73,26 @@ pub fn local_version() -> String {
     }
 
     "0.0.0".to_string()
+}
+
+fn version_candidates(solace_home: &Path, current_exe: Option<&Path>) -> Vec<PathBuf> {
+    let mut candidates = Vec::new();
+
+    if let Some(exe) = current_exe {
+        if let Some(dir) = exe.parent() {
+            candidates.push(dir.join("VERSION"));
+            if let Some(parent) = dir.parent() {
+                candidates.push(parent.join("solace-browser-release").join("VERSION"));
+            }
+        }
+    }
+
+    candidates.push(PathBuf::from(
+        "/usr/lib/solace-browser/solace-browser-release/VERSION",
+    ));
+    candidates.push(solace_home.join("bin").join("VERSION"));
+    candidates.push(solace_home.join("VERSION"));
+    candidates
 }
 
 /// Check GCS for latest version. Returns remote manifest if newer.
@@ -151,7 +162,10 @@ pub async fn download_and_install(manifest: &RemoteManifest) -> Result<String, S
         .to_string();
 
     if expected_hash.len() != 64 {
-        return Err(format!("Invalid SHA256 hash length: {}", expected_hash.len()));
+        return Err(format!(
+            "Invalid SHA256 hash length: {}",
+            expected_hash.len()
+        ));
     }
 
     // 2. Download tarball
@@ -168,8 +182,7 @@ pub async fn download_and_install(manifest: &RemoteManifest) -> Result<String, S
         .await
         .map_err(|e| format!("Tarball read failed: {}", e))?;
 
-    std::fs::write(&tarball_path, &bytes)
-        .map_err(|e| format!("Tarball write failed: {}", e))?;
+    std::fs::write(&tarball_path, &bytes).map_err(|e| format!("Tarball write failed: {}", e))?;
 
     // 3. Verify SHA256
     let actual_hash = crate::utils::sha256_bytes(&bytes);
@@ -206,8 +219,8 @@ pub async fn download_and_install(manifest: &RemoteManifest) -> Result<String, S
             .args([
                 "/i",
                 tarball_path.to_str().unwrap_or(""),
-                "/qn",           // silent
-                "/norestart",    // don't reboot
+                "/qn",        // silent
+                "/norestart", // don't reboot
             ])
             .output()
             .map_err(|e| format!("MSI install failed: {}", e))?;
@@ -246,7 +259,11 @@ pub async fn download_and_install(manifest: &RemoteManifest) -> Result<String, S
     let extracted_bundle = extract_dir.join("solace-browser-release");
     for binary in &["solace-runtime", "solace-hub-bin"] {
         let src = extracted_bundle.join(binary);
-        let dst = bin_dir.join(if *binary == "solace-hub-bin" { "solace-hub" } else { binary });
+        let dst = bin_dir.join(if *binary == "solace-hub-bin" {
+            "solace-hub"
+        } else {
+            binary
+        });
         if src.exists() {
             let _ = std::fs::copy(&src, &dst);
             #[cfg(unix)]
@@ -290,11 +307,7 @@ pub async fn download_and_install(manifest: &RemoteManifest) -> Result<String, S
 /// Semantic version comparison: is `remote` newer than `local`?
 fn is_newer(remote: &str, local: &str) -> bool {
     let parse = |v: &str| -> (u32, u32, u32) {
-        let parts: Vec<u32> = v
-            .trim()
-            .split('.')
-            .filter_map(|p| p.parse().ok())
-            .collect();
+        let parts: Vec<u32> = v.trim().split('.').filter_map(|p| p.parse().ok()).collect();
         (
             parts.first().copied().unwrap_or(0),
             parts.get(1).copied().unwrap_or(0),
@@ -317,13 +330,16 @@ pub fn spawn_update_checker(state: crate::state::AppState) {
                 match check_for_update().await {
                     Ok(Some(manifest)) => {
                         let msg = format!("Update available: v{}", manifest.version);
-                        state.notifications.write().push(crate::state::Notification {
-                            id: uuid::Uuid::new_v4().to_string(),
-                            message: msg.clone(),
-                            level: "info".to_string(),
-                            read: false,
-                            created_at: crate::utils::now_iso8601(),
-                        });
+                        state
+                            .notifications
+                            .write()
+                            .push(crate::state::Notification {
+                                id: uuid::Uuid::new_v4().to_string(),
+                                message: msg.clone(),
+                                level: "info".to_string(),
+                                read: false,
+                                created_at: crate::utils::now_iso8601(),
+                            });
 
                         {
                             let mut status = state.update_status.write();
@@ -335,13 +351,16 @@ pub fn spawn_update_checker(state: crate::state::AppState) {
                         // Auto-download and install
                         match download_and_install(&manifest).await {
                             Ok(result) => {
-                                state.notifications.write().push(crate::state::Notification {
-                                    id: uuid::Uuid::new_v4().to_string(),
-                                    message: format!("Auto-update complete: {}", result),
-                                    level: "success".to_string(),
-                                    read: false,
-                                    created_at: crate::utils::now_iso8601(),
-                                });
+                                state
+                                    .notifications
+                                    .write()
+                                    .push(crate::state::Notification {
+                                        id: uuid::Uuid::new_v4().to_string(),
+                                        message: format!("Auto-update complete: {}", result),
+                                        level: "success".to_string(),
+                                        read: false,
+                                        created_at: crate::utils::now_iso8601(),
+                                    });
                                 let mut status = state.update_status.write();
                                 status.last_update = Some(crate::utils::now_iso8601());
                                 status.update_available = false;
@@ -390,5 +409,21 @@ mod tests {
         let v = local_version();
         // Should return something (even if "0.0.0")
         assert!(!v.is_empty());
+    }
+
+    #[test]
+    fn test_version_candidates_prefer_installed_bundle_first() {
+        let base = std::env::temp_dir().join(format!("solace-version-test-{}", std::process::id()));
+        let exe_dir = base.join("bundle");
+        let solace_home = base.join("home");
+        let _ = std::fs::create_dir_all(&exe_dir);
+        let _ = std::fs::create_dir_all(solace_home.join("bin"));
+        let _ = std::fs::write(exe_dir.join("VERSION"), "2.7.1\n");
+        let _ = std::fs::write(solace_home.join("bin").join("VERSION"), "2.7.0\n");
+
+        let candidates = version_candidates(&solace_home, Some(&exe_dir.join("solace-runtime")));
+        assert_eq!(candidates[0], exe_dir.join("VERSION"));
+
+        let _ = std::fs::remove_dir_all(&base);
     }
 }

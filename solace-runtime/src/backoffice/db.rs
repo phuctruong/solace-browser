@@ -42,8 +42,8 @@ impl DbManager {
         let db_path = db_dir.join("workspace.db");
 
         // Open connection with WAL mode
-        let conn =
-            Connection::open(&db_path).map_err(|e| format!("sqlite open {}: {e}", db_path.display()))?;
+        let conn = Connection::open(&db_path)
+            .map_err(|e| format!("sqlite open {}: {e}", db_path.display()))?;
 
         conn.execute_batch(
             "PRAGMA journal_mode=WAL;
@@ -151,9 +151,11 @@ mod tests {
 
         // Verify meta
         let hash: String = c
-            .query_row("SELECT value FROM _meta WHERE key='schema_hash'", [], |row| {
-                row.get(0)
-            })
+            .query_row(
+                "SELECT value FROM _meta WHERE key='schema_hash'",
+                [],
+                |row| row.get(0),
+            )
             .unwrap();
         assert!(!hash.is_empty());
     }

@@ -7,3 +7,4 @@ Icon=solace-browser
 Categories=Network;WebBrowser;
 Comment=AI-Native browser with Yinyang AI sidebar
 MimeType=text/html;text/xml;application/xhtml+xml;
+StartupWMClass=solace

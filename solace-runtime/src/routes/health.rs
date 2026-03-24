@@ -10,7 +10,10 @@ pub fn routes() -> Router<AppState> {
         .route("/api/status", get(health))
         .route("/api/v1/system/status", get(system_status))
         .route("/api/v1/system/updates", get(update_status))
-        .route("/api/v1/system/check-update", axum::routing::post(check_update_now))
+        .route(
+            "/api/v1/system/check-update",
+            axum::routing::post(check_update_now),
+        )
         .route("/agents", get(agents))
 }
 
@@ -108,7 +111,8 @@ async fn system_status(State(state): State<AppState>) -> Json<serde_json::Value>
 async fn agents() -> Json<serde_json::Value> {
     let cli_agents = crate::agents::detect_agents();
     let apps = crate::app_engine::scan_installed_apps();
-    let domains: std::collections::HashSet<String> = apps.iter().map(|a| a.domain.clone()).collect();
+    let domains: std::collections::HashSet<String> =
+        apps.iter().map(|a| a.domain.clone()).collect();
 
     Json(json!({
         "runtime": {

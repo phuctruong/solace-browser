@@ -21,7 +21,10 @@ async fn main() {
     }
     let solace_home = utils::solace_home();
 
-    let lock_port: u16 = std::env::var("PORT").ok().and_then(|p| p.parse().ok()).unwrap_or(8888);
+    let lock_port: u16 = std::env::var("PORT")
+        .ok()
+        .and_then(|p| p.parse().ok())
+        .unwrap_or(8888);
     if let Err(error) = persistence::write_port_lock(&solace_home, lock_port, &state.token_hash) {
         tracing::error!(%error, "failed to write port.lock");
     }
@@ -51,11 +54,12 @@ async fn main() {
         .and_then(|p| p.parse().ok())
         .unwrap_or(8888);
     // Cloud Run: bind 0.0.0.0 (not 127.0.0.1) so health checks work
-    let bind_addr = if std::env::var("SOLACE_CLOUD_TWIN").is_ok() || std::env::var("K_SERVICE").is_ok() {
-        [0, 0, 0, 0]
-    } else {
-        [127, 0, 0, 1]
-    };
+    let bind_addr =
+        if std::env::var("SOLACE_CLOUD_TWIN").is_ok() || std::env::var("K_SERVICE").is_ok() {
+            [0, 0, 0, 0]
+        } else {
+            [127, 0, 0, 1]
+        };
     let addr = SocketAddr::from((bind_addr, port));
     tracing::info!(%addr, "Solace Runtime v0.1.0");
 

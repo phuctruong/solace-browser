@@ -744,7 +744,7 @@ class SolaceBrowser:
         if not self.headless:
             launch_args.extend([
                 '--disable-features=UseSkiaRenderer',
-                '--class=SolaceBrowser',
+                '--class=solace',
                 '--app-user-model-id=SolaceAGI.SolaceBrowser',
             ])
             if self.head_hidden:

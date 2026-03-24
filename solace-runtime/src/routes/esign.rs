@@ -87,10 +87,18 @@ async fn feedback_history() -> Json<Value> {
                 for entry in entries.flatten() {
                     let path = entry.path();
                     if path.extension().map(|e| e == "md").unwrap_or(false) {
-                        let filename = path.file_name().unwrap_or_default().to_string_lossy().to_string();
-                        let decision = if filename.starts_with("approve") { "approve" }
-                            else if filename.starts_with("reject") { "reject" }
-                            else { "unknown" };
+                        let filename = path
+                            .file_name()
+                            .unwrap_or_default()
+                            .to_string_lossy()
+                            .to_string();
+                        let decision = if filename.starts_with("approve") {
+                            "approve"
+                        } else if filename.starts_with("reject") {
+                            "reject"
+                        } else {
+                            "unknown"
+                        };
                         let content = std::fs::read_to_string(&path).unwrap_or_default();
                         all_feedback.push(json!({
                             "app_id": app.id,
@@ -114,7 +122,10 @@ async fn feedback_history() -> Json<Value> {
     });
 
     let total = all_feedback.len();
-    let approvals = all_feedback.iter().filter(|f| f.get("decision").and_then(|d| d.as_str()) == Some("approve")).count();
+    let approvals = all_feedback
+        .iter()
+        .filter(|f| f.get("decision").and_then(|d| d.as_str()) == Some("approve"))
+        .count();
     let rejections = total - approvals;
 
     Json(json!({
@@ -141,8 +152,11 @@ async fn feedback_metrics() -> Json<Value> {
             if let Ok(entries) = std::fs::read_dir(&feedback_dir) {
                 for entry in entries.flatten() {
                     let name = entry.file_name().to_string_lossy().to_string();
-                    if name.starts_with("approve") { approvals += 1; }
-                    else if name.starts_with("reject") { rejections += 1; }
+                    if name.starts_with("approve") {
+                        approvals += 1;
+                    } else if name.starts_with("reject") {
+                        rejections += 1;
+                    }
                     let content = std::fs::read_to_string(entry.path()).unwrap_or_default();
                     if content.contains("## Edited Output") && !content.contains("(no edits") {
                         has_edits += 1;
@@ -167,8 +181,14 @@ async fn feedback_metrics() -> Json<Value> {
         }
     }
 
-    let total_reviews: u32 = per_app.iter().map(|a| a.get("total_reviews").and_then(|t| t.as_u64()).unwrap_or(0) as u32).sum();
-    let total_approvals: u32 = per_app.iter().map(|a| a.get("approvals").and_then(|t| t.as_u64()).unwrap_or(0) as u32).sum();
+    let total_reviews: u32 = per_app
+        .iter()
+        .map(|a| a.get("total_reviews").and_then(|t| t.as_u64()).unwrap_or(0) as u32)
+        .sum();
+    let total_approvals: u32 = per_app
+        .iter()
+        .map(|a| a.get("approvals").and_then(|t| t.as_u64()).unwrap_or(0) as u32)
+        .sum();
 
     Json(json!({
         "workers": per_app,
@@ -335,7 +355,10 @@ async fn build_package(
     // Include snapshot if provided
     let snapshot_included = !payload.snapshot_html.is_empty();
     if snapshot_included {
-        package_content.push_str(&format!("snapshot_hash:{}\n", crate::utils::sha256_hex(&payload.snapshot_html)));
+        package_content.push_str(&format!(
+            "snapshot_hash:{}\n",
+            crate::utils::sha256_hex(&payload.snapshot_html)
+        ));
     }
 
     // Load Stillwater/Ripple from latest run if available
@@ -353,7 +376,10 @@ async fn build_package(
                     let sw_path = latest.path().join("stillwater.json");
                     if sw_path.exists() {
                         if let Ok(sw) = std::fs::read_to_string(&sw_path) {
-                            package_content.push_str(&format!("stillwater_hash:{}\n", crate::utils::sha256_hex(&sw)));
+                            package_content.push_str(&format!(
+                                "stillwater_hash:{}\n",
+                                crate::utils::sha256_hex(&sw)
+                            ));
                             stillwater_included = true;
                         }
                     }
@@ -364,7 +390,10 @@ async fn build_package(
 
     // Load last 10 evidence entries for chain context
     let evidence_entries = crate::evidence::list_evidence(&solace_home, 10);
-    package_content.push_str(&format!("evidence_chain_count:{}\n", evidence_entries.len()));
+    package_content.push_str(&format!(
+        "evidence_chain_count:{}\n",
+        evidence_entries.len()
+    ));
 
     // Compute package hash
     let package_sha256 = crate::utils::sha256_hex(&package_content);
@@ -414,7 +443,10 @@ async fn build_package(
     let _ = crate::persistence::write_json(&package_path, &package);
 
     // Try to submit to solaceagi.com as witness (non-blocking)
-    let api_key = config.as_ref().map(|c| c.api_key.clone()).unwrap_or_default();
+    let api_key = config
+        .as_ref()
+        .map(|c| c.api_key.clone())
+        .unwrap_or_default();
     let witness_package = package_sha256.clone();
     let witness_email = email.clone();
     let witness_pkg_id = package_id.clone();
@@ -483,7 +515,9 @@ async fn list_packages() -> Json<Value> {
         }
     }
     packages.sort_by(|a, b| {
-        b.get("timestamp").and_then(|t| t.as_str()).unwrap_or("")
+        b.get("timestamp")
+            .and_then(|t| t.as_str())
+            .unwrap_or("")
             .cmp(a.get("timestamp").and_then(|t| t.as_str()).unwrap_or(""))
     });
 
@@ -497,16 +531,30 @@ async fn verify_package(
     axum::extract::Path(package_id): axum::extract::Path<String>,
 ) -> Result<Json<Value>, (StatusCode, Json<Value>)> {
     let solace_home = crate::utils::solace_home();
-    let package_path = solace_home.join("esign").join("packages").join(format!("{}.json", package_id));
+    let package_path = solace_home
+        .join("esign")
+        .join("packages")
+        .join(format!("{}.json", package_id));
 
     if !package_path.exists() {
-        return Err((StatusCode::NOT_FOUND, Json(json!({"error": "Package not found"}))));
+        return Err((
+            StatusCode::NOT_FOUND,
+            Json(json!({"error": "Package not found"})),
+        ));
     }
 
-    let content = std::fs::read_to_string(&package_path)
-        .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, Json(json!({"error": e.to_string()}))))?;
-    let pkg: Value = serde_json::from_str(&content)
-        .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, Json(json!({"error": e.to_string()}))))?;
+    let content = std::fs::read_to_string(&package_path).map_err(|e| {
+        (
+            StatusCode::INTERNAL_SERVER_ERROR,
+            Json(json!({"error": e.to_string()})),
+        )
+    })?;
+    let pkg: Value = serde_json::from_str(&content).map_err(|e| {
+        (
+            StatusCode::INTERNAL_SERVER_ERROR,
+            Json(json!({"error": e.to_string()})),
+        )
+    })?;
 
     Ok(Json(json!({
         "verified": true,
@@ -558,17 +606,31 @@ async fn pending_approvals(State(state): State<AppState>) -> Json<Value> {
 
 fn extract_app_from_message(msg: &str) -> String {
     let lower = msg.to_ascii_lowercase();
-    if lower.contains("morning") && lower.contains("brief") { return "morning-brief".to_string(); }
-    if lower.contains("hackernews") || lower.contains("hn") { return "hackernews-feed".to_string(); }
-    if lower.contains("gmail") || lower.contains("email") { return "gmail-inbox-triage".to_string(); }
-    if lower.contains("reddit") { return "reddit-scanner".to_string(); }
-    if lower.contains("linkedin") { return "linkedin-outreach".to_string(); }
-    if lower.contains("twitter") { return "twitter-poster".to_string(); }
+    if lower.contains("morning") && lower.contains("brief") {
+        return "morning-brief".to_string();
+    }
+    if lower.contains("hackernews") || lower.contains("hn") {
+        return "hackernews-feed".to_string();
+    }
+    if lower.contains("gmail") || lower.contains("email") {
+        return "gmail-inbox-triage".to_string();
+    }
+    if lower.contains("reddit") {
+        return "reddit-scanner".to_string();
+    }
+    if lower.contains("linkedin") {
+        return "linkedin-outreach".to_string();
+    }
+    if lower.contains("twitter") {
+        return "twitter-poster".to_string();
+    }
     "unknown".to_string()
 }
 
 #[derive(Deserialize)]
-struct ActionIdPayload { action_id: String }
+struct ActionIdPayload {
+    action_id: String,
+}
 
 /// POST /api/v1/approvals/approve — approve a pending action
 async fn approve_action(
@@ -633,7 +695,9 @@ async fn reject_action(
 }
 
 #[derive(Deserialize)]
-struct PreviewQuery { action_id: String }
+struct PreviewQuery {
+    action_id: String,
+}
 
 /// GET /api/v1/approvals/preview?action_id=xxx — full page preview (future: PZip reconstruction)
 #[allow(dead_code)]
@@ -643,7 +707,8 @@ async fn approval_preview(
     let action_id = q.action_id;
     // For now, return a simple card preview
     // In production: reconstruct full page from PZip Stillwater + Ripple
-    let html = format!(r#"<!DOCTYPE html>
+    let html = format!(
+        r#"<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="utf-8">
@@ -672,7 +737,9 @@ body {{ font-family: var(--sb-font-sans, system-ui); background: var(--sb-bg, #0
   </div>
 </div>
 </body>
-</html>"#, id = action_id);
+</html>"#,
+        id = action_id
+    );
 
     axum::response::Html(html)
 }

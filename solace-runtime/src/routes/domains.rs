@@ -55,14 +55,8 @@ pub fn routes() -> Router<AppState> {
             "/api/v1/domains/:domain/tab/release",
             axum::routing::post(release_domain_tab),
         )
-        .route(
-            "/api/v1/domains/:domain/triggers",
-            get(match_triggers),
-        )
-        .route(
-            "/api/v1/domains/:domain/status",
-            get(domain_status),
-        )
+        .route("/api/v1/domains/:domain/triggers", get(match_triggers))
+        .route("/api/v1/domains/:domain/status", get(domain_status))
 }
 
 /// Per-domain session policy — controls TTL, auth type, keep-alive interval.
@@ -147,7 +141,9 @@ async fn list_domains() -> Json<serde_json::Value> {
     }
     // Then all other domains alphabetically
     for (domain, count) in &counts {
-        if domain == "localhost" { continue; }
+        if domain == "localhost" {
+            continue;
+        }
         items.push(json!({
             "id": domain,
             "host": domain,
@@ -180,9 +176,7 @@ async fn domain_detail(
 ///
 /// Returns the session policy for a domain. If no config exists,
 /// returns the default (24h TTL for auth domains, none for public).
-async fn get_domain_config(
-    Path(domain): Path<String>,
-) -> Json<serde_json::Value> {
+async fn get_domain_config(Path(domain): Path<String>) -> Json<serde_json::Value> {
     let policy = load_domain_config(&domain);
     Json(json!({
         "domain": domain,
@@ -212,7 +206,9 @@ async fn set_domain_config(
         if !valid_types.contains(&auth_type.as_str()) {
             return Err((
                 StatusCode::BAD_REQUEST,
-                Json(json!({"error": format!("invalid auth_type: {auth_type}. Must be one of: {}", valid_types.join(", "))})),
+                Json(
+                    json!({"error": format!("invalid auth_type: {auth_type}. Must be one of: {}", valid_types.join(", "))}),
+                ),
             ));
         }
         policy.auth_type = auth_type;
@@ -316,9 +312,7 @@ async fn keep_alive_analysis(
         (
             f64::INFINITY,
             true,
-            format!(
-                "No scheduled apps. Keep-alive should run every {interval}h (TTL/4 of {ttl}h)"
-            ),
+            format!("No scheduled apps. Keep-alive should run every {interval}h (TTL/4 of {ttl}h)"),
         )
     } else {
         // Max gap = largest interval among scheduled apps
@@ -464,11 +458,15 @@ async fn acquire_domain_tab(
     let now = crate::utils::now_iso8601();
 
     // Read session_id BEFORE acquiring domain_tabs write lock (avoid deadlock)
-    let session_id = payload
-        .session_id
-        .unwrap_or_else(|| {
-            state.sessions.read().keys().next().cloned().unwrap_or_else(|| "no-session".to_string())
-        });
+    let session_id = payload.session_id.unwrap_or_else(|| {
+        state
+            .sessions
+            .read()
+            .keys()
+            .next()
+            .cloned()
+            .unwrap_or_else(|| "no-session".to_string())
+    });
 
     // Now acquire the domain_tabs write lock
     let tab = {
@@ -699,7 +697,10 @@ async fn match_triggers(
     Path(domain): Path<String>,
     axum::extract::Query(params): axum::extract::Query<std::collections::HashMap<String, String>>,
 ) -> Json<serde_json::Value> {
-    let url_path = params.get("path").cloned().unwrap_or_else(|| "/".to_string());
+    let url_path = params
+        .get("path")
+        .cloned()
+        .unwrap_or_else(|| "/".to_string());
 
     let apps = crate::utils::scan_apps();
     let mut matched = Vec::new();
@@ -716,7 +717,8 @@ async fn match_triggers(
             let path_pattern = &trigger.path;
             let path_matches = path_pattern == "/*"
                 || path_pattern == &url_path
-                || (path_pattern.ends_with('*') && url_path.starts_with(&path_pattern[..path_pattern.len()-1]));
+                || (path_pattern.ends_with('*')
+                    && url_path.starts_with(&path_pattern[..path_pattern.len() - 1]));
 
             if path_matches {
                 matched.push(serde_json::json!({
@@ -747,11 +749,11 @@ async fn domain_status(
     Path(domain): Path<String>,
 ) -> Json<serde_json::Value> {
     let apps = crate::utils::scan_apps();
-    let domain_apps: Vec<_> = apps.iter()
+    let domain_apps: Vec<_> = apps
+        .iter()
         .filter(|a| {
             // Match by app domain field OR by trigger domain
-            a.domain == domain
-                || a.triggers.iter().any(|t| domain.contains(&t.domain))
+            a.domain == domain || a.triggers.iter().any(|t| domain.contains(&t.domain))
         })
         .collect();
 
@@ -760,18 +762,34 @@ async fn domain_status(
     let vault_path = solace_home.join("vault").join("oauth3.json");
     let oauth3_status = if vault_path.exists() {
         if let Ok(content) = std::fs::read_to_string(&vault_path) {
-            if content.contains(&domain) { "active" } else { "not_configured" }
-        } else { "not_configured" }
-    } else { "not_configured" };
+            if content.contains(&domain) {
+                "active"
+            } else {
+                "not_configured"
+            }
+        } else {
+            "not_configured"
+        }
+    } else {
+        "not_configured"
+    };
 
     // Wiki snapshot count for this domain
     let wiki_dir = solace_home.join("wiki").join("domains").join(&domain);
     let snapshot_count = if wiki_dir.exists() {
         std::fs::read_dir(&wiki_dir)
-            .into_iter().flatten().filter_map(|e| e.ok())
-            .filter(|e| e.file_name().to_string_lossy().ends_with(".prime-snapshot.md"))
+            .into_iter()
+            .flatten()
+            .filter_map(|e| e.ok())
+            .filter(|e| {
+                e.file_name()
+                    .to_string_lossy()
+                    .ends_with(".prime-snapshot.md")
+            })
             .count()
-    } else { 0 };
+    } else {
+        0
+    };
 
     let cloud = state.cloud_config.read().is_some();
 

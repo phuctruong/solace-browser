@@ -174,7 +174,8 @@ impl EventBus {
     /// Get recent events for a topic (polling API).
     pub fn recent(&self, topic: &str, limit: usize) -> Vec<Event> {
         let recent = self.recent_events.read();
-        recent.get(topic)
+        recent
+            .get(topic)
             .map(|events| {
                 let start = events.len().saturating_sub(limit);
                 events[start..].to_vec()
@@ -185,7 +186,10 @@ impl EventBus {
     /// List all topics with event counts.
     pub fn topics(&self) -> Vec<(String, usize)> {
         let recent = self.recent_events.read();
-        recent.iter().map(|(t, events)| (t.clone(), events.len())).collect()
+        recent
+            .iter()
+            .map(|(t, events)| (t.clone(), events.len()))
+            .collect()
     }
 
     /// List active subscriptions.

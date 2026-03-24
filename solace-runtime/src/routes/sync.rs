@@ -25,7 +25,10 @@ pub fn routes() -> Router<AppState> {
 async fn sync_status(State(state): State<AppState>) -> Json<Value> {
     let cloud = state.cloud_config.read();
     let connected = cloud.is_some();
-    let email = cloud.as_ref().map(|c| c.user_email.clone()).unwrap_or_default();
+    let email = cloud
+        .as_ref()
+        .map(|c| c.user_email.clone())
+        .unwrap_or_default();
     let paid = cloud.as_ref().map(|c| c.paid_user).unwrap_or(false);
 
     let solace_home = crate::utils::solace_home();
@@ -33,19 +36,27 @@ async fn sync_status(State(state): State<AppState>) -> Json<Value> {
     // Count local data
     let wiki_dir = solace_home.join("wiki");
     let snapshot_count = if wiki_dir.exists() {
-        std::fs::read_dir(&wiki_dir).into_iter().flatten()
+        std::fs::read_dir(&wiki_dir)
+            .into_iter()
+            .flatten()
             .filter_map(|e| e.ok())
             .filter(|e| e.file_name().to_string_lossy().ends_with(".pzwb"))
             .count()
-    } else { 0 };
+    } else {
+        0
+    };
 
     let backoffice_dir = solace_home.join("backoffice");
     let db_count = if backoffice_dir.exists() {
-        std::fs::read_dir(&backoffice_dir).into_iter().flatten()
+        std::fs::read_dir(&backoffice_dir)
+            .into_iter()
+            .flatten()
             .filter_map(|e| e.ok())
             .filter(|e| e.file_type().map(|t| t.is_dir()).unwrap_or(false))
             .count()
-    } else { 0 };
+    } else {
+        0
+    };
 
     let evidence_count = crate::evidence::part11_status(&solace_home).record_count;
 
@@ -66,15 +77,20 @@ async fn sync_status(State(state): State<AppState>) -> Json<Value> {
 }
 
 /// Push local data to solaceagi.com (paid users only)
-async fn sync_push(State(state): State<AppState>) -> Result<Json<Value>, (StatusCode, Json<Value>)> {
+async fn sync_push(
+    State(state): State<AppState>,
+) -> Result<Json<Value>, (StatusCode, Json<Value>)> {
     let cloud = state.cloud_config.read();
     let paid = cloud.as_ref().map(|c| c.paid_user).unwrap_or(false);
 
     if !paid {
-        return Err((StatusCode::PAYMENT_REQUIRED, Json(json!({
-            "error": "Sync requires paid plan ($28/mo Pro or higher)",
-            "upgrade_url": "https://solaceagi.com/pricing",
-        }))));
+        return Err((
+            StatusCode::PAYMENT_REQUIRED,
+            Json(json!({
+                "error": "Sync requires paid plan ($28/mo Pro or higher)",
+                "upgrade_url": "https://solaceagi.com/pricing",
+            })),
+        ));
     }
 
     let solace_home = crate::utils::solace_home();
@@ -84,7 +100,11 @@ async fn sync_push(State(state): State<AppState>) -> Result<Json<Value>, (Status
     let mut snapshots = 0usize;
     let mut total_bytes = 0u64;
     if wiki_dir.exists() {
-        for entry in std::fs::read_dir(&wiki_dir).into_iter().flatten().filter_map(|e| e.ok()) {
+        for entry in std::fs::read_dir(&wiki_dir)
+            .into_iter()
+            .flatten()
+            .filter_map(|e| e.ok())
+        {
             if entry.file_name().to_string_lossy().ends_with(".pzwb") {
                 snapshots += 1;
                 total_bytes += entry.metadata().map(|m| m.len()).unwrap_or(0);
@@ -93,14 +113,20 @@ async fn sync_push(State(state): State<AppState>) -> Result<Json<Value>, (Status
     }
 
     // Publish sync event
-    state.event_bus.publish("sync.push", json!({
-        "snapshots": snapshots,
-        "bytes": total_bytes,
-    }), "sync");
+    state.event_bus.publish(
+        "sync.push",
+        json!({
+            "snapshots": snapshots,
+            "bytes": total_bytes,
+        }),
+        "sync",
+    );
 
     // Evidence
     let _ = crate::evidence::record_event(
-        &solace_home, "sync.push", "system",
+        &solace_home,
+        "sync.push",
+        "system",
         json!({"snapshots": snapshots, "bytes": total_bytes}),
     );
     *state.evidence_count.write() += 1;
@@ -115,15 +141,20 @@ async fn sync_push(State(state): State<AppState>) -> Result<Json<Value>, (Status
 }
 
 /// Pull data from solaceagi.com (paid users only)
-async fn sync_pull(State(state): State<AppState>) -> Result<Json<Value>, (StatusCode, Json<Value>)> {
+async fn sync_pull(
+    State(state): State<AppState>,
+) -> Result<Json<Value>, (StatusCode, Json<Value>)> {
     let cloud = state.cloud_config.read();
     let paid = cloud.as_ref().map(|c| c.paid_user).unwrap_or(false);
 
     if !paid {
-        return Err((StatusCode::PAYMENT_REQUIRED, Json(json!({
-            "error": "Sync requires paid plan",
-            "upgrade_url": "https://solaceagi.com/pricing",
-        }))));
+        return Err((
+            StatusCode::PAYMENT_REQUIRED,
+            Json(json!({
+                "error": "Sync requires paid plan",
+                "upgrade_url": "https://solaceagi.com/pricing",
+            })),
+        ));
     }
 
     Ok(Json(json!({
@@ -141,12 +172,22 @@ async fn community_stats() -> Json<Value> {
 
     let mut domains = Vec::new();
     if wiki_dir.exists() {
-        for entry in std::fs::read_dir(&wiki_dir).into_iter().flatten().filter_map(|e| e.ok()) {
+        for entry in std::fs::read_dir(&wiki_dir)
+            .into_iter()
+            .flatten()
+            .filter_map(|e| e.ok())
+        {
             if entry.file_type().map(|t| t.is_dir()).unwrap_or(false) {
                 let domain = entry.file_name().to_string_lossy().to_string();
                 let page_count = std::fs::read_dir(entry.path())
-                    .into_iter().flatten().filter_map(|e| e.ok())
-                    .filter(|e| e.file_name().to_string_lossy().ends_with(".prime-snapshot.md"))
+                    .into_iter()
+                    .flatten()
+                    .filter_map(|e| e.ok())
+                    .filter(|e| {
+                        e.file_name()
+                            .to_string_lossy()
+                            .ends_with(".prime-snapshot.md")
+                    })
                     .count();
                 domains.push(json!({"domain": domain, "pages": page_count}));
             }
@@ -163,24 +204,34 @@ async fn community_stats() -> Json<Value> {
 }
 
 /// Contribute a snapshot to the community pool
-async fn contribute_snapshot(
-    State(state): State<AppState>,
-) -> Json<Value> {
+async fn contribute_snapshot(State(state): State<AppState>) -> Json<Value> {
     let solace_home = crate::utils::solace_home();
     let wiki_dir = solace_home.join("wiki");
 
     let mut contributed = 0usize;
     if wiki_dir.exists() {
-        for entry in std::fs::read_dir(&wiki_dir).into_iter().flatten().filter_map(|e| e.ok()) {
-            if entry.file_name().to_string_lossy().ends_with(".prime-snapshot.md") {
+        for entry in std::fs::read_dir(&wiki_dir)
+            .into_iter()
+            .flatten()
+            .filter_map(|e| e.ok())
+        {
+            if entry
+                .file_name()
+                .to_string_lossy()
+                .ends_with(".prime-snapshot.md")
+            {
                 contributed += 1;
             }
         }
     }
 
-    state.event_bus.publish("community.contribute", json!({
-        "snapshots": contributed,
-    }), "community");
+    state.event_bus.publish(
+        "community.contribute",
+        json!({
+            "snapshots": contributed,
+        }),
+        "community",
+    );
 
     Json(json!({
         "contributed": contributed,

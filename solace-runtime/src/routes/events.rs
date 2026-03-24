@@ -2,7 +2,11 @@
 // Events API — the universal view. Every action is an event.
 // Events are the atoms of the system. Show them and everything is transparent.
 
-use axum::{extract::{Query, State}, routing::{get, post}, Json, Router};
+use axum::{
+    extract::{Query, State},
+    routing::{get, post},
+    Json, Router,
+};
 use serde::Deserialize;
 use serde_json::{json, Value};
 use std::fs;
@@ -26,10 +30,7 @@ struct EventQuery {
 }
 
 /// POST /api/v1/events/emit — record an event from any source (browser, cron, hub).
-async fn emit_event(
-    State(state): State<AppState>,
-    Json(payload): Json<Value>,
-) -> Json<Value> {
+async fn emit_event(State(state): State<AppState>, Json(payload): Json<Value>) -> Json<Value> {
     let mut event = payload;
     if let Some(obj) = event.as_object_mut() {
         if !obj.contains_key("timestamp") {
@@ -68,7 +69,10 @@ async fn list_events(
         let runtime_events = state.runtime_events.read();
         for event in runtime_events.iter() {
             if let Some(ref type_filter) = query.event_type {
-                let et = event.get("event_type").and_then(|v| v.as_str()).unwrap_or("");
+                let et = event
+                    .get("event_type")
+                    .and_then(|v| v.as_str())
+                    .unwrap_or("");
                 if !et.eq_ignore_ascii_case(type_filter) {
                     continue;
                 }
@@ -152,9 +156,7 @@ async fn list_events(
                             obj.insert("run_id".to_string(), json!(run_id));
                             // Determine L1-L5 level from event type
                             let level = classify_event_level(
-                                obj.get("event_type")
-                                    .and_then(|v| v.as_str())
-                                    .unwrap_or(""),
+                                obj.get("event_type").and_then(|v| v.as_str()).unwrap_or(""),
                             );
                             obj.insert("level".to_string(), json!(level));
                         }
