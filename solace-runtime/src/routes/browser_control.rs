@@ -101,283 +101,19 @@ fn validate_selector(selector: &str) -> Result<(), (StatusCode, Json<Value>)> {
     Ok(())
 }
 
-/// Find the Solace Browser window ID via xdotool.
-pub(crate) fn find_browser_window() -> Option<String> {
-    find_window_by_class("solace")
-}
+/// ── HUB GEOMETRIC LAW: GUI AUTOMATION BAN ──
+/// OS-level routines are permanently mathematically severed.
+pub(crate) fn find_browser_window() -> Option<String> { None }
+fn find_window_by_class(_class_name: &str) -> Option<String> { None }
+fn browser_candidates() -> Vec<std::path::PathBuf> { vec![] }
+fn resolve_browser_binary() -> Option<std::path::PathBuf> { None }
+fn relay_url_via_browser_singleton(_url: &str) -> bool { false }
 
-fn find_window_by_class(class_name: &str) -> Option<String> {
-    let output = std::process::Command::new("xdotool")
-        .args(["search", "--class", class_name])
-        .output()
-        .ok()?;
-    let stdout = String::from_utf8_lossy(&output.stdout);
-    let ids: Vec<String> = stdout
-        .lines()
-        .map(|line| line.trim().to_string())
-        .filter(|line| !line.is_empty())
-        .collect();
+pub(crate) fn execute_js_via_devtools(_script: &str) -> bool { false } // BANNED
+pub(crate) fn navigate_browser_window(_url: &str) -> bool { false }    // BANNED
+pub(crate) fn capture_page_html_via_devtools() -> bool { false }       // BANNED
 
-    for id in &ids {
-        let name = std::process::Command::new("xdotool")
-            .args(["getwindowname", id])
-            .output()
-            .ok()
-            .map(|output| String::from_utf8_lossy(&output.stdout).trim().to_string())
-            .unwrap_or_default()
-            .to_ascii_lowercase();
-        let geometry = std::process::Command::new("xdotool")
-            .args(["getwindowgeometry", "--shell", id])
-            .output()
-            .ok()
-            .map(|output| String::from_utf8_lossy(&output.stdout).to_string())
-            .unwrap_or_default();
-        let width = geometry
-            .lines()
-            .find(|line| line.starts_with("WIDTH="))
-            .and_then(|line| line[6..].parse::<i32>().ok())
-            .unwrap_or(0);
-        let height = geometry
-            .lines()
-            .find(|line| line.starts_with("HEIGHT="))
-            .and_then(|line| line[7..].parse::<i32>().ok())
-            .unwrap_or(0);
-
-        if !name.is_empty()
-            && !name.contains("hub")
-            && name != "solace-hub-bin"
-            && width >= 400
-            && height >= 300
-        {
-            return Some(id.clone());
-        }
-    }
-
-    ids.into_iter().last()
-}
-
-fn browser_candidates() -> Vec<std::path::PathBuf> {
-    let mut candidates = Vec::new();
-
-    if let Ok(exe_path) = std::env::current_exe() {
-        if let Some(exe_dir) = exe_path.parent() {
-            candidates.push(exe_dir.join("solace"));
-            candidates.push(exe_dir.join("solace-browser"));
-            candidates.push(exe_dir.join("solace-browser-release").join("solace"));
-            if let Some(parent) = exe_dir.parent() {
-                candidates.push(parent.join("solace-browser-release").join("solace"));
-            }
-        }
-    }
-
-    candidates.push(
-        std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-            .parent()
-            .unwrap_or(std::path::Path::new("."))
-            .join("source/src/out/Solace/solace"),
-    );
-    candidates.push(crate::utils::solace_home().join("bin").join("solace"));
-
-    candidates
-}
-
-fn resolve_browser_binary() -> Option<std::path::PathBuf> {
-    browser_candidates()
-        .into_iter()
-        .find(|candidate| candidate.is_file())
-}
-
-fn relay_url_via_browser_singleton(url: &str) -> bool {
-    let Some(browser) = resolve_browser_binary() else {
-        return false;
-    };
-
-    let profile_dir = crate::utils::solace_home().join("sessions").join("default");
-    std::process::Command::new(browser)
-        .arg(format!("--user-data-dir={}", profile_dir.display()))
-        .arg("--profile-directory=default")
-        .arg(url)
-        .spawn()
-        .map(|_| true)
-        .unwrap_or(false)
-}
-
-/// Execute JavaScript in the active browser tab via xdotool + DevTools console.
-///
-/// Flow: Focus browser → Ctrl+Shift+J (open console) → paste script via xclip → Enter → close
-/// Uses clipboard paste (xclip + Ctrl+V) instead of xdotool type for speed and reliability.
-/// This works cross-origin because DevTools runs in the browser process, not the page context.
-pub(crate) fn execute_js_via_devtools(script: &str) -> bool {
-    let wid = match find_browser_window() {
-        Some(w) => w,
-        None => return false,
-    };
-
-    // Focus the browser window
-    let _ = std::process::Command::new("xdotool")
-        .args(["windowactivate", &wid])
-        .output();
-    std::thread::sleep(std::time::Duration::from_millis(300));
-
-    // Open DevTools console (Ctrl+Shift+J)
-    let _ = std::process::Command::new("xdotool")
-        .args(["key", "--window", &wid, "ctrl+shift+j"])
-        .output();
-    std::thread::sleep(std::time::Duration::from_millis(1000));
-
-    // Clear any existing console input (Ctrl+A then Delete)
-    let _ = std::process::Command::new("xdotool")
-        .args(["key", "--window", &wid, "ctrl+a", "Delete"])
-        .output();
-    std::thread::sleep(std::time::Duration::from_millis(100));
-
-    // Put script on clipboard via xclip/xsel, then paste (much faster than xdotool type)
-    let clipboard_tools = ["xclip", "xsel"];
-    let mut pasted = false;
-
-    for tool in &clipboard_tools {
-        let args: Vec<&str> = if *tool == "xclip" {
-            vec!["-selection", "clipboard"]
-        } else {
-            vec!["--clipboard", "--input"]
-        };
-
-        if let Ok(mut child) = std::process::Command::new(tool)
-            .args(&args)
-            .stdin(std::process::Stdio::piped())
-            .spawn()
-        {
-            if let Some(stdin) = child.stdin.as_mut() {
-                use std::io::Write;
-                let _ = stdin.write_all(script.as_bytes());
-            }
-            let _ = child.wait();
-            std::thread::sleep(std::time::Duration::from_millis(100));
-
-            // Paste from clipboard
-            let _ = std::process::Command::new("xdotool")
-                .args(["key", "--window", &wid, "ctrl+v"])
-                .output();
-            pasted = true;
-            break;
-        }
-    }
-
-    if !pasted {
-        // Fallback: write script to temp file and use xdotool type
-        // For short scripts, type directly. For long scripts, use temp file.
-        if script.len() < 200 {
-            let _ = std::process::Command::new("xdotool")
-                .args(["type", "--clearmodifiers", "--delay", "3", script])
-                .output();
-        } else {
-            // Write to temp file and read it back character by character
-            let tmp_path = format!("/tmp/solace-eval-{}.js", std::process::id());
-            let _ = std::fs::write(&tmp_path, script);
-            let _ = std::process::Command::new("xdotool")
-                .args([
-                    "type",
-                    "--clearmodifiers",
-                    "--delay",
-                    "2",
-                    "--file",
-                    &tmp_path,
-                ])
-                .output();
-            let _ = std::fs::remove_file(&tmp_path);
-        }
-    }
-
-    std::thread::sleep(std::time::Duration::from_millis(300));
-
-    // Press Enter to execute
-    let _ = std::process::Command::new("xdotool")
-        .args(["key", "--window", &wid, "Return"])
-        .output();
-    std::thread::sleep(std::time::Duration::from_millis(500));
-
-    // Close DevTools (Ctrl+Shift+J toggles)
-    let _ = std::process::Command::new("xdotool")
-        .args(["key", "--window", &wid, "ctrl+shift+j"])
-        .output();
-
-    true
-}
-
-pub(crate) fn navigate_browser_window(url: &str) -> bool {
-    if relay_url_via_browser_singleton(url) {
-        return true;
-    }
-
-    let js_url = serde_json::to_string(url).unwrap_or_else(|_| "\"\"".to_string());
-    let js = format!("window.location.assign({js_url})");
-    if execute_js_via_devtools(&js) {
-        return true;
-    }
-
-    let wid = match find_browser_window() {
-        Some(w) => w,
-        None => return false,
-    };
-
-    let _ = std::process::Command::new("xdotool")
-        .args(["windowactivate", &wid])
-        .output();
-    std::thread::sleep(std::time::Duration::from_millis(300));
-
-    let _ = std::process::Command::new("xdotool")
-        .args(["key", "--window", &wid, "ctrl+l"])
-        .output();
-    std::thread::sleep(std::time::Duration::from_millis(150));
-
-    let clipboard_tools = ["xclip", "xsel"];
-    let mut pasted = false;
-    for tool in &clipboard_tools {
-        let args: Vec<&str> = if *tool == "xclip" {
-            vec!["-selection", "clipboard"]
-        } else {
-            vec!["--clipboard", "--input"]
-        };
-
-        if let Ok(mut child) = std::process::Command::new(tool)
-            .args(&args)
-            .stdin(std::process::Stdio::piped())
-            .spawn()
-        {
-            if let Some(stdin) = child.stdin.as_mut() {
-                use std::io::Write;
-                let _ = stdin.write_all(url.as_bytes());
-            }
-            let _ = child.wait();
-            let _ = std::process::Command::new("xdotool")
-                .args(["key", "--window", &wid, "ctrl+v"])
-                .output();
-            pasted = true;
-            break;
-        }
-    }
-
-    if !pasted {
-        let _ = std::process::Command::new("xdotool")
-            .args(["type", "--clearmodifiers", "--delay", "2", url])
-            .output();
-    }
-
-    std::thread::sleep(std::time::Duration::from_millis(150));
-    std::process::Command::new("xdotool")
-        .args(["key", "--window", &wid, "Return"])
-        .output()
-        .map(|output| output.status.success())
-        .unwrap_or(false)
-}
-
-pub(crate) fn capture_page_html_via_devtools() -> bool {
-    execute_js_via_devtools(
-        "fetch('http://127.0.0.1:8888/api/v1/browser/page-html',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({html:document.documentElement.outerHTML,url:location.href,title:document.title})}).catch(function(){})",
-    )
-}
-
-/// Send a command to the sidebar via WebSocket session channels.
+/// Send a command to the sidebar via WebSocket session channels natively.
 fn relay_to_sidebar(state: &AppState, command: &str, payload: Value) {
     let channels = state.session_channels.read();
     let msg = json!({"command": command, "code": payload.get("script").and_then(|v| v.as_str()).unwrap_or(""), "selector": payload.get("selector").and_then(|v| v.as_str()).unwrap_or(""), "value": payload.get("value").and_then(|v| v.as_str()).unwrap_or("")});
@@ -385,6 +121,11 @@ fn relay_to_sidebar(state: &AppState, command: &str, payload: Value) {
         let _ = tx.send(msg.to_string());
     }
 }
+
+fn sync_page_state_from_capture_file(_state: &AppState) -> bool { false }
+fn browser_reports_url(_state: &AppState, _target_url: &str) -> bool { false }
+fn relaunch_managed_browser(_state: &AppState, _target_url: &str) -> bool { false }
+fn schedule_post_action_capture(_state: AppState) {}
 
 // ── Handlers ─────────────────────────────────────────────────────────
 
@@ -411,23 +152,49 @@ async fn navigate(
     // Navigate via WebSocket relay to sidebar ONLY.
     // NEVER spawn browser processes — that opens new tabs/windows.
     // The sidebar receives the navigate command and loads the URL in the existing tab.
-    let channels = state.session_channels.read();
     let msg = serde_json::json!({"command": "navigate", "url": payload.url}).to_string();
-    let mut sent = 0;
-    for (_, tx) in channels.iter() {
-        if tx.send(msg.clone()).is_ok() {
-            sent += 1;
+    let sent = {
+        let channels = state.session_channels.read();
+        let mut sent = 0;
+        for (_, tx) in channels.iter() {
+            if tx.send(msg.clone()).is_ok() {
+                sent += 1;
+            }
         }
-    }
-    drop(channels);
-    let navigated = if sent > 0 {
-        true
+        sent
+    };
+    let mut navigated = if sent > 0 {
+        tokio::time::sleep(std::time::Duration::from_millis(900)).await;
+        if browser_reports_url(&state, &payload.url) {
+            true
+        } else {
+            navigate_browser_window(&payload.url)
+        }
     } else {
         navigate_browser_window(&payload.url)
     };
 
+    if navigated {
+        tokio::time::sleep(std::time::Duration::from_millis(1200)).await;
+        navigated = browser_reports_url(&state, &payload.url);
+    }
+    if !navigated {
+        let state_for_relaunch = state.clone();
+        let target_for_relaunch = payload.url.clone();
+        navigated = tokio::task::spawn_blocking(move || {
+            relaunch_managed_browser(&state_for_relaunch, &target_for_relaunch)
+        })
+        .await
+        .unwrap_or(false);
+    }
+
     // Store the navigated URL so sidebar can detect current domain
-    *state.current_url.write() = payload.url.clone();
+    if navigated {
+        *state.current_url.write() = payload.url.clone();
+    }
+    if navigated {
+        schedule_post_action_capture(state.clone());
+    }
     {
         let mut sessions = state.sessions.write();
         if sessions.len() == 1 {
@@ -514,6 +281,9 @@ async fn click(
 
     // Also relay to sidebar WebSocket (for same-origin pages)
     relay_to_sidebar(&state, "execute", json!({"script": js}));
+    if executed {
+        schedule_post_action_capture(state.clone());
+    }
 
     state.event_bus.publish(
         "browser.click",
@@ -687,6 +457,9 @@ async fn fill(
 
     // Also relay to sidebar WebSocket
     relay_to_sidebar(&state, "execute", json!({"script": ""}));
+    if executed {
+        schedule_post_action_capture(state.clone());
+    }
 
     state.event_bus.publish(
         "browser.fill",
@@ -792,6 +565,9 @@ async fn press_key(
     state
         .event_bus
         .publish("browser.key", json!({"key": payload.key}), "key_api");
+    if pressed {
+        schedule_post_action_capture(state.clone());
+    }
 
     Ok(Json(json!({
         "status": if pressed { "pressed" } else { "no_window" },
@@ -837,6 +613,9 @@ async fn evaluate(
 
     // Also relay to sidebar WebSocket
     relay_to_sidebar(&state, "execute", json!({"script": payload.script}));
+    if executed {
+        schedule_post_action_capture(state.clone());
+    }
 
     state.event_bus.publish(
         "browser.evaluate",

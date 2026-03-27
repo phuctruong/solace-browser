@@ -369,6 +369,63 @@ fn push_linux_browser_candidates(
     }
 }
 
+fn should_cleanup_stale_process(exe_target: &str, cmdline: &str) -> bool {
+    exe_target.contains(" (deleted)")
+        && (cmdline.contains("solace-hub-bin") || cmdline.contains("solace-runtime"))
+}
+
+#[cfg(target_family = "unix")]
+fn cleanup_stale_deleted_processes() {
+    let current_pid = std::process::id();
+    let proc_dir = Path::new("/proc");
+    let entries = match fs::read_dir(proc_dir) {
+        Ok(entries) => entries,
+        Err(error) => {
+            eprintln!("WARN: Cannot scan /proc for stale Solace processes: {error}");
+            return;
+        }
+    };
+
+    let mut killed_any = false;
+    for entry in entries.flatten() {
+        let file_name = entry.file_name();
+        let pid = match file_name.to_string_lossy().parse::<u32>() {
+            Ok(pid) if pid != current_pid => pid,
+            _ => continue,
+        };
+        let exe_link = proc_dir.join(pid.to_string()).join("exe");
+        let cmdline_path = proc_dir.join(pid.to_string()).join("cmdline");
+        let exe_target = match fs::read_link(&exe_link) {
+            Ok(path) => path.to_string_lossy().into_owned(),
+            Err(_) => continue,
+        };
+        let cmdline = match fs::read(&cmdline_path) {
+            Ok(bytes) => String::from_utf8_lossy(&bytes).replace('\0', " "),
+            Err(_) => continue,
+        };
+        if !should_cleanup_stale_process(&exe_target, &cmdline) {
+            continue;
+        }
+        eprintln!("INFO: Killing stale deleted Solace process pid={pid} exe={exe_target}");
+        let signal_result = unsafe { libc_kill(pid as i32, 9) };
+        if signal_result == 0 {
+            killed_any = true;
+        } else {
+            eprintln!(
+                "WARN: Could not kill stale deleted Solace process pid={pid}: {}",
+                io::Error::last_os_error()
+            );
+        }
+    }
+
+    if killed_any {
+        thread::sleep(Duration::from_millis(500));
+    }
+}
+
+#[cfg(not(target_family = "unix"))]
+fn cleanup_stale_deleted_processes() {}
+
 fn ensure_runtime_port_available() -> Result<(), String> {
     if TcpStream::connect(("127.0.0.1", YINYANG_PORT)).is_ok() {
         eprintln!("INFO: Port {} occupied. Killing existing process to start fresh.", YINYANG_PORT);
@@ -803,6 +860,7 @@ fn cmd_kill_all_sessions(state: State<HubState>) -> Result<String, String> {
 // ────────────────────────────────────────────────────────────────────────────
 
 fn main() {
+    cleanup_stale_deleted_processes();
     ensure_runtime_port_available()
         .unwrap_or_else(|msg| panic!("{msg}"));
 
@@ -966,7 +1024,7 @@ extern "C" {
 
 #[cfg(test)]
 mod tests {
-    use super::dashboard_target_size;
+    use super::{dashboard_target_size, should_cleanup_stale_process};
 
     #[test]
     fn dashboard_target_size_keeps_window_shorter_than_1080p_monitor() {
@@ -979,5 +1037,25 @@ mod tests {
         let (width, height) = dashboard_target_size(Some((1366.0, 768.0)));
         assert!(width <= 1280.0, "dashboard width should fit inside a typical laptop monitor");
         assert!(height <= 700.0, "dashboard height should not bury the native frame controls");
+    }
+
+    #[test]
+    fn stale_deleted_solace_processes_are_marked_for_cleanup() {
+        assert!(should_cleanup_stale_process(
+            "/usr/lib/solace-browser/solace-browser-release/solace-runtime (deleted)",
+            "/usr/lib/solace-browser/solace-browser-release/solace-runtime --port 8888",
+        ));
+        assert!(should_cleanup_stale_process(
+            "/usr/lib/solace-browser/solace-browser-release/solace-hub-bin (deleted)",
+            "/usr/lib/solace-browser/solace-browser-release/solace-hub-bin",
+        ));
+        assert!(!should_cleanup_stale_process(
+            "/usr/lib/solace-browser/solace-browser-release/solace-hub-bin",
+            "/usr/lib/solace-browser/solace-browser-release/solace-hub-bin",
+        ));
+        assert!(!should_cleanup_stale_process(
+            "/usr/bin/bash (deleted)",
+            "/bin/bash -lc sleep 1",
+        ));
     }
 }

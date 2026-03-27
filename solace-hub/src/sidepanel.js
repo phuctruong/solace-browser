@@ -13,7 +13,8 @@
     domainApps: [],
     worker: null,          // { id, name, domain, steps: [], status }
     recentSessions: [],
-    ws: null
+    ws: null,
+    sessionId: null
   };
 
   // ─── Helpers ───
@@ -45,6 +46,80 @@
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(body || {})
     }).then(function (r) { return r.json(); });
+  }
+
+  function sendToRuntime(message) {
+    if (state.ws && state.ws.readyState === WebSocket.OPEN) {
+      state.ws.send(JSON.stringify(message));
+    }
+  }
+
+  function normalizeReportedTabs(tabs) {
+    return (Array.isArray(tabs) ? tabs : []).map(function (tab, index) {
+      return {
+        id: String(typeof tab.index === 'number' ? tab.index : (tab.id || tab.url || ('tab-' + index))),
+        index: typeof tab.index === 'number' ? tab.index : index,
+        url: tab.url || '',
+        title: tab.title || '',
+        active: !!tab.active
+      };
+    });
+  }
+
+  function publishTabs(tabs) {
+    var normalized = normalizeReportedTabs(tabs);
+    sendToRuntime({
+      type: 'tabs_list',
+      session_id: state.sessionId,
+      tabs: normalized
+    });
+    postJson('/api/v1/browser/tabs', { tabs: normalized }).catch(function () {});
+  }
+
+  function reportStatus() {
+    var url = state.currentUrl || '';
+    var title = '';
+    try {
+      url = window.top.location.href || url;
+      title = window.top.document.title || '';
+    } catch (e) {}
+    sendToRuntime({
+      type: 'status',
+      session_id: state.sessionId,
+      url: url,
+      title: title
+    });
+  }
+
+  function reportTabs() {
+    try {
+      if (typeof chrome !== 'undefined' && typeof chrome.send === 'function') {
+        chrome.send('solaceGetTabs', []);
+        return;
+      }
+      publishTabs([{
+        id: state.currentUrl || 'active',
+        index: 0,
+        url: state.currentUrl || '',
+        title: '',
+        active: true
+      }]);
+    } catch (e) {}
+  }
+
+  function detectSessionId() {
+    return getJson('/api/v1/browser/sessions').then(function (payload) {
+      var sessions = Array.isArray(payload.sessions) ? payload.sessions.slice() : [];
+      sessions.sort(function (a, b) {
+        return String(b.started_at || '').localeCompare(String(a.started_at || ''));
+      });
+      if (sessions.length && sessions[0].session_id) {
+        return sessions[0].session_id;
+      }
+      return 'sidebar-' + Date.now();
+    }).catch(function () {
+      return 'sidebar-' + Date.now();
+    });
   }
 
   // ─── State Machine ───
@@ -312,22 +387,71 @@
     if (state.ws) {
       try { state.ws.close(); } catch (e) {}
     }
-    try {
-      state.ws = new WebSocket('ws://127.0.0.1:8888/ws/yinyang');
+    detectSessionId().then(function (sessionId) {
+      state.sessionId = sessionId;
+      try {
+        state.ws = new WebSocket('ws://127.0.0.1:8888/ws/yinyang?session=' + encodeURIComponent(sessionId));
+      } catch (e) {
+        return;
+      }
       state.ws.onmessage = function (evt) {
         try {
           var msg = JSON.parse(evt.data);
           handleWsMessage(msg);
         } catch (e) {}
       };
+      state.ws.onopen = function () {
+        reportStatus();
+        reportTabs();
+      };
       state.ws.onclose = function () {
         // Reconnect after 5s
         setTimeout(connectWebSocket, 5000);
       };
-    } catch (e) {}
+    }).catch(function () {});
   }
 
   function handleWsMessage(msg) {
+    var command = msg.command || '';
+    if (command === 'navigate' && msg.url) {
+      navigateMain(msg.url);
+      return;
+    }
+    if (command === 'execute') {
+      var script = msg.code || msg.script || '';
+      if (script) {
+        try {
+          if (typeof chrome !== 'undefined' && typeof chrome.send === 'function') {
+            chrome.send('solaceEvaluateInPage', [script]);
+          } else {
+            window.top.eval(script);
+          }
+        } catch (e) {}
+      }
+      return;
+    }
+    if (command === 'close_other_tabs') {
+      if (typeof chrome !== 'undefined' && typeof chrome.send === 'function') {
+        chrome.send('solaceCloseOtherTabs', []);
+        setTimeout(reportTabs, 500);
+      }
+      return;
+    }
+    if (command === 'close_tab') {
+      if (typeof chrome !== 'undefined' && typeof chrome.send === 'function') {
+        var targetIndex = Number(msg.tab_id);
+        if (!Number.isNaN(targetIndex)) {
+          chrome.send('solaceCloseTab', [targetIndex]);
+          setTimeout(reportTabs, 500);
+        }
+      }
+      return;
+    }
+    if (command === 'get_url') {
+      reportStatus();
+      return;
+    }
+
     // Worker step events
     if (msg.type === 'worker_step' && state.mode === 'worker_running') {
       addTimelineEntry(msg.text || msg.message || 'Step completed');
@@ -511,6 +635,7 @@
   // Listen for tab updates from the C++ WebUI bridge (chrome.send('solaceGetTabs'))
   window.addEventListener('solace-tabs-updated', function () {
     var tabs = window.__solaceTabs || [];
+    publishTabs(tabs);
     var active = tabs.find(function (t) { return t.active; });
     if (active && active.url) {
       processUrlChange(active.url);
@@ -538,6 +663,23 @@
     if (!currentUrl || currentUrl === lastMonitoredUrl) return;
     lastMonitoredUrl = currentUrl;
     state.currentUrl = currentUrl;
+    var sameDocument = false;
+    var title = '';
+    var content = '';
+    try {
+      sameDocument = window.top.location.href === currentUrl;
+      if (sameDocument) {
+        title = window.top.document.title || '';
+        content = window.top.document.documentElement.outerHTML || '';
+      }
+    } catch (e) {}
+    sendToRuntime({
+      type: 'url_changed',
+      session_id: state.sessionId,
+      url: currentUrl,
+      title: title,
+      content: content.length > 100 ? content : ''
+    });
 
     // Don't change mode if worker is running
     if (state.mode === 'worker_running' || state.mode === 'celebrate') return;
@@ -612,6 +754,9 @@
 
   // Poll URL changes every 2s
   setInterval(monitorUrl, 2000);
+
+  // Refresh tab truth periodically in case the C++ bridge event is missed
+  setInterval(reportTabs, 5000);
 
   // Refresh state every 15s
   setInterval(refreshState, 15000);

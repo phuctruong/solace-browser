@@ -27,6 +27,7 @@ pub async fn run_heartbeat(state: AppState) {
                             count = pending.len(),
                             "pending evidence to sync on reconnect"
                         );
+                        let _ = sync_evidence_payload(&config.api_key, &config.device_id, pending).await;
                     }
                 }
                 Ok(false) => {
@@ -70,6 +71,14 @@ pub async fn run_heartbeat(state: AppState) {
                     let status = response.status();
                     if status.is_success() {
                         consecutive_failures = 0;
+                        
+                        // ── DIMENSION 8 (ACTIVE SYNC PROTOCOL) ──
+                        // Opportunistically backport trace evidence to Firestore via SolaceAGI APIs.
+                        let solace_home = crate::utils::solace_home();
+                        let pending = crate::evidence::list_evidence(&solace_home, 100);
+                        if !pending.is_empty() {
+                            let _ = sync_evidence_payload(&config.api_key, &config.device_id, pending).await;
+                        }
                     } else if status.as_u16() == 401 {
                         // API key may be expired — don't clear immediately.
                         // The bridge from solaceagi.com will re-send a fresh token.
@@ -139,4 +148,33 @@ async fn validate_api_key(api_key: &str) -> Result<bool, String> {
         .map_err(|e| e.to_string())?;
 
     Ok(response.status().is_success())
+}
+
+/// POST evidence records to the cloud. Fire-and-forget backport strategy.
+pub async fn sync_evidence_payload(
+    api_key: &str,
+    device_id: &str,
+    records: Vec<crate::evidence::EvidenceRecord>,
+) -> Result<(), String> {
+    if records.is_empty() {
+        return Ok(());
+    }
+
+    let response = reqwest::Client::new()
+        .post(format!("{CLOUD_BASE}/api/v1/sync/evidence"))
+        .bearer_auth(api_key)
+        .json(&json!({
+            "device_id": device_id,
+            "evidence": records,
+        }))
+        .timeout(Duration::from_secs(20))
+        .send()
+        .await
+        .map_err(|e| e.to_string())?;
+
+    if !response.status().is_success() {
+        return Err(format!("cloud evidence sync failed: {}", response.status()));
+    }
+
+    Ok(())
 }

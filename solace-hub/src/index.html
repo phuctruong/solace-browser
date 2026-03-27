@@ -455,8 +455,8 @@
   </div>
   <div class="sb-topbar-spacer"></div>
   <div class="sb-theme-group">
-    <button class="sb-theme-btn sb-theme-btn--active" data-theme="dark">Dark</button>
-    <button class="sb-theme-btn" data-theme="light">Light</button>
+    <button type="button" class="sb-theme-btn sb-theme-btn--active" data-theme="dark">Dark</button>
+    <button type="button" class="sb-theme-btn" data-theme="light">Light</button>
   </div>
   <div class="sb-lang-switcher">
     <button class="sb-lang-toggle" id="languageToggle" aria-label="Language" aria-expanded="false" type="button">
@@ -520,13 +520,11 @@
   <!-- TABS -->
   <div id="hub-tabs" class="sh-tabs-container">
     <div class="sb-tabs" role="tablist">
-      <button class="sb-tab sb-tab--active" data-tab="overview" role="tab" aria-selected="true">Overview</button>
-      <button class="sb-tab" data-tab="backoffice" role="tab">Backoffice</button>
-      <button class="sb-tab" data-tab="workers" role="tab">Workers</button>
-      <button class="sb-tab" data-tab="sessions" role="tab">Sessions</button>
-      <button class="sb-tab" data-tab="events" role="tab">Events <span id="events-badge" class="sb-pill sb-pill--danger sh-events-badge">0</span></button>
-      <button class="sb-tab" data-tab="remote" role="tab">Remote</button>
-      <button class="sb-tab" data-tab="settings" role="tab">Settings</button>
+      <button type="button" class="sb-tab sb-tab--active" data-tab="overview" role="tab" aria-selected="true">Overview</button>
+      <button type="button" class="sb-tab" data-tab="sessions" role="tab">Sessions</button>
+      <button type="button" class="sb-tab" data-tab="events" role="tab">Events <span id="events-badge" class="sb-pill sb-pill--danger sh-events-badge">0</span></button>
+      <button type="button" class="sb-tab" data-tab="remote" role="tab">Remote</button>
+      <button type="button" class="sb-tab" data-tab="settings" role="tab">Settings</button>
     </div>
   </div>
 
@@ -670,26 +668,6 @@
   </div>
   </div><!-- end tab-overview -->
 
-  <!-- TAB: BACKOFFICE -->
-  <div id="tab-backoffice" class="hub-tab-panel sh-tab-panel-hidden">
-    <h2>Backoffice Apps <span id="bo-count" class="sb-pill sb-pill--info">0</span></h2>
-    <p class="sb-text-muted sb-mb-sm">SQLite-backed workspace apps. Agents write via API, humans read here.</p>
-    <div id="bo-stats" class="bo-stats"></div>
-    <div id="bo-apps" class="sb-grid"></div>
-    <h3 class="sb-mt-md">Pub/Sub Topics <span id="pubsub-count" class="sb-pill sb-pill--info">0</span></h3>
-    <div id="pubsub-topics"></div>
-    <h3 class="sb-mt-md">Job Queue</h3>
-    <div id="job-stats"></div>
-    <div id="job-list"></div>
-  </div>
-
-  <!-- TAB: WORKERS -->
-  <div id="tab-workers" class="hub-tab-panel sh-tab-panel-hidden">
-    <h2>CLI Workers <span id="cli-count" class="sb-pill sb-pill--info">0</span></h2>
-    <p class="sb-text-muted sb-mb-sm">Auto-detected local tools. Agents call via POST /api/v1/cli/:id/run.</p>
-    <div id="cli-workers"></div>
-  </div>
-
   <!-- TAB: SESSIONS -->
   <div id="tab-sessions" class="hub-tab-panel sh-tab-panel-hidden">
     <div class="sb-card">
@@ -829,9 +807,16 @@ function setActiveTab(tabId) {
   });
 }
 
+function activateHubTab(tabId) {
+  setActiveTab(tabId);
+  if (tabId === 'sessions' && typeof window.refreshSessionsTab === 'function') try { window.refreshSessionsTab(); } catch(e) {}
+  if (tabId === 'events' && typeof window.refreshEvents === 'function') try { window.refreshEvents(); } catch(e) {}
+  if (tabId === 'settings' && typeof window.refreshSettings === 'function') try { window.refreshSettings(); } catch(e) {}
+}
+
 // Global for compatibility with older hooks and Hub control tooling.
 function switchTab(btn, tabId) {
-  setActiveTab(tabId);
+  activateHubTab(tabId);
 }
 
 function initTabs() {
@@ -843,10 +828,7 @@ function initTabs() {
     tab.addEventListener('click', function(e) {
       e.preventDefault();
       e.stopPropagation();
-      setActiveTab(tab.dataset.tab);
-      if (tab.dataset.tab === 'sessions') try { refreshSessionsTab(); } catch(e) {}
-      if (tab.dataset.tab === 'events') try { refreshEvents(); } catch(e) {}
-      if (tab.dataset.tab === 'settings') try { refreshSettings(); } catch(e) {}
+      activateHubTab(tab.dataset.tab);
     });
   });
 
@@ -913,7 +895,7 @@ function initTabs() {
         if (!tab) {
           throw new Error('Unknown tab: ' + command.tab);
         }
-        tab.click();
+        activateHubTab(command.tab);
         return hubStateSnapshot();
       }
       case 'click_selector': {
@@ -941,33 +923,26 @@ function initTabs() {
 
   function pollPendingHubJs() {
     return get('/api/v1/hub/pending-js').then(function(payload) {
-      if (!payload || !payload.js) {
+      var raw = payload && (payload.command || payload.js);
+      if (!raw) {
         return;
       }
+      var requestId = payload.request_id || null;
 
       try {
-        var command = JSON.parse(payload.js);
-        return postEvalResult({ok: true, result: normalizeEvalResult(executeHubCommand(command))});
-      } catch (parseErr) {
-        // Not JSON; fall through to legacy eval path below.
-      }
-
-      try {
-        var value = window.eval(payload.js);
-        if (value && typeof value.then === 'function') {
-          return value.then(function(resolved) {
-            return postEvalResult({ok: true, result: normalizeEvalResult(resolved)});
-          }).catch(function(err) {
-            return postEvalResult({ok: false, error: err ? String(err.message || err) : 'Hub eval failed'});
-          });
-        }
-        return postEvalResult({ok: true, result: normalizeEvalResult(value)});
+        var command = JSON.parse(raw);
+        return postEvalResult({
+          request_id: requestId,
+          ok: true,
+          result: normalizeEvalResult(executeHubCommand(command))
+        });
       } catch (err) {
         return postEvalResult({
+          request_id: requestId,
           ok: false,
           error: err ? String(err.message || err) : 'Hub eval failed',
           result: {
-            hint: 'Prefer JSON commands such as {\"op\":\"set_active_tab\",\"tab\":\"backoffice\"} because CSP blocks arbitrary eval in production.'
+            hint: 'Prefer JSON commands such as {\"op\":\"set_active_tab\",\"tab\":\"overview\"}.'
           }
         });
       }
@@ -1002,13 +977,9 @@ function initTabs() {
       if ($('hub-header')) $('hub-header').style.display = 'block';
       if ($('results-phase')) $('results-phase').style.display = 'block';
       try { loadVersionInfo(); } catch(e) {}
+      try { refreshOverviewStatus(); } catch(e) {}
       try { loadSettingsInfo(); } catch(e) {}
       try { loadRemoteStatus(); } catch(e) {}
-      get('/api/v1/system/status').then(function(s) {
-        var count = s.app_count || 0;
-        var el = $('app-discovery-count');
-        if (el) el.textContent = count + ' apps ready';
-      }).catch(function(){});
     }, 500);
   }
 
@@ -1150,7 +1121,7 @@ function initTabs() {
     // Close all sessions + browsers when switching modes (no orphans)
     get('/api/v1/browser/sessions').then(function(d) {
       (d.sessions || []).forEach(function(s) {
-        fetch('/api/v1/browser/close/' + s.session_id, {method:'POST'}).catch(function(){});
+        fetch(API + '/api/v1/browser/close/' + s.session_id, {method:'POST'}).catch(function(){});
       });
       singleSessionId = null;
       $('single-session-info').style.display = 'none';
@@ -1169,7 +1140,7 @@ function initTabs() {
   // ─── Launch Browser (Single Mode) ───
   window.launchBrowser = function() {
     $('dot-sidebar').className = 'sb-topbar-dot sb-topbar-dot--on';
-    fetch('/api/v1/browser/launch', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({})})
+    fetch(API + '/api/v1/browser/launch', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({})})
       .then(function(r){return r.json();})
       .then(function(d) {
         if (d.deduped && d.session) {
@@ -1193,7 +1164,7 @@ function initTabs() {
 
   window.closeSingleSession = function() {
     if (!singleSessionId) return;
-    fetch('/api/v1/browser/close/' + singleSessionId, {method:'POST'})
+    fetch(API + '/api/v1/browser/close/' + singleSessionId, {method:'POST'})
       .then(function(r){return r.json();})
       .then(function() {
         toast('Browser closed', 'success');
@@ -1206,7 +1177,7 @@ function initTabs() {
   window.newSession = function() {
     var name = prompt('Session profile name:', 'session-' + Date.now());
     if (!name) return;
-    fetch('/api/v1/browser/launch', {method:'POST', headers:{'Content-Type':'application/json'},
+    fetch(API + '/api/v1/browser/launch', {method:'POST', headers:{'Content-Type':'application/json'},
       body:JSON.stringify({profile: name, allow_duplicate: true})
     }).then(function(r){return r.json();}).then(function(d) {
       if (d.session) toast('Session "' + name + '" launched!', 'success');
@@ -1271,7 +1242,7 @@ function initTabs() {
   };
 
   window.focusSession = function(id) {
-    fetch('/api/v1/browser/focus/' + id, {method:'POST'})
+    fetch(API + '/api/v1/browser/focus/' + id, {method:'POST'})
       .then(function(r){return r.json();})
       .then(function(d) {
         if (d.focused) toast('Browser window focused', 'success');
@@ -1303,7 +1274,7 @@ function initTabs() {
         var masked = key.substring(0, 4) + '...' + key.substring(key.length - 4);
         display.textContent = masked;
         display.style.color = 'var(--sb-success)';
-        fetch('/api/v1/cloud/connect', {method:'POST', headers:{'Content-Type':'application/json'},
+        fetch(API + '/api/v1/cloud/connect', {method:'POST', headers:{'Content-Type':'application/json'},
           body:JSON.stringify({api_key:key, user_email:'byok@local', device_id:'local', paid_user:false})
         }).then(function(){
           toast('BYOK key saved!', 'success');
@@ -1357,7 +1328,7 @@ function initTabs() {
       var verified = 0;
       var total = agents.length;
       agents.forEach(function(a) {
-        fetch('/api/v1/agents/generate', {
+        fetch(API + '/api/v1/agents/generate', {
           method:'POST', headers:{'Content-Type':'application/json'},
           body:JSON.stringify({agent_id:a.id, prompt:'respond with ok', timeout:15})
         }).then(function(r){return r.json();}).then(function(d) {
@@ -1420,7 +1391,7 @@ function initTabs() {
     // Show waiting state in LLM card
     var managedGif = $('src-managed-gif');
     if (managedGif) managedGif.innerHTML = '<span class="sb-text-muted" class="sb-text-sm">Waiting for sign-in...</span>';
-    fetch('/api/v1/browser/launch', {method:'POST', headers:{'Content-Type':'application/json'},
+    fetch(API + '/api/v1/browser/launch', {method:'POST', headers:{'Content-Type':'application/json'},
       body:JSON.stringify({url:'https://solaceagi.com/dashboard', allow_duplicate:true})
     }).then(function(r){return r.json();}).then(function(d) {
       if (d.session_id || d.deduped) toast('Browser opened to solaceagi.com', 'success');
@@ -1450,7 +1421,7 @@ function initTabs() {
 
   // ─── Sign Out (disconnects cloud, reverts to gate state) ───
   window.signOut = function() {
-    fetch('/api/v1/cloud/disconnect', {method:'POST'}).then(function(r){return r.json();}).then(function() {
+    fetch(API + '/api/v1/cloud/disconnect', {method:'POST'}).then(function(r){return r.json();}).then(function() {
       toast('Signed out', 'success');
       $('topbar-signin').style.display = 'inline-flex';
       $('topbar-user-info').style.display = 'none';
@@ -1542,7 +1513,7 @@ function initTabs() {
 
   // ─── Close Session ───
   window.closeSession = function(id) {
-    fetch('/api/v1/browser/close/' + id, {method:'POST'})
+    fetch(API + '/api/v1/browser/close/' + id, {method:'POST'})
       .then(function(r){return r.json();})
       .then(function(d) {
         toast('Session closed: ' + (d.profile || id), 'success');
@@ -1563,6 +1534,7 @@ function initTabs() {
       var empty = $('sessions-tab-empty');
       if (!sessions.length) { tbody.innerHTML = ''; empty.style.display = 'block'; empty.textContent = 'No active sessions. Click "Launch Default" or "+ New Session".'; return; }
       empty.style.display = 'none';
+      empty.textContent = '';
       tbody.innerHTML = sessions.map(function(s) {
         var started = s.started_at ? s.started_at.substring(0, 19).replace('T',' ') : '?';
         return '<tr>' +
@@ -1581,6 +1553,7 @@ function initTabs() {
       }).join('');
     });
   }
+  window.refreshSessionsTab = refreshSessionsTab;
 
   // ─── Events Tab (DataTables) ───
   var eventsTable = null;
@@ -1591,6 +1564,7 @@ function initTabs() {
       var empty = $('events-empty');
       if (!events.length) { empty.style.display = 'block'; empty.textContent = 'No events yet. Heartbeat events will appear here.'; return; }
       empty.style.display = 'none';
+      empty.textContent = '';
 
       // Destroy existing DataTable if any
       if (eventsTable) { eventsTable.destroy(); eventsTable = null; }
@@ -1647,7 +1621,7 @@ function initTabs() {
     var url = row ? row.dataset.eventUrl : null;
     if (!url) return;
     var fullUrl = 'http://localhost:8888' + url;
-    fetch('/api/v1/browser/launch', {method:'POST', headers:{'Content-Type':'application/json'},
+    fetch(API + '/api/v1/browser/launch', {method:'POST', headers:{'Content-Type':'application/json'},
       body:JSON.stringify({url: fullUrl})
     }).then(function(r){return r.json();}).then(function(d) {
       if (d.deduped) toast('Opened in existing browser', 'success');
@@ -1672,6 +1646,7 @@ function initTabs() {
         '<span class="sb-text-muted">No LLM CLIs detected</span>';
     });
   }
+  window.refreshSettings = refreshSettings;
 
   // Init tabs — try immediately, also on DOMContentLoaded, also on load
   initTabs();
@@ -1717,7 +1692,7 @@ function initTabs() {
     var el = e.target.closest('[data-signoff-id]');
     var id = el ? el.dataset.signoffId : '';
     if (!id) return;
-    fetch('/api/v1/notifications/' + id + '/read', {method:'POST'}).then(function() {
+    fetch(API + '/api/v1/notifications/' + id + '/read', {method:'POST'}).then(function() {
       toast('Approved', 'success'); refreshSignoffs();
     });
   };
@@ -1725,13 +1700,13 @@ function initTabs() {
     var el = e.target.closest('[data-signoff-id]');
     var id = el ? el.dataset.signoffId : '';
     if (!id) return;
-    fetch('/api/v1/notifications/' + id + '/read', {method:'POST'}).then(function() {
+    fetch(API + '/api/v1/notifications/' + id + '/read', {method:'POST'}).then(function() {
       toast('Rejected', 'warning'); refreshSignoffs();
     });
   };
 
   window.disconnectRemote = function() {
-    fetch('/api/v1/tunnel/disconnect', {method:'POST'}).then(function(r){return r.json()}).then(function(d) {
+    fetch(API + '/api/v1/tunnel/disconnect', {method:'POST'}).then(function(r){return r.json()}).then(function(d) {
       toast('Remote access disconnected', 'success');
       loadRemoteStatus();
     }).catch(function(e) { toast('Disconnect failed: ' + e.message, 'error'); });
@@ -1754,93 +1729,8 @@ function initTabs() {
   setTimeout(pollPendingHubJs, 1000);
   setInterval(pollPendingHubJs, 1000);
 
-  // ── BACKOFFICE TAB ──
-  function loadBackoffice() {
-    get('/api/v1/backoffice').then(function(d) {
-      var apps = d.backoffice_apps || [];
-      $('bo-count').textContent = apps.length;
-      var html = '';
-      apps.forEach(function(app) {
-        html += '<div class="sb-card sb-mb-sm">';
-        html += '<h3><a href="/backoffice/' + esc(app.app_id) + '">' + esc(app.app_id.replace('backoffice-','').toUpperCase()) + '</a></h3>';
-        html += '<p class="sb-text-muted">' + (app.tables||[]).length + ' tables: ' + (app.tables||[]).join(', ') + '</p>';
-        html += '<p class="sb-text-xs">' + (app.views||[]).length + ' views: ' + (app.views||[]).join(', ') + '</p>';
-        html += '</div>';
-      });
-      $('bo-apps').innerHTML = html || '<p class="sb-text-muted">No backoffice apps detected</p>';
-    });
-
-    get('/api/v1/events/topics').then(function(d) {
-      var topics = d.topics || [];
-      $('pubsub-count').textContent = topics.length;
-      var html = '<table class="sb-table"><thead><tr><th>Topic</th><th>Events</th></tr></thead><tbody>';
-      topics.forEach(function(t) {
-        html += '<tr><td>' + esc(t.topic) + '</td><td>' + t.event_count + '</td></tr>';
-      });
-      html += '</tbody></table>';
-      $('pubsub-topics').innerHTML = topics.length ? html : '<p class="sb-text-muted">No events published yet</p>';
-    });
-
-    get('/api/v1/jobs/stats').then(function(d) {
-      var html = '<div class="bo-stats">';
-      html += '<div class="bo-stat-card"><div class="bo-stat-value">' + (d.total||0) + '</div><div class="bo-stat-label">Total Jobs</div></div>';
-      html += '<div class="bo-stat-card"><div class="bo-stat-value">' + (d.queued||0) + '</div><div class="bo-stat-label">Queued</div></div>';
-      html += '<div class="bo-stat-card"><div class="bo-stat-value">' + (d.running||0) + '</div><div class="bo-stat-label">Running</div></div>';
-      html += '<div class="bo-stat-card"><div class="bo-stat-value">' + (d.done||0) + '</div><div class="bo-stat-label">Done</div></div>';
-      html += '<div class="bo-stat-card"><div class="bo-stat-value">' + (d.failed||0) + '</div><div class="bo-stat-label">Failed</div></div>';
-      html += '</div>';
-      $('job-stats').innerHTML = html;
-    });
-
-    get('/api/v1/jobs?limit=10').then(function(d) {
-      var jobs = d.jobs || [];
-      if (!jobs.length) { $('job-list').innerHTML = '<p class="sb-text-muted">No jobs yet</p>'; return; }
-      var html = '<table class="sb-table"><thead><tr><th>Type</th><th>Status</th><th>Worker</th><th>Created</th></tr></thead><tbody>';
-      jobs.forEach(function(j) {
-        var cls = j.status === 'done' ? 'success' : j.status === 'failed' ? 'danger' : j.status === 'running' ? 'warning' : 'info';
-        html += '<tr><td>' + esc(j.job_type) + '</td>';
-        html += '<td><span class="sb-pill sb-pill--' + cls + '">' + esc(j.status) + '</span></td>';
-        html += '<td>' + esc(j.assigned_to||'—') + '</td>';
-        html += '<td class="sb-text-xs">' + esc((j.created_at||'').substring(0,19)) + '</td></tr>';
-      });
-      html += '</tbody></table>';
-      $('job-list').innerHTML = html;
-    });
-  }
-  loadBackoffice();
-  setInterval(loadBackoffice, 10000);
-
-  // ── WORKERS TAB ──
-  function loadWorkers() {
-    get('/api/v1/cli').then(function(d) {
-      var workers = d.workers || [];
-      $('cli-count').textContent = d.installed + '/' + d.total;
-      var byCat = {};
-      workers.forEach(function(w) {
-        if (!byCat[w.category]) byCat[w.category] = [];
-        byCat[w.category].push(w);
-      });
-      var html = '';
-      ['reasoning','perception','action','utility'].forEach(function(cat) {
-        var list = byCat[cat] || [];
-        if (!list.length) return;
-        html += '<h3 class="sb-mt-md">' + cat.charAt(0).toUpperCase() + cat.slice(1) + '</h3>';
-        list.forEach(function(w) {
-          var status = w.installed ? '<span class="sb-pill sb-pill--success">installed</span>' : '<span class="sb-pill sb-pill--danger">not found</span>';
-          html += '<div class="sb-card sb-mb-sm">';
-          html += '<strong>' + esc(w.id) + '</strong> ' + status;
-          html += '<p class="sb-text-muted sb-text-sm">' + esc(w.description) + '</p>';
-          if (w.installed) {
-            html += '<p class="sb-text-xs sb-text-mono">' + esc(w.path) + ' — ' + esc(w.version).substring(0,50) + '</p>';
-            html += '<p class="sb-text-xs">API: <code>POST ' + esc(w.api) + '</code></p>';
-          }
-          html += '</div>';
-        });
-      });
-      $('cli-workers').innerHTML = html;
-    });
-  }
-  loadWorkers();
+  refreshOverviewStatus();
+  setInterval(refreshOverviewStatus, 10000);
 
   function loadVersionInfo() {
     get('/health').then(function(d) {
@@ -1859,6 +1749,14 @@ function initTabs() {
         var badge = $('hub-version-badge');
         if (badge) { badge.textContent = 'v' + d.current_version + ' → v' + d.latest_version; badge.className = 'sb-pill sb-pill--warning'; }
       }
+    }).catch(function(){});
+  }
+
+  function refreshOverviewStatus() {
+    get('/api/v1/system/status').then(function(d) {
+      var count = d.app_count || 0;
+      var el = $('app-discovery-count');
+      if (el) el.textContent = count + ' apps ready';
     }).catch(function(){});
   }
 

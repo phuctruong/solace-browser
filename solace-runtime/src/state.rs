@@ -1,10 +1,11 @@
 // Diagram: 05-solace-runtime-architecture
-use std::collections::HashMap;
+use std::collections::{HashMap, VecDeque};
 use std::sync::Arc;
 use std::time::Instant;
 
 use chrono::{DateTime, Timelike, Utc};
 use parking_lot::RwLock;
+use serde_json::Value;
 
 /// Window in seconds: launches of the same key within this period are deduped.
 pub const LAUNCH_DEDUP_WINDOW_SECS: u64 = 30;
@@ -58,8 +59,14 @@ pub struct AppState {
     pub update_status: Arc<RwLock<crate::updates::UpdateStatus>>,
     /// Pending JS to execute in Hub WebView (polled by Hub).
     pub pending_js: Arc<RwLock<Option<String>>>,
+    /// Request ID for the pending Hub command.
+    pub pending_js_request_id: Arc<RwLock<Option<String>>>,
+    /// FIFO queue of Hub commands waiting for the desktop app to poll and execute.
+    pub pending_js_queue: Arc<RwLock<VecDeque<PendingHubCommand>>>,
     /// Last JS eval result returned by the Hub WebView.
     pub pending_js_result: Arc<RwLock<Option<serde_json::Value>>>,
+    /// Per-request Hub eval results keyed by request_id for concurrent agent control.
+    pub pending_js_results: Arc<RwLock<HashMap<String, Value>>>,
     /// Live page HTML: the actual currently-rendered full page HTML of the active browser tab.
     /// Updated by the sidebar on every URL change (2s polling via WebSocket url_changed event).
     /// GET /api/v1/browser/page-html returns this. MCP tool browser_page_html reads it.
@@ -78,6 +85,8 @@ pub struct AppState {
     pub event_bus: Arc<crate::pubsub::EventBus>,
     /// Job queue: priority-based task dispatch with retry + evidence.
     pub job_queue: Arc<crate::job_queue::JobQueue>,
+    /// Active runs: guarantees atomic $O(1)$ execution locking per app_id.
+    pub active_runs: Arc<RwLock<std::collections::HashSet<String>>>,
 }
 
 /// Tunnel state for remote access (FDA Part 11 consent + WSS connection).
@@ -291,6 +300,12 @@ pub struct PageHtml {
     pub captured_at: String,
 }
 
+#[derive(Clone, Debug)]
+pub struct PendingHubCommand {
+    pub request_id: String,
+    pub js: String,
+}
+
 impl AppState {
     pub fn new() -> Self {
         let solace_home = crate::utils::solace_home();
@@ -299,6 +314,7 @@ impl AppState {
         let settings = crate::config::load_settings(&solace_home);
         let cloud_config = crate::config::load_cloud_config(&solace_home);
         let budget_usage = crate::config::load_budget_usage(&solace_home);
+        let part11 = crate::evidence::part11_status(&solace_home);
         let schedules = crate::persistence::read_json::<Vec<Schedule>>(
             &solace_home.join("daemon").join("schedules.json"),
         )
@@ -310,7 +326,7 @@ impl AppState {
             sessions: Arc::new(RwLock::new(HashMap::new())),
             notifications: Arc::new(RwLock::new(Vec::new())),
             schedules: Arc::new(RwLock::new(schedules)),
-            evidence_count: Arc::new(RwLock::new(0)),
+            evidence_count: Arc::new(RwLock::new(part11.record_count as u64)),
             app_count: Arc::new(RwLock::new(crate::utils::scan_apps().len() as u32)),
             budget_usage: Arc::new(RwLock::new(budget_usage)),
             cloud_config: Arc::new(RwLock::new(cloud_config)),
@@ -335,7 +351,10 @@ impl AppState {
             tunnel: Arc::new(RwLock::new(TunnelState::default())),
             update_status: Arc::new(RwLock::new(crate::updates::UpdateStatus::default())),
             pending_js: Arc::new(RwLock::new(None)),
+            pending_js_request_id: Arc::new(RwLock::new(None)),
+            pending_js_queue: Arc::new(RwLock::new(VecDeque::new())),
             pending_js_result: Arc::new(RwLock::new(None)),
+            pending_js_results: Arc::new(RwLock::new(HashMap::new())),
             page_html: Arc::new(RwLock::new(PageHtml::default())),
             browser_tabs: Arc::new(RwLock::new(Vec::new())),
             worker_run: Arc::new(RwLock::new(None)),
@@ -345,6 +364,7 @@ impl AppState {
             )),
             event_bus: Arc::new(crate::pubsub::EventBus::new(&solace_home)),
             job_queue: Arc::new(crate::job_queue::JobQueue::new(&solace_home)),
+            active_runs: Arc::new(RwLock::new(std::collections::HashSet::new())),
         }
     }
 

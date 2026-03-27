@@ -1,8 +1,8 @@
 // Diagram: hub-ux-architecture
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, HashMap};
 use std::fs;
 
-use axum::extract::{Path, State};
+use axum::extract::{Path, Query, State};
 use axum::http::StatusCode;
 use axum::response::{Html, Redirect};
 use axum::routing::get;
@@ -115,6 +115,8 @@ pub fn routes() -> Router<AppState> {
         .route("/settings", get(settings_page))
         .route("/styleguide", get(styleguide_page))
         .route("/styleguide.css", get(styleguide_css))
+        .route("/site.css", get(site_css))
+        .route("/hub-app.js", get(hub_app_js))
         .nest_service("/assets", tower_http::services::ServeDir::new("templates"))
         .nest_service(
             "/icons",
@@ -137,7 +139,10 @@ async fn index() -> Redirect {
 // ---------------------------------------------------------------------------
 // GET /dashboard — local control plane dashboard
 // ---------------------------------------------------------------------------
-async fn dashboard_page(State(state): State<AppState>) -> Html<String> {
+async fn dashboard_page(
+    State(state): State<AppState>,
+    Query(params): Query<HashMap<String, String>>,
+) -> Html<String> {
     let apps = crate::app_engine::scan_installed_apps();
     let sessions = state.sessions.read().clone();
     let events = state.runtime_events.read().clone();
@@ -146,6 +151,11 @@ async fn dashboard_page(State(state): State<AppState>) -> Html<String> {
     let notifications = state.notifications.read().clone();
     let solace_home = crate::utils::solace_home();
     let part11 = crate::evidence::part11_status(&solace_home);
+    let requested_tab = params.get("tab").map(String::as_str).unwrap_or("overview");
+    let initial_tab = match requested_tab {
+        "overview" | "workers" | "apps" | "backoffice" | "trust" | "platform" => requested_tab,
+        _ => "overview",
+    };
 
     let greeting = delight.warm_greeting();
     let celebration_banner = delight
@@ -254,8 +264,10 @@ async fn dashboard_page(State(state): State<AppState>) -> Html<String> {
                 .to_string();
     }
 
-    let chain_badge = if part11.chain_valid {
+    let chain_badge = if part11.chain_valid && part11.continuous_chain_valid {
         "<span class=\"sb-pill sb-pill--success\">Chain Valid</span>"
+    } else if part11.chain_valid && part11.record_count > 0 {
+        "<span class=\"sb-pill sb-pill--warning\">Chain Segmented</span>"
     } else if part11.record_count > 0 {
         "<span class=\"sb-pill sb-pill--danger\">Chain Broken</span>"
     } else {
@@ -385,7 +397,7 @@ async fn dashboard_page(State(state): State<AppState>) -> Html<String> {
   <div class="sb-card sb-stat-card">
     <div class="sb-kicker">Dashboard</div>
     <div>
-      <a href="/dashboard#overview" class="sb-btn sb-btn--sm sb-btn--primary">Local</a>
+      <a href="/dashboard?tab=overview" class="sb-btn sb-btn--sm sb-btn--primary">Local</a>
       <a href="https://solaceagi.com/dashboard" class="sb-btn sb-btn--sm">Cloud</a>
     </div>
     <div id="auth-status" class="sb-text-xs" style="color:var(--sb-text-muted);margin-top:0.2rem">Checking...</div>
@@ -435,12 +447,12 @@ async fn dashboard_page(State(state): State<AppState>) -> Html<String> {
 </div>
 
 <div class="sb-tabs" role="tablist" id="dash-tabs">
-  <button class="sb-tab sb-tab--active" data-tab="overview" role="tab" aria-selected="true">Overview</button>
-  <button class="sb-tab" data-tab="workers" role="tab" aria-selected="false">Workers</button>
-  <button class="sb-tab" data-tab="apps" role="tab" aria-selected="false">Apps</button>
-  <button class="sb-tab" data-tab="backoffice" role="tab" aria-selected="false">Backoffice</button>
-  <button class="sb-tab" data-tab="trust" role="tab" aria-selected="false">Trust</button>
-  <button class="sb-tab" data-tab="platform" role="tab" aria-selected="false">Platform</button>
+  <a class="sb-tab {overview_tab_class}" data-tab="overview" role="tab" aria-selected="{overview_selected}" href="/dashboard?tab=overview">Overview</a>
+  <a class="sb-tab {workers_tab_class}" data-tab="workers" role="tab" aria-selected="{workers_selected}" href="/dashboard?tab=workers">Workers</a>
+  <a class="sb-tab {apps_tab_class}" data-tab="apps" role="tab" aria-selected="{apps_selected}" href="/dashboard?tab=apps">Apps</a>
+  <a class="sb-tab {backoffice_tab_class}" data-tab="backoffice" role="tab" aria-selected="{backoffice_selected}" href="/dashboard?tab=backoffice">Backoffice</a>
+  <a class="sb-tab {trust_tab_class}" data-tab="trust" role="tab" aria-selected="{trust_selected}" href="/dashboard?tab=trust">Trust</a>
+  <a class="sb-tab {platform_tab_class}" data-tab="platform" role="tab" aria-selected="{platform_selected}" href="/dashboard?tab=platform">Platform</a>
 </div>"#,
         role_count = role_apps.len(),
         app_count = apps.len(),
@@ -450,23 +462,71 @@ async fn dashboard_page(State(state): State<AppState>) -> Html<String> {
         evidence_count = part11.record_count,
         uptime = uptime_str,
         unread = unread,
+        overview_tab_class = if initial_tab == "overview" {
+            "sb-tab--active"
+        } else {
+            ""
+        },
+        workers_tab_class = if initial_tab == "workers" {
+            "sb-tab--active"
+        } else {
+            ""
+        },
+        apps_tab_class = if initial_tab == "apps" {
+            "sb-tab--active"
+        } else {
+            ""
+        },
+        backoffice_tab_class = if initial_tab == "backoffice" {
+            "sb-tab--active"
+        } else {
+            ""
+        },
+        trust_tab_class = if initial_tab == "trust" {
+            "sb-tab--active"
+        } else {
+            ""
+        },
+        platform_tab_class = if initial_tab == "platform" {
+            "sb-tab--active"
+        } else {
+            ""
+        },
+        overview_selected = if initial_tab == "overview" {
+            "true"
+        } else {
+            "false"
+        },
+        workers_selected = if initial_tab == "workers" { "true" } else { "false" },
+        apps_selected = if initial_tab == "apps" { "true" } else { "false" },
+        backoffice_selected = if initial_tab == "backoffice" {
+            "true"
+        } else {
+            "false"
+        },
+        trust_selected = if initial_tab == "trust" { "true" } else { "false" },
+        platform_selected = if initial_tab == "platform" {
+            "true"
+        } else {
+            "false"
+        },
     ));
 
     body.push_str(&format!(
-        r#"<div id="tab-overview" class="dash-tab-panel">
+        r#"<div id="tab-overview" class="dash-tab-panel" style="{overview_panel_style}">
   {celebration_banner}
   <div class="sb-section-header">
     <h2 class="sb-heading">Overview</h2>
-    <a href="/dashboard#workers" class="sb-btn sb-btn--sm">Open Workers</a>
+    <a href="/dashboard?tab=workers" class="sb-btn sb-btn--sm">Open Workers</a>
   </div>
   <p class="sb-text-muted">Local-first control plane for workers, approvals, backoffice work, and platform status.</p>
 
   <div class="sb-card-grid" style="margin-bottom:1rem">
-    <a href="/dashboard#workers" class="sb-card sb-domain-link">
+    <a href="/dashboard?tab=workers" class="sb-card sb-domain-link">
       <div class="sb-card-header"><h3 class="sb-card-title">Workers</h3><span class="sb-pill sb-pill--info">{role_count}</span></div>
       <div class="sb-card-body"><p class="sb-text-sm">Hire, run, and manage AI employees.</p></div>
     </a>
-    <a href="/dashboard#backoffice" class="sb-card sb-domain-link">
+    <a href="/dashboard?tab=backoffice" class="sb-card sb-domain-link">
       <div class="sb-card-header"><h3 class="sb-card-title">Backoffice</h3><span class="sb-pill sb-pill--info">{backoffice_count}</span></div>
       <div class="sb-card-body"><p class="sb-text-sm">CRM, tasks, messages, docs, email, support, invoicing, and more.</p></div>
     </a>
@@ -503,10 +563,15 @@ async fn dashboard_page(State(state): State<AppState>) -> Html<String> {
         backoffice_count = backoffice_apps.len(),
         session_rows = session_rows,
         event_rows = event_rows,
+        overview_panel_style = if initial_tab == "overview" {
+            "display:block"
+        } else {
+            "display:none"
+        },
     ));
 
     body.push_str(&format!(
-        r#"<div id="tab-workers" class="dash-tab-panel" style="display:none">
+        r#"<div id="tab-workers" class="dash-tab-panel" style="{workers_panel_style}">
   <div class="sb-section-header">
     <h2 class="sb-heading">AI Workers</h2>
     <a href="/hire" class="sb-btn sb-btn--sm">Hire New Worker</a>
@@ -533,10 +598,15 @@ async fn dashboard_page(State(state): State<AppState>) -> Html<String> {
         qa_count = qa_apps.len(),
         unread = unread,
         role_cards = role_cards,
+        workers_panel_style = if initial_tab == "workers" {
+            "display:block"
+        } else {
+            "display:none"
+        },
     ));
 
     body.push_str(&format!(
-        r#"<div id="tab-apps" class="dash-tab-panel" style="display:none">
+        r#"<div id="tab-apps" class="dash-tab-panel" style="{apps_panel_style}">
   <div class="sb-section-header">
     <h2 class="sb-heading">Apps</h2>
     <div>
@@ -553,10 +623,15 @@ async fn dashboard_page(State(state): State<AppState>) -> Html<String> {
 </div>"#,
         domain_cards = domain_cards,
         app_cards = app_cards,
+        apps_panel_style = if initial_tab == "apps" {
+            "display:block"
+        } else {
+            "display:none"
+        },
     ));
 
     body.push_str(&format!(
-        r#"<div id="tab-backoffice" class="dash-tab-panel" style="display:none">
+        r#"<div id="tab-backoffice" class="dash-tab-panel" style="{backoffice_panel_style}">
   <div class="sb-section-header">
     <h2 class="sb-heading">Backoffice</h2>
     <a href="/backoffice" class="sb-btn sb-btn--sm">Open Workspace</a>
@@ -565,10 +640,15 @@ async fn dashboard_page(State(state): State<AppState>) -> Html<String> {
   <div class="sb-card-grid">{backoffice_cards}</div>
 </div>"#,
         backoffice_cards = backoffice_cards,
+        backoffice_panel_style = if initial_tab == "backoffice" {
+            "display:block"
+        } else {
+            "display:none"
+        },
     ));
 
     body.push_str(&format!(
-        r#"<div id="tab-trust" class="dash-tab-panel" style="display:none">
+        r#"<div id="tab-trust" class="dash-tab-panel" style="{trust_panel_style}">
   <div class="sb-section-header">
     <h2 class="sb-heading">Trust</h2>
     <a href="/signoff" class="sb-btn sb-btn--sm">Open Sign Off</a>
@@ -622,10 +702,16 @@ async fn dashboard_page(State(state): State<AppState>) -> Html<String> {
         chain_badge = chain_badge,
         evidence_count = part11.record_count,
         qa_count = qa_apps.len(),
+        trust_panel_style = if initial_tab == "trust" {
+            "display:block"
+        } else {
+            "display:none"
+        },
     ));
 
     body.push_str(
-        r#"<div id="tab-platform" class="dash-tab-panel" style="display:none">
+        &format!(
+            r#"<div id="tab-platform" class="dash-tab-panel" style="{platform_panel_style}">
   <div class="sb-section-header">
     <h2 class="sb-heading">Platform</h2>
     <a href="/settings" class="sb-btn sb-btn--sm">Open Settings</a>
@@ -672,6 +758,12 @@ async fn dashboard_page(State(state): State<AppState>) -> Html<String> {
     </div>
   </div>
 </div>"#,
+            platform_panel_style = if initial_tab == "platform" {
+                "display:block"
+            } else {
+                "display:none"
+            },
+        ),
     );
 
     body.push_str(
@@ -693,9 +785,17 @@ async fn dashboard_page(State(state): State<AppState>) -> Html<String> {
       return response.json();
     });
   }
-  function normalizeTab(hash) {
-    var tab = String(hash || '').replace(/^#/, '');
+  function normalizeTab(value) {
+    var tab = String(value || '').replace(/^#/, '').trim().toLowerCase();
     return VALID_TABS.indexOf(tab) !== -1 ? tab : 'overview';
+  }
+  function currentTab() {
+    try {
+      var url = new URL(window.location.href);
+      var searchTab = url.searchParams.get('tab');
+      if (searchTab) return normalizeTab(searchTab);
+    } catch (err) {}
+    return normalizeTab(location.hash);
   }
   function activateTab(tab) {
     var active = normalizeTab(tab);
@@ -708,20 +808,13 @@ async fn dashboard_page(State(state): State<AppState>) -> Html<String> {
       panel.style.display = panel.id === 'tab-' + active ? 'block' : 'none';
     });
   }
-
-  document.querySelectorAll('#dash-tabs .sb-tab[data-tab]').forEach(function(btn) {
-    btn.addEventListener('click', function() {
-      var target = btn.dataset.tab || 'overview';
-      if (location.hash !== '#' + target) {
-        location.hash = target;
-      }
-      activateTab(target);
-    });
+  window.addEventListener('popstate', function() {
+    activateTab(currentTab());
   });
   window.addEventListener('hashchange', function() {
-    activateTab(location.hash);
+    activateTab(currentTab());
   });
-  activateTab(location.hash);
+  activateTab(currentTab());
 
   function renderPendingSummary(summary) {
     var count = summary.needs_review || 0;
@@ -1677,8 +1770,10 @@ async fn evidence_page() -> Html<String> {
     let entries = crate::evidence::list_evidence(&solace_home, 100);
     let part11 = crate::evidence::part11_status(&solace_home);
 
-    let status_badge = if part11.chain_valid {
+    let status_badge = if part11.chain_valid && part11.continuous_chain_valid {
         "<span class=\"badge chain-valid\">Chain Valid</span>"
+    } else if part11.chain_valid && part11.record_count > 0 {
+        "<span class=\"badge chain-warning\">Chain Segmented</span>"
     } else if part11.record_count > 0 {
         "<span class=\"badge chain-invalid\">Chain Broken</span>"
     } else {
@@ -1716,11 +1811,13 @@ async fn evidence_page() -> Html<String> {
 
     let body = format!(
         "<p><a href=\"/domains\">&larr; All Domains</a></p>\
-         <p>Part 11 Status: {status_badge} &mdash; {} records &mdash; ALCOA: {}</p>\
+         <p>Part 11 Status: {status_badge} &mdash; {} records &mdash; {} segments / {} restarts &mdash; ALCOA: {}</p>\
          <h2>Evidence Chain</h2>\
          <table class=\"events\"><thead><tr><th>Timestamp</th><th>Event</th><th>Actor</th><th>Hash</th><th>Prev Hash</th></tr></thead>\
          <tbody>{rows}</tbody></table>",
         part11.record_count,
+        part11.segment_count,
+        part11.restart_count,
         part11.alcoa.join(", "),
     );
 
@@ -2546,6 +2643,64 @@ async fn styleguide_css() -> (
     )
 }
 
+/// Serve the Hub page CSS from the Hub frontend directory (cross-platform).
+async fn site_css() -> (
+    StatusCode,
+    [(axum::http::header::HeaderName, &'static str); 1],
+    String,
+) {
+    let path = hub_assets_dir(".").join("site.css");
+    if let Ok(content) = fs::read_to_string(&path) {
+        return (
+            StatusCode::OK,
+            [(axum::http::header::CONTENT_TYPE, "text/css")],
+            content,
+        );
+    }
+    let alt = hub_assets_dir("..").join("site.css");
+    if let Ok(content) = fs::read_to_string(&alt) {
+        return (
+            StatusCode::OK,
+            [(axum::http::header::CONTENT_TYPE, "text/css")],
+            content,
+        );
+    }
+    (
+        StatusCode::NOT_FOUND,
+        [(axum::http::header::CONTENT_TYPE, "text/css")],
+        String::new(),
+    )
+}
+
+/// Serve the Hub app JS from the Hub frontend directory (cross-platform).
+async fn hub_app_js() -> (
+    StatusCode,
+    [(axum::http::header::HeaderName, &'static str); 1],
+    String,
+) {
+    let path = hub_assets_dir(".").join("hub-app.js");
+    if let Ok(content) = fs::read_to_string(&path) {
+        return (
+            StatusCode::OK,
+            [(axum::http::header::CONTENT_TYPE, "application/javascript")],
+            content,
+        );
+    }
+    let alt = hub_assets_dir("..").join("hub-app.js");
+    if let Ok(content) = fs::read_to_string(&alt) {
+        return (
+            StatusCode::OK,
+            [(axum::http::header::CONTENT_TYPE, "application/javascript")],
+            content,
+        );
+    }
+    (
+        StatusCode::NOT_FOUND,
+        [(axum::http::header::CONTENT_TYPE, "application/javascript")],
+        String::new(),
+    )
+}
+
 /// Simple stub page (legacy — used by index, onboarding, sidebar).
 fn page(title: &str, body: &str) -> String {
     format!(
@@ -2589,6 +2744,7 @@ fn hub_page(title: &str, body_content: &str) -> String {
 .event-signoff td {{ color: var(--sb-danger); }}
 .event-seal td {{ color: var(--sb-signal); }}
 .chain-valid {{ background: var(--sb-success); color: var(--sb-on-accent); }}
+.chain-warning {{ background: var(--sb-warning); color: var(--sb-on-accent); }}
 .chain-invalid {{ background: var(--sb-danger); color: var(--sb-on-accent); }}
 /* A11Y: Focus styles (WCAG 2.1 AA) */
 :focus-visible {{ outline: 2px solid var(--sb-signal); outline-offset: 2px; }}

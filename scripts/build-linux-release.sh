@@ -102,6 +102,19 @@ if [ -f "${CHROMIUM_OUT}/solace_crashpad_handler" ]; then
   copy_runtime_file "${CHROMIUM_OUT}/solace_crashpad_handler"
 fi
 
+HUB_FRONTEND_DIR="${REPO_ROOT}/solace-hub/src"
+for hub_file in index.html styleguide.css site.css hub-app.js; do
+  if [ -f "${HUB_FRONTEND_DIR}/${hub_file}" ]; then
+    install -m 644 "${HUB_FRONTEND_DIR}/${hub_file}" "${BUNDLE_DIR}/${hub_file}"
+  fi
+done
+
+for hub_dir in icons media vendor; do
+  if [ -d "${HUB_FRONTEND_DIR}/${hub_dir}" ]; then
+    copy_tree "${HUB_FRONTEND_DIR}/${hub_dir}" "${BUNDLE_DIR}/"
+  fi
+done
+
 while IFS= read -r runtime_file; do
   case "$(basename "${runtime_file}")" in
     solace|solace-wrapper|solace_crashpad_handler)
@@ -155,6 +168,15 @@ elif [ -d "${CHROMIUM_OUT}/source/src/${_UPSTREAM_DIR}/browser/resources/solace"
 else
   echo "WARNING: sidebar resources not found — skipping (sidebar will not be available)"
 fi
+
+for sidebar_file in sidepanel.html sidepanel.js sidepanel.css; do
+  if [ -f "${HUB_FRONTEND_DIR}/${sidebar_file}" ]; then
+    mkdir -p "${BUNDLE_DIR}/resources/solace-sidebar"
+    mkdir -p "${BUNDLE_DIR}/source/src/${_UPSTREAM_DIR}/browser/resources/solace"
+    install -m 644 "${HUB_FRONTEND_DIR}/${sidebar_file}" "${BUNDLE_DIR}/resources/solace-sidebar/${sidebar_file}"
+    install -m 644 "${HUB_FRONTEND_DIR}/${sidebar_file}" "${BUNDLE_DIR}/source/src/${_UPSTREAM_DIR}/browser/resources/solace/${sidebar_file}"
+  fi
+done
 
 mkdir -p "${BUNDLE_DIR}/data/default"
 copy_tree "${REPO_ROOT}/data/default/apps" "${BUNDLE_DIR}/data/default/"

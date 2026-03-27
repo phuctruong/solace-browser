@@ -123,8 +123,12 @@ async fn handle_yinyang_ws(socket: WebSocket, state: AppState, session_id: Strin
                         // AND create Prime Wiki snapshot
                         if let Some(content) = parsed.get("content").and_then(|v| v.as_str()) {
                             let title = parsed.get("title").and_then(|v| v.as_str()).unwrap_or("");
+                            let looks_like_sidebar_shell = title.contains("Yinyang AI Assistant")
+                                || content.contains("id=\"yy-shell\"")
+                                || content.contains("class=\"yy-status-pill\"")
+                                || content.contains("yy-shell--working");
                             // Store live page HTML in state (GET /api/v1/browser/page-html reads this)
-                            if !nav_url.is_empty() && content.len() > 100 {
+                            if !nav_url.is_empty() && content.len() > 100 && !looks_like_sidebar_shell {
                                 let mut page = state.page_html.write();
                                 page.html = content.to_string();
                                 page.url = nav_url.clone();
@@ -132,7 +136,7 @@ async fn handle_yinyang_ws(socket: WebSocket, state: AppState, session_id: Strin
                                 page.captured_at = crate::utils::now_iso8601();
                             }
                             // Also send to wiki/extract for Stillwater compression + Prime Wiki snapshot
-                            if !nav_url.is_empty() && content.len() > 100 {
+                            if !nav_url.is_empty() && content.len() > 100 && !looks_like_sidebar_shell {
                                 let wiki_url = nav_url.clone();
                                 let wiki_content = content.to_string();
                                 let _handle = tokio::spawn(async move {

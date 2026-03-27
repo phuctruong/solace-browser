@@ -3,6 +3,7 @@ pub mod inbox;
 pub mod outbox;
 pub mod runner;
 pub mod template;
+pub mod wasm_sandbox;
 
 use std::collections::HashMap;
 
@@ -59,6 +60,15 @@ pub struct AppManifest {
     /// Conductor apps: list of app IDs whose outboxes this app reads.
     #[serde(default)]
     pub orchestrates: Vec<String>,
+    /// Hierarchical Org Chart: The ID of the App/Manager this agent reports to.
+    #[serde(default)]
+    pub reports_to: Option<String>,
+    /// Company isolation matrix: Domain or UUID bounding this agent's state.
+    #[serde(default)]
+    pub company_id: Option<String>,
+    /// Budget guard rails (Adversarial QA / Protocol Security).
+    #[serde(default = "default_budget")]
+    pub budget_limit: f64,
     /// CLI wrapper apps: binary to execute.
     #[serde(default)]
     pub binary: String,
@@ -136,4 +146,8 @@ fn default_visibility() -> String {
 
 pub fn scan_installed_apps() -> Vec<AppManifest> {
     crate::utils::scan_apps()
+}
+
+fn default_budget() -> f64 {
+    0.0
 }

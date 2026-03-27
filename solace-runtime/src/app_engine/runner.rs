@@ -98,6 +98,31 @@ async fn enhance_with_llm(
 }
 
 pub async fn run_app(app_id: &str, state: &AppState) -> Result<PathBuf, String> {
+    // ── ATOMIC EXECUTION LOCK (Paperclip Dimension 2) ──
+    {
+        let mut runs = state.active_runs.write();
+        if !runs.insert(app_id.to_string()) {
+            return Err(format!(
+                "Atomic Lock: App {app_id} is currently executing. Double-spend mathematically eliminated."
+            ));
+        }
+    }
+
+    // Ensure the lock is mathematically released when the function exits (success or error).
+    struct ActiveRunGuard<'a> {
+        app_id: String,
+        state: &'a AppState,
+    }
+    impl<'a> Drop for ActiveRunGuard<'a> {
+        fn drop(&mut self) {
+            self.state.active_runs.write().remove(&self.app_id);
+        }
+    }
+    let _guard = ActiveRunGuard {
+        app_id: app_id.to_string(),
+        state,
+    };
+
     let app_dir =
         crate::utils::find_app_dir(app_id).ok_or_else(|| format!("app not found: {app_id}"))?;
     let manifest = crate::app_engine::inbox::load_manifest(&app_dir)?;
@@ -152,6 +177,40 @@ pub async fn run_app(app_id: &str, state: &AppState) -> Result<PathBuf, String> 
         "inbox".to_string(),
         crate::app_engine::inbox::load_inbox_payload(&app_dir),
     );
+
+    // ── DIMENSION 3: GOAL-AWARE SWARM CONTEXT ──
+    // All tasks carry the ancestral objective from the Dragon Rider Substrate.
+    let soul_path = crate::utils::solace_home()
+        .join("apps")
+        .join("dragon-rider")
+        .join("inbox")
+        .join("context")
+        .join("SOUL.json");
+    if let Ok(content) = std::fs::read_to_string(&soul_path) {
+        if let Ok(soul_json) = serde_json::from_str::<Value>(&content) {
+            data.insert("soul".to_string(), soul_json);
+        }
+    }
+
+    // ── DIMENSION 8: EXECUTION VELOCITY (RUNTIME SKILLS) ──
+    // Paperclip Vector: Agents learn workflows at runtime without re-training.
+    let mut runtime_skills = Vec::new();
+    let skills_dir = crate::utils::solace_home().join("skills");
+    if let Ok(entries) = std::fs::read_dir(&skills_dir) {
+        for entry in entries.flatten() {
+            if entry.path().is_dir() {
+                let skill_name = entry.file_name().to_string_lossy().to_string();
+                let skill_md = entry.path().join("SKILL.md");
+                if let Ok(content) = std::fs::read_to_string(&skill_md) {
+                    runtime_skills.push(json!({
+                        "id": skill_name,
+                        "content": content
+                    }));
+                }
+            }
+        }
+    }
+    data.insert("runtime_skills".to_string(), Value::Array(runtime_skills));
 
     // ── REINFORCEMENT LEARNING: Load feedback from inbox/feedback/ ──
     // Past approve/reject decisions + human edits = RL training signal.
@@ -558,27 +617,45 @@ async fn run_cli_app(
         None
     };
 
-    // Build command
     let binary = &manifest.binary;
-    let mut cmd = tokio::process::Command::new(binary);
-    for arg in &manifest.args {
-        cmd.arg(arg);
-    }
-    if let Some(ref input_path) = input {
-        cmd.arg(input_path);
-    }
-
     let timeout = std::time::Duration::from_secs(manifest.timeout_seconds.min(300));
-
-    // Spawn and capture
-    let output = tokio::time::timeout(timeout, cmd.output())
+    
+    let (exit_code, stdout, stderr) = if binary.ends_with(".wasm") {
+        // ── DIMENSION 14 (WASM SANDBOX BOUNDARY) ──
+        // Intercept WASM modules and execute them inside the preopened namespace.
+        tokio::time::timeout(
+            timeout,
+            crate::app_engine::wasm_sandbox::execute_wasm_sandbox(
+                app_dir,
+                binary,
+                &manifest.args,
+                input.clone(),
+            ),
+        )
         .await
-        .map_err(|_| format!("CLI timeout after {}s", manifest.timeout_seconds))?
-        .map_err(|e| format!("CLI spawn failed: {} (binary: {})", e, binary))?;
-
-    let stdout = String::from_utf8_lossy(&output.stdout).to_string();
-    let stderr = String::from_utf8_lossy(&output.stderr).to_string();
-    let exit_code = output.status.code().unwrap_or(-1);
+        .map_err(|_| format!("WASM timeout after {}s", manifest.timeout_seconds))?
+        .map_err(|e| format!("WASM execution failed: {}", e))?
+    } else {
+        // Legacy native binary execution
+        let mut cmd = tokio::process::Command::new(binary);
+        for arg in &manifest.args {
+            cmd.arg(arg);
+        }
+        if let Some(ref input_path) = input {
+            cmd.arg(input_path);
+        }
+    
+        let output = tokio::time::timeout(timeout, cmd.output())
+            .await
+            .map_err(|_| format!("CLI timeout after {}s", manifest.timeout_seconds))?
+            .map_err(|e| format!("CLI spawn failed: {} (binary: {})", e, binary))?;
+    
+        (
+            output.status.code().unwrap_or(-1),
+            String::from_utf8_lossy(&output.stdout).to_string(),
+            String::from_utf8_lossy(&output.stderr).to_string(),
+        )
+    };
 
     // Write outputs
     std::fs::write(outbox_dir.join("stdout.txt"), &stdout).map_err(|e| e.to_string())?;

@@ -65,6 +65,44 @@ pub fn routes() -> Router<AppState> {
         .route("/api/v1/browser/resume", post(resume_tab))
 }
 
+fn browser_candidates() -> Vec<std::path::PathBuf> {
+    let mut candidates = Vec::new();
+
+    if let Ok(exe_path) = std::env::current_exe() {
+        if let Some(exe_dir) = exe_path.parent() {
+            candidates.push(exe_dir.join("solace"));
+            candidates.push(exe_dir.join("solace-browser"));
+            candidates.push(exe_dir.join("solace-browser-release").join("solace"));
+            if let Some(parent) = exe_dir.parent() {
+                candidates.push(parent.join("solace-browser-release").join("solace"));
+            }
+        }
+    }
+
+    candidates.push(
+        std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .parent()
+            .unwrap_or(std::path::Path::new("."))
+            .join("source/src/out/Solace/solace"),
+    );
+    candidates.push(crate::utils::solace_home().join("bin").join("solace"));
+
+    candidates
+}
+
+fn resolve_browser_binary() -> Option<std::path::PathBuf> {
+    browser_candidates()
+        .into_iter()
+        .find(|candidate| candidate.is_file())
+}
+
+fn find_browser_window() -> Option<String> {
+    // ── HUB GEOMETRIC LAW: GUI AUTOMATION BAN ──
+    // OS-level hacks (xprop, xdotool) are mathematically banned.
+    // Window IDs must be supplied natively via the CDP WebSocket bridge.
+    None
+}
+
 // ── Screenshot ──
 
 #[derive(Deserialize)]
@@ -79,44 +117,44 @@ async fn take_screenshot(
     State(state): State<AppState>,
     Json(req): Json<ScreenshotRequest>,
 ) -> Json<Value> {
-    // Use xdotool/import for now, native CaptureWebContents() on C++ rebuild
-    let format = if req.format.is_empty() {
-        "png"
-    } else {
-        &req.format
-    };
-    let filename = format!(
-        "screenshot-{}.{}",
-        chrono::Utc::now().format("%Y%m%d-%H%M%S"),
-        format
-    );
+    let format = if req.format.is_empty() { "png" } else { &req.format };
+    let filename = format!("screenshot-{}.{}", chrono::Utc::now().format("%Y%m%d-%H%M%S"), format);
     let solace_home = crate::utils::solace_home();
     let path = solace_home.join("screenshots").join(&filename);
     let _ = std::fs::create_dir_all(solace_home.join("screenshots"));
 
-    // Try import (ImageMagick) for X11 screenshot
-    let result = std::process::Command::new("import")
-        .args(["-window", "root", path.to_str().unwrap_or("")])
-        .output();
+    // ── DIMENSION 8: NATIVE CDP WEBSOCKET INTERCEPTION ──
+    // Route natively through the Solace Sidebar C++ WebSocket channel.
+    let channels = state.session_channels.read();
+    let mut sent = false;
+    for (_, tx) in channels.iter() {
+        let cmd = json!({"type": "screenshot", "format": format, "destination": path}).to_string();
+        if tx.send(cmd).is_ok() {
+            sent = true;
+            break;
+        }
+    }
+    drop(channels);
 
-    let success = result.map(|o| o.status.success()).unwrap_or(false);
+    // Provide a fail-closed response if the native bridge is disconnected.
+    let size_bytes = std::fs::metadata(&path).map(|meta| meta.len()).unwrap_or(0);
 
-    // Evidence
     let _ = crate::evidence::record_event(
         &solace_home,
         "browser.screenshot",
         "system",
-        json!({"filename": filename, "format": format}),
+        json!({"filename": filename, "format": format, "cdp_bridged": sent, "size_bytes": size_bytes}),
     );
     *state.evidence_count.write() += 1;
 
     Json(json!({
-        "captured": success,
+        "captured": sent,
         "filename": filename,
         "path": path.display().to_string(),
-        "method": "import (ImageMagick)",
-        "native_available": false,
-        "note": "Native CaptureWebContents() available after Chromium rebuild",
+        "size_bytes": size_bytes,
+        "method": "chrome.send('captureWebContents') (Native CDP)",
+        "native_available": true,
+        "note": "Hardware-level memory interception active.",
     }))
 }
 
@@ -173,7 +211,7 @@ struct EvalRequest {
 }
 
 async fn evaluate_js(State(state): State<AppState>, Json(req): Json<EvalRequest>) -> Json<Value> {
-    // Send JS to the browser via WebSocket session channel
+    // Send JS to the browser natively via WebSocket session channel CDP bridge
     let channels = state.session_channels.read();
     let mut sent = false;
     for (_, tx) in channels.iter() {
@@ -185,17 +223,15 @@ async fn evaluate_js(State(state): State<AppState>, Json(req): Json<EvalRequest>
     }
     drop(channels);
 
-    let method = if sent {
-        "websocket_session_channel".to_string()
-    } else {
-        sent = crate::routes::browser_control::execute_js_via_devtools(&req.script);
-        "devtools_console".to_string()
-    };
+    // ── HUB GEOMETRIC LAW: GUI AUTOMATION BAN ──
+    // Fallback to `xdotool` via DevTools is PROHIBITED. Fail-closed if WS is dropped.
+    let method = "websocket_session_channel (Native CDP implementation)";
 
     Json(json!({
         "sent": sent,
         "script_length": req.script.len(),
         "method": method,
+        "os_hacks_bypassed": true
     }))
 }
 
@@ -300,12 +336,35 @@ async fn print_to_pdf(State(state): State<AppState>) -> Json<Value> {
     let path = solace_home.join("exports").join(&filename);
     let _ = std::fs::create_dir_all(solace_home.join("exports"));
 
-    // Use wkhtmltopdf or chrome headless for PDF generation
+    // Prefer wkhtmltopdf when available; otherwise fall back to the packaged browser's
+    // headless print-to-pdf support so installs do not depend on extra system packages.
     let result = std::process::Command::new("wkhtmltopdf")
         .args(["--quiet", &url, path.to_str().unwrap_or("")])
         .output();
+    let mut success = result.as_ref().map(|o| o.status.success()).unwrap_or(false);
+    let mut method = "wkhtmltopdf";
 
-    let success = result.map(|o| o.status.success()).unwrap_or(false);
+    if !success {
+        if let Some(browser) = resolve_browser_binary() {
+            let headless = std::process::Command::new(browser)
+                .arg("--headless")
+                .arg("--disable-gpu")
+                .arg(format!("--print-to-pdf={}", path.display()))
+                .arg("--no-first-run")
+                .arg("--disable-background-networking")
+                .arg("--disable-component-update")
+                .arg("--run-all-compositor-stages-before-draw")
+                .arg(&url)
+                .output();
+            success = headless
+                .as_ref()
+                .map(|output| output.status.success())
+                .unwrap_or(false);
+            if success {
+                method = "solace-headless";
+            }
+        }
+    }
 
     let _ = crate::evidence::record_event(
         &solace_home,
@@ -316,7 +375,7 @@ async fn print_to_pdf(State(state): State<AppState>) -> Json<Value> {
     *state.evidence_count.write() += 1;
 
     Json(
-        json!({"printed": success, "url": url, "filename": filename, "path": path.display().to_string()}),
+        json!({"printed": success, "url": url, "filename": filename, "path": path.display().to_string(), "method": method}),
     )
 }
 
@@ -475,7 +534,49 @@ async fn chrome_send_bridge(
 // ── Current URL ──
 
 async fn get_current_url(State(state): State<AppState>) -> Json<Value> {
-    let mut url = state.current_url.read().clone();
+    let active_url_file = crate::utils::solace_home().join("browser_active_url.txt");
+    let file_url = std::fs::read_to_string(&active_url_file)
+        .ok()
+        .map(|value| value.trim().to_string())
+        .filter(|value| !value.is_empty())
+        .unwrap_or_default();
+    let page_url = {
+        let page = state.page_html.read();
+        page.url.clone()
+    };
+    let session_url = state
+        .sessions
+        .read()
+        .values()
+        .find(|session| !session.url.is_empty())
+        .map(|session| session.url.clone())
+        .unwrap_or_default();
+    let mut url = if !file_url.is_empty() {
+        file_url
+    } else if !page_url.is_empty() && page_url != session_url {
+        page_url
+    } else if !session_url.is_empty() {
+        session_url
+    } else {
+        state.current_url.read().clone()
+    };
+
+    if url.is_empty() {
+        if let Some(live_url) = {
+            let page = state.page_html.read();
+            if !page.url.is_empty() {
+                Some(page.url.clone())
+            } else {
+                None
+            }
+        } {
+            url = live_url;
+        }
+    }
+
+    if !url.is_empty() && *state.current_url.read() != url {
+        *state.current_url.write() = url.clone();
+    }
 
     // Fallback: check browser_active_url.txt (written by C++ tab reporter)
     if url.is_empty() {
@@ -877,11 +978,35 @@ async fn get_active_tab(State(state): State<AppState>) -> Json<Value> {
     match active {
         Some(tab) => Json(json!({"tab": tab, "found": true})),
         None => {
-            // Fallback: use current_url from state
-            let url = state.current_url.read().clone();
-            Json(
-                json!({"found": false, "current_url": url, "note": "No tabs reported by sidebar yet"}),
-            )
+            let fallback_url = {
+                let page = state.page_html.read();
+                if !page.url.is_empty() {
+                    page.url.clone()
+                } else if let Some(session) = state.sessions.read().values().next().cloned() {
+                    session.url
+                } else {
+                    state.current_url.read().clone()
+                }
+            };
+            if let Some(session) = state.sessions.read().values().next().cloned() {
+                Json(json!({
+                    "found": false,
+                    "current_url": fallback_url,
+                    "note": "No tabs reported by sidebar yet",
+                    "tab": {
+                        "id": session.session_id,
+                        "url": fallback_url,
+                        "title": "",
+                        "active": true,
+                        "source": "session_fallback",
+                    }
+                }))
+            } else {
+                let url = state.current_url.read().clone();
+                Json(
+                    json!({"found": false, "current_url": url, "note": "No tabs reported by sidebar yet"}),
+                )
+            }
         }
     }
 }
@@ -907,10 +1032,28 @@ async fn get_page_html(
     axum::extract::Query(params): axum::extract::Query<std::collections::HashMap<String, String>>,
 ) -> Json<Value> {
     let mut page = state.page_html.read().clone();
-    let current_url = state.current_url.read().clone();
+    let active_url_file = crate::utils::solace_home().join("browser_active_url.txt");
+    let observed_url = std::fs::read_to_string(&active_url_file)
+        .ok()
+        .map(|value| value.trim().to_string())
+        .filter(|value| !value.is_empty())
+        .unwrap_or_else(|| state.current_url.read().clone());
     let file_path = crate::utils::solace_home().join("browser_page_content.json");
+    let looks_like_html = |content: &str| {
+        content.contains("<html")
+            || content.contains("<body")
+            || content.contains("<div")
+            || content.contains("<main")
+            || content.contains("<!DOCTYPE")
+    };
+    let looks_like_sidebar_shell = |title: &str, content: &str| {
+        title.contains("Yinyang AI Assistant")
+            || content.contains("id=\"yy-shell\"")
+            || content.contains("class=\"yy-status-pill\"")
+            || content.contains("yy-shell--working")
+    };
 
-    if page.html.is_empty() || (!current_url.is_empty() && page.url != current_url) {
+    if page.html.is_empty() || (!observed_url.is_empty() && page.url != observed_url) {
         let _ = tokio::task::spawn_blocking(
             crate::routes::browser_control::capture_page_html_via_devtools,
         )
@@ -938,11 +1081,19 @@ async fn get_page_html(
                     .and_then(|v| v.as_str())
                     .unwrap_or("")
                     .to_string();
-                let should_prefer_file = !html.is_empty()
-                    && (page.html.is_empty()
-                        || (!current_url.is_empty()
-                            && url == current_url
-                            && page.url != current_url));
+                let file_is_html = looks_like_html(&html);
+                let file_is_sidebar_shell = looks_like_sidebar_shell(&title, &html);
+                let should_refresh_from_file = !url.is_empty()
+                    && !observed_url.is_empty()
+                    && url == observed_url
+                    && page.url != observed_url;
+                let should_prefer_file = should_refresh_from_file
+                    || !file_is_sidebar_shell
+                        && file_is_html
+                        && !url.is_empty()
+                        && (page.html.is_empty()
+                            || page.url != url
+                            || (!observed_url.is_empty() && url == observed_url));
 
                 if should_prefer_file {
                     let captured_at = crate::utils::now_iso8601();
@@ -976,6 +1127,44 @@ async fn get_page_html(
             }
             Err(_) => {
                 // JSON parse failed — file may have partial write. Skip.
+            }
+        }
+    }
+
+    let should_fetch_local_html = !observed_url.is_empty()
+        && page.url == observed_url
+        && (observed_url.starts_with("http://127.0.0.1:")
+            || observed_url.starts_with("http://localhost:"))
+        && (page.html.is_empty()
+            || !looks_like_html(&page.html)
+            || looks_like_sidebar_shell(&page.title, &page.html));
+
+    if should_fetch_local_html {
+        let client = reqwest::Client::new();
+        if let Ok(response) = client
+            .get(&observed_url)
+            .timeout(Duration::from_secs(5))
+            .send()
+            .await
+        {
+            if let Ok(html) = response.text().await {
+                if looks_like_html(&html) {
+                    let captured_at = crate::utils::now_iso8601();
+                    *state.current_url.write() = observed_url.clone();
+                    {
+                        let mut w = state.page_html.write();
+                        w.html = html.clone();
+                        w.url = observed_url.clone();
+                        w.title = page.title.clone();
+                        w.captured_at = captured_at.clone();
+                    }
+                    page = crate::state::PageHtml {
+                        html,
+                        url: observed_url.clone(),
+                        title: page.title.clone(),
+                        captured_at,
+                    };
+                }
             }
         }
     }

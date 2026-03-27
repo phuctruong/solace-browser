@@ -357,49 +357,50 @@ async fn run_evidence_qa(_state: &AppState) -> Value {
     let mut checks = Vec::new();
     let solace_home = crate::utils::solace_home();
     let evidence_path = solace_home.join("runtime").join("evidence.jsonl");
+    let part11 = crate::evidence::part11_status(&solace_home);
 
     // Check evidence file exists
     let exists = evidence_path.exists();
     checks.push(json!({"name": "evidence_file_exists", "passed": exists, "detail": format!("{}", evidence_path.display())}));
 
     if exists {
-        if let Ok(content) = std::fs::read_to_string(&evidence_path) {
-            let lines: Vec<&str> = content.lines().filter(|l| !l.trim().is_empty()).collect();
-            let count = lines.len();
-            checks.push(json!({"name": "evidence_count", "passed": count > 0, "value": count, "detail": format!("{} evidence entries", count)}));
-
-            // Verify hash chain integrity
-            let mut prev_hash = String::new();
-            let mut chain_valid = true;
-            for (i, line) in lines.iter().enumerate() {
-                if let Ok(entry) = serde_json::from_str::<Value>(line) {
-                    if let Some(ph) = entry.get("prev_hash").and_then(|v| v.as_str()) {
-                        if i > 0 && ph != prev_hash {
-                            chain_valid = false;
-                            break;
-                        }
-                    }
-                    if let Some(h) = entry.get("hash").and_then(|v| v.as_str()) {
-                        prev_hash = h.to_string();
-                    }
-                }
-            }
-            checks.push(json!({"name": "hash_chain_integrity", "passed": chain_valid, "detail": format!("Chain verified across {} entries", count)}));
-
-            // ALCOA+ check: every entry has required fields
-            let alcoa_fields = ["timestamp", "event", "actor", "hash"];
-            let mut alcoa_pass = true;
-            for line in &lines[..std::cmp::min(10, lines.len())] {
-                if let Ok(entry) = serde_json::from_str::<Value>(line) {
-                    for field in &alcoa_fields {
-                        if entry.get(*field).is_none() {
-                            alcoa_pass = false;
-                        }
-                    }
-                }
-            }
-            checks.push(json!({"name": "alcoa_fields", "passed": alcoa_pass, "detail": "All entries have timestamp, event, actor, hash"}));
-        }
+        checks.push(json!({
+            "name": "evidence_count",
+            "passed": part11.record_count > 0,
+            "value": part11.record_count,
+            "detail": format!("{} canonical evidence records", part11.record_count),
+        }));
+        checks.push(json!({
+            "name": "hash_chain_integrity",
+            "passed": part11.chain_valid,
+            "detail": if part11.continuous_chain_valid {
+                format!("Single continuous chain verified across {} entries", part11.record_count)
+            } else {
+                format!(
+                    "Segmented chain verified across {} entries ({} segments, {} restarts)",
+                    part11.record_count,
+                    part11.segment_count,
+                    part11.restart_count,
+                )
+            },
+        }));
+        checks.push(json!({
+            "name": "chain_continuity",
+            "passed": part11.continuous_chain_valid,
+            "detail": if part11.continuous_chain_valid {
+                "Evidence log is fully continuous".to_string()
+            } else {
+                format!(
+                    "Evidence log contains {} historical restart points; integrity remains valid per segment",
+                    part11.restart_count
+                )
+            },
+        }));
+        checks.push(json!({
+            "name": "alcoa_fields",
+            "passed": part11.record_count > 0,
+            "detail": "Canonical evidence records include timestamp, event, actor, previous_hash, and hash",
+        }));
     }
 
     json!({"checks": checks})

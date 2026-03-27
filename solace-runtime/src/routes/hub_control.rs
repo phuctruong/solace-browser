@@ -4,6 +4,7 @@
 //! Uses xprop to find windows, xdotool for input, ImageMagick for screenshots.
 
 use axum::{
+    extract::Query,
     extract::State,
     http::StatusCode,
     routing::{get, post},
@@ -19,7 +20,10 @@ pub fn routes() -> Router<AppState> {
         .route("/api/v1/hub/status", get(hub_status))
         .route("/api/v1/hub/accessibility", get(hub_accessibility))
         .route("/api/v1/hub/action", post(hub_action))
-        .route("/api/v1/hub/screenshot", post(hub_screenshot))
+        .route(
+            "/api/v1/hub/screenshot",
+            get(hub_screenshot).post(hub_screenshot),
+        )
         .route("/api/v1/hub/click", post(hub_click))
         .route("/api/v1/hub/type", post(hub_type_text))
         .route("/api/v1/hub/key", post(hub_key))
@@ -122,8 +126,6 @@ async fn hub_accessibility(State(state): State<AppState>) -> Json<Value> {
         "window": "solace-hub",
         "tabs": [
             {"id": "overview", "label": "Overview"},
-            {"id": "backoffice", "label": "Backoffice"},
-            {"id": "workers", "label": "Workers"},
             {"id": "sessions", "label": "Sessions"},
             {"id": "events", "label": "Events"},
             {"id": "remote", "label": "Remote"},
@@ -423,33 +425,63 @@ async fn hub_key(
 /// Better approach: use the runtime to serve a special eval endpoint that the Hub polls
 #[derive(Deserialize)]
 struct EvalPayload {
+    #[serde(alias = "code")]
     js: String,
+    #[serde(default)]
+    request_id: Option<String>,
 }
 
 async fn hub_eval(
     State(state): State<AppState>,
     Json(payload): Json<EvalPayload>,
 ) -> Result<Json<Value>, (StatusCode, Json<Value>)> {
-    // Store the JS to execute — the Hub's inline script polls this
-    *state.pending_js.write() = Some(payload.js.clone());
+    let request_id = payload
+        .request_id
+        .unwrap_or_else(|| uuid::Uuid::new_v4().to_string());
+    // Queue the JS to execute — the Hub's inline script polls this.
+    state
+        .pending_js_queue
+        .write()
+        .push_back(crate::state::PendingHubCommand {
+            request_id: request_id.clone(),
+            js: payload.js.clone(),
+        });
     *state.pending_js_result.write() = None;
+    state.pending_js_results.write().remove(&request_id);
 
     Ok(Json(json!({
         "queued": true,
+        "request_id": request_id,
         "js": payload.js,
         "note": "JS queued. Hub polls /api/v1/hub/pending-js every 2s and executes."
     })))
 }
 
 async fn hub_pending_js(State(state): State<AppState>) -> Json<Value> {
-    let pending = state.pending_js.write().take();
+    let pending = state.pending_js_queue.write().pop_front();
+    let (command, request_id) = match pending {
+        Some(item) => {
+            *state.pending_js.write() = Some(item.js.clone());
+            *state.pending_js_request_id.write() = Some(item.request_id.clone());
+            (Some(item.js), Some(item.request_id))
+        }
+        None => {
+            *state.pending_js.write() = None;
+            *state.pending_js_request_id.write() = None;
+            (None, None)
+        }
+    };
     Json(json!({
-        "js": pending,
+        "js": Value::Null,
+        "command": command,
+        "request_id": request_id,
     }))
 }
 
 #[derive(Deserialize)]
 struct EvalResultPayload {
+    #[serde(default)]
+    request_id: Option<String>,
     #[serde(default)]
     ok: bool,
     #[serde(default)]
@@ -463,16 +495,35 @@ async fn post_hub_eval_result(
     Json(payload): Json<EvalResultPayload>,
 ) -> Json<Value> {
     let value = json!({
+        "request_id": payload.request_id,
         "ok": payload.ok,
         "result": payload.result,
         "error": payload.error,
     });
     *state.pending_js_result.write() = Some(value.clone());
+    if let Some(request_id) = payload.request_id.clone() {
+        state
+            .pending_js_results
+            .write()
+            .insert(request_id, value.clone());
+    }
     Json(value)
 }
 
-async fn get_hub_eval_result(State(state): State<AppState>) -> Json<Value> {
-    let result = state.pending_js_result.read().clone();
+#[derive(Deserialize)]
+struct EvalResultQuery {
+    request_id: Option<String>,
+}
+
+async fn get_hub_eval_result(
+    State(state): State<AppState>,
+    Query(query): Query<EvalResultQuery>,
+) -> Json<Value> {
+    let result = if let Some(request_id) = query.request_id {
+        state.pending_js_results.read().get(&request_id).cloned()
+    } else {
+        state.pending_js_result.read().clone()
+    };
     Json(json!({
         "result": result,
     }))

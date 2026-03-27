@@ -2,7 +2,7 @@
 use axum::{
     extract::{Query, State},
     http::StatusCode,
-    routing::get,
+    routing::{get, post},
     Json, Router,
 };
 use serde::Deserialize;
@@ -15,6 +15,7 @@ pub fn routes() -> Router<AppState> {
         .route("/api/v1/evidence", get(list_evidence).post(create_evidence))
         .route("/api/v1/evidence/part11", get(part11_status))
         .route("/api/v1/evidence/count", get(evidence_count))
+        .route("/api/v1/evidence/repair", post(repair_evidence_chain))
 }
 
 #[derive(Deserialize)]
@@ -77,4 +78,18 @@ async fn part11_status() -> Json<serde_json::Value> {
 
 async fn evidence_count(State(state): State<AppState>) -> Json<serde_json::Value> {
     Json(json!({"count": *state.evidence_count.read()}))
+}
+
+async fn repair_evidence_chain(
+    State(state): State<AppState>,
+) -> Result<Json<serde_json::Value>, (StatusCode, Json<serde_json::Value>)> {
+    let solace_home = crate::utils::solace_home();
+    let report = crate::evidence::repair_chain(&solace_home)
+        .map_err(|error| (StatusCode::BAD_REQUEST, Json(json!({"error": error}))))?;
+    let part11 = crate::evidence::part11_status(&solace_home);
+    *state.evidence_count.write() = part11.record_count as u64;
+    Ok(Json(json!({
+        "repair": report,
+        "part11": part11,
+    })))
 }

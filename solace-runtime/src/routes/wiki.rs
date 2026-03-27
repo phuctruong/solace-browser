@@ -1,5 +1,7 @@
 // Diagram: 27-prime-wiki-snapshots
+use std::collections::BTreeSet;
 use std::fs;
+use std::path::Path;
 
 use axum::{
     extract::State,
@@ -24,20 +26,26 @@ pub fn routes() -> Router<AppState> {
 
 async fn list_snapshots() -> Json<serde_json::Value> {
     let wiki_dir = crate::utils::solace_home().join("wiki");
-    let mut snapshots = Vec::new();
-    if let Ok(entries) = fs::read_dir(&wiki_dir) {
-        for entry in entries.flatten() {
-            let path = entry.path();
-            if path.is_file() {
-                snapshots.push(json!({
-                    "name": path.file_name().and_then(|name| name.to_str()).unwrap_or_default(),
-                    "modified_at": crate::utils::modified_iso8601(&path),
-                    "size_bytes": fs::metadata(&path).map(|meta| meta.len()).unwrap_or(0),
-                }));
+    let snapshots = collect_wiki_snapshots(&wiki_dir);
+    let total_size_bytes: u64 = snapshots
+        .iter()
+        .filter_map(|entry| entry.get("size_bytes").and_then(|v| v.as_u64()))
+        .sum();
+    let mut domains = BTreeSet::new();
+    for entry in &snapshots {
+        if let Some(domain) = entry.get("domain").and_then(|v| v.as_str()) {
+            if !domain.is_empty() {
+                domains.insert(domain.to_string());
             }
         }
     }
-    Json(json!({"snapshots": snapshots}))
+    Json(json!({
+        "snapshots": snapshots,
+        "count": snapshots.len(),
+        "domains": domains.into_iter().collect::<Vec<_>>(),
+        "total_size_bytes": total_size_bytes,
+        "total_size_human": format_size(total_size_bytes),
+    }))
 }
 
 #[derive(Deserialize)]
@@ -70,6 +78,28 @@ async fn extract_page(
     let content = req.content.as_bytes();
     match stillwater::extract(content, &req.content_type, &req.url) {
         Ok(decomp) => {
+            let meta_description = decomp
+                .stillwater
+                .meta
+                .iter()
+                .find(|(key, _)| key == "description")
+                .map(|(_, value)| value.clone())
+                .unwrap_or_default();
+            let stillwater_headings = decomp.stillwater.headings.clone();
+            let stillwater_nav_links = decomp.stillwater.nav_links.clone();
+            let ripple_title = decomp.ripple.title.clone();
+            let section_labels = decomp
+                .ripple
+                .sections
+                .iter()
+                .map(|section| {
+                    if section.heading.is_empty() {
+                        "section".to_string()
+                    } else {
+                        section.heading.clone()
+                    }
+                })
+                .collect::<Vec<_>>();
             // Save snapshot to wiki dir
             let wiki_dir = crate::utils::solace_home().join("wiki");
             let _ = fs::create_dir_all(&wiki_dir);
@@ -189,6 +219,8 @@ async fn extract_page(
             let domain = extract_domain(&decomp.url);
             let page_path_str = extract_path(&decomp.url);
             let mut domain_stillwater_created = false;
+            let mut domain_snapshot_path = snapshot_path.clone();
+            let mut domain_pzwb_path = pzwb_path.clone();
             if !domain.is_empty() {
                 let domain_dir = wiki_dir.join("domains").join(&domain);
                 let _ = fs::create_dir_all(&domain_dir);
@@ -253,10 +285,10 @@ async fn extract_page(
                 } else {
                     page_path_str.trim_matches('/').replace('/', "-")
                 };
-                let _ = fs::write(
-                    domain_dir.join(format!("{page_name}.prime-snapshot.md")),
-                    &snapshot_md,
-                );
+                domain_snapshot_path = domain_dir.join(format!("{page_name}.prime-snapshot.md"));
+                let _ = fs::write(&domain_snapshot_path, &snapshot_md);
+                domain_pzwb_path = domain_dir.join(format!("{url_hash}.pzwb"));
+                let _ = fs::write(&domain_pzwb_path, fs::read(&pzwb_path).unwrap_or_default());
 
                 // Update domain sitemap (append or create)
                 let sitemap_path = domain_dir.join("sitemap.prime-wiki.md");
@@ -295,6 +327,20 @@ async fn extract_page(
                 *count += 1;
             }
             crate::routes::budget::record_budget_event(&state);
+            let evidence = crate::evidence::record_event(
+                &crate::utils::solace_home(),
+                "wiki.extract",
+                "runtime",
+                json!({
+                    "url": decomp.url,
+                    "domain": domain,
+                    "codec": decomp.codec.name(),
+                    "snapshot_path": domain_snapshot_path.display().to_string(),
+                    "pzwb_path": domain_pzwb_path.display().to_string(),
+                    "domain_stillwater_created": domain_stillwater_created,
+                }),
+            )
+            .ok();
 
             // Auto-sync trigger: after evidence seal, push if paid user
             // Non-blocking — spawn a background task so we don't delay the response
@@ -306,10 +352,25 @@ async fn extract_page(
                 .unwrap_or(false);
             if is_paid {
                 let sync_state = state.clone();
+                let sync_domain = domain.clone();
+                let sync_url_hash = format!("sha256:{}", decomp.sha256);
+                let sync_snapshot = snapshot_md.clone();
+                let sync_title = title_short.clone();
+                let sync_codec = decomp.codec.name().to_string();
                 tokio::spawn(async move {
                     // Fire-and-forget sync push — errors are logged, not propagated
                     if let Err(error) = trigger_auto_sync(&sync_state).await {
                         tracing::warn!(%error, "auto-sync after extract failed");
+                    }
+                    if let Err(error) = trigger_wiki_sync(
+                        &sync_state, 
+                        &sync_domain, 
+                        &sync_url_hash, 
+                        &sync_snapshot,
+                        &sync_title,
+                        &sync_codec
+                    ).await {
+                        tracing::warn!(%error, "wiki-sync after extract failed");
                     }
                 });
             }
@@ -330,8 +391,10 @@ async fn extract_page(
 
             Json(json!({
                 "status": "extracted",
-                "codec": decomp.codec.name(),
                 "url": decomp.url,
+                "url_hash": format!("sha256:{}", decomp.sha256),
+                "domain": domain,
+                "codec": decomp.codec.name(),
                 "sha256": decomp.sha256,
                 "token_savings": {
                     "raw_html_tokens": raw_tokens,
@@ -340,17 +403,41 @@ async fn extract_page(
                     "savings_pct": savings_pct,
                 },
                 "stillwater": {
-                    "headings": decomp.stillwater.headings,
+                    "type": decomp.codec.name(),
+                    "codec": "PZSW",
+                    "nav": stillwater_nav_links,
+                    "header": {
+                        "title": ripple_title,
+                        "meta_description": meta_description,
+                    },
+                    "sections": section_labels,
+                    "css_tokens": decomp.stillwater.css_tokens.len(),
+                    "headings": stillwater_headings.clone(),
                     "nav_links_count": decomp.stillwater.nav_links.len(),
                     "css_tokens_count": decomp.stillwater.css_tokens.len(),
                     "meta_count": decomp.stillwater.meta.len(),
                     "template_hash": decomp.stillwater.template_hash,
                 },
                 "ripple": {
+                    "headings": stillwater_headings,
+                    "links_count": decomp.stillwater.nav_links.len(),
+                    "text_blocks": decomp.ripple.sections.len(),
+                    "images_count": 0,
+                    "meta": {
+                        "title": decomp.ripple.title,
+                        "description": meta_description,
+                    },
                     "title": decomp.ripple.title,
                     "sections_count": decomp.ripple.sections.len(),
                     "data_items_count": decomp.ripple.data_items.len(),
                 },
+                "artifacts": {
+                    "snapshot_path": domain_snapshot_path.display().to_string(),
+                    "pzwb_path": domain_pzwb_path.display().to_string(),
+                    "domain_stillwater_created": domain_stillwater_created,
+                },
+                "evidence_hash": evidence.map(|record| format!("sha256:{}", record.hash)),
+                "timestamp": crate::utils::now_iso8601(),
                 "compressed_size": compressed,
                 "original_size": content.len(),
                 "ratio": if compressed > 0 {
@@ -371,18 +458,12 @@ async fn extract_page(
 
 async fn wiki_stats() -> Json<serde_json::Value> {
     let wiki_dir = crate::utils::solace_home().join("wiki");
-    let snapshot_count = fs::read_dir(&wiki_dir)
-        .map(|entries| entries.flatten().filter(|e| e.path().is_file()).count())
-        .unwrap_or(0);
-    let total_size: u64 = fs::read_dir(&wiki_dir)
-        .map(|entries| {
-            entries
-                .flatten()
-                .filter_map(|e| fs::metadata(e.path()).ok())
-                .map(|m| m.len())
-                .sum()
-        })
-        .unwrap_or(0);
+    let snapshot_entries = collect_wiki_snapshots(&wiki_dir);
+    let snapshot_count = snapshot_entries.len();
+    let total_size: u64 = snapshot_entries
+        .iter()
+        .filter_map(|entry| entry.get("size_bytes").and_then(|v| v.as_u64()))
+        .sum();
     Json(json!({
         "snapshot_count": snapshot_count,
         "total_size_bytes": total_size,
@@ -400,9 +481,11 @@ async fn export_wiki() -> Json<serde_json::Value> {
     let wiki_dir = crate::utils::solace_home().join("wiki");
     let domains_dir = wiki_dir.join("domains");
     let mut exports = Vec::new();
+    let mut domains = BTreeSet::new();
+    let mut total_size_bytes = 0u64;
 
-    if let Ok(domains) = fs::read_dir(&domains_dir) {
-        for domain_entry in domains.flatten() {
+    if let Ok(domain_entries) = fs::read_dir(&domains_dir) {
+        for domain_entry in domain_entries.flatten() {
             let domain_path = domain_entry.path();
             if !domain_path.is_dir() {
                 continue;
@@ -423,10 +506,13 @@ async fn export_wiki() -> Json<serde_json::Value> {
                             .unwrap_or("")
                             .to_string();
                         let size = fs::metadata(&path).map(|m| m.len()).unwrap_or(0);
+                        total_size_bytes += size;
+                        domains.insert(domain.clone());
                         exports.push(json!({
                             "domain": domain,
                             "filename": filename,
                             "size_bytes": size,
+                            "path": path.display().to_string(),
                         }));
                     }
                 }
@@ -437,6 +523,9 @@ async fn export_wiki() -> Json<serde_json::Value> {
     Json(json!({
         "exports": exports,
         "count": exports.len(),
+        "domains": domains.into_iter().collect::<Vec<_>>(),
+        "total_size_bytes": total_size_bytes,
+        "total_size_human": format_size(total_size_bytes),
         "format": "prime-snapshot-index",
     }))
 }
@@ -448,6 +537,84 @@ fn format_size(bytes: u64) -> String {
         format!("{:.1}KB", bytes as f64 / 1024.0)
     } else {
         format!("{:.1}MB", bytes as f64 / (1024.0 * 1024.0))
+    }
+}
+
+fn collect_wiki_snapshots(wiki_dir: &Path) -> Vec<serde_json::Value> {
+    let mut snapshots = Vec::new();
+    collect_wiki_snapshots_recursive(wiki_dir, wiki_dir, &mut snapshots);
+    snapshots.sort_by(|a, b| {
+        let a_key = a
+            .get("path")
+            .and_then(|v| v.as_str())
+            .unwrap_or_default()
+            .to_string();
+        let b_key = b
+            .get("path")
+            .and_then(|v| v.as_str())
+            .unwrap_or_default()
+            .to_string();
+        a_key.cmp(&b_key)
+    });
+    snapshots
+}
+
+fn collect_wiki_snapshots_recursive(root: &Path, current: &Path, out: &mut Vec<serde_json::Value>) {
+    let entries = match fs::read_dir(current) {
+        Ok(entries) => entries,
+        Err(_) => return,
+    };
+
+    for entry in entries.flatten() {
+        let path = entry.path();
+        if path.is_dir() {
+            collect_wiki_snapshots_recursive(root, &path, out);
+            continue;
+        }
+
+        let rel = path.strip_prefix(root).unwrap_or(&path);
+        let rel_str = rel.to_string_lossy().replace('\\', "/");
+        let filename = path
+            .file_name()
+            .and_then(|name| name.to_str())
+            .unwrap_or_default()
+            .to_string();
+        let size_bytes = fs::metadata(&path).map(|meta| meta.len()).unwrap_or(0);
+        let domain = path
+            .strip_prefix(root.join("domains"))
+            .ok()
+            .and_then(|rel_path| rel_path.components().next())
+            .map(|component| component.as_os_str().to_string_lossy().to_string());
+        let page = if filename == "stillwater.prime-snapshot.md" {
+            Some("stillwater".to_string())
+        } else if filename == "sitemap.prime-wiki.md" {
+            Some("sitemap".to_string())
+        } else if filename.ends_with(".prime-snapshot.md") {
+            Some(filename.trim_end_matches(".prime-snapshot.md").to_string())
+        } else {
+            None
+        };
+        let kind = if filename.ends_with(".prime-snapshot.md") {
+            "prime_snapshot"
+        } else if filename.ends_with(".pzwb") {
+            "pzwb"
+        } else if filename.ends_with(".prime-wiki.md") {
+            "sitemap"
+        } else {
+            "artifact"
+        };
+
+        out.push(json!({
+            "name": filename,
+            "filename": path.file_name().and_then(|name| name.to_str()).unwrap_or_default(),
+            "relative_path": rel_str,
+            "path": path.display().to_string(),
+            "modified_at": crate::utils::modified_iso8601(&path),
+            "size_bytes": size_bytes,
+            "domain": domain,
+            "page": page,
+            "kind": kind,
+        }));
     }
 }
 
@@ -643,6 +810,70 @@ async fn trigger_auto_sync(state: &AppState) -> Result<(), String> {
             "trigger": "extract_page",
         }),
     );
+
+    Ok(())
+}
+
+/// Trigger an async wiki snapshot sync push. Called after wiki extraction
+/// to populate `prime_wiki_snapshots` in Firestore.
+async fn trigger_wiki_sync(
+    state: &AppState,
+    domain: &str,
+    url_hash: &str,
+    snapshot_md: &str,
+    title: &str,
+    codec: &str,
+) -> Result<(), String> {
+    let config = state
+        .cloud_config
+        .read()
+        .clone()
+        .ok_or_else(|| "no cloud config".to_string())?;
+
+    if !config.paid_user {
+        return Ok(());
+    }
+
+    let payload = json!({
+        "device_id": config.device_id,
+        "user_email": config.user_email,
+        "domain": domain,
+        "url_hash": url_hash,
+        "snapshot_md": snapshot_md,
+        "title": title,
+        "codec": codec,
+        "timestamp": crate::utils::now_iso8601(),
+    });
+
+    // Stream it natively to the solaceagi cloud HTTP/2 sync endpoint
+    let sync_url = "https://solaceagi-mfjzxmegpq-uc.a.run.app/api/v1/wiki/publish";
+    let key = crate::crypto::derive_key(&config.api_key, b"solace-wiki-sync:v1");
+    let plaintext = serde_json::to_vec(&payload).map_err(|e| e.to_string())?;
+    let ciphertext = crate::crypto::encrypt(&plaintext, &key)?;
+
+    use ::base64::engine::general_purpose::STANDARD;
+    use ::base64::Engine;
+    let encoded = STANDARD.encode(&ciphertext);
+
+    let response = reqwest::Client::new()
+        .post(sync_url)
+        .bearer_auth(&config.api_key)
+        .json(&json!({
+            "device_id": config.device_id,
+            "encrypted_payload": encoded,
+            "domain": domain,
+            "url_hash": url_hash,
+        }))
+        .timeout(std::time::Duration::from_secs(15))
+        .send()
+        .await
+        .map_err(|e| format!("wiki-sync request failed: {e}"))?;
+
+    if !response.status().is_success() {
+        let status = response.status();
+        let body = response.text().await.unwrap_or_default();
+        return Err(format!("wiki-sync cloud returned {status}: {body}"));
+    }
 
     Ok(())
 }

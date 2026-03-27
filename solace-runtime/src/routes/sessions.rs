@@ -329,8 +329,8 @@ async fn launch_session(
             {
                 Ok(mut child) => {
                     let child_pid = child.id();
-                    // Reap the child in background so it doesn't become a zombie
-                    tokio::spawn(async move {
+                    // Reap the child on a dedicated OS thread; waiting blocks.
+                    std::thread::spawn(move || {
                         let _ = child.wait();
                     });
                     child_pid
@@ -359,10 +359,25 @@ async fn launch_session(
             started_at: crate::utils::now_iso8601(),
             mode,
         };
+        *state.current_url.write() = session.url.clone();
         state
             .sessions
             .write()
             .insert(session.session_id.clone(), session.clone());
+
+        // ── DIMENSION 5: DRAGON RIDER MEMORY ALIGNMENT ──
+        let _ = crate::evidence::record_event(
+            &crate::utils::solace_home(),
+            "browser.session_launched",
+            "solace-hub-orchestrator",
+            json!({
+                "session_id": session.session_id,
+                "profile": session.profile,
+                "url": session.url,
+                "pid": session.pid,
+                "mode": session.mode,
+            }),
+        );
 
         // Record the launch and clear inflight
         {
@@ -403,7 +418,7 @@ async fn launch_session(
             {
                 Ok(mut child) => {
                     let child_pid = child.id();
-                    tokio::spawn(async move {
+                    std::thread::spawn(move || {
                         let _ = child.wait();
                     });
                     child_pid
@@ -430,10 +445,25 @@ async fn launch_session(
             started_at: crate::utils::now_iso8601(),
             mode,
         };
+        *state.current_url.write() = session.url.clone();
         state
             .sessions
             .write()
             .insert(session.session_id.clone(), session.clone());
+
+        // ── DIMENSION 5: DRAGON RIDER MEMORY ALIGNMENT ──
+        let _ = crate::evidence::record_event(
+            &crate::utils::solace_home(),
+            "browser.session_launched",
+            "solace-hub-orchestrator",
+            json!({
+                "session_id": session.session_id,
+                "profile": session.profile,
+                "url": session.url,
+                "pid": session.pid,
+                "mode": session.mode,
+            }),
+        );
         Ok(Json(json!({"session": session})))
     }
 }

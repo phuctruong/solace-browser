@@ -31,6 +31,7 @@ async fn budget_status(State(state): State<AppState>) -> Json<serde_json::Value>
             "monthly_date": usage.monthly_date,
         },
         "blocked": blocked,
+        "active_budget": config.daily_limit.saturating_sub(usage.daily_count),
     }))
 }
 
