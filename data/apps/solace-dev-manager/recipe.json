@@ -1,0 +1,11 @@
+{
+  "name": "solace-dev-manager",
+  "steps": [
+    "load_request",
+    "match_project_map",
+    "create_assignment",
+    "route_next_role",
+    "track_artifacts",
+    "track_approvals"
+  ]
+}

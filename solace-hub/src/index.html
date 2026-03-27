@@ -522,6 +522,7 @@
   <div id="hub-tabs" class="sh-tabs-container">
     <div class="sb-tabs" role="tablist">
       <button type="button" class="sb-tab sb-tab--active" data-tab="overview" role="tab" aria-selected="true">Overview</button>
+      <button type="button" class="sb-tab" data-tab="dev" role="tab">Dev Workspace</button>
       <button type="button" class="sb-tab" data-tab="sessions" role="tab">Sessions</button>
       <button type="button" class="sb-tab" data-tab="events" role="tab">Events <span id="events-badge" class="sb-pill sb-pill--danger sh-events-badge">0</span></button>
       <button type="button" class="sb-tab" data-tab="remote" role="tab">Remote</button>
@@ -649,6 +650,44 @@
 
   </div>
   </div><!-- end tab-overview -->
+
+  <!-- TAB: DEV WORKSPACE -->
+  <div id="tab-dev" class="hub-tab-panel sh-tab-panel-hidden">
+    <div class="sb-card">
+      <div class="hub-flex-between">
+        <p class="sb-kicker">Dev Manager Workspace</p>
+        <span class="sb-pill sb-pill--info">solace-browser project active</span>
+      </div>
+      <p class="sb-text-muted">Manage requests, assignments, and approvals across design, coder, and QA roles.</p>
+      <div class="sb-mt-md" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem;">
+        <a href="/backoffice/solace-dev-manager/requests" target="_blank" class="sb-btn sb-btn--sm" style="display:flex; flex-direction:column; align-items:flex-start; height:auto; padding: 0.75rem;">
+          <strong style="margin-bottom:0.25rem;">Requests</strong>
+          <span class="sb-text-muted" style="font-weight:normal; text-align:left;">Triage features and bugs</span>
+        </a>
+        <a href="/backoffice/solace-dev-manager/assignments" target="_blank" class="sb-btn sb-btn--sm" style="display:flex; flex-direction:column; align-items:flex-start; height:auto; padding: 0.75rem;">
+          <strong style="margin-bottom:0.25rem;">Assignments</strong>
+          <span class="sb-text-muted" style="font-weight:normal; text-align:left;">Route work to specialists</span>
+        </a>
+        <a href="/backoffice/solace-dev-manager/approvals" target="_blank" class="sb-btn sb-btn--sm" style="display:flex; flex-direction:column; align-items:flex-start; height:auto; padding: 0.75rem;">
+          <strong style="margin-bottom:0.25rem;">Approvals</strong>
+          <span class="sb-text-muted" style="font-weight:normal; text-align:left;">Review QA & Design signoffs</span>
+        </a>
+        <a href="/backoffice/solace-dev-manager/artifacts" target="_blank" class="sb-btn sb-btn--sm" style="display:flex; flex-direction:column; align-items:flex-start; height:auto; padding: 0.75rem;">
+          <strong style="margin-bottom:0.25rem;">Artifacts & Evidence</strong>
+          <span class="sb-text-muted" style="font-weight:normal; text-align:left;">Inspect proofs of work</span>
+        </a>
+        <a href="/backoffice/solace-dev-manager/projects" target="_blank" class="sb-btn sb-btn--sm" style="display:flex; flex-direction:column; align-items:flex-start; height:auto; padding: 0.75rem;">
+          <strong style="margin-bottom:0.25rem;">Projects Map</strong>
+          <span class="sb-text-muted" style="font-weight:normal; text-align:left;">View tracked repositories</span>
+        </a>
+        <a href="/backoffice/solace-dev-manager" target="_blank" class="sb-btn sb-btn--sm sb-btn--primary" style="display:flex; flex-direction:column; align-items:flex-start; height:auto; padding: 0.75rem;">
+          <strong style="margin-bottom:0.25rem;">Backoffice Dashboard &rarr;</strong>
+          <span class="sb-text-muted" style="font-weight:normal; text-align:left; color:var(--sb-on-primary-soft, #fff);">Open raw schema views</span>
+        </a>
+      </div>
+    </div>
+  </div>
+
 
   <!-- TAB: SESSIONS -->
   <div id="tab-sessions" class="hub-tab-panel sh-tab-panel-hidden">

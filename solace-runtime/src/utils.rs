@@ -79,6 +79,10 @@ pub fn scan_app_dirs() -> Vec<PathBuf> {
 
 fn app_search_paths() -> Vec<PathBuf> {
     let mut paths = vec![solace_home().join("apps")];
+    let repo_root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .parent()
+        .unwrap_or(std::path::Path::new("."))
+        .to_path_buf();
 
     // Production: apps bundled next to or near the binary (MSI/deb install)
     if let Ok(exe) = std::env::current_exe() {
@@ -122,10 +126,19 @@ fn app_search_paths() -> Vec<PathBuf> {
         }
     }
 
+    let repo_local = [
+        repo_root.join("data").join("apps"),
+        repo_root.join("data").join("default").join("apps"),
+    ];
+    for candidate in &repo_local {
+        if candidate.is_dir() && !paths.iter().any(|p| p == candidate) {
+            paths.push(candidate.clone());
+        }
+    }
+
     // Fallback: dev path relative to CARGO_MANIFEST_DIR (cross-platform)
-    let dev_fallback = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+    let dev_fallback = repo_root
         .parent()
-        .and_then(|p| p.parent())
         .unwrap_or(std::path::Path::new("."))
         .join("solace-cli/data/default/apps");
     if dev_fallback.is_dir() && !paths.iter().any(|p| p == &dev_fallback) {

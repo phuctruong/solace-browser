@@ -1,0 +1,125 @@
+id: solace-dev-manager
+name: Solace Dev Manager
+version: 1.0.0
+domain: localhost
+category: backoffice
+description: "Manager workspace schema and worker app for the Solace Dev role architecture"
+author: system
+roles:
+  - manager
+
+backoffice:
+  tables:
+    - name: projects
+      display:
+        title: "Managed Projects"
+      search: ["id", "name", "repository"]
+      columns:
+        - name: name
+          type: text
+          required: true
+        - name: repository
+          type: text
+        - name: description
+          type: text
+
+    - name: requests
+      display:
+        title: "Work Requests"
+        badge: status
+      search: ["title", "ticket_type", "status"]
+      columns:
+        - name: project_id
+          type: ref:projects
+          required: true
+        - name: ticket_type
+          type: enum
+          values: ["bug", "feature", "chore"]
+          required: true
+        - name: title
+          type: text
+          required: true
+        - name: status
+          type: enum
+          values: ["open", "mapped", "assigned", "closed"]
+          required: true
+
+    - name: assignments
+      display:
+        title: "Role Assignments"
+        badge: target_role
+      search: ["details", "target_role", "status"]
+      columns:
+        - name: request_id
+          type: ref:requests
+          required: true
+        - name: target_role
+          type: enum
+          values: ["design", "coder", "qa"]
+          required: true
+        - name: details
+          type: text
+          required: true
+        - name: status
+          type: enum
+          values: ["pending", "active", "review", "done"]
+          required: true
+
+    - name: artifacts
+      display:
+        title: "Evidence Artifacts"
+      search: ["file_path", "evidence_hash"]
+      columns:
+        - name: assignment_id
+          type: ref:assignments
+          required: true
+        - name: file_path
+          type: text
+          required: true
+        - name: evidence_hash
+          type: text
+          required: true
+
+    - name: approvals
+      display:
+        title: "Approvals"
+        badge: status
+      search: ["notes", "approver_role"]
+      columns:
+        - name: assignment_id
+          type: ref:assignments
+          required: true
+        - name: approver_role
+          type: text
+          required: true
+        - name: status
+          type: enum
+          values: ["approved", "rejected", "pending"]
+          required: true
+        - name: notes
+          type: text
+
+    - name: releases
+      display:
+        title: "Releases"
+      search: ["version", "evidence_bundle"]
+      columns:
+        - name: project_id
+          type: ref:projects
+          required: true
+        - name: version
+          type: text
+          required: true
+        - name: evidence_bundle
+          type: text
+          required: true
+
+  views:
+    - name: All Requests
+      type: table
+      table: requests
+      order_by: "created_at DESC"
+    - name: Open Assignments
+      type: kanban
+      table: assignments
+      group_by: status

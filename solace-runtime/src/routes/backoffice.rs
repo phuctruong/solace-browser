@@ -40,18 +40,30 @@ pub fn routes() -> Router<AppState> {
 
 /// Load workspace config for a backoffice app from its manifest.yaml
 pub fn load_workspace_config(app_id: &str) -> Result<WorkspaceConfig, String> {
-    let solace_home = crate::utils::solace_home();
+    let mut candidates = Vec::new();
 
-    // Search in multiple locations
-    let candidates = [
-        solace_home
+    if let Some(app_dir) = crate::utils::find_app_dir(app_id) {
+        candidates.push(app_dir.join("manifest.yaml"));
+    }
+
+    let repo_root = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .parent()
+        .unwrap_or(std::path::Path::new("."))
+        .to_path_buf();
+    candidates.extend([
+        crate::utils::solace_home()
             .join("apps")
             .join("localhost")
             .join(app_id)
             .join("manifest.yaml"),
-        std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-            .parent()
-            .unwrap_or(std::path::Path::new("."))
+        repo_root.join("data").join("apps").join(app_id).join("manifest.yaml"),
+        repo_root
+            .join("data")
+            .join("default")
+            .join("apps")
+            .join(app_id)
+            .join("manifest.yaml"),
+        repo_root
             .parent()
             .unwrap_or(std::path::Path::new("."))
             .join("solace-cli/data/default/apps")
@@ -63,18 +75,16 @@ pub fn load_workspace_config(app_id: &str) -> Result<WorkspaceConfig, String> {
         )
         .join(app_id)
         .join("manifest.yaml"),
-    ];
+    ]);
 
-    for path in &candidates {
-        if path.exists() {
-            if let Ok(content) = std::fs::read_to_string(path) {
-                if let Ok(manifest) = serde_yaml::from_str::<Value>(&content) {
-                    if let Some(bo) = manifest.get("backoffice") {
-                        if let Ok(config) = serde_json::from_value::<WorkspaceConfig>(
-                            serde_json::to_value(bo).unwrap_or_default(),
-                        ) {
-                            return Ok(config);
-                        }
+    for path in candidates.iter().filter(|path| path.exists()) {
+        if let Ok(content) = std::fs::read_to_string(path) {
+            if let Ok(manifest) = serde_yaml::from_str::<Value>(&content) {
+                if let Some(bo) = manifest.get("backoffice") {
+                    if let Ok(config) = serde_json::from_value::<WorkspaceConfig>(
+                        serde_json::to_value(bo).unwrap_or_default(),
+                    ) {
+                        return Ok(config);
                     }
                 }
             }
@@ -111,6 +121,7 @@ async fn list_backoffice_apps(State(_state): State<AppState>) -> Json<Value> {
         "backoffice-invoicing",
         "backoffice-scheduling",
         "backoffice-forms",
+        "solace-dev-manager",
     ];
     let mut apps = Vec::new();
 
@@ -359,6 +370,7 @@ async fn backoffice_home(State(_state): State<AppState>) -> Html<String> {
         "backoffice-invoicing",
         "backoffice-scheduling",
         "backoffice-forms",
+        "solace-dev-manager",
     ];
     let mut cards = String::new();
 

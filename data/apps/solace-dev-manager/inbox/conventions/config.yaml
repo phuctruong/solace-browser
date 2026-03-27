@@ -1,0 +1,7 @@
+mode: manager-first
+project: solace-browser
+roles:
+  - solace-dev-manager
+  - solace-design
+  - solace-coder
+  - solace-qa
