@@ -87,6 +87,8 @@ pub struct AppState {
     pub job_queue: Arc<crate::job_queue::JobQueue>,
     /// Active runs: guarantees atomic $O(1)$ execution locking per app_id.
     pub active_runs: Arc<RwLock<std::collections::HashSet<String>>>,
+    /// The single source of truth for the entire company state. Natively bound to BACKOFFICE.mermaid.
+    pub prime_graph: Arc<RwLock<String>>,
 }
 
 /// Tunnel state for remote access (FDA Part 11 consent + WSS connection).
@@ -365,6 +367,7 @@ impl AppState {
             event_bus: Arc::new(crate::pubsub::EventBus::new(&solace_home)),
             job_queue: Arc::new(crate::job_queue::JobQueue::new(&solace_home)),
             active_runs: Arc::new(RwLock::new(std::collections::HashSet::new())),
+            prime_graph: Arc::new(RwLock::new(crate::config::load_prime_graph(&solace_home))),
         }
     }
 

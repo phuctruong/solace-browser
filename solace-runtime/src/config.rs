@@ -202,3 +202,18 @@ pub fn load_budget_usage(solace_home: &Path) -> BudgetUsage {
 pub fn save_budget_usage(solace_home: &Path, value: &BudgetUsage) -> Result<(), String> {
     crate::persistence::write_json(&solace_home.join("budget_usage.json"), value)
 }
+
+pub fn load_prime_graph(solace_home: &Path) -> String {
+    let path = solace_home.join("BACKOFFICE.mermaid");
+    if let Ok(content) = std::fs::read_to_string(&path) {
+        content
+    } else {
+        let default_graph = "graph TD\n    %% Solace Prime Back Office OS\n    Hub[Solace Hub] --> Agents[AI Agents]\n    Hub --> Apps[Domain Apps]\n    Hub --> UI[Yinyang Dashboard]".to_string();
+        let _ = std::fs::write(&path, &default_graph);
+        default_graph
+    }
+}
+
+pub fn save_prime_graph(solace_home: &Path, content: &str) -> std::io::Result<()> {
+    std::fs::write(&solace_home.join("BACKOFFICE.mermaid"), content)
+}

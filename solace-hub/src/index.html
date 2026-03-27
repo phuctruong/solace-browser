@@ -10,6 +10,7 @@
   <link rel="stylesheet" href="/vendor/jquery.dataTables.min.css">
   <script src="/vendor/jquery-3.7.1.min.js"></script>
   <script src="/vendor/jquery.dataTables.min.js"></script>
+  <script src="/vendor/mermaid.min.js"></script>
   <link rel="stylesheet" href="/site.css">
   <style>
     /* ═══════════════════════════════════════════════════════════════════
@@ -632,35 +633,16 @@
       </div>
     </div>
 
-    <!-- System Status -->
+    <!-- Prime Mermaid Back Office Edge -->
     <div class="sb-card sb-mt-md">
-      <div class="sb-flex sb-gap-md sh-flex-wrap">
-        <div class="sh-status-column">
-          <p class="sb-kicker sh-kicker-success">Free · Local-First</p>
-          <div class="sh-status-grid-2col">
-            <div class="hub-status-row"><span class="sb-topbar-dot sb-topbar-dot--on" id="dot-dashboard"></span> Dashboard</div>
-            <div class="hub-status-row"><span class="sb-topbar-dot sb-topbar-dot--on" id="dot-mcp"></span> MCP Server</div>
-            <div class="hub-status-row"><span class="sb-topbar-dot sb-topbar-dot--on" id="dot-cron"></span> Cron / Scheduler</div>
-            <div class="hub-status-row"><span class="sb-topbar-dot sb-topbar-dot--on" id="dot-apps"></span> App Engine</div>
-            <div class="hub-status-row"><span class="sb-topbar-dot sb-topbar-dot--on" id="dot-evidence"></span> Evidence Chain</div>
-            <div class="hub-status-row"><span class="sb-topbar-dot sb-topbar-dot--on" id="dot-fda"></span> FDA Part 11</div>
-            <div class="hub-status-row"><span class="sb-topbar-dot sb-topbar-dot--on" id="dot-recipes"></span> Recipe Cache</div>
-            <div class="hub-status-row"><span class="sb-topbar-dot sb-topbar-dot--on" id="dot-wiki"></span> Wiki Capture</div>
-          </div>
-        </div>
-        <div class="sh-status-column">
-          <p class="sb-kicker sh-kicker-accent">Paid · Cloud Features · <a href="#" data-action="signIn" class="sh-pricing-link">starting at $8/mo &rarr;</a></p>
-          <div class="sh-status-grid-2col">
-            <div class="hub-status-row"><span class="sb-topbar-dot sb-topbar-dot--off" id="dot-sidebar"></span> Yinyang Sidebar</div>
-            <div class="hub-status-row"><span class="sb-topbar-dot" id="dot-remote"></span> Remote Control</div>
-            <div class="hub-status-row"><span class="sb-topbar-dot sb-topbar-dot--off" id="dot-tunnel"></span> Custom Tunnel</div>
-            <div class="hub-status-row"><span class="sb-topbar-dot sb-topbar-dot--off" id="dot-sync"></span> Cloud Sync</div>
-            <div class="hub-status-row"><span class="sb-topbar-dot sb-topbar-dot--off" id="dot-esign"></span> E-Sign</div>
-            <div class="hub-status-row"><span class="sb-topbar-dot sb-topbar-dot--off" id="dot-team"></span> Team Workspace</div>
-            <div class="hub-status-row"><span class="sb-topbar-dot sb-topbar-dot--off" id="dot-twin"></span> Twin Browser</div>
-            <div class="hub-status-row"><span class="sb-topbar-dot sb-topbar-dot--off" id="dot-fleet"></span> Device Fleet</div>
-          </div>
-        </div>
+      <div class="hub-flex-between">
+        <p class="sb-kicker">Prime Back Office Topology</p>
+        <span class="sb-pill sb-pill--info sh-pill-xs">O(1) Live Geometric View</span>
+      </div>
+      <div id="prime-graph-render" class="mermaid" style="margin-top:0.75rem; text-align:center;">
+        %% Solace Prime Back Office OS
+        graph TD
+          Hub[Solace Hub] --> Agents[AI Agents]
       </div>
     </div>
 
@@ -1752,11 +1734,27 @@ function initTabs() {
     }).catch(function(){});
   }
 
+  if (window.mermaid) {
+    mermaid.initialize({ startOnLoad: false, theme: 'dark' });
+  }
+
   function refreshOverviewStatus() {
     get('/api/v1/system/status').then(function(d) {
       var count = d.app_count || 0;
       var el = $('app-discovery-count');
       if (el) el.textContent = count + ' apps ready';
+    }).catch(function(){});
+
+    get('/api/v1/sidebar/state').then(function(state) {
+      if (window.mermaid && state.prime_graph) {
+        var renderEl = $('prime-graph-render');
+        if (renderEl && renderEl.dataset.lastGraph !== state.prime_graph) {
+          renderEl.dataset.lastGraph = state.prime_graph;
+          mermaid.render('prime-graph-svg', state.prime_graph).then(function(result) {
+            renderEl.innerHTML = result.svg;
+          }).catch(function(e) { console.error('Mermaid async render error:', e); });
+        }
+      }
     }).catch(function(){});
   }
 

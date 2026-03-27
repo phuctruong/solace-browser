@@ -170,6 +170,7 @@ pub(crate) fn compute_sidebar_state(state: &AppState) -> serde_json::Value {
             "dimension_wasm": true,
             "trace_events_sealed": crate::evidence::part11_status(&crate::utils::solace_home()).record_count,
             "active_tasks": *state.app_count.read(),
-        }
+        },
+        "prime_graph": state.prime_graph.read().clone(),
     })
 }
