@@ -485,6 +485,7 @@
     updateSpecialistConventionRelease(appId, runId);
     updateSpecialistConventionRollout(appId, runId);
     updateSpecialistPostReleaseHealth(appId, runId);
+    updateSpecialistPostReleaseIncident(appId, runId);
     updateDepartmentMemoryQueue(appId, runId);
     updateWorkerDriftState(appId, runId);
     updateWorkerRoutingState(appId, runId);
@@ -3750,6 +3751,104 @@
     html += 'Health Basis: <code>rollout execution -> ongoing telemetry -> healthy, degraded, or rolled-back state</code><br/>';
     html += 'Health metrics are <em>role-derived mocks</em> simulating continuous post-release accountability. ';
     html += 'Resolution Bound: <code>SI19 — Measuring Solace System Efficiency</code>.';
+    html += '</div>';
+
+    html += '</div>';
+    panel.innerHTML = html;
+  }
+
+  // ── SAL52: Specialist Post-Release Incident & Remediation ──
+
+  function updateSpecialistPostReleaseIncident(appId, runId) {
+    var panel = document.getElementById('dev-specialist-post-release-incident-state');
+    if (!panel) return;
+
+    var viewerRole = 'solace-dev-manager';
+    var selectedWorker = appId || 'unknown';
+    var selectedRun = runId || 'latest';
+    var role = DEV_ROLES.find(function(r) { return r.id === appId; });
+    var roleName = role ? role.key : 'unknown';
+
+    // Remediation records derived from SAK51 Health (role-mocked; shown honestly)
+    var remediationEntries = [];
+
+    if (roleName === 'qa') {
+      remediationEntries = [{
+        state: 'Mitigated',
+        healthLineage: 'Telemetry Vector [Healthy]',
+        incidentBasis: 'No active incident bounds currently violated.',
+        remediationVerdict: 'System nominal. No remediation required.',
+        color: '#10b981',
+        bg: 'rgba(16,185,129,0.1)'
+      }];
+    } else if (roleName === 'coder') {
+      remediationEntries = [{
+        state: 'In Progress',
+        healthLineage: 'Telemetry Vector [Degraded]',
+        incidentBasis: 'Active execution shear generating P2 non-fatal alert.',
+        remediationVerdict: 'Remediation task dispatched to active execution loop. Temporary capacity constraints applied.',
+        color: '#f59e0b',
+        bg: 'rgba(245,158,11,0.1)'
+      }];
+    } else if (roleName === 'design') {
+      remediationEntries = [{
+        state: 'Unresolved',
+        healthLineage: 'Telemetry Vector [Rolled Back]',
+        incidentBasis: 'Terminal P0 panic isolated; system structural root cause remains unknown.',
+        remediationVerdict: 'Incident stands open pending manual forensic analysis. Asset deployment frozen.',
+        color: '#ef4444',
+        bg: 'rgba(239,68,68,0.1)'
+      }];
+    } else {
+      remediationEntries = [{
+        state: 'Unresolved',
+        healthLineage: 'N/A',
+        incidentBasis: 'Missing telemetry source.',
+        remediationVerdict: 'Cannot verify remediation path on untracked asset.',
+        color: '#64748b',
+        bg: 'rgba(100,116,139,0.1)'
+      }];
+    }
+
+    var remediationIcon = { 'Mitigated': '🛡️', 'In Progress': '🚧', 'Unresolved': '🔥' };
+
+    var html = '<div style="display:flex;flex-direction:column;gap:0.5rem;font-size:0.75rem;color:var(--sb-on-surface);">';
+
+    remediationEntries.forEach(function(entry) {
+      html += '<div style="background:var(--sb-surface-alt,#1e293b);padding:0.45rem 0.55rem;border-radius:0.3rem;border-left:2px solid ' + entry.color + ';display:flex;flex-direction:column;gap:0.35rem;">';
+
+      // Header
+      html += '<div style="display:flex;align-items:center;justify-content:space-between;">';
+      html += '<strong style="color:var(--sb-on-surface);font-size:0.73rem;">' + (remediationIcon[entry.state] || '●') + ' Incident Remediation State</strong>';
+      html += '<code style="color:' + entry.color + ';background:' + entry.bg + ';padding:0.1rem 0.4rem;text-transform:uppercase;font-size:0.63rem;">' + escapeHtml(entry.state) + '</code>';
+      html += '</div>';
+
+      // Context
+      html += '<div style="display:flex;flex-direction:column;gap:0.1rem;">';
+      html += '<div><span style="color:var(--sb-text-muted);font-weight:600;font-size:0.63rem;">Telemetry Lineage:</span> <span style="font-family:monospace;font-size:0.68rem;color:#38bdf8;">' + escapeHtml(entry.healthLineage) + '</span></div>';
+      html += '<div><span style="color:var(--sb-text-muted);font-weight:600;font-size:0.63rem;">Incident Basis:</span> <span style="font-family:monospace;font-size:0.68rem;color:#cbd5e1;">' + escapeHtml(entry.incidentBasis) + '</span></div>';
+      html += '</div>';
+
+      // Object description
+      html += '<div style="background:#0f172a;border-radius:0.2rem;padding:0.3rem 0.4rem;font-size:0.65rem;color:#cbd5e1;line-height:1.4;">';
+      html += '<code>' + escapeHtml(entry.remediationVerdict) + '</code>';
+      html += '</div>';
+
+      // ALCOA+ hash
+      var alcoa = btoa(entry.state + entry.healthLineage + entry.remediationVerdict).substring(0, 16);
+      html += '<div><span style="color:var(--sb-text-muted);font-weight:600;font-size:0.63rem;">Remediation Hash:</span> <code style="font-size:0.6rem;color:#64748b;">' + alcoa + '</code></div>';
+
+      html += '</div>';
+    });
+
+    html += '<div style="margin-top:0.1rem;font-size:0.63rem;color:#64748b;">';
+    html += '<strong style="color:var(--sb-text-muted);">Audit Constraints:</strong> ';
+    html += 'Viewer Role: <code>' + escapeHtml(viewerRole) + '</code><br/>';
+    html += 'Selected Worker: <code>' + escapeHtml(selectedWorker) + '</code><br/>';
+    html += 'Selected Run: <code>' + escapeHtml(selectedRun) + '</code><br/>';
+    html += 'Incident Basis: <code>post-release health -> remediation path -> mitigated, in-progress, or unresolved state</code><br/>';
+    html += 'Incident states are <em>role-derived mocks</em> simulating operational escalation handling. ';
+    html += 'Resolution Bound: <code>SI21 — The Solace Intelligence System</code>.';
     html += '</div>';
 
     html += '</div>';
