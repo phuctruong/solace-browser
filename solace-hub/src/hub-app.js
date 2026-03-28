@@ -473,6 +473,7 @@
     updateSpecialistArtifactBundle(appId, runId);
     updateSpecialistArtifactProvenance(appId, runId);
     updateSpecialistPromotionCandidate(appId, runId);
+    updateSpecialistMemoryAdmission(appId, runId);
     updateDepartmentMemoryQueue(appId, runId);
     updateWorkerDriftState(appId, runId);
     updateWorkerRoutingState(appId, runId);
@@ -2551,6 +2552,103 @@
     html += 'Promotion Basis: <code>visible specialist promotion-candidate and seal-readiness state for current provenance context</code><br/>';
     html += 'Promotion values are <em>role-derived mocks</em> until runtime provenance path is wired.<br/>';
     html += 'Resolution Bound: <code>SI17 — Human-in-the-Loop as First-Class Component</code>.';
+    html += '</div>';
+
+    html += '</div>';
+    panel.innerHTML = html;
+  }
+
+  // ── SAM40: Specialist Memory Admission ──
+
+  function updateSpecialistMemoryAdmission(appId, runId) {
+    var panel = document.getElementById('dev-specialist-memory-admission-state');
+    if (!panel) return;
+
+    var role = DEV_ROLES.find(function(r) { return r.id === appId; });
+    var roleName = role ? role.key : 'unknown';
+
+    // Admission entries derived from SAP39 seal action (role-mocked; shown honestly)
+    var admissionTokens = [];
+
+    if (roleName === 'qa') {
+      admissionTokens = [{
+        status: 'Admitted',
+        bundleId: 'qa-run-20260328-003',
+        specialist: 'solace-qa-agent-v2',
+        sourcePacket: 'inbox/qa/test-suite.json',
+        targetMemory: 'outbox/qa/verified-tests/',
+        basis: 'Seal approved via SI17 Gate. Artifacts successfully written to department memory tree.',
+        color: '#10b981',
+        bg: 'rgba(16,185,129,0.1)'
+      }];
+    } else if (roleName === 'coder') {
+      admissionTokens = [{
+        status: 'Queued',
+        bundleId: 'coder-run-20260328-001',
+        specialist: 'solace-prime-mermaid-coder-v1.2.0',
+        sourcePacket: 'inbox/coder/packet.json',
+        targetMemory: 'Pending allocation',
+        basis: 'Awaiting promotion candidate to clear Provisional state.',
+        color: '#f59e0b',
+        bg: 'rgba(245,158,11,0.1)'
+      }];
+    } else if (roleName === 'design') {
+      admissionTokens = [{
+        status: 'Rejected',
+        bundleId: 'design-run-20260328-002',
+        specialist: 'solace-ui-renderer-v1',
+        sourcePacket: 'inbox/design/command_lock.json',
+        targetMemory: 'N/A',
+        basis: 'Promotion disqualified (hash-mismatch). Admission request denied.',
+        color: '#ef4444',
+        bg: 'rgba(239,68,68,0.1)'
+      }];
+    } else {
+      admissionTokens = [{
+        status: 'Rejected',
+        bundleId: 'unknown-bundle',
+        specialist: 'Unbound',
+        sourcePacket: 'N/A',
+        targetMemory: 'N/A',
+        basis: 'No specialist lane bound. Admission impossible.',
+        color: '#64748b',
+        bg: 'rgba(100,116,139,0.1)'
+      }];
+    }
+
+    var html = '<div style="display:flex;flex-direction:column;gap:0.5rem;font-size:0.75rem;color:var(--sb-on-surface);">';
+
+    admissionTokens.forEach(function(token) {
+      html += '<div style="background:var(--sb-surface-alt,#1e293b);padding:0.45rem 0.55rem;border-radius:0.3rem;border-left:2px solid ' + token.color + ';display:flex;flex-direction:column;gap:0.35rem;">';
+
+      // Header
+      html += '<div style="display:flex;align-items:center;justify-content:space-between;">';
+      html += '<strong style="color:var(--sb-on-surface);font-size:0.73rem;">' + (token.status === 'Admitted' ? '📥' : '🔒') + ' ' + escapeHtml(token.bundleId) + '</strong>';
+      html += '<code style="color:' + token.color + ';background:' + token.bg + ';padding:0.1rem 0.4rem;text-transform:uppercase;font-size:0.63rem;">' + escapeHtml(token.status) + '</code>';
+      html += '</div>';
+
+      // Context
+      html += '<div style="display:flex;flex-direction:column;gap:0.1rem;">';
+      html += '<div><span style="color:var(--sb-text-muted);font-weight:600;font-size:0.63rem;">Specialist:</span> <span style="font-family:monospace;font-size:0.68rem;color:#c084fc;">' + escapeHtml(token.specialist) + '</span></div>';
+      html += '<div><span style="color:var(--sb-text-muted);font-weight:600;font-size:0.63rem;">Memory Target:</span> <span style="font-family:monospace;font-size:0.68rem;color:#10b981;">' + escapeHtml(token.targetMemory) + '</span></div>';
+      html += '<div><span style="color:var(--sb-text-muted);font-weight:600;font-size:0.63rem;">Admission Basis:</span> <span style="font-size:0.63rem;color:#94a3b8;">' + escapeHtml(token.basis) + '</span></div>';
+      html += '</div>';
+
+      // ALCOA+ hash
+      var alcoa = btoa(token.status + token.bundleId + token.targetMemory).substring(0, 16);
+      html += '<div><span style="color:var(--sb-text-muted);font-weight:600;font-size:0.63rem;">Admission Hash:</span> <code style="font-size:0.6rem;color:#64748b;">' + alcoa + '</code></div>';
+
+      html += '</div>';
+    });
+
+    html += '<div style="margin-top:0.1rem;font-size:0.63rem;color:#64748b;">';
+    html += '<strong style="color:var(--sb-text-muted);">Audit Constraints:</strong><br/>';
+    html += 'Viewer Role: <code>solace-dev-manager</code><br/>';
+    html += 'Selected Worker: <code>' + escapeHtml(appId || 'unknown') + '</code><br/>';
+    html += 'Selected Run: <code>' + escapeHtml(runId || 'latest') + '</code><br/>';
+    html += 'Admission Basis: <code>visible specialist seal-action request and department-memory admission state for current promotion context</code><br/>';
+    html += 'Admission values are <em>role-derived mocks</em> until runtime fs pipeline is wired.<br/>';
+    html += 'Resolution Bound: <code>SI18 — Transparency as Product Feature</code>.';
     html += '</div>';
 
     html += '</div>';
