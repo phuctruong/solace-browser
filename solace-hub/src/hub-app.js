@@ -481,6 +481,7 @@
     updateSpecialistConventionActivation(appId, runId);
     updateSpecialistConventionEffect(appId, runId);
     updateSpecialistConventionProof(appId, runId);
+    updateSpecialistConventionTrust(appId, runId);
     updateDepartmentMemoryQueue(appId, runId);
     updateWorkerDriftState(appId, runId);
     updateWorkerRoutingState(appId, runId);
@@ -3354,6 +3355,104 @@
     html += 'Proof Basis: <code>constrained output -> evidence verdict -> governed convention lineage</code><br/>';
     html += 'Proof verdicts are <em>role-derived mocks</em> until cryptographic pipeline binds. ';
     html += 'Resolution Bound: <code>SI19 — Measuring Solace System Efficiency</code>.';
+    html += '</div>';
+
+    html += '</div>';
+    panel.innerHTML = html;
+  }
+
+  // ── SAH48: Specialist Convention Trust & Release Readiness ──
+
+  function updateSpecialistConventionTrust(appId, runId) {
+    var panel = document.getElementById('dev-specialist-convention-trust-state');
+    if (!panel) return;
+
+    var role = DEV_ROLES.find(function(r) { return r.id === appId; });
+    var roleName = role ? role.key : 'unknown';
+    var viewerRole = 'solace-dev-manager';
+    var selectedWorker = appId || 'unknown';
+    var selectedRun = runId || 'latest';
+
+    // Trust/Governance records derived from SAG47 evidence verdict (role-mocked; shown honestly)
+    var trustEntries = [];
+
+    if (roleName === 'qa') {
+      trustEntries = [{
+        state: 'Trusted',
+        verdictLineage: 'Evidence Verdict [Verified] on outbox/coder/runs/c-run-20260328-999',
+        governanceBasis: 'Cryptography bounds verified. No known physical vulnerabilities or structural drift present.',
+        decisionVerdict: 'Lineage cleared for immediate promotion and systemic Department Memory admission.',
+        color: '#10b981',
+        bg: 'rgba(16,185,129,0.1)'
+      }];
+    } else if (roleName === 'coder') {
+      trustEntries = [{
+        state: 'Provisional',
+        verdictLineage: 'Evidence Verdict [Partial] on tmp/eval-staging-diff.patch',
+        governanceBasis: 'Missing execution bounds validation. Component constrained to local testing sandbox only.',
+        decisionVerdict: 'Lineage barred from production. Subject to explicit Human oversight constraint (SI17).',
+        color: '#f59e0b',
+        bg: 'rgba(245,158,11,0.1)'
+      }];
+    } else if (roleName === 'design') {
+      trustEntries = [{
+        state: 'Blocked',
+        verdictLineage: 'Evidence Verdict [Missing]',
+        governanceBasis: 'No conclusive proof evaluated by governance mechanisms.',
+        decisionVerdict: 'Lineage entirely quarantined. Run is a dead-end execution node with zero intelligence trust.',
+        color: '#ef4444',
+        bg: 'rgba(239,68,68,0.1)'
+      }];
+    } else {
+      trustEntries = [{
+        state: 'Blocked',
+        verdictLineage: 'N/A',
+        governanceBasis: 'Invalid capability matrix.',
+        decisionVerdict: 'Governance routing disconnected from worker boundaries.',
+        color: '#64748b',
+        bg: 'rgba(100,116,139,0.1)'
+      }];
+    }
+
+    var trustIcon = { 'Trusted': '🟢', 'Provisional': '🟡', 'Blocked': '🔴' };
+
+    var html = '<div style="display:flex;flex-direction:column;gap:0.5rem;font-size:0.75rem;color:var(--sb-on-surface);">';
+
+    trustEntries.forEach(function(entry) {
+      html += '<div style="background:var(--sb-surface-alt,#1e293b);padding:0.45rem 0.55rem;border-radius:0.3rem;border-left:2px solid ' + entry.color + ';display:flex;flex-direction:column;gap:0.35rem;">';
+
+      // Header
+      html += '<div style="display:flex;align-items:center;justify-content:space-between;">';
+      html += '<strong style="color:var(--sb-on-surface);font-size:0.73rem;">' + (trustIcon[entry.state] || '●') + ' Governance Readiness Decision</strong>';
+      html += '<code style="color:' + entry.color + ';background:' + entry.bg + ';padding:0.1rem 0.4rem;text-transform:uppercase;font-size:0.63rem;">' + escapeHtml(entry.state) + '</code>';
+      html += '</div>';
+
+      // Context
+      html += '<div style="display:flex;flex-direction:column;gap:0.1rem;">';
+      html += '<div><span style="color:var(--sb-text-muted);font-weight:600;font-size:0.63rem;">Proof Lineage:</span> <span style="font-family:monospace;font-size:0.68rem;color:#38bdf8;">' + escapeHtml(entry.verdictLineage) + '</span></div>';
+      html += '<div><span style="color:var(--sb-text-muted);font-weight:600;font-size:0.63rem;">Governance Basis:</span> <span style="font-family:monospace;font-size:0.68rem;color:#cbd5e1;">' + escapeHtml(entry.governanceBasis) + '</span></div>';
+      html += '</div>';
+
+      // Object description
+      html += '<div style="background:#0f172a;border-radius:0.2rem;padding:0.3rem 0.4rem;font-size:0.65rem;color:#cbd5e1;line-height:1.4;">';
+      html += '<code>' + escapeHtml(entry.decisionVerdict) + '</code>';
+      html += '</div>';
+
+      // ALCOA+ hash
+      var alcoa = btoa(entry.state + entry.verdictLineage + entry.decisionVerdict).substring(0, 16);
+      html += '<div><span style="color:var(--sb-text-muted);font-weight:600;font-size:0.63rem;">Readiness Hash:</span> <code style="font-size:0.6rem;color:#64748b;">' + alcoa + '</code></div>';
+
+      html += '</div>';
+    });
+
+    html += '<div style="margin-top:0.1rem;font-size:0.63rem;color:#64748b;">';
+    html += '<strong style="color:var(--sb-text-muted);">Audit Constraints:</strong> ';
+    html += 'Viewer Role: <code>' + escapeHtml(viewerRole) + '</code><br/>';
+    html += 'Selected Worker: <code>' + escapeHtml(selectedWorker) + '</code><br/>';
+    html += 'Selected Run: <code>' + escapeHtml(selectedRun) + '</code><br/>';
+    html += 'Trust Basis: <code>proof verdict -> governance decision -> release or promotion readiness</code><br/>';
+    html += 'Trust states are <em>role-derived mocks</em> pending central hub promotion sync. ';
+    html += 'Resolution Bound: <code>SI21 — The Solace Intelligence System</code>.';
     html += '</div>';
 
     html += '</div>';
