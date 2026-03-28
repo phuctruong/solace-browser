@@ -452,6 +452,8 @@
   // ── SAW14: Worker Detail Panel ──
 
   function updateWorkerDetail(appId, runId) {
+    updateWorkerInboxOutbox(appId, runId);
+    
     var panel = document.getElementById('dev-worker-detail');
     var diagramPreview = document.getElementById('dev-worker-diagram-preview');
     var rolePill = document.getElementById('dev-worker-role-pill');
@@ -593,6 +595,80 @@
       }
     }
   };
+
+  // ── SAI15: Worker Inbox/Outbox ──
+
+  function updateWorkerInboxOutbox(appId, runId) {
+    var panel = document.getElementById('dev-worker-inbox-outbox');
+    if (!panel) return;
+
+    var role = DEV_ROLES.find(function(r) { return r.id === appId; });
+    var roleName = role ? role.key : 'unknown';
+    var color = roleColor(roleName);
+    var outboxPath = '/apps/' + appId + '/outbox/runs/' + runId;
+
+    var inbox = [];
+    var outbox = [];
+
+    if (roleName === 'manager') {
+      inbox = ['User Request / Assignment Context', 'solace-dev-workspace.md', 'solace-worker-inbox-contract.md'];
+      outbox = ['manager-to-design-handoff.md', 'Project Map Updates'];
+    } else if (roleName === 'design') {
+      inbox = ['manager-to-design-handoff.md', 'Product Requirements'];
+      outbox = ['design-to-coder-handoff.md', 'UI Maps / Figma Targets'];
+    } else if (roleName === 'coder') {
+      inbox = ['design-to-coder-handoff.md', 'TODO.md (Current Round)'];
+      outbox = ['coder-to-qa-handoff.md', 'Code Commits', 'App Outbox / Runs'];
+    } else if (roleName === 'qa') {
+      inbox = ['coder-to-qa-handoff.md', 'App Outbox / Runs', 'Code Changes'];
+      outbox = ['qa-signoffs', 'Review Reports / Bug Triage'];
+    } else {
+      inbox = ['Unknown Inputs'];
+      outbox = ['Unknown Outputs'];
+    }
+
+    var html = '<div style="display:flex;flex-direction:column;gap:0.4rem;font-size:0.75rem;color:var(--sb-on-surface);">';
+
+    html += '<div style="background:rgba(99,102,241,0.08);padding:0.4rem 0.5rem;border-radius:0.25rem;border-left:2px solid ' + color + ';">';
+    html += '<strong style="color:var(--sb-text-muted);">Active Contract Context:</strong><br/>';
+    html += 'App ID: <code>' + escapeHtml(appId) + '</code><br/>';
+    html += 'Role: <code>' + escapeHtml(roleName) + '</code><br/>';
+    html += 'Run: <code>' + escapeHtml(runId) + '</code><br/>';
+    html += 'Outbox Root: <code style="font-size:0.65rem;color:#94a3b8;">' + escapeHtml(outboxPath) + '</code>';
+    html += '</div>';
+    
+    html += '<div style="background:var(--sb-surface-alt,#1e293b);padding:0.4rem 0.5rem;border-radius:0.25rem;border-left:2px solid ' + color + ';">';
+    html += '<strong style="color:var(--sb-text-muted);">Inbox Inputs (read-only context):</strong><br/>';
+    html += '<ul style="margin:0.2rem 0 0 1rem;padding:0;color:var(--sb-on-surface);font-family:monospace;font-size:0.7rem;">';
+    inbox.forEach(function(item) {
+      if (item.indexOf('.md') > -1) {
+        html += '<li><code style="color:#818cf8;background:transparent;padding:0;">' + escapeHtml(item) + '</code></li>';
+      } else {
+        html += '<li>' + escapeHtml(item) + '</li>';
+      }
+    });
+    html += '</ul>';
+    html += '</div>';
+
+    html += '<div style="background:var(--sb-surface-alt,#1e293b);padding:0.4rem 0.5rem;border-radius:0.25rem;border-left:2px solid ' + color + ';">';
+    html += '<strong style="color:var(--sb-text-muted);">Outbox Outputs (result surface):</strong><br/>';
+    html += '<ul style="margin:0.2rem 0 0 1rem;padding:0;color:var(--sb-on-surface);font-family:monospace;font-size:0.7rem;">';
+    outbox.forEach(function(item) {
+      if (item === 'App Outbox / Runs') {
+        html += '<li><a href="#" onclick="document.getElementById(\'dev-run-history-card\').scrollIntoView();return false;" style="color:#818cf8;text-decoration:none;">' + escapeHtml(item) + '</a></li>';
+      } else if (item.indexOf('.md') > -1) {
+        html += '<li><code style="color:#818cf8;background:transparent;padding:0;">' + escapeHtml(item) + '</code></li>';
+      } else {
+        html += '<li>' + escapeHtml(item) + '</li>';
+      }
+    });
+    html += '</ul>';
+    html += '</div>';
+
+    html += '</div>';
+    
+    panel.innerHTML = html;
+  }
 
   window.__solaceCopyInspectionLink = function() {
     var input = document.getElementById('dev-context-link');
