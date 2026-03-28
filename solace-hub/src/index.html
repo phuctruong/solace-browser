@@ -861,6 +861,18 @@
       <div id="dev-run-history" class="sb-mt-sm" style="display:none;"></div>
     </div>
 
+    <!-- ═══════════════════════════════════════════════════════════════
+         SECTION 6: ARTIFACT PREVIEWS  (SAV9)
+         ═══════════════════════════════════════════════════════════════ -->
+    <div class="sb-card sb-mt-md" id="dev-artifact-preview-card">
+      <div class="hub-flex-between">
+        <p class="sb-kicker">Artifact Previews</p>
+        <span class="sb-pill" style="background: var(--sb-surface-alt, #1e293b); color: var(--sb-on-surface); font-size: 0.65rem;">GET /api/v1/apps/:id/runs/:run_id/artifact/:file</span>
+      </div>
+      <p class="sb-text-muted" style="font-size:0.8rem;">Inline preview of latest-run artifacts &mdash; fetched from real artifact routes on workspace activation.</p>
+      <div id="dev-artifact-previews" class="sb-mt-sm" style="display:none;"></div>
+    </div>
+
     <!-- Worker run function now in hub-app.js (SDH5) -->
 
   </div>

@@ -317,12 +317,154 @@
     return html;
   }
 
-  // Render inspection into the panel
+  // Render inspection into the panel + trigger artifact previews
   function showRunInspection(appId, runId, reportPath, eventsData, statusOk) {
     var panel = document.getElementById('dev-run-inspection');
     if (!panel) return;
     panel.innerHTML = buildRunInspectionHTML(appId, runId, reportPath, eventsData, statusOk);
     panel.style.display = 'block';
+
+    // Trigger native artifact previews (SAV9)
+    if (runId) {
+      hydrateArtifactPreviews(appId, runId);
+    }
+  }
+
+  // ── SAV9: Workspace-Native Artifact Previews ──
+
+  function artifactUrl(appId, runId, filename) {
+    return API + '/api/v1/apps/' + appId + '/runs/' + runId + '/artifact/' + filename;
+  }
+
+  function hydrateArtifactPreviews(appId, runId) {
+    var previewPanel = document.getElementById('dev-artifact-previews');
+    if (!previewPanel) return;
+
+    previewPanel.style.display = 'block';
+    previewPanel.innerHTML =
+      '<p class="sb-kicker" style="margin-bottom:0.5rem;">Artifact Previews</p>' +
+      '<p style="font-size:0.7rem;color:var(--sb-text-muted);">' + appId + ' / ' + runId + '</p>' +
+      '<div id="preview-payload" class="sav9-preview-slot" style="margin-top:0.5rem;"><span style="font-size:0.7rem;color:#94a3b8;">loading payload.json…</span></div>' +
+      '<div id="preview-events" class="sav9-preview-slot" style="margin-top:0.5rem;"><span style="font-size:0.7rem;color:#94a3b8;">loading events.jsonl…</span></div>' +
+      '<div id="preview-report" class="sav9-preview-slot" style="margin-top:0.5rem;"><span style="font-size:0.7rem;color:#94a3b8;">loading report…</span></div>';
+
+    // Preview 1: payload.json
+    fetchArtifactText(appId, runId, 'payload.json').then(function(result) {
+      var slot = document.getElementById('preview-payload');
+      if (!slot) return;
+      if (result.missing) {
+        slot.innerHTML = buildMissingState('payload.json', result.reason);
+      } else {
+        slot.innerHTML = buildPayloadPreview(result.text, appId, runId);
+      }
+    });
+
+    // Preview 2: events.jsonl
+    fetchArtifactText(appId, runId, 'events.jsonl').then(function(result) {
+      var slot = document.getElementById('preview-events');
+      if (!slot) return;
+      if (result.missing) {
+        slot.innerHTML = buildMissingState('events.jsonl', result.reason);
+      } else {
+        slot.innerHTML = buildEventsPreview(result.text, appId, runId);
+      }
+    });
+
+    // Preview 3: report.html (summary only — not full render)
+    fetchArtifactText(appId, runId, 'report.html').then(function(result) {
+      var slot = document.getElementById('preview-report');
+      if (!slot) return;
+      if (result.missing) {
+        slot.innerHTML = buildMissingState('report.html', result.reason);
+      } else {
+        slot.innerHTML = buildReportPreview(result.text, appId, runId);
+      }
+    });
+  }
+
+  function fetchArtifactText(appId, runId, filename) {
+    return fetch(artifactUrl(appId, runId, filename))
+      .then(function(r) {
+        if (r.status === 404) return { missing: true, reason: 'not found in outbox' };
+        if (r.status === 403) return { missing: true, reason: 'not in whitelist' };
+        if (!r.ok) return { missing: true, reason: 'HTTP ' + r.status };
+        return r.text().then(function(t) { return { missing: false, text: t }; });
+      })
+      .catch(function(err) {
+        return { missing: true, reason: 'fetch error: ' + err.message };
+      });
+  }
+
+  function buildMissingState(filename, reason) {
+    return '<div style="border-left:2px solid #475569;padding:0.3rem 0.6rem;background:rgba(71,85,105,0.08);border-radius:0 0.25rem 0.25rem 0;">' +
+      '<strong style="font-size:0.7rem;color:var(--sb-text-muted);">' + filename + '</strong> ' +
+      '<span class="sb-pill" style="background:#1e293b;color:#94a3b8;font-size:0.6rem;">missing</span>' +
+      '<div style="font-size:0.65rem;color:#64748b;margin-top:0.15rem;">' + reason + '</div>' +
+      '</div>';
+  }
+
+  function buildPayloadPreview(text, appId, runId) {
+    var truncated = text.length > 1200 ? text.slice(0, 1200) + '\n...(truncated)' : text;
+    var keyCount = 0;
+    try { keyCount = Object.keys(JSON.parse(text)).length; } catch(e) {}
+    return '<div style="border-left:2px solid #6366f1;padding:0.3rem 0.6rem;background:rgba(99,102,241,0.06);border-radius:0 0.25rem 0.25rem 0;">' +
+      '<div style="display:flex;gap:0.3rem;align-items:center;">' +
+      '<strong style="font-size:0.7rem;color:var(--sb-on-surface);">payload.json</strong> ' +
+      '<span class="sb-pill" style="background:#1e293b;color:#e2e8f0;font-size:0.6rem;">' + (text.length > 1024 ? Math.round(text.length/1024) + 'KB' : text.length + 'B') + '</span>' +
+      (keyCount ? ' <span class="sb-pill" style="background:#1e293b;color:#e2e8f0;font-size:0.6rem;">' + keyCount + ' keys</span>' : '') +
+      '</div>' +
+      '<details style="margin-top:0.25rem;"><summary style="cursor:pointer;font-size:0.65rem;color:var(--sb-text-muted);">show payload</summary>' +
+      '<pre style="font-size:0.6rem;background:var(--sb-surface-alt,#0f172a);padding:0.4rem;border-radius:0.25rem;max-height:200px;overflow-y:auto;margin-top:0.2rem;white-space:pre-wrap;word-break:break-all;">' +
+      escapeHtml(truncated) + '</pre></details></div>';
+  }
+
+  function buildEventsPreview(text, appId, runId) {
+    var lines = text.trim().split('\n').filter(function(l) { return l.trim(); });
+    var total = lines.length;
+    var tail = lines.slice(-5);
+    var preview = '';
+    tail.forEach(function(line) {
+      try {
+        var ev = JSON.parse(line);
+        var ts = (ev.timestamp || '').slice(11, 19);
+        var type = ev.event_type || ev.type || '?';
+        var detail = ev.detail || ev.metadata || '';
+        preview += ts + ' [' + type + '] ' + (typeof detail === 'string' ? detail : JSON.stringify(detail)) + '\n';
+      } catch(e) {
+        preview += line.slice(0, 120) + '\n';
+      }
+    });
+    return '<div style="border-left:2px solid #10b981;padding:0.3rem 0.6rem;background:rgba(16,185,129,0.06);border-radius:0 0.25rem 0.25rem 0;">' +
+      '<div style="display:flex;gap:0.3rem;align-items:center;">' +
+      '<strong style="font-size:0.7rem;color:var(--sb-on-surface);">events.jsonl</strong> ' +
+      '<span class="sb-pill" style="background:#1e293b;color:#e2e8f0;font-size:0.6rem;">' + total + ' events</span>' +
+      '</div>' +
+      '<pre style="font-size:0.6rem;background:var(--sb-surface-alt,#0f172a);padding:0.4rem;border-radius:0.25rem;max-height:120px;overflow-y:auto;margin-top:0.25rem;">' +
+      escapeHtml(preview) + '</pre></div>';
+  }
+
+  function buildReportPreview(text, appId, runId) {
+    // Extract title from <title>...</title>
+    var titleMatch = text.match(/<title[^>]*>([\s\S]*?)<\/title>/i);
+    var title = titleMatch ? titleMatch[1].trim() : 'Untitled Report';
+    var sizeKB = Math.round(text.length / 1024);
+    return '<div style="border-left:2px solid #f59e0b;padding:0.3rem 0.6rem;background:rgba(245,158,11,0.06);border-radius:0 0.25rem 0.25rem 0;">' +
+      '<div style="display:flex;gap:0.3rem;align-items:center;">' +
+      '<strong style="font-size:0.7rem;color:var(--sb-on-surface);">report.html</strong> ' +
+      '<span class="sb-pill" style="background:#1e293b;color:#e2e8f0;font-size:0.6rem;">' + sizeKB + 'KB</span>' +
+      '</div>' +
+      '<div style="font-size:0.65rem;color:var(--sb-text-muted);margin-top:0.15rem;">' + escapeHtml(title) + '</div>' +
+      '<details style="margin-top:0.25rem;"><summary style="cursor:pointer;font-size:0.65rem;color:var(--sb-text-muted);">preview report</summary>' +
+      '<iframe sandbox="" srcdoc="' + escapeAttr(text) + '" style="width:100%;height:200px;border:1px solid var(--sb-border,#334155);border-radius:0.25rem;margin-top:0.2rem;background:#fff;"></iframe>' +
+      '</details></div>';
+  }
+
+  function escapeHtml(s) {
+    return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  }
+
+  function escapeAttr(s) {
+    return s.replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
   }
 
   // Upgraded worker run with full inspection pipeline
