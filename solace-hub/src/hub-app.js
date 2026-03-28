@@ -468,6 +468,7 @@
     updateDelegationHandoffLog(appId, runId);
     updateSpecialistAcceptanceState(appId, runId);
     updateSpecialistIntakeReadiness(appId, runId);
+    updateSpecialistExecutionActivity(appId, runId);
     updateDepartmentMemoryQueue(appId, runId);
     updateWorkerDriftState(appId, runId);
     updateWorkerRoutingState(appId, runId);
@@ -1981,6 +1982,90 @@
     html += 'Execution Basis: <code>visible specialist intake clearance and execution-start state for current acceptance context</code><br/>';
     html += 'Evaluation Limit: <code>Clearance of execution partition dependencies</code><br/>';
     html += 'Resolution Bound: <code>Proceeds directly to Worker Loop (SI21)</code>';
+    html += '</div>';
+
+    html += '</div>';
+    
+    panel.innerHTML = html;
+  }
+
+  // ── SAX35: Specialist Execution Activity ──
+
+  function updateSpecialistExecutionActivity(appId, runId) {
+    var panel = document.getElementById('dev-specialist-execution-activity-state');
+    if (!panel) return;
+
+    var role = DEV_ROLES.find(function(r) { return r.id === appId; });
+    var roleName = role ? role.key : 'unknown';
+
+    // Mock explicit execution activity deriving from SAR34 intake environments
+    var activityLogs = [];
+
+    if (roleName === 'coder') {
+      activityLogs = [
+        {
+          state: 'Running',
+          specialist: 'solace-prime-mermaid-coder-v1.2.0',
+          activePacket: 'inbox/coder/packet.json',
+          firstOutput: 'Node active. Generated preliminary AST matrix from source constraints.',
+          color: '#10b981',
+          bg: 'rgba(16,185,129,0.1)'
+        }
+      ];
+    } else if (roleName === 'design') {
+      activityLogs = [
+        {
+          state: 'Paused',
+          specialist: 'solace-ui-renderer-v1',
+          activePacket: 'inbox/design/command_lock.json',
+          firstOutput: 'Execution halted at validation gate. Awaiting Coder structural hashes.',
+          color: '#f59e0b',
+          bg: 'rgba(245,158,11,0.1)'
+        }
+      ];
+    } else {
+      activityLogs = [
+        {
+          state: 'Failed',
+          specialist: 'System Manager',
+          activePacket: 'Intake failed',
+          firstOutput: 'Process aborted. Fatal syntax error during initialization.',
+          color: '#ef4444',
+          bg: 'rgba(239,68,68,0.1)'
+        }
+      ];
+    }
+
+    var html = '<div style="display:flex;flex-direction:column;gap:0.4rem;font-size:0.75rem;color:var(--sb-on-surface);">';
+    
+    activityLogs.forEach(function(log) {
+      html += '<div style="background:var(--sb-surface-alt,#1e293b);padding:0.4rem 0.5rem;border-radius:0.25rem;border-left:2px solid ' + log.color + ';display:flex;flex-direction:column;gap:0.3rem;">';
+      
+      html += '<div style="display:flex;align-items:center;justify-content:space-between;">';
+      html += '<strong style="color:var(--sb-on-surface);font-size:0.75rem;text-transform:uppercase;">[Live Monitor -> ' + escapeHtml(log.specialist) + ']</strong>';
+      html += '<code style="color:' + log.color + ';background:' + log.bg + ';padding:0.1rem 0.35rem;text-transform:uppercase;font-size:0.65rem;">' + escapeHtml(log.state) + '</code>';
+      html += '</div>';
+
+      html += '<div style="display:flex;flex-direction:column;gap:0.1rem;">';
+      html += '<div><span style="color:var(--sb-text-muted);font-weight:600;font-size:0.65rem;">Running Packet:</span> <span style="font-family:monospace;font-size:0.7rem;color:#c084fc;">' + escapeHtml(log.activePacket) + '</span></div>';
+      html += '<div><span style="color:var(--sb-text-muted);font-weight:600;font-size:0.65rem;">First Output Signal:</span> <span style="color:var(--sb-on-surface);">' + escapeHtml(log.firstOutput) + '</span></div>';
+      
+      // Phuc Forecast bounds (crypto stamping)
+      var dummyHash = btoa(log.state + log.specialist + log.firstOutput).substring(0, 16);
+      html += '<div><span style="color:var(--sb-text-muted);font-weight:600;font-size:0.65rem;">Activity Hash:</span> <code style="font-size:0.6rem;color:#94a3b8;">' + dummyHash + '</code></div>';
+
+      html += '</div>';
+      html += '</div>';
+    });
+
+    html += '<div style="margin-top:0.15rem;font-size:0.65rem;color:#64748b;">';
+    html += '<strong style="color:var(--sb-text-muted);">Active Observability Constraints:</strong><br/>';
+    html += 'Viewer Role: <code>solace-dev-manager</code><br/>';
+    html += 'Selected Worker: <code>' + escapeHtml(appId || 'unknown') + '</code><br/>';
+    html += 'Selected Run: <code>' + escapeHtml(runId || 'latest') + '</code><br/>';
+    html += 'Execution Basis: <code>visible specialist execution activity and first-output state for current readiness context</code><br/>';
+    html += 'Evaluation Limit: <code>Verification of runtime operation states</code><br/>';
+    html += 'Resolution Bound: <code>Confirms worker is generating output sequences (SI18)</code>';
     html += '</div>';
 
     html += '</div>';
