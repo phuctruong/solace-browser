@@ -366,8 +366,12 @@
       return;
     }
 
-    get('/api/v1/backoffice/solace-dev-manager/assignments').catch(function(){return {items:[]};}).then(function(res) {
-      var assignments = res.items || [];
+    Promise.all([
+      get('/api/v1/backoffice/solace-dev-manager/assignments').catch(function(){return {items:[]};}),
+      get('/api/v1/backoffice/solace-dev-manager/approvals').catch(function(){return {items:[]};})
+    ]).then(function(responses) {
+      var assignments = responses[0].items || [];
+      var approvals = responses[1].items || [];
       var active = assignments.find(function(a) { 
         if (boundRun.assignmentId && a.id === boundRun.assignmentId) {
           return true;
@@ -380,6 +384,8 @@
         content.innerHTML = '';
         return;
       }
+      
+      var linkedApproval = approvals.find(function(item) { return item.assignment_id === active.id; }) || null;
 
       get('/api/v1/apps/' + boundRun.appId + '/runs').catch(function(){return {runs:[]};}).then(function(runData) {
         var runs = runData.runs || [];
@@ -408,8 +414,22 @@
         }
         html += '</div>';
 
+        // --- SAC73 Output ---
+        html += '<div style="margin-top:0.3rem; padding-top:0.3rem; border-top:1px solid #334155;">';
+        html += '<strong style="display:block; margin-bottom:0.1rem;">Approval State:</strong>';
+        if (linkedApproval) {
+            var color = linkedApproval.status === 'approved' ? '#6ee7b7' : (linkedApproval.status === 'rejected' ? '#fca5a5' : '#fcd34d');
+            html += '<span class="sb-pill" style="color:' + color + '; border:1px solid ' + color + '; font-size:0.65rem;">' + escapeHtml(linkedApproval.status) + '</span>';
+            html += '<span style="font-size:0.65rem; color:var(--sb-text-muted); margin-left:0.4rem;">' + escapeHtml(linkedApproval.notes || '') + '</span>';
+        } else {
+            html += '<span class="sb-pill" style="color:#94a3b8; border:1px dashed #475569; font-size:0.65rem;">pending workflow signoff</span>';
+            html += '<span style="font-size:0.65rem; color:var(--sb-text-muted); margin-left:0.4rem;">No manager approval registered for assignment.</span>';
+        }
+        html += '</div>';
+        // --------------------
+
         if (boundRun.basis === 'workflow-launch-session-binding') {
-          html += '<strong style="display:block;margin-top:0.3rem;">Binding Basis:</strong> <code style="background:rgba(252,211,77,0.15);color:#fcd34d;padding:0.1rem 0.3rem;border-radius:0.15rem;">Run execution explicitly bound to workflow launch session state (SAC70/71/72)</code>';
+          html += '<strong style="display:block;margin-top:0.3rem;">Binding Basis:</strong> <code style="background:rgba(252,211,77,0.15);color:#fcd34d;padding:0.1rem 0.3rem;border-radius:0.15rem;">Run execution explicitly bound to workflow launch session state (SAC70/71/72/73)</code>';
         } else {
           html += '<strong style="display:block;margin-top:0.3rem;">Binding Basis:</strong> <code style="background:rgba(239,68,68,0.12);color:#fca5a5;padding:0.1rem 0.3rem;border-radius:0.15rem;">Fallback to selected run only; not durable workflow launch proof</code>';
         }
