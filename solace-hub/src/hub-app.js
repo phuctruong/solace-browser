@@ -721,64 +721,99 @@
     var color = roleColor(roleName);
     var outboxPath = '/apps/' + appId + '/outbox/runs/' + runId;
 
-    var statement = '';
-    var scopePolicy = 'FAIL_AND_NEW_TASK';
-    var evidence = [];
+    Promise.all([
+      get('/api/v1/backoffice/solace-dev-manager/assignments').catch(function() { return {items:[]}; }),
+      get('/api/v1/backoffice/solace-dev-manager/requests').catch(function() { return {items:[]}; }),
+      get('/api/v1/backoffice/solace-dev-manager/artifacts').catch(function() { return {items:[]}; }),
+      get('/api/v1/backoffice/solace-dev-manager/approvals').catch(function() { return {items:[]}; })
+    ]).then(function(responses) {
+      var assignments = (responses[0] && responses[0].items) ? responses[0].items : [];
+      var requests = (responses[1] && responses[1].items) ? responses[1].items : [];
+      var artifacts = (responses[2] && responses[2].items) ? responses[2].items : [];
+      var approvals = (responses[3] && responses[3].items) ? responses[3].items : [];
 
-    if (roleName === 'manager') {
-      statement = 'Triage incoming requests and distribute bounded task packages to specialist roles.';
-      evidence = ['manager-to-design-handoff.md', 'Updated assignment database'];
-    } else if (roleName === 'design') {
-      statement = 'Translate manager assignments into architectural boundaries and explicit data/UI contracts.';
-      evidence = ['design-to-coder-handoff.md', 'Prime Mermaid architectural diagrams'];
-    } else if (roleName === 'coder') {
-      statement = 'Implement the exact design handoff specification without arbitrary scope expansion.';
-      evidence = ['coder-to-qa-handoff.md', 'Source code diffs', 'Passing tests / localized verifications'];
-    } else if (roleName === 'qa') {
-      statement = 'Verify coder implementation against the original design handoff and requirements.';
-      evidence = ['qa-signoffs record', 'Bug triage logs', 'Final review summary'];
-    } else {
-      statement = 'Unknown assignment.';
-      evidence = ['Unknown evidence contract'];
-    }
-
-    var html = '<div style="display:flex;flex-direction:column;gap:0.4rem;font-size:0.75rem;color:var(--sb-on-surface);">';
-
-    html += '<div style="background:rgba(99,102,241,0.08);padding:0.4rem 0.5rem;border-radius:0.25rem;border-left:2px solid ' + color + ';">';
-    html += '<strong style="color:var(--sb-text-muted);">Active Assignment Context:</strong><br/>';
-    html += 'App ID: <code>' + escapeHtml(appId) + '</code><br/>';
-    html += 'Role: <code>' + escapeHtml(roleName) + '</code><br/>';
-    html += 'Run: <code>' + escapeHtml(runId) + '</code><br/>';
-    html += 'Packet Basis: <code>role-derived visible contract</code><br/>';
-    html += 'Outbox Root: <code style="font-size:0.65rem;color:#94a3b8;">' + escapeHtml(outboxPath) + '</code>';
-    html += '</div>';
-    
-    html += '<div style="background:var(--sb-surface-alt,#1e293b);padding:0.4rem 0.5rem;border-radius:0.25rem;border-left:2px solid ' + color + ';">';
-    html += '<strong style="color:var(--sb-text-muted);">Task Statement / Objective:</strong><br/>';
-    html += '<div style="margin-top:0.2rem;font-family:monospace;color:var(--sb-on-surface); line-height:1.4;">' + escapeHtml(statement) + '</div>';
-    html += '</div>';
-
-    html += '<div style="background:var(--sb-surface-alt,#1e293b);padding:0.4rem 0.5rem;border-radius:0.25rem;border-left:2px solid ' + color + ';">';
-    html += '<strong style="color:var(--sb-text-muted);">Scope Change Policy:</strong><br/>';
-    html += '<div style="margin-top:0.2rem;"><code style="color:#ef4444;background:rgba(239,68,68,0.1);padding:0.1rem 0.3rem;">' + escapeHtml(scopePolicy) + '</code></div>';
-    html += '</div>';
-
-    html += '<div style="background:var(--sb-surface-alt,#1e293b);padding:0.4rem 0.5rem;border-radius:0.25rem;border-left:2px solid ' + color + ';">';
-    html += '<strong style="color:var(--sb-text-muted);">Evidence Contract (Required Output):</strong><br/>';
-    html += '<ul style="margin:0.2rem 0 0 1rem;padding:0;color:var(--sb-on-surface);font-family:monospace;font-size:0.7rem;">';
-    evidence.forEach(function(item) {
-      if (item.indexOf('.md') > -1) {
-        html += '<li><code style="color:#818cf8;background:transparent;padding:0;">' + escapeHtml(item) + '</code></li>';
-      } else {
-        html += '<li>' + escapeHtml(item) + '</li>';
+      var activeAssgn = assignments.find(function(a) { return a.target_role === roleName && a.status === 'active'; }) || assignments.find(function(a) { return a.target_role === roleName; });
+      var reqInfo = null;
+      var linkedArtifact = null;
+      var linkedApproval = null;
+      if (activeAssgn) {
+        reqInfo = requests.find(function(r) { return r.id === activeAssgn.request_id; });
+        linkedArtifact = artifacts.find(function(item) { return item.assignment_id === activeAssgn.id; }) || null;
+        linkedApproval = approvals.find(function(item) { return item.assignment_id === activeAssgn.id; }) || null;
       }
-    });
-    html += '</ul>';
-    html += '</div>';
 
-    html += '</div>';
-    
-    panel.innerHTML = html;
+      var statement = '';
+      var scopePolicy = 'FAIL_AND_NEW_TASK';
+      var evidence = [];
+
+      var basisHtml = '';
+
+      if (activeAssgn && reqInfo) {
+        statement = reqInfo.title + ' [' + reqInfo.ticket_type + ']: ' + activeAssgn.details;
+        evidence.push('Back Office Request ID: ' + reqInfo.id.substring(0, 8));
+        evidence.push('Back Office Assignment ID: ' + activeAssgn.id.substring(0, 8));
+        if (linkedArtifact && linkedArtifact.file_path) {
+          evidence.push('Back Office Artifact: ' + linkedArtifact.file_path);
+        } else {
+          evidence.push('/apps/' + appId + '/outbox/runs/' + runId + '/evidence.json');
+        }
+        if (linkedApproval && linkedApproval.status) {
+          evidence.push('Back Office Approval: ' + linkedApproval.status);
+        }
+        basisHtml = '<code>runtime-backed dynamic API (SAC66)</code>';
+      } else {
+        statement = 'No active Back Office assignments found for role: ' + roleName + '. Execute seed script to bind runtime.';
+        evidence.push('None - API offline or unseeded');
+        basisHtml = '<code style="background:rgba(239,68,68,0.1);color:#ef4444;">disconnected / fallback mock</code>';
+      }
+
+      var html = '<div style="display:flex;flex-direction:column;gap:0.4rem;font-size:0.75rem;color:var(--sb-on-surface);">';
+
+      html += '<div style="background:rgba(99,102,241,0.08);padding:0.4rem 0.5rem;border-radius:0.25rem;border-left:2px solid ' + color + ';">';
+      html += '<strong style="color:var(--sb-text-muted);">Active Assignment Context:</strong><br/>';
+      html += 'App ID: <code>' + escapeHtml(appId) + '</code><br/>';
+      html += 'Role: <code>' + escapeHtml(roleName) + '</code><br/>';
+      html += 'Run: <code>' + escapeHtml(runId) + '</code><br/>';
+      html += 'Packet Basis: ' + basisHtml + '<br/>';
+      if (activeAssgn) {
+        html += 'Assignment ID: <code>' + escapeHtml(activeAssgn.id.substring(0, 8)) + '</code><br/>';
+      }
+      if (reqInfo) {
+        html += 'Request ID: <code>' + escapeHtml(reqInfo.id.substring(0, 8)) + '</code><br/>';
+      }
+      if (linkedApproval) {
+        html += 'Approval State: <code>' + escapeHtml(linkedApproval.status) + '</code><br/>';
+      }
+      html += 'Outbox Root: <code style="font-size:0.65rem;color:#94a3b8;">' + escapeHtml(outboxPath) + '</code>';
+      html += '</div>';
+      
+      html += '<div style="background:var(--sb-surface-alt,#1e293b);padding:0.4rem 0.5rem;border-radius:0.25rem;border-left:2px solid ' + color + ';">';
+      html += '<strong style="color:var(--sb-text-muted);">Task Statement / Objective:</strong><br/>';
+      html += '<div style="margin-top:0.2rem;font-family:monospace;color:var(--sb-on-surface); line-height:1.4;">' + escapeHtml(statement) + '</div>';
+      html += '</div>';
+
+      html += '<div style="background:var(--sb-surface-alt,#1e293b);padding:0.4rem 0.5rem;border-radius:0.25rem;border-left:2px solid ' + color + ';">';
+      html += '<strong style="color:var(--sb-text-muted);">Scope Change Policy:</strong><br/>';
+      html += '<div style="margin-top:0.2rem;"><code style="color:#ef4444;background:rgba(239,68,68,0.1);padding:0.1rem 0.3rem;">' + escapeHtml(scopePolicy) + '</code></div>';
+      html += '</div>';
+
+      html += '<div style="background:var(--sb-surface-alt,#1e293b);padding:0.4rem 0.5rem;border-radius:0.25rem;border-left:2px solid ' + color + ';">';
+      html += '<strong style="color:var(--sb-text-muted);">Evidence Contract (Required Output):</strong><br/>';
+      html += '<ul style="margin:0.2rem 0 0 1rem;padding:0;color:var(--sb-on-surface);font-family:monospace;font-size:0.7rem;">';
+      evidence.forEach(function(item) {
+        if (item.indexOf('.md') > -1 || item.indexOf('.json') > -1) {
+          html += '<li><code style="color:#818cf8;background:transparent;padding:0;">' + escapeHtml(item) + '</code></li>';
+        } else {
+          html += '<li>' + escapeHtml(item) + '</li>';
+        }
+      });
+      html += '</ul>';
+      html += '</div>';
+
+      html += '</div>';
+      
+      panel.innerHTML = html;
+    });
   }
 
   // ── SAI15: Worker Inbox/Outbox ──
@@ -792,67 +827,105 @@
     var color = roleColor(roleName);
     var outboxPath = '/apps/' + appId + '/outbox/runs/' + runId;
 
-    var inbox = [];
-    var outbox = [];
-
-    if (roleName === 'manager') {
-      inbox = ['User Request / Assignment Context', 'solace-dev-workspace.md', 'solace-worker-inbox-contract.md'];
-      outbox = ['manager-to-design-handoff.md', 'Project Map Updates'];
-    } else if (roleName === 'design') {
-      inbox = ['manager-to-design-handoff.md', 'Product Requirements'];
-      outbox = ['design-to-coder-handoff.md', 'UI Maps / Figma Targets'];
-    } else if (roleName === 'coder') {
-      inbox = ['design-to-coder-handoff.md', 'TODO.md (Current Round)'];
-      outbox = ['coder-to-qa-handoff.md', 'Code Commits', 'App Outbox / Runs'];
-    } else if (roleName === 'qa') {
-      inbox = ['coder-to-qa-handoff.md', 'App Outbox / Runs', 'Code Changes'];
-      outbox = ['qa-signoffs', 'Review Reports / Bug Triage'];
-    } else {
-      inbox = ['Unknown Inputs'];
-      outbox = ['Unknown Outputs'];
-    }
-
-    var html = '<div style="display:flex;flex-direction:column;gap:0.4rem;font-size:0.75rem;color:var(--sb-on-surface);">';
-
-    html += '<div style="background:rgba(99,102,241,0.08);padding:0.4rem 0.5rem;border-radius:0.25rem;border-left:2px solid ' + color + ';">';
-    html += '<strong style="color:var(--sb-text-muted);">Active Contract Context:</strong><br/>';
-    html += 'App ID: <code>' + escapeHtml(appId) + '</code><br/>';
-    html += 'Role: <code>' + escapeHtml(roleName) + '</code><br/>';
-    html += 'Run: <code>' + escapeHtml(runId) + '</code><br/>';
-    html += 'Outbox Root: <code style="font-size:0.65rem;color:#94a3b8;">' + escapeHtml(outboxPath) + '</code>';
-    html += '</div>';
-    
-    html += '<div style="background:var(--sb-surface-alt,#1e293b);padding:0.4rem 0.5rem;border-radius:0.25rem;border-left:2px solid ' + color + ';">';
-    html += '<strong style="color:var(--sb-text-muted);">Inbox Inputs (read-only context):</strong><br/>';
-    html += '<ul style="margin:0.2rem 0 0 1rem;padding:0;color:var(--sb-on-surface);font-family:monospace;font-size:0.7rem;">';
-    inbox.forEach(function(item) {
-      if (item.indexOf('.md') > -1) {
-        html += '<li><code style="color:#818cf8;background:transparent;padding:0;">' + escapeHtml(item) + '</code></li>';
-      } else {
-        html += '<li>' + escapeHtml(item) + '</li>';
+    Promise.all([
+      get('/api/v1/backoffice/solace-dev-manager/assignments').catch(function(){return {items:[]};}),
+      get('/api/v1/backoffice/solace-dev-manager/artifacts').catch(function(){return {items:[]};}),
+      get('/api/v1/backoffice/solace-dev-manager/approvals').catch(function(){return {items:[]};})
+    ]).then(function(responses) {
+      var assignments = (responses[0] && responses[0].items) ? responses[0].items : [];
+      var artifacts = (responses[1] && responses[1].items) ? responses[1].items : [];
+      var approvals = (responses[2] && responses[2].items) ? responses[2].items : [];
+      var activeAssgn = assignments.find(function(a) { return a.target_role === roleName && a.status === 'active'; }) || assignments.find(function(a) { return a.target_role === roleName; });
+      var linkedArtifact = null;
+      var linkedApproval = null;
+      if (activeAssgn) {
+        linkedArtifact = artifacts.find(function(item) { return item.assignment_id === activeAssgn.id; }) || null;
+        linkedApproval = approvals.find(function(item) { return item.assignment_id === activeAssgn.id; }) || null;
       }
-    });
-    html += '</ul>';
-    html += '</div>';
 
-    html += '<div style="background:var(--sb-surface-alt,#1e293b);padding:0.4rem 0.5rem;border-radius:0.25rem;border-left:2px solid ' + color + ';">';
-    html += '<strong style="color:var(--sb-text-muted);">Outbox Outputs (result surface):</strong><br/>';
-    html += '<ul style="margin:0.2rem 0 0 1rem;padding:0;color:var(--sb-on-surface);font-family:monospace;font-size:0.7rem;">';
-    outbox.forEach(function(item) {
-      if (item === 'App Outbox / Runs') {
-        html += '<li><a href="#" onclick="document.getElementById(\'dev-run-history-card\').scrollIntoView();return false;" style="color:#818cf8;text-decoration:none;">' + escapeHtml(item) + '</a></li>';
-      } else if (item.indexOf('.md') > -1) {
-        html += '<li><code style="color:#818cf8;background:transparent;padding:0;">' + escapeHtml(item) + '</code></li>';
+      var inbox = [];
+      var outbox = [];
+      var basisHtml = '';
+
+      if (activeAssgn) {
+        basisHtml = '<code>runtime-backed dynamic API (SAC66)</code>';
+        inbox = ['Back Office Request Parent Object', 'Back Office Assignment Object (' + activeAssgn.id.substring(0,8) + ')'];
+        outbox = ['Worker Run Artifacts (' + runId + ')', 'App Outbox / Runs'];
+        if (linkedArtifact && linkedArtifact.file_path) {
+          outbox.unshift('Back Office Artifact Link (' + linkedArtifact.file_path + ')');
+        }
+        if (linkedApproval && linkedApproval.status) {
+          outbox.push('Back Office Approval Status (' + linkedApproval.status + ')');
+        }
       } else {
-        html += '<li>' + escapeHtml(item) + '</li>';
+        basisHtml = '<code style="background:rgba(239,68,68,0.1);color:#ef4444;">disconnected / fallback mock</code>';
+        if (roleName === 'manager') {
+          inbox = ['User Request / Assignment Context', 'solace-dev-workspace.md'];
+          outbox = ['manager-to-design-handoff.md', 'Project Map Updates'];
+        } else if (roleName === 'design') {
+          inbox = ['manager-to-design-handoff.md', 'Product Requirements'];
+          outbox = ['design-to-coder-handoff.md', 'UI Maps / Figma Targets'];
+        } else if (roleName === 'coder') {
+          inbox = ['design-to-coder-handoff.md', 'TODO.md (Current Round)'];
+          outbox = ['coder-to-qa-handoff.md', 'Code Commits', 'App Outbox / Runs'];
+        } else if (roleName === 'qa') {
+          inbox = ['coder-to-qa-handoff.md', 'App Outbox / Runs', 'Code Changes'];
+          outbox = ['qa-signoffs', 'Review Reports / Bug Triage'];
+        } else {
+          inbox = ['Unknown Inputs'];
+          outbox = ['Unknown Outputs'];
+        }
       }
-    });
-    html += '</ul>';
-    html += '</div>';
 
-    html += '</div>';
-    
-    panel.innerHTML = html;
+      var html = '<div style="display:flex;flex-direction:column;gap:0.4rem;font-size:0.75rem;color:var(--sb-on-surface);">';
+
+      html += '<div style="background:rgba(99,102,241,0.08);padding:0.4rem 0.5rem;border-radius:0.25rem;border-left:2px solid ' + color + ';">';
+      html += '<strong style="color:var(--sb-text-muted);">Active Contract Context:</strong><br/>';
+      html += 'App ID: <code>' + escapeHtml(appId) + '</code><br/>';
+      html += 'Role: <code>' + escapeHtml(roleName) + '</code><br/>';
+      html += 'Run: <code>' + escapeHtml(runId) + '</code><br/>';
+      html += 'Packet Basis: ' + basisHtml + '<br/>';
+      if (activeAssgn) {
+        html += 'Assignment ID: <code>' + escapeHtml(activeAssgn.id.substring(0, 8)) + '</code><br/>';
+      }
+      if (linkedApproval) {
+        html += 'Approval Status: <code>' + escapeHtml(linkedApproval.status) + '</code><br/>';
+      }
+      html += 'Outbox Root: <code style="font-size:0.65rem;color:#94a3b8;">' + escapeHtml(outboxPath) + '</code>';
+      html += '</div>';
+      
+      html += '<div style="background:var(--sb-surface-alt,#1e293b);padding:0.4rem 0.5rem;border-radius:0.25rem;border-left:2px solid ' + color + ';">';
+      html += '<strong style="color:var(--sb-text-muted);">Inbox Inputs (read-only context):</strong><br/>';
+      html += '<ul style="margin:0.2rem 0 0 1rem;padding:0;color:var(--sb-on-surface);font-family:monospace;font-size:0.7rem;">';
+      inbox.forEach(function(item) {
+        if (item.indexOf('.md') > -1 || item.indexOf('Back Office') > -1) {
+          html += '<li><code style="color:#818cf8;background:transparent;padding:0;">' + escapeHtml(item) + '</code></li>';
+        } else {
+          html += '<li>' + escapeHtml(item) + '</li>';
+        }
+      });
+      html += '</ul>';
+      html += '</div>';
+
+      html += '<div style="background:var(--sb-surface-alt,#1e293b);padding:0.4rem 0.5rem;border-radius:0.25rem;border-left:2px solid ' + color + ';">';
+      html += '<strong style="color:var(--sb-text-muted);">Outbox Outputs (result surface):</strong><br/>';
+      html += '<ul style="margin:0.2rem 0 0 1rem;padding:0;color:var(--sb-on-surface);font-family:monospace;font-size:0.7rem;">';
+      outbox.forEach(function(item) {
+        if (item === 'App Outbox / Runs') {
+          html += '<li><a href="#" onclick="document.getElementById(\'dev-run-history-card\').scrollIntoView();return false;" style="color:#818cf8;text-decoration:none;">' + escapeHtml(item) + '</a></li>';
+        } else if (item.indexOf('.md') > -1 || item.indexOf('Worker Run Artifacts') > -1) {
+          html += '<li><code style="color:#818cf8;background:transparent;padding:0;">' + escapeHtml(item) + '</code></li>';
+        } else {
+          html += '<li>' + escapeHtml(item) + '</li>';
+        }
+      });
+      html += '</ul>';
+      html += '</div>';
+
+      html += '</div>';
+      
+      panel.innerHTML = html;
+    });
   }
 
   // ── SAH18: Human Approval Gate ──

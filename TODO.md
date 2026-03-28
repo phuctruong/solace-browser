@@ -1,187 +1,129 @@
 # TODO
 
 Repo: `solace-browser`
-Role: Solace Hub + Browser workspace for one runtime-backed Solace Dev workflow
+Role: Solace Hub + Browser workspace for runtime-backed request creation and active workflow selection
 
 ## Current Round
 
-`SAC66` native Back Office request/assignment/run truth for one self-hosting Dev loop.
+`SAC67` native manager request creation and request-selection truth.
 
-The workspace now exposes many useful panels, but the audit shows the real gap clearly: too much of the Dev Manager and specialist flow is still `role-derived` in [hub-app.js](/home/phuc/projects/solace-browser/solace-hub/src/hub-app.js) instead of being hydrated from the real Back Office and app-run substrate that already exists in:
+`SAC66` was the first real pivot away from pure role-derived visibility. The Hub now reads a real Back Office request/assignment/artifact/approval chain for one workflow.
 
-- `solace-runtime/src/backoffice/schema.rs`
-- `solace-runtime/src/routes/backoffice.rs`
-- `solace-runtime/src/routes/apps.rs`
-- `data/apps/solace-dev-manager/manifest.yaml`
-- `data/apps/solace-design/manifest.yaml`
-- `data/apps/solace-coder/manifest.yaml`
-- `data/apps/solace-qa/manifest.yaml`
-
-This round is a deliberate pivot away from adding another isolated visibility panel. The goal is to make one real Solace Dev workflow exist end to end for `solace-browser` itself.
+That is progress, but it is still not self-hosting enough because the workflow currently depends on an external seed script. The next step is to let the Dev Manager create and select the active `solace-browser` request directly in Hub, then drive the rest of the runtime-backed workflow from that selected request.
 
 ## Worker Inbox
 
-- `northstar`: `Solace Browser is the visible operating environment for the Solace Dev department, and it must be able to use one real Back Office request -> assignment -> worker inbox -> run -> evidence -> approval/release path to improve Solace Browser itself.`
+- `northstar`: `Solace Browser must let the Dev Manager initiate and inspect one real self-hosting request in the browser itself, not only through external seeding scripts.`
 - `worker_mode`: `external_coding_agent`
 - `worker_role`: `coder`
-- `task_statement`: `Bind one self-hosting Solace Dev workflow to the real Back Office and runtime. Use durable request/assignment/run objects instead of another role-derived panel.`
+- `task_statement`: `Add one native manager request-creation and request-selection path in Hub, backed by the existing Back Office objects, and use that selected request as the visible basis for assignment and worker workflow context.`
 - `scope_change_policy`: `FAIL_AND_NEW_TASK`
 
 ## Read This First
 
-Before coding, read and align to:
-
 - `/home/phuc/projects/solace-prime/NORTHSTAR.md`
 - `/home/phuc/projects/solace-prime/ROADMAP.md`
-- `/home/phuc/projects/solace-prime/specs/solace-dev.md`
 - `/home/phuc/projects/solace-prime/specs/solace-dev-workspace.md`
 - `/home/phuc/projects/solace-prime/specs/solace-dev-role-architecture.md`
-- `/home/phuc/projects/solace-prime/specs/solace-worker-inbox-contract.md`
 - `/home/phuc/projects/solace-prime/canon/hub/SI5 — Solace Hub as Mission Control.md`
 - `/home/phuc/projects/solace-prime/canon/hub/SI6 — Solace Browser as Execution & Proof Layer.md`
-- `/home/phuc/projects/solace-prime/canon/hub/SI9 — Conventions as the Core Product Object.md`
 - `/home/phuc/projects/solace-prime/canon/hub/SI17 — Human-in-the-Loop as a First-Class System Component.md`
-- `/home/phuc/projects/solace-prime/canon/hub/SI18 — Transparency as a Product Feature.md`
-- `/home/phuc/projects/solace-browser/solace-runtime/src/backoffice/schema.rs`
 - `/home/phuc/projects/solace-browser/solace-runtime/src/routes/backoffice.rs`
-- `/home/phuc/projects/solace-browser/solace-runtime/src/routes/apps.rs`
+- `/home/phuc/projects/solace-browser/data/apps/solace-dev-manager/manifest.yaml`
 - `/home/phuc/projects/solace-browser/solace-hub/src/hub-app.js`
 - `/home/phuc/projects/solace-browser/solace-hub/src/index.html`
 
 ## Audit Ground Truth
 
-The current audit says:
-
-- Back Office already exists.
-- Worker app manifests already exist.
-- Run history, events, and artifact serving already exist.
-- The Dev workspace is stronger on transparency than on durable system truth.
-- Many later surfaces explicitly admit they are `role-derived mocks`.
-
-This round must reduce that gap materially.
+- Back Office objects now exist and are being read for one workflow.
+- The current runtime-backed path still depends on `scripts/seed-saz66-runtime-binding.sh`.
+- The manager still cannot create the canonical request directly inside the Hub workspace.
+- Active workflow selection is still too implicit and too dependent on role/run context.
 
 ## Rules
 
-- do not add another isolated “state panel” as the main deliverable
-- bind the visible Dev workspace to real Back Office records and real app-run paths
-- use one real `solace-browser` request as the canonical proof path
-- preserve the current integrated workspace and existing review surfaces
-- if anything remains mocked, say so in the UI and in the evidence return
-- prefer wiring existing runtime/backoffice routes over inventing parallel state
-- do not expand into `solaceagi`, billing, cloud sync, or unrelated browser platform work
+- do not revert to a new mock panel
+- use the existing `projects`, `requests`, `assignments`, `artifacts`, and `approvals` Back Office objects
+- keep the manager flow honest about what is runtime-backed and what is still fallback
+- preserve the current integrated workspace and `SAC66` binding
+- do not introduce a second parallel request model
 
 ## Hard Rejection Criteria
 
-- the result still centers on a new mock panel instead of one durable workflow
-- the Dev Manager still cannot see a real request/assignment/run path for `solace-browser`
-- the worker inbox/outbox view is still detached from Back Office request/assignment truth
-- no real run/evidence path is shown for the selected request
-- the implementation invents a second object model instead of using the existing Back Office/runtime
+- the manager still cannot create one real `solace-browser` request from Hub
+- the visible active workflow is still determined only by fallback role/run context
+- request selection does not visibly drive assignment and worker context
+- the result depends entirely on an external seed script again
 
 ## Required Deliverables
 
-1. one real Back Office request object for `solace-browser`
-2. one real manager assignment object linked to that request
-3. one visible worker inbox packet derived from that assignment
-4. one visible run/evidence binding for that assignment
-5. one visible human review or approval state linked to the same object chain
-6. one Prime Mermaid artifact describing this runtime-backed flow
-7. one narrow smoke path
-8. one narrow automated test
+1. one native Hub request-creation path for `solace-browser`
+2. one visible active-request selection surface
+3. one visible link from selected request -> assignment context
+4. one visible link from selected request -> worker inbox/outbox context
+5. one Prime Mermaid artifact for request creation and selection
+6. one narrow smoke path
+7. one narrow automated test
 
 ## Current Tickets
 
-### Ticket 1: Define the runtime-backed object chain
+### Ticket 1: Add native request creation
 
-Objective: stop the workspace from floating above the system truth.
-
-Scope:
-
-- choose or create the minimum durable objects needed for one self-hosting loop:
-  - `request`
-  - `assignment`
-  - `run`
-  - `approval` or `release_decision`
-- use the existing Back Office manifest/runtime rather than parallel ad hoc JSON
-
-Done when: one reviewer can trace a single `solace-browser` improvement request through these objects.
-
-### Ticket 2: Hydrate manager view from Back Office truth
-
-Objective: make the Dev Manager operate on durable records.
+Objective: make the manager able to start the self-hosting loop inside Hub.
 
 Scope:
 
-- surface the chosen request and assignment in the workspace
-- show IDs, titles, status, linked worker, and linked run honestly
-- make it obvious what is runtime-backed vs still derived
+- create one narrow UI path that creates a `requests` record in `solace-dev-manager`
+- tie it to the `solace-browser` project
+- keep the interaction minimal and reviewable
 
-Done when: the manager panel is grounded in real records, not just role-derived text.
+Done when: a reviewer can create a real `solace-browser` request from the Hub workspace.
 
-### Ticket 3: Bind worker inbox/outbox to the same chain
+### Ticket 2: Add active request selection
 
-Objective: make worker operation visible as part of the same workflow.
-
-Scope:
-
-- show the selected worker packet as derived from the selected assignment
-- show the run/evidence/artifact path tied to that packet
-- show at least one concrete linkage between assignment and outbox/run result
-
-Done when: the inbox/outbox view is clearly part of the same durable object chain.
-
-### Ticket 4: Add one Prime Mermaid flow artifact
-
-Objective: record the runtime-backed self-hosting loop as source truth.
+Objective: make the workflow basis explicit.
 
 Scope:
 
-- add one Prime Mermaid artifact for:
-  - request
-  - assignment
-  - worker packet
-  - run
-  - evidence
-  - approval/release decision
+- show a visible selected request in the manager workspace
+- make selected request context flow into assignment and worker panels
+- keep fallback mode explicit if no request is selected
 
-Done when: the flow is committed as source truth and matches the real implementation.
+Done when: a reviewer can tell which request the current workflow is about.
 
-### Ticket 5: Add one smoke path and one narrow test
+### Ticket 3: Preserve runtime-backed linkage
 
-Objective: make the new binding reviewable and repeatable.
+Objective: keep `SAC66` intact while making it manager-driven.
 
 Scope:
 
-- one smoke path from workspace load to request selection to assignment inspection to worker packet inspection to run/evidence inspection
-- one automated test asserting that the workspace is reading the runtime-backed chain rather than only role-derived mocks
+- ensure assignment, artifact, and approval reads still work
+- ensure selected request drives the same durable chain
 
-Done when: a reviewer can prove the path without guessing.
+Done when: the new manager path strengthens the existing runtime-backed chain instead of bypassing it.
 
 ## Suggested File Targets
 
-- `solace-runtime/src/routes/backoffice.rs`
-- `solace-runtime/src/routes/apps.rs`
-- `data/apps/solace-dev-manager/manifest.yaml`
 - `solace-hub/src/index.html`
 - `solace-hub/src/hub-app.js`
-- `specs/solace-dev/`
+- `solace-runtime/src/routes/backoffice.rs`
 - `tests/`
 - `scripts/`
+- `specs/solace-dev/`
 
 ## Evidence Return Format
 
 - changed files
 - exact test/check command output
 - exact routes or APIs exercised
-- sample request/assignment/run payloads
-- artifact/report paths
+- sample created request payload
 - screenshot paths
 - local smoke path
 - remaining risks
 
 ## Out Of Scope
 
-- adding another long post-release surface chain
-- building cloud sync or `solaceagi`
-- rewriting the entire runtime
-- generic UI polish without durable workflow improvement
+- broad workflow redesign
+- cloud sync or `solaceagi`
+- another long post-release panel chain
+- generic polish without manager-driven runtime truth
