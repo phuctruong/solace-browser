@@ -218,6 +218,11 @@
           }
         }
         highlightSelectedRun(latestRunAppId, runId);
+        updateInspectionContext(
+          latestRunAppId,
+          runId,
+          invalidDeepLink ? 'invalid' : (staleSelection ? 'fallback' : 'selected')
+        );
       }
     }
   }
@@ -233,6 +238,8 @@
     saveSelectedRun(appId, runId);
     // SAU12: Update URL hash
     setInspectionHash(appId, runId);
+    // SAC13: Update context panel
+    updateInspectionContext(appId, runId, 'selected');
 
     // Update selected-state badge
     var lastRunBadge = document.getElementById('dev-last-run');
@@ -372,6 +379,7 @@
     setInspectionHash(appId, runId);
     saveSelectedRun(appId, runId);
     highlightSelectedRun(appId, runId);
+    updateInspectionContext(appId, runId, label);
     if (eventsExist) {
       fetchRunEvents(appId, runId).then(function(eventsData) {
         showRunInspection(appId, runId, reportExists ? 'exists' : null, eventsData, true);
@@ -392,6 +400,75 @@
         'Falling back to <code>' + newAppId + ' / ' + newRunId + '</code>.</div></div>' +
         inspectionPanel.innerHTML;
     }
+  }
+
+  // ── SAC13: Inspection-Context Panel ──
+
+  function updateInspectionContext(appId, runId, source) {
+    var panel = document.getElementById('dev-inspection-context');
+    var sourcePill = document.getElementById('dev-context-source-pill');
+    if (!panel) return;
+
+    var sourceColors = {
+      'deep-link':  { bg: '#1e3a5f', color: '#7dd3fc' },
+      'restored':   { bg: '#064e3b', color: '#6ee7b7' },
+      'selected':   { bg: '#312e81', color: '#a5b4fc' },
+      'fallback':   { bg: '#78350f', color: '#fcd34d' },
+      'invalid':    { bg: '#7f1d1d', color: '#fca5a5' }
+    };
+    var sc = sourceColors[source] || sourceColors['selected'];
+    var sourceDescriptions = {
+      'deep-link': 'Workspace hydrated directly from a shareable inspection link.',
+      'restored': 'Workspace restored the last known inspection context from session state.',
+      'selected': 'Workspace is showing the run explicitly selected in this session.',
+      'fallback': 'Workspace fell back to the latest valid run after stored selection was no longer available.',
+      'invalid': 'Requested deep link was invalid, so the workspace fell back to the latest valid run and preserved that outcome visibly.'
+    };
+    var sourceDescription = sourceDescriptions[source] || sourceDescriptions['selected'];
+
+    if (sourcePill) {
+      sourcePill.style.background = sc.bg;
+      sourcePill.style.color = sc.color;
+      sourcePill.textContent = source;
+    }
+
+    var deepLink = location.origin + location.pathname + '?tab=dev#inspect=' + appId + '/' + runId;
+
+    panel.innerHTML =
+      '<div style="display:flex;flex-direction:column;gap:0.3rem;">' +
+      '<div style="display:flex;gap:0.4rem;align-items:center;flex-wrap:wrap;">' +
+      '<code style="font-size:0.72rem;color:var(--sb-on-surface);background:var(--sb-surface-alt,#1e293b);padding:0.15rem 0.35rem;border-radius:0.2rem;">' + appId + ' / ' + runId + '</code>' +
+      '</div>' +
+      '<div style="font-size:0.68rem;color:var(--sb-text-muted);line-height:1.45;">' + sourceDescription + '</div>' +
+      '<div style="display:flex;gap:0.3rem;align-items:center;flex-wrap:wrap;margin-top:0.15rem;">' +
+      '<input id="dev-context-link" type="text" readonly value="' + deepLink.replace(/"/g, '&quot;') + '" style="flex:1;min-width:180px;font-size:0.65rem;background:var(--sb-surface-alt,#0f172a);color:var(--sb-text-muted);border:1px solid var(--sb-border,#334155);border-radius:0.25rem;padding:0.2rem 0.35rem;font-family:monospace;">' +
+      '<button onclick="window.__solaceCopyInspectionLink()" class="sb-btn sb-btn--sm" id="dev-copy-link-btn" style="font-size:0.65rem;padding:0.2rem 0.5rem;white-space:nowrap;">📋 copy link</button>' +
+      '</div>' +
+      '</div>';
+  }
+
+  window.__solaceCopyInspectionLink = function() {
+    var input = document.getElementById('dev-context-link');
+    var btn = document.getElementById('dev-copy-link-btn');
+    if (!input) return;
+    var link = input.value;
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(link).then(function() {
+        if (btn) { btn.textContent = '✓ copied'; setTimeout(function() { btn.textContent = '📋 copy link'; }, 1500); }
+      }).catch(function() {
+        fallbackCopy(input, btn);
+      });
+    } else {
+      fallbackCopy(input, btn);
+    }
+  };
+
+  function fallbackCopy(input, btn) {
+    input.select();
+    try {
+      document.execCommand('copy');
+      if (btn) { btn.textContent = '✓ copied'; setTimeout(function() { btn.textContent = '📋 copy link'; }, 1500); }
+    } catch(e) {}
   }
 
   function roleColor(key) {
