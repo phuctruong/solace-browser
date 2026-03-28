@@ -99,6 +99,7 @@
     var latestRun = null;
     var latestRunAppId = null;
     var staleSelection = null;
+    var invalidDeepLink = null;
     var pending = DEV_ROLES.length;
 
     DEV_ROLES.forEach(function(role) {
@@ -157,19 +158,26 @@
         historyPanel.style.display = 'block';
       }
 
-      // SAP11: Check for stored selection first
-      var stored = loadSelectedRun();
+      // SAU12: Check URL hash first, then SAP11 session storage
+      var hashContext = parseInspectionHash();
+      var stored = hashContext || loadSelectedRun();
+      var storedSource = hashContext ? 'deep-link' : 'restored';
       if (stored && inspectionPanel) {
         // Verify stored selection exists in current runs list
         var storedRow = document.getElementById('run-row-' + stored.appId + '-' + stored.runId);
         if (storedRow) {
-          // Stored selection is still valid — restore it
-          restoreSelectedRun(stored.appId, stored.runId, storedRow);
+          // Stored/linked selection is still valid — restore it
+          restoreSelectedRun(stored.appId, stored.runId, storedRow, storedSource);
           return;
         } else {
           // Stored selection is stale — record fallback and continue to latest run
-          staleSelection = stored;
-          clearSelectedRun();
+          if (hashContext) {
+            invalidDeepLink = stored;
+            clearInspectionHash();
+          } else {
+            staleSelection = stored;
+            clearSelectedRun();
+          }
         }
       }
 
@@ -177,15 +185,22 @@
       if (latestRun && latestRunAppId && inspectionPanel) {
         var runId = latestRun.run_id;
         saveSelectedRun(latestRunAppId, runId);
+        setInspectionHash(latestRunAppId, runId);
         if (latestRun.events_exist) {
           fetchRunEvents(latestRunAppId, runId).then(function(eventsData) {
             showRunInspection(latestRunAppId, runId, latestRun.report_exists ? 'exists' : null, eventsData, true);
+            if (invalidDeepLink) {
+              prependInvalidDeepLinkNotice(invalidDeepLink.appId, invalidDeepLink.runId, latestRunAppId, runId);
+            }
             if (staleSelection) {
               prependStaleFallbackNotice(staleSelection.appId, staleSelection.runId, latestRunAppId, runId);
             }
           });
         } else {
           showRunInspection(latestRunAppId, runId, latestRun.report_exists ? 'exists' : null, { events: [], count: 0, chain_valid: false }, true);
+          if (invalidDeepLink) {
+            prependInvalidDeepLinkNotice(invalidDeepLink.appId, invalidDeepLink.runId, latestRunAppId, runId);
+          }
           if (staleSelection) {
             prependStaleFallbackNotice(staleSelection.appId, staleSelection.runId, latestRunAppId, runId);
           }
@@ -194,7 +209,9 @@
         // Update last-run badge and mark selected row
         var lastRunBadge = document.getElementById('dev-last-run');
         if (lastRunBadge) {
-          if (staleSelection) {
+          if (invalidDeepLink) {
+            lastRunBadge.innerHTML = '<span class="sb-pill" style="background:#7f1d1d;color:#fca5a5;font-size:0.7rem;">deep link invalid → fallback: ' + latestRunAppId + ' @ ' + runId + '</span>';
+          } else if (staleSelection) {
             lastRunBadge.innerHTML = '<span class="sb-pill" style="background:#78350f;color:#fcd34d;font-size:0.7rem;">fallback: ' + latestRunAppId + ' @ ' + runId + '</span>';
           } else {
             lastRunBadge.innerHTML = '<span class="sb-pill" style="background:#064e3b;color:#6ee7b7;font-size:0.7rem;">selected: ' + latestRunAppId + ' @ ' + runId + '</span>';
@@ -214,6 +231,8 @@
 
     // SAP11: Persist selection
     saveSelectedRun(appId, runId);
+    // SAU12: Update URL hash
+    setInspectionHash(appId, runId);
 
     // Update selected-state badge
     var lastRunBadge = document.getElementById('dev-last-run');
@@ -286,14 +305,72 @@
     try { sessionStorage.removeItem(SELECTED_RUN_KEY); } catch(e) {}
   }
 
-  function restoreSelectedRun(appId, runId, storedRow) {
+  // ── SAU12: URL-Backed Deep-Link Context ──
+
+  function parseInspectionHash() {
+    try {
+      var hash = location.hash || '';
+      var match = hash.match(/^#inspect=([^/]+)\/(.+)$/);
+      if (match && match[1] && match[2]) {
+        return { appId: match[1], runId: match[2] };
+      }
+    } catch(e) {}
+    return null;
+  }
+
+  function setInspectionHash(appId, runId) {
+    try {
+      history.replaceState(null, '', '#inspect=' + appId + '/' + runId);
+    } catch(e) {}
+  }
+
+  function clearInspectionHash() {
+    try {
+      history.replaceState(null, '', location.pathname + location.search);
+    } catch(e) {}
+  }
+
+  function showInvalidDeepLinkFallback(appId, runId) {
+    var inspectionPanel = document.getElementById('dev-run-inspection');
+    if (inspectionPanel) {
+      inspectionPanel.style.display = 'block';
+      inspectionPanel.innerHTML =
+        '<div style="border-left:3px solid #dc2626;padding:0.5rem 0.75rem;background:rgba(220,38,38,0.08);border-radius:0 0.5rem 0.5rem 0;">' +
+        '<strong style="font-size:0.8rem;color:var(--sb-on-surface);">Deep link invalid</strong>' +
+        '<div style="font-size:0.72rem;color:var(--sb-text-muted);margin-top:0.2rem;">' +
+        'The URL pointed to <code>#inspect=' + appId + '/' + runId + '</code> but that run was not found. ' +
+        'Falling back to latest known run.</div></div>';
+    }
+    var lastRunBadge = document.getElementById('dev-last-run');
+    if (lastRunBadge) {
+      lastRunBadge.innerHTML = '<span class="sb-pill" style="background:#7f1d1d;color:#fca5a5;font-size:0.7rem;">deep link invalid</span>';
+    }
+  }
+
+  function prependInvalidDeepLinkNotice(oldAppId, oldRunId, newAppId, newRunId) {
+    var inspectionPanel = document.getElementById('dev-run-inspection');
+    if (inspectionPanel) {
+      inspectionPanel.innerHTML =
+        '<div style="border-left:3px solid #dc2626;padding:0.5rem 0.75rem;background:rgba(220,38,38,0.08);border-radius:0 0.5rem 0.5rem 0;">' +
+        '<strong style="font-size:0.8rem;color:var(--sb-on-surface);">Deep link invalid</strong>' +
+        '<div style="font-size:0.72rem;color:var(--sb-text-muted);margin-top:0.2rem;">' +
+        'The URL pointed to <code>#inspect=' + oldAppId + '/' + oldRunId + '</code> but that run was not found. ' +
+        'Falling back to <code>' + newAppId + ' / ' + newRunId + '</code>.</div></div>' +
+        inspectionPanel.innerHTML;
+    }
+  }
+
+  function restoreSelectedRun(appId, runId, storedRow, source) {
     var btn = storedRow ? storedRow.querySelector('.sat10-select-run') : null;
     var reportExists = btn && btn.dataset ? btn.dataset.reportExists === 'true' : false;
     var eventsExist = btn && btn.dataset ? btn.dataset.eventsExists === 'true' : true;
+    var label = source || 'restored';
     var lastRunBadge = document.getElementById('dev-last-run');
     if (lastRunBadge) {
-      lastRunBadge.innerHTML = '<span class="sb-pill" style="background:#064e3b;color:#6ee7b7;font-size:0.7rem;">restored: ' + appId + ' @ ' + runId + '</span>';
+      lastRunBadge.innerHTML = '<span class="sb-pill" style="background:#064e3b;color:#6ee7b7;font-size:0.7rem;">' + label + ': ' + appId + ' @ ' + runId + '</span>';
     }
+    setInspectionHash(appId, runId);
+    saveSelectedRun(appId, runId);
     highlightSelectedRun(appId, runId);
     if (eventsExist) {
       fetchRunEvents(appId, runId).then(function(eventsData) {

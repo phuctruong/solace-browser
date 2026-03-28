@@ -26,9 +26,10 @@ grep -q 'no longer in the runs list' "solace-hub/src/hub-app.js"
 echo "  -> OK: stale-selection fallback exists"
 
 echo "[5/6] Checking hydration prefers stored selection..."
-grep -q 'var stored = loadSelectedRun()' "solace-hub/src/hub-app.js"
+grep -q 'var hashContext = parseInspectionHash()' "solace-hub/src/hub-app.js"
+grep -q "var stored = hashContext || loadSelectedRun()" "solace-hub/src/hub-app.js"
 grep -q 'if (stored && inspectionPanel)' "solace-hub/src/hub-app.js"
-grep -q 'restoreSelectedRun(stored.appId, stored.runId, storedRow)' "solace-hub/src/hub-app.js"
+grep -q 'restoreSelectedRun(stored.appId, stored.runId, storedRow, storedSource)' "solace-hub/src/hub-app.js"
 echo "  -> OK: hydration restores stored selection first"
 
 echo "[6/6] Checking prior run-selection regressions..."

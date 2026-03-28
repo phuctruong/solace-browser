@@ -45,7 +45,8 @@ def test_hub_app_js_has_restore_selected_run() -> None:
     ).read_text(encoding="utf-8")
 
     assert "restoreSelectedRun" in hub_app
-    assert "restored:" in hub_app
+    assert "storedSource = hashContext ? 'deep-link' : 'restored'" in hub_app
+    assert "var label = source || 'restored'" in hub_app
     assert "storedRow.querySelector('.sat10-select-run')" in hub_app
 
 
@@ -54,7 +55,8 @@ def test_hub_app_js_finish_hydration_checks_stored() -> None:
         REPO_ROOT / "solace-hub" / "src" / "hub-app.js"
     ).read_text(encoding="utf-8")
 
-    assert "var stored = loadSelectedRun()" in hub_app
+    assert "var hashContext = parseInspectionHash()" in hub_app
+    assert "var stored = hashContext || loadSelectedRun()" in hub_app
 
 
 # ── Ticket 3: Handle invalid stored selection ──
