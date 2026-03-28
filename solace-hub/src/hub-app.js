@@ -116,19 +116,19 @@
           historyHTML += '<strong style="font-size:0.75rem;color:' + roleColor(role.key) + ';">' + role.key + '</strong>';
           historyHTML += ' <span class="sb-pill" style="background:#1e293b;color:#e2e8f0;font-size:0.6rem;">' + runs.length + ' runs</span>';
           historyHTML += '<div style="display:flex;flex-direction:column;gap:0.2rem;margin-top:0.2rem;">';
-          // Show up to 3 most recent runs
-          runs.slice(0, 3).forEach(function(run) {
+          // Show up to 5 most recent runs
+          runs.slice(0, 5).forEach(function(run) {
+            var selectBtn = '<a href="#" onclick="window.__solaceSelectRun(\'' + role.id + '\',\'' + run.run_id + '\',this);return false;" class="sb-btn sb-btn--sm sat10-select-run" style="font-size:0.6rem;padding:0.15rem 0.35rem;background:#1e293b;color:#818cf8;border:1px solid #334155;" data-run-id="' + run.run_id + '" data-app-id="' + role.id + '" data-report-exists="' + (run.report_exists ? 'true' : 'false') + '" data-events-exists="' + (run.events_exist ? 'true' : 'false') + '">▸ select</a>';
             var reportPill = run.report_exists
-              ? '<a href="/api/v1/apps/' + role.id + '/runs/' + run.run_id + '/report" target="_blank" style="color:#818cf8;font-size:0.65rem;">report</a>'
+              ? '<a href="/api/v1/apps/' + role.id + '/runs/' + run.run_id + '/artifact/report.html" target="_blank" style="color:#818cf8;font-size:0.65rem;">report</a>'
               : '<span style="color:#64748b;font-size:0.65rem;">no report</span>';
-            var detailPill =
-              '<a href="/apps/' + role.id + '/runs/' + run.run_id + '" target="_blank" style="color:#818cf8;font-size:0.65rem;">detail</a>';
-            var eventsPill = run.events_exist
-              ? '<a href="#" onclick="window.__solaceInspectRun(\'' + role.id + '\',\'' + run.run_id + '\');return false;" style="color:#818cf8;font-size:0.65rem;">events</a>'
-              : '';
-            historyHTML += '<div style="display:flex;gap:0.4rem;align-items:center;font-size:0.7rem;color:var(--sb-text-muted);">';
+            historyHTML += '<div class="sat10-run-row" id="run-row-' + role.id + '-' + run.run_id + '" style="display:flex;gap:0.4rem;align-items:center;font-size:0.7rem;color:var(--sb-text-muted);padding:0.15rem 0.3rem;border-radius:0.25rem;transition:background 0.15s;">';
+            historyHTML += selectBtn + ' ';
             historyHTML += '<code style="font-size:0.65rem;">' + run.run_id + '</code> ';
-            historyHTML += detailPill + ' ' + reportPill + ' ' + eventsPill;
+            historyHTML += reportPill;
+            if (run.events_exist) {
+              historyHTML += ' <span class="sb-pill" style="background:#1e293b;color:#94a3b8;font-size:0.55rem;">events</span>';
+            }
             historyHTML += '</div>';
           });
           historyHTML += '</div></div>';
@@ -167,21 +167,69 @@
           showRunInspection(latestRunAppId, runId, latestRun.report_exists ? 'exists' : null, { events: [], count: 0, chain_valid: false }, true);
         }
 
-        // Update last-run badge
+        // Update last-run badge and mark selected row
         var lastRunBadge = document.getElementById('dev-last-run');
         if (lastRunBadge) {
-          lastRunBadge.innerHTML = '<span class="sb-pill" style="background:#064e3b;color:#6ee7b7;font-size:0.7rem;">latest: ' + latestRunAppId + ' @ ' + runId + '</span>';
+          lastRunBadge.innerHTML = '<span class="sb-pill" style="background:#064e3b;color:#6ee7b7;font-size:0.7rem;">selected: ' + latestRunAppId + ' @ ' + runId + '</span>';
         }
+        highlightSelectedRun(latestRunAppId, runId);
       }
     }
   }
 
-  // Inspect a specific historical run
-  window.__solaceInspectRun = function(appId, runId) {
-    fetchRunEvents(appId, runId).then(function(eventsData) {
-      showRunInspection(appId, runId, 'exists', eventsData, true);
-    });
+  // ── SAT10: Run Selection ──
+
+  // Select and inspect a specific run from history
+  window.__solaceSelectRun = function(appId, runId, clickedEl) {
+    var reportExists = clickedEl && clickedEl.dataset ? clickedEl.dataset.reportExists === 'true' : false;
+    var eventsExist = clickedEl && clickedEl.dataset ? clickedEl.dataset.eventsExists === 'true' : true;
+
+    // Update selected-state badge
+    var lastRunBadge = document.getElementById('dev-last-run');
+    if (lastRunBadge) {
+      lastRunBadge.innerHTML = '<span class="sb-pill" style="background:#064e3b;color:#6ee7b7;font-size:0.7rem;">selected: ' + appId + ' @ ' + runId + '</span>';
+    }
+
+    // Highlight selected row
+    highlightSelectedRun(appId, runId);
+
+    // Fetch events and trigger full inspection + preview chain
+    if (eventsExist) {
+      fetchRunEvents(appId, runId).then(function(eventsData) {
+        showRunInspection(appId, runId, reportExists ? 'exists' : null, eventsData, true);
+      });
+    } else {
+      showRunInspection(appId, runId, reportExists ? 'exists' : null, { events: [], count: 0, chain_valid: false }, true);
+    }
   };
+
+  // Backward compat alias
+  window.__solaceInspectRun = window.__solaceSelectRun;
+
+  function highlightSelectedRun(appId, runId) {
+    // Clear all highlights
+    var allRows = document.querySelectorAll('.sat10-run-row');
+    for (var i = 0; i < allRows.length; i++) {
+      allRows[i].style.background = 'transparent';
+    }
+    var allBtns = document.querySelectorAll('.sat10-select-run');
+    for (var j = 0; j < allBtns.length; j++) {
+      allBtns[j].style.background = '#1e293b';
+      allBtns[j].style.color = '#818cf8';
+      allBtns[j].textContent = '▸ select';
+    }
+    // Highlight selected
+    var selectedRow = document.getElementById('run-row-' + appId + '-' + runId);
+    if (selectedRow) {
+      selectedRow.style.background = 'rgba(99,102,241,0.12)';
+      var btn = selectedRow.querySelector('.sat10-select-run');
+      if (btn) {
+        btn.style.background = '#6366f1';
+        btn.style.color = '#fff';
+        btn.textContent = '● viewing';
+      }
+    }
+  }
 
   function roleColor(key) {
     var colors = { manager: '#d946ef', design: '#3b82f6', coder: '#10b981', qa: '#f59e0b' };
