@@ -20,6 +20,7 @@ pub fn routes() -> Router<AppState> {
             get(get_run_events),
         )
         .route("/api/v1/workforce", get(workforce_org_chart))
+        .route("/api/v1/apps/:app_id/runs", get(list_runs))
 }
 
 async fn list_apps() -> Json<serde_json::Value> {
@@ -118,4 +119,73 @@ async fn get_run_events(
         }
         Err(error) => Err((StatusCode::NOT_FOUND, Json(json!({"error": error})))),
     }
+}
+
+async fn list_runs(
+    Path(app_id): Path<String>,
+) -> Result<Json<serde_json::Value>, (StatusCode, Json<serde_json::Value>)> {
+    let app_dir = crate::utils::find_app_dir(&app_id)
+        .ok_or_else(|| (StatusCode::NOT_FOUND, Json(json!({"error": "app not found"}))))?;
+
+    let runs_dir = app_dir.join("outbox").join("runs");
+    if !runs_dir.exists() {
+        return Ok(Json(json!({ "app_id": app_id, "runs": [], "count": 0 })));
+    }
+
+    let mut runs: Vec<serde_json::Value> = Vec::new();
+
+    if let Ok(entries) = std::fs::read_dir(&runs_dir) {
+        for entry in entries.flatten() {
+            let path = entry.path();
+            if !path.is_dir() {
+                continue;
+            }
+            let run_id = path.file_name()
+                .and_then(|n| n.to_str())
+                .unwrap_or("")
+                .to_string();
+            if run_id.is_empty() {
+                continue;
+            }
+
+            let report_exists = path.join("report.html").exists();
+            let events_exist = path.join("events.jsonl").exists();
+            let payload_exists = path.join("payload.json").exists();
+
+            // Get modified time as ISO string
+            let modified = std::fs::metadata(&path)
+                .and_then(|m| m.modified())
+                .ok()
+                .map(|t| {
+                    let dt: chrono::DateTime<chrono::Utc> = t.into();
+                    dt.format("%Y-%m-%dT%H:%M:%SZ").to_string()
+                })
+                .unwrap_or_default();
+
+            runs.push(json!({
+                "run_id": run_id,
+                "report_exists": report_exists,
+                "events_exist": events_exist,
+                "payload_exists": payload_exists,
+                "modified": modified,
+            }));
+        }
+    }
+
+    // Sort by run_id descending (newest first since IDs are YYYYMMDD-HHMMSS)
+    runs.sort_by(|a, b| {
+        let a_id = a.get("run_id").and_then(|v| v.as_str()).unwrap_or("");
+        let b_id = b.get("run_id").and_then(|v| v.as_str()).unwrap_or("");
+        b_id.cmp(a_id)
+    });
+
+    // Limit to most recent 20
+    runs.truncate(20);
+    let count = runs.len();
+
+    Ok(Json(json!({
+        "app_id": app_id,
+        "runs": runs,
+        "count": count,
+    })))
 }

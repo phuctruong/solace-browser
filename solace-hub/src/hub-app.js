@@ -87,6 +87,105 @@
     DEV_ROLES.forEach(function(role) {
       hydrateRoleCard(role);
     });
+    hydrateRunHistory();
+  }
+
+  // ── SDI7: Durable Last-Known Run State ──
+
+  function hydrateRunHistory() {
+    var historyPanel = document.getElementById('dev-run-history');
+    var inspectionPanel = document.getElementById('dev-run-inspection');
+    var historyHTML = '';
+    var latestRun = null;
+    var latestRunAppId = null;
+    var pending = DEV_ROLES.length;
+
+    DEV_ROLES.forEach(function(role) {
+      get('/api/v1/apps/' + role.id + '/runs').then(function(data) {
+        var runs = data.runs || [];
+        if (runs.length > 0) {
+          // Track the most recent run across all roles
+          var newestRun = runs[0];
+          if (!latestRun || (newestRun.run_id > (latestRun.run_id || ''))) {
+            latestRun = newestRun;
+            latestRunAppId = role.id;
+          }
+
+          // Build run history entry for this role
+          historyHTML += '<div style="margin-bottom:0.5rem;">';
+          historyHTML += '<strong style="font-size:0.75rem;color:' + roleColor(role.key) + ';">' + role.key + '</strong>';
+          historyHTML += ' <span class="sb-pill" style="background:#1e293b;color:#e2e8f0;font-size:0.6rem;">' + runs.length + ' runs</span>';
+          historyHTML += '<div style="display:flex;flex-direction:column;gap:0.2rem;margin-top:0.2rem;">';
+          // Show up to 3 most recent runs
+          runs.slice(0, 3).forEach(function(run) {
+            var reportPill = run.report_exists
+              ? '<a href="/api/v1/apps/' + role.id + '/runs/' + run.run_id + '/report" target="_blank" style="color:#818cf8;font-size:0.65rem;">report</a>'
+              : '<span style="color:#64748b;font-size:0.65rem;">no report</span>';
+            var detailPill =
+              '<a href="/apps/' + role.id + '/runs/' + run.run_id + '" target="_blank" style="color:#818cf8;font-size:0.65rem;">detail</a>';
+            var eventsPill = run.events_exist
+              ? '<a href="#" onclick="window.__solaceInspectRun(\'' + role.id + '\',\'' + run.run_id + '\');return false;" style="color:#818cf8;font-size:0.65rem;">events</a>'
+              : '';
+            historyHTML += '<div style="display:flex;gap:0.4rem;align-items:center;font-size:0.7rem;color:var(--sb-text-muted);">';
+            historyHTML += '<code style="font-size:0.65rem;">' + run.run_id + '</code> ';
+            historyHTML += detailPill + ' ' + reportPill + ' ' + eventsPill;
+            historyHTML += '</div>';
+          });
+          historyHTML += '</div></div>';
+        }
+
+        pending--;
+        if (pending === 0) {
+          finishHydration();
+        }
+      }).catch(function() {
+        pending--;
+        if (pending === 0) {
+          finishHydration();
+        }
+      });
+    });
+
+    function finishHydration() {
+      // Render run history
+      if (historyPanel && historyHTML) {
+        historyPanel.innerHTML = historyHTML;
+        historyPanel.style.display = 'block';
+      } else if (historyPanel) {
+        historyPanel.innerHTML = '<span style="font-size:0.75rem;color:var(--sb-text-muted);">No runs found. Click a worker control button to trigger the first run.</span>';
+        historyPanel.style.display = 'block';
+      }
+
+      // Hydrate latest-known run into inspection panel
+      if (latestRun && latestRunAppId && inspectionPanel) {
+        var runId = latestRun.run_id;
+        if (latestRun.events_exist) {
+          fetchRunEvents(latestRunAppId, runId).then(function(eventsData) {
+            showRunInspection(latestRunAppId, runId, latestRun.report_exists ? 'exists' : null, eventsData, true);
+          });
+        } else {
+          showRunInspection(latestRunAppId, runId, latestRun.report_exists ? 'exists' : null, { events: [], count: 0, chain_valid: false }, true);
+        }
+
+        // Update last-run badge
+        var lastRunBadge = document.getElementById('dev-last-run');
+        if (lastRunBadge) {
+          lastRunBadge.innerHTML = '<span class="sb-pill" style="background:#064e3b;color:#6ee7b7;font-size:0.7rem;">latest: ' + latestRunAppId + ' @ ' + runId + '</span>';
+        }
+      }
+    }
+  }
+
+  // Inspect a specific historical run
+  window.__solaceInspectRun = function(appId, runId) {
+    fetchRunEvents(appId, runId).then(function(eventsData) {
+      showRunInspection(appId, runId, 'exists', eventsData, true);
+    });
+  };
+
+  function roleColor(key) {
+    var colors = { manager: '#d946ef', design: '#3b82f6', coder: '#10b981', qa: '#f59e0b' };
+    return colors[key] || '#94a3b8';
   }
 
   function hydrateHubStatus() {
