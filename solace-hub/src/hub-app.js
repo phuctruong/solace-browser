@@ -455,6 +455,7 @@
     updateWorkerExecutionMode(appId, runId);
     updateWorkerAssignmentPacket(appId, runId);
     updateWorkerInboxOutbox(appId, runId);
+    updateWorkerHumanGate(appId, runId);
     
     var panel = document.getElementById('dev-worker-detail');
     var diagramPreview = document.getElementById('dev-worker-diagram-preview');
@@ -802,6 +803,83 @@
     html += '</ul>';
     html += '</div>';
 
+    html += '</div>';
+    
+    panel.innerHTML = html;
+  }
+
+  // ── SAH18: Human Approval Gate ──
+
+  function updateWorkerHumanGate(appId, runId) {
+    var panel = document.getElementById('dev-worker-human-gate');
+    if (!panel) return;
+
+    var role = DEV_ROLES.find(function(r) { return r.id === appId; });
+    var roleName = role ? role.key : 'unknown';
+    var color = roleColor(roleName);
+
+    // Mock realistic states tied to the roles for SAH18 visibility demonstration
+    var state = 'unknown';
+    var message = '';
+
+    if (roleName === 'manager') {
+      state = 'not_yet_at_gate';
+      message = 'Autonomous parsing currently active. Manager routing does not currently require review unless budget constraints are exceeded.';
+    } else if (roleName === 'design') {
+      state = 'awaiting_human';
+      message = 'Blocked pending visual review of the UI topology and flow architecture. Human architect must sign off before coder execution.';
+    } else if (roleName === 'coder') {
+      state = 'intervention_required';
+      message = 'Linting or automated constraints failed unexpectedly. Human intervention requested to resolve the paradox or adjust lint policies.';
+    } else if (roleName === 'qa') {
+      state = 'approved';
+      message = 'Human review completed. Test results, QA signatures, and evidence hashes have been countersigned by the Dev Lead.';
+    }
+
+    var html = '<div style="display:flex;flex-direction:column;gap:0.4rem;font-size:0.75rem;color:var(--sb-on-surface);">';
+    html += '<div style="background:rgba(99,102,241,0.08);padding:0.4rem 0.5rem;border-radius:0.25rem;border-left:2px solid ' + color + ';">';
+    html += '<strong style="color:var(--sb-text-muted);">Active Human Gate Context:</strong><br/>';
+    html += 'App ID: <code>' + escapeHtml(appId) + '</code><br/>';
+    html += 'Role: <code>' + escapeHtml(roleName) + '</code><br/>';
+    html += 'Run: <code>' + escapeHtml(runId) + '</code><br/>';
+    html += 'Gate Basis: <code>role-derived visible approval contract</code><br/>';
+    html += 'Intervention Basis: <code>human review state for current role/run</code>';
+    html += '</div>';
+
+    html += '<div style="display:flex;align-items:flex-start;gap:0.75rem;padding:0.5rem;border-radius:0.25rem;background:var(--sb-surface-alt,#1e293b);border-left:2px solid ' + color + ';">';
+    
+    var icon = '⏳';
+    var stateColor = '#94a3b8'; // gray
+    var bg = 'rgba(148,163,184,0.1)';
+
+    if (state === 'awaiting_human') {
+      icon = '🛑';
+      stateColor = '#ef4444'; // red
+      bg = 'rgba(239,68,68,0.1)';
+    } else if (state === 'approved') {
+      icon = '✅';
+      stateColor = '#10b981'; // green
+      bg = 'rgba(16,185,129,0.1)';
+    } else if (state === 'intervention_required') {
+      icon = '⚠️';
+      stateColor = '#f59e0b'; // amber
+      bg = 'rgba(245,158,11,0.1)';
+    }
+
+    html += '<div style="font-size:1.5rem;line-height:1;">' + icon + '</div>';
+    html += '<div style="flex:1;">';
+    html += '<div style="display:flex;align-items:center;gap:0.5rem;margin-bottom:0.2rem;">';
+    html += '<code style="font-size:0.7rem;color:' + stateColor + ';background:' + bg + ';padding:0.1rem 0.35rem;white-space:nowrap;">' + state + '</code>';
+    html += '</div>';
+    html += '<div style="font-size:0.75rem;color:var(--sb-on-surface);line-height:1.4;">' + escapeHtml(message) + '</div>';
+    
+    if (state === 'awaiting_human' || state === 'intervention_required') {
+      html += '<div style="margin-top:0.4rem;">';
+      html += '<button class="sb-btn sb-btn--sm" style="font-size:0.65rem;padding:0.2rem 0.6rem;background:var(--sb-btn-bg,#3b82f6);color:#fff;border:none;">Review & Approve</button>';
+      html += '</div>';
+    }
+
+    html += '</div>';
     html += '</div>';
     
     panel.innerHTML = html;
