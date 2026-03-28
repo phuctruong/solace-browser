@@ -1,20 +1,20 @@
 # TODO
 
 Repo: `solace-browser`
-Role: Solace Hub + Browser workspace for native post-release reopen and escalation visibility
+Role: Solace Hub + Browser workspace for native post-release quarantine and override visibility
 
 ## Current Round
 
-`SAC54` native post-release reopen and escalation visibility.
+`SAC55` native post-release quarantine and override visibility.
 
-The Dev workspace now shows whether remediation actually verified closure, remained pending, or failed verification. The next step is to make failed closure operationally governable: one visible surface showing whether the system reopened the incident, escalated it, or kept it under bounded observation.
+The Dev workspace now shows whether failed closure reopened the incident, escalated it, or kept it under observation. The next step is to make severe escalation operationally governable: one visible surface showing whether the system imposed quarantine, required manual override, or allowed constrained continuation.
 
 ## Worker Inbox
 
-- `northstar`: `Solace Browser is the visible operating environment for the Solace Dev department, where the Dev Manager can see trustworthy convention lineages move from proof to trust to signoff to rollout, then see the incident path, remediation path, closure path, and whether failed closure caused honest reopen or escalation`
+- `northstar`: `Solace Browser is the visible operating environment for the Solace Dev department, where the Dev Manager can see trustworthy convention lineages move from proof to trust to signoff to rollout, then see the incident path, remediation path, closure path, escalation path, and whether severe escalation caused honest quarantine or override control`
 - `worker_mode`: `external_coding_agent`
 - `worker_role`: `coder`
-- `task_statement`: `Add a native post-release reopen and escalation panel to the Dev workspace while preserving the current role stack, worker detail, diagram access, inbox/outbox visibility, assignment packet, execution mode/convention visibility, human gate visibility, proof visibility, execution graph visibility, convention-store visibility, drift/adaptive replay visibility, hybrid routing visibility, efficiency visibility, per-worker distillation visibility, department memory queue visibility, promotion decision packet visibility, promotion audit trail visibility, governance summary visibility, manager action queue visibility, manager directive packet visibility, delegation handoff visibility, specialist acceptance visibility, specialist readiness visibility, specialist execution visibility, specialist evidence visibility, specialist artifact visibility, specialist provenance visibility, specialist promotion visibility, specialist memory-admission visibility, department-memory entry visibility, department-memory reuse visibility, convention invocation visibility, convention delivery visibility, convention activation visibility, convention effect visibility, convention proof visibility, convention trust visibility, convention release visibility, convention rollout visibility, post-release health visibility, post-release incident visibility, post-release closure visibility, run history, inspection context, and artifact inspection behavior.`
+- `task_statement`: `Add a native post-release quarantine and override panel to the Dev workspace while preserving the current role stack, worker detail, diagram access, inbox/outbox visibility, assignment packet, execution mode/convention visibility, human gate visibility, proof visibility, execution graph visibility, convention-store visibility, drift/adaptive replay visibility, hybrid routing visibility, efficiency visibility, per-worker distillation visibility, department memory queue visibility, promotion decision packet visibility, promotion audit trail visibility, governance summary visibility, manager action queue visibility, manager directive packet visibility, delegation handoff visibility, specialist acceptance visibility, specialist readiness visibility, specialist execution visibility, specialist evidence visibility, specialist artifact visibility, specialist provenance visibility, specialist promotion visibility, specialist memory-admission visibility, department-memory entry visibility, department-memory reuse visibility, convention invocation visibility, convention delivery visibility, convention activation visibility, convention effect visibility, convention proof visibility, convention trust visibility, convention release visibility, convention rollout visibility, post-release health visibility, post-release incident visibility, post-release closure visibility, post-release escalation visibility, run history, inspection context, and artifact inspection behavior.`
 - `scope_change_policy`: `FAIL_AND_NEW_TASK`
 
 ## Read This First
@@ -37,62 +37,62 @@ Before coding, read and align to:
 ## Rules
 
 - build on the current integrated Dev workspace and preserve all existing role, routing, drift, convention, proof, graph, efficiency, artifact, inspection, promotion, admission, memory-entry, memory-reuse, convention-invocation, convention-delivery, convention-activation, convention-effect, convention-proof, convention-trust, convention-release, convention-rollout, post-release health, and post-release incident surfaces
-- the workspace must show one direct post-release reopen or escalation panel tied to a visible failed or pending closure state
-- the surface must show at least one reopened state, one escalated state, and one under-observation state
-- the surface must tie reopen or escalation back to visible incident, closure, remediation, and operational basis honestly
-- if escalation values are mocked or role-derived rather than runtime-native, show that honestly
-- the panel must fit the Solace company model: failed closure must become an honest management path, not disappear after a bad verification result
+- the workspace must show one direct post-release quarantine or override panel tied to a visible escalated or reopened state
+- the surface must show at least one quarantined state, one manual-override-required state, and one constrained-continuation state
+- the surface must tie quarantine or override back to visible escalation, closure, remediation, and operational basis honestly
+- if quarantine values are mocked or role-derived rather than runtime-native, show that honestly
+- the panel must fit the Solace company model: severe escalation must become an explicit control path, not disappear into generic alert noise
 - keep the surface compatible with the current Prime Mermaid-first source model
 - do not expand into cloud sync, billing, `solaceagi`, or unrelated browser platform work
 
 ## Hard Rejection Criteria
 
-- the manager still cannot see whether failed closure reopened or escalated the problem
-- a reviewer still cannot tell whether the current reopen state is reopened, escalated, or under observation
-- reopen or escalation state is presented as fake certainty instead of visible grounded context
-- the round only adds labels without making failed post-release closure materially governable
+- the manager still cannot see whether severe escalation forced quarantine or override
+- a reviewer still cannot tell whether the current control state is quarantined, manual-override-required, or constrained-continuation
+- quarantine or override state is presented as fake certainty instead of visible grounded context
+- the round only adds labels without making severe post-release escalation materially controllable
 
 ## Required Deliverables
 
-1. one visible post-release reopen or escalation panel in the Dev workspace
-2. one visible tie between reopen state and incident / closure / remediation context
-3. one honest reopened / escalated / under-observation summary
-4. one honest reopen-basis or escalation-basis summary
-5. one Prime Mermaid source artifact for post-release reopen and escalation visibility
+1. one visible post-release quarantine or override panel in the Dev workspace
+2. one visible tie between control state and escalation / closure / remediation context
+3. one honest quarantined / manual-override-required / constrained-continuation summary
+4. one honest quarantine-basis or override-basis summary
+5. one Prime Mermaid source artifact for post-release quarantine and override visibility
 6. one narrow smoke path
 7. one narrow automated test or scripted verification
 
 ## Current Tickets
 
-### Ticket 1: Add a visible reopen and escalation surface
-Objective: make failed closure outcomes governable.
-Scope: show one visible surface of reopen or escalation state attached to a failed or pending closure lineage directly in the workspace.
-Done when: a reviewer can tell whether the system reopened or escalated the problem without leaving the workspace.
+### Ticket 1: Add a visible quarantine and override surface
+Objective: make severe escalation outcomes governable.
+Scope: show one visible surface of quarantine or override state attached to an escalated or reopened lineage directly in the workspace.
+Done when: a reviewer can tell whether the system imposed quarantine or demanded override without leaving the workspace.
 Evidence required: screenshots, routes exercised, and one short walkthrough.
 
-### Ticket 2: Tie reopen state to closure and remediation context
-Objective: stop treating escalation as detached theory.
-Scope: each reopen or escalation entry should reveal which incident lineage, which closure failure, and what operational basis is involved.
-Done when: a reviewer can tell what each reopen verdict refers to and why.
+### Ticket 2: Tie control state to escalation and remediation context
+Objective: stop treating quarantine as detached theory.
+Scope: each quarantine or override entry should reveal which escalation lineage, which failed closure path, and what operational basis is involved.
+Done when: a reviewer can tell what each control verdict refers to and why.
 Evidence required: screenshots, routes exercised, and one short walkthrough.
 
-### Ticket 3: Represent honest reopen and escalation states
-Objective: make post-release escalation operationally truthful.
-Scope: support at least one reopened state, one escalated state, and one under-observation state with visible reasoning.
-Done when: the workspace does not imply fake escalation certainty.
+### Ticket 3: Represent honest quarantine and override states
+Objective: make post-release control operationally truthful.
+Scope: support at least one quarantined state, one manual-override-required state, and one constrained-continuation state with visible reasoning.
+Done when: the workspace does not imply fake control certainty.
 Evidence required: screenshots, routes exercised, and one short walkthrough.
 
-### Ticket 4: Add one post-release reopen Prime Mermaid artifact
-Objective: capture the move from failed closure to managed escalation.
-Scope: add one Prime Mermaid artifact for post-release reopen and escalation visibility.
-Done when: the escalation surface is represented as committed source truth.
+### Ticket 4: Add one post-release quarantine Prime Mermaid artifact
+Objective: capture the move from escalation to explicit control.
+Scope: add one Prime Mermaid artifact for post-release quarantine and override visibility.
+Done when: the control surface is represented as committed source truth.
 Evidence required: artifact path and one short note on what it governs.
 
 ### Ticket 5: Add one narrow smoke path and one narrow test
-Objective: make post-release reopen or escalation visible, reviewable, and repeatable.
+Objective: make post-release quarantine or override visible, reviewable, and repeatable.
 Scope:
-- one documented local smoke path from workspace load to memory-entry inspection to callable-convention inspection to invocation inspection to delivery inspection to activation inspection to constrained-output inspection to proof inspection to trust-decision inspection to release-action inspection to rollout inspection to post-release inspection to remediation inspection to remediation-verification inspection to escalation inspection
-- one automated test or lightweight scripted verification for the reopen and escalation surface
+- one documented local smoke path from workspace load to memory-entry inspection to callable-convention inspection to invocation inspection to delivery inspection to activation inspection to constrained-output inspection to proof inspection to trust-decision inspection to release-action inspection to rollout inspection to post-release inspection to remediation inspection to remediation-verification inspection to escalation inspection to control inspection
+- one automated test or lightweight scripted verification for the quarantine and override surface
 Done when: a reviewer can run the commands without guessing hidden steps.
 Evidence required: exact commands, exact output, screenshot paths, and remaining risks.
 
@@ -120,4 +120,4 @@ Evidence required: exact commands, exact output, screenshot paths, and remaining
 - adding new specialist roles beyond manager, design, coder, and QA
 - broad cloud sync, billing, `solaceagi` work
 - unrelated Chromium platform changes
-- rewriting the role stack instead of making failed closure governable
+- rewriting the role stack instead of making severe escalation controllable
