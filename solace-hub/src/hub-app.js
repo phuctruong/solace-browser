@@ -498,6 +498,7 @@
     updateSpecialistPostReleaseNextPathExecution(appId, runId);
     updateSpecialistPostReleaseNextPathAcknowledgment(appId, runId);
     updateSpecialistPostReleaseNextPathOwnership(appId, runId);
+    updateSpecialistPostReleaseUpstreamRelease(appId, runId);
     updateDepartmentMemoryQueue(appId, runId);
     updateWorkerDriftState(appId, runId);
     updateWorkerRoutingState(appId, runId);
@@ -5036,6 +5037,106 @@
     html += 'Selected Run: <code>' + escapeHtml(selectedRun) + '</code><br/>';
     html += 'Ownership Basis: <code>post-release next-path acknowledgment -> next-path ownership -> ownership-settled, ownership-pending, or ownership-bounced state</code><br/>';
     html += 'Next-path ownership states are <em>role-derived mocks</em> simulating explicit architectural settlement verification. ';
+    html += 'Resolution Bound: <code>SI21 — The Solace Intelligence System</code>.';
+    html += '</div>';
+
+    html += '</div>';
+    panel.innerHTML = html;
+  }
+
+  // ── SAY65: Specialist Post-Release Upstream Release ──
+
+  // ── SAC65: Specialist Post-Release Upstream Release ──
+
+  function updateSpecialistPostReleaseUpstreamRelease(appId, runId) {
+    var panel = document.getElementById('dev-specialist-post-release-upstream-release-state');
+    if (!panel) return;
+
+    var role = DEV_ROLES.find(function(r) { return r.id === appId; });
+    var roleName = role ? role.key : 'unknown';
+    var viewerRole = 'solace-dev-manager';
+    var selectedWorker = appId || 'unknown';
+    var selectedRun = runId || 'latest';
+
+    // Upstream release records derived from SAC64 Next-Path Ownership (role-mocked; shown honestly)
+    var releaseEntries = [];
+
+    if (roleName === 'qa') {
+      releaseEntries = [{
+        state: 'Custody Released',
+        ownershipLineage: 'Target Settlement Gate [Ownership Settled]',
+        releaseBasis: 'Target settlement achieved. Local fallback buffers and quarantine metadata officially purged.',
+        releaseVerdict: 'Upstream incident tracking explicitly cleanly terminated. Full architectural memory flushed.',
+        color: '#10b981',
+        bg: 'rgba(16,185,129,0.1)'
+      }];
+    } else if (roleName === 'coder') {
+      releaseEntries = [{
+        state: 'Custody Retained',
+        ownershipLineage: 'Target Settlement Gate [Ownership Pending]',
+        releaseBasis: 'Target queue accepted handoff but has not booted artifact natively. Backup buffers remain locked.',
+        releaseVerdict: 'Upstream memory explicitly retained. Incident tracking paused pending target operational activation.',
+        color: '#f59e0b',
+        bg: 'rgba(245,158,11,0.1)'
+      }];
+    } else if (roleName === 'design') {
+      releaseEntries = [{
+        state: 'Custody Re-armed',
+        ownershipLineage: 'Target Settlement Gate [Ownership Bounced]',
+        releaseBasis: 'Target explicitly refused residency. Artifact was physically bounced back to local incident loop.',
+        releaseVerdict: 'Upstream memory physically re-armed. Investigation and mitigation loops fully forcefully restarted.',
+        color: '#ef4444',
+        bg: 'rgba(239,68,68,0.1)'
+      }];
+    } else {
+      releaseEntries = [{
+        state: 'Custody Re-armed',
+        ownershipLineage: 'N/A',
+        releaseBasis: 'Missing next-path ownership context.',
+        releaseVerdict: 'Cannot clear upstream local memory buffers without explicitly confirmed architectural residency downstream.',
+        color: '#64748b',
+        bg: 'rgba(100,116,139,0.1)'
+      }];
+    }
+
+    var releaseIcon = { 'Custody Released': '🌬️', 'Custody Retained': '🔒', 'Custody Re-armed': '⚔️' };
+
+    var html = '<div style="display:flex;flex-direction:column;gap:0.5rem;font-size:0.75rem;color:var(--sb-on-surface);">';
+
+    releaseEntries.forEach(function(entry) {
+      html += '<div style="background:var(--sb-surface-alt,#1e293b);padding:0.45rem 0.55rem;border-radius:0.3rem;border-left:2px solid ' + entry.color + ';display:flex;flex-direction:column;gap:0.35rem;">';
+
+      // Header
+      html += '<div style="display:flex;align-items:center;justify-content:space-between;">';
+      html += '<strong style="color:var(--sb-on-surface);font-size:0.73rem;">' + (releaseIcon[entry.state] || '●') + ' Upstream Release Gate</strong>';
+      html += '<code style="color:' + entry.color + ';background:' + entry.bg + ';padding:0.1rem 0.4rem;text-transform:uppercase;font-size:0.63rem;">' + escapeHtml(entry.state) + '</code>';
+      html += '</div>';
+
+      // Context
+      html += '<div style="display:flex;flex-direction:column;gap:0.1rem;">';
+      html += '<div><span style="color:var(--sb-text-muted);font-weight:600;font-size:0.63rem;">Settlement Lineage:</span> <span style="font-family:monospace;font-size:0.68rem;color:#38bdf8;">' + escapeHtml(entry.ownershipLineage) + '</span></div>';
+      html += '<div><span style="color:var(--sb-text-muted);font-weight:600;font-size:0.63rem;">Local Basis:</span> <span style="font-family:monospace;font-size:0.68rem;color:#cbd5e1;">' + escapeHtml(entry.releaseBasis) + '</span></div>';
+      html += '</div>';
+
+      // Object description
+      html += '<div style="background:#0f172a;border-radius:0.2rem;padding:0.3rem 0.4rem;font-size:0.65rem;color:#cbd5e1;line-height:1.4;">';
+      html += '<code>' + escapeHtml(entry.releaseVerdict) + '</code>';
+      html += '</div>';
+
+      // ALCOA+ hash
+      var alcoa = btoa(entry.state + entry.ownershipLineage + entry.releaseVerdict).substring(0, 16);
+      html += '<div><span style="color:var(--sb-text-muted);font-weight:600;font-size:0.63rem;">Release Hash:</span> <code style="font-size:0.6rem;color:#64748b;">' + alcoa + '</code></div>';
+
+      html += '</div>';
+    });
+
+    html += '<div style="margin-top:0.1rem;font-size:0.63rem;color:#64748b;">';
+    html += '<strong style="color:var(--sb-text-muted);">Audit Constraints:</strong> ';
+    html += 'Viewer Role: <code>' + escapeHtml(viewerRole) + '</code><br/>';
+    html += 'Selected Worker: <code>' + escapeHtml(selectedWorker) + '</code><br/>';
+    html += 'Selected Run: <code>' + escapeHtml(selectedRun) + '</code><br/>';
+    html += 'Upstream Release Basis: <code>post-release next-path ownership -> upstream release -> custody-released, custody-retained, or custody-rearmed state</code><br/>';
+    html += 'Upstream release states are <em>role-derived mocks</em> simulating explicit local memory buffer flushes. ';
     html += 'Resolution Bound: <code>SI21 — The Solace Intelligence System</code>.';
     html += '</div>';
 

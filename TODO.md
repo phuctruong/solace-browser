@@ -1,20 +1,30 @@
 # TODO
 
 Repo: `solace-browser`
-Role: Solace Hub + Browser workspace for native post-release upstream release visibility
+Role: Solace Hub + Browser workspace for one runtime-backed Solace Dev workflow
 
 ## Current Round
 
-`SAC65` native post-release upstream release visibility.
+`SAC66` native Back Office request/assignment/run truth for one self-hosting Dev loop.
 
-The Dev workspace now shows whether ownership actually settled, remained pending, or bounced back upstream. The next step is to make that settlement operationally governable: one visible surface showing whether upstream custody and buffers were released, retained, or re-armed.
+The workspace now exposes many useful panels, but the audit shows the real gap clearly: too much of the Dev Manager and specialist flow is still `role-derived` in [hub-app.js](/home/phuc/projects/solace-browser/solace-hub/src/hub-app.js) instead of being hydrated from the real Back Office and app-run substrate that already exists in:
+
+- `solace-runtime/src/backoffice/schema.rs`
+- `solace-runtime/src/routes/backoffice.rs`
+- `solace-runtime/src/routes/apps.rs`
+- `data/apps/solace-dev-manager/manifest.yaml`
+- `data/apps/solace-design/manifest.yaml`
+- `data/apps/solace-coder/manifest.yaml`
+- `data/apps/solace-qa/manifest.yaml`
+
+This round is a deliberate pivot away from adding another isolated visibility panel. The goal is to make one real Solace Dev workflow exist end to end for `solace-browser` itself.
 
 ## Worker Inbox
 
-- `northstar`: `Solace Browser is the visible operating environment for the Solace Dev department, where the Dev Manager can see trustworthy convention lineages move from proof to trust to signoff to rollout, then see the incident path, remediation path, closure path, escalation path, control path, recovery path, return-to-service path, sustained-service path, regression-response path, regression-resolution path, the explicit next-path decision that follows relapse resolution, whether that next path actually executed, whether the target subsystem acknowledged it, whether ownership actually settled, and whether upstream custody was released`
+- `northstar`: `Solace Browser is the visible operating environment for the Solace Dev department, and it must be able to use one real Back Office request -> assignment -> worker inbox -> run -> evidence -> approval/release path to improve Solace Browser itself.`
 - `worker_mode`: `external_coding_agent`
 - `worker_role`: `coder`
-- `task_statement`: `Add a native post-release upstream release panel to the Dev workspace while preserving the current role stack, worker detail, diagram access, inbox/outbox visibility, assignment packet, execution mode/convention visibility, human gate visibility, proof visibility, execution graph visibility, convention-store visibility, drift/adaptive replay visibility, hybrid routing visibility, efficiency visibility, per-worker distillation visibility, department memory queue visibility, promotion decision packet visibility, promotion audit trail visibility, governance summary visibility, manager action queue visibility, manager directive packet visibility, delegation handoff visibility, specialist acceptance visibility, specialist readiness visibility, specialist execution visibility, specialist evidence visibility, specialist artifact visibility, specialist provenance visibility, specialist promotion visibility, specialist memory-admission visibility, department-memory entry visibility, department-memory reuse visibility, convention invocation visibility, convention delivery visibility, convention activation visibility, convention effect visibility, convention proof visibility, convention trust visibility, convention release visibility, convention rollout visibility, post-release health visibility, post-release incident visibility, post-release closure visibility, post-release escalation visibility, post-release quarantine visibility, post-release recovery visibility, post-release return visibility, post-release sustained visibility, post-release regression visibility, post-release regression resolution visibility, post-release next-path decision visibility, post-release next-path execution visibility, post-release next-path acknowledgment visibility, post-release next-path ownership visibility, run history, inspection context, and artifact inspection behavior.`
+- `task_statement`: `Bind one self-hosting Solace Dev workflow to the real Back Office and runtime. Use durable request/assignment/run objects instead of another role-derived panel.`
 - `scope_change_policy`: `FAIL_AND_NEW_TASK`
 
 ## Read This First
@@ -22,82 +32,136 @@ The Dev workspace now shows whether ownership actually settled, remained pending
 Before coding, read and align to:
 
 - `/home/phuc/projects/solace-prime/NORTHSTAR.md`
-- `/home/phuc/projects/solace-prime/specs/solace-company.md`
+- `/home/phuc/projects/solace-prime/ROADMAP.md`
 - `/home/phuc/projects/solace-prime/specs/solace-dev.md`
 - `/home/phuc/projects/solace-prime/specs/solace-dev-workspace.md`
 - `/home/phuc/projects/solace-prime/specs/solace-dev-role-architecture.md`
-- `/home/phuc/projects/solace-prime/specs/prime-mermaid-substrate.md`
 - `/home/phuc/projects/solace-prime/specs/solace-worker-inbox-contract.md`
+- `/home/phuc/projects/solace-prime/canon/hub/SI5 — Solace Hub as Mission Control.md`
+- `/home/phuc/projects/solace-prime/canon/hub/SI6 — Solace Browser as Execution & Proof Layer.md`
+- `/home/phuc/projects/solace-prime/canon/hub/SI9 — Conventions as the Core Product Object.md`
+- `/home/phuc/projects/solace-prime/canon/hub/SI17 — Human-in-the-Loop as a First-Class System Component.md`
 - `/home/phuc/projects/solace-prime/canon/hub/SI18 — Transparency as a Product Feature.md`
-- `/home/phuc/projects/solace-prime/canon/hub/SI19 — Measuring Solace System Efficiency.md`
-- `/home/phuc/projects/solace-prime/canon/hub/SI21 — The Solace Intelligence System.md`
+- `/home/phuc/projects/solace-browser/solace-runtime/src/backoffice/schema.rs`
+- `/home/phuc/projects/solace-browser/solace-runtime/src/routes/backoffice.rs`
+- `/home/phuc/projects/solace-browser/solace-runtime/src/routes/apps.rs`
 - `/home/phuc/projects/solace-browser/solace-hub/src/hub-app.js`
 - `/home/phuc/projects/solace-browser/solace-hub/src/index.html`
 
+## Audit Ground Truth
+
+The current audit says:
+
+- Back Office already exists.
+- Worker app manifests already exist.
+- Run history, events, and artifact serving already exist.
+- The Dev workspace is stronger on transparency than on durable system truth.
+- Many later surfaces explicitly admit they are `role-derived mocks`.
+
+This round must reduce that gap materially.
+
 ## Rules
 
-- build on the current integrated Dev workspace and preserve all existing role, routing, drift, convention, proof, graph, efficiency, artifact, inspection, promotion, admission, memory-entry, memory-reuse, convention-invocation, convention-delivery, convention-activation, convention-effect, convention-proof, convention-trust, convention-release, convention-rollout, post-release health, and post-release incident surfaces
-- the workspace must show one direct post-release upstream release panel tied to a visible next-path ownership state
-- the surface must show at least one upstream-released state, one upstream-retained state, and one upstream-rearmed state
-- the surface must tie upstream release state back to visible next-path ownership, acknowledgment, and operational basis honestly
-- if upstream release values are mocked or role-derived rather than runtime-native, show that honestly
-- the panel must fit the Solace company model: ownership settlement must lead to visible upstream custody outcomes, not remain a perpetual settlement label
-- keep the surface compatible with the current Prime Mermaid-first source model
-- do not expand into cloud sync, billing, `solaceagi`, or unrelated browser platform work
+- do not add another isolated “state panel” as the main deliverable
+- bind the visible Dev workspace to real Back Office records and real app-run paths
+- use one real `solace-browser` request as the canonical proof path
+- preserve the current integrated workspace and existing review surfaces
+- if anything remains mocked, say so in the UI and in the evidence return
+- prefer wiring existing runtime/backoffice routes over inventing parallel state
+- do not expand into `solaceagi`, billing, cloud sync, or unrelated browser platform work
 
 ## Hard Rejection Criteria
 
-- the manager still cannot see whether upstream custody was released, retained, or re-armed after ownership settlement
-- a reviewer still cannot tell whether the current upstream release state is upstream-released, upstream-retained, or upstream-rearmed
-- upstream release state is presented as fake certainty instead of visible grounded context
-- the round only adds labels without making post-release upstream release materially governable
+- the result still centers on a new mock panel instead of one durable workflow
+- the Dev Manager still cannot see a real request/assignment/run path for `solace-browser`
+- the worker inbox/outbox view is still detached from Back Office request/assignment truth
+- no real run/evidence path is shown for the selected request
+- the implementation invents a second object model instead of using the existing Back Office/runtime
 
 ## Required Deliverables
 
-1. one visible post-release upstream release panel in the Dev workspace
-2. one visible tie between upstream release state and next-path ownership / acknowledgment context
-3. one honest upstream-released / upstream-retained / upstream-rearmed summary
-4. one honest upstream release basis summary
-5. one Prime Mermaid source artifact for post-release upstream release visibility
-6. one narrow smoke path
-7. one narrow automated test or scripted verification
+1. one real Back Office request object for `solace-browser`
+2. one real manager assignment object linked to that request
+3. one visible worker inbox packet derived from that assignment
+4. one visible run/evidence binding for that assignment
+5. one visible human review or approval state linked to the same object chain
+6. one Prime Mermaid artifact describing this runtime-backed flow
+7. one narrow smoke path
+8. one narrow automated test
 
 ## Current Tickets
 
-### Ticket 1: Add a visible upstream release surface
-Objective: make post-settlement outcomes governable.
-Scope: show one visible surface of upstream release state attached to a next-path ownership lineage directly in the workspace.
-Done when: a reviewer can tell what happened to upstream custody after settlement without leaving the workspace.
-Evidence required: screenshots, routes exercised, and one short walkthrough.
+### Ticket 1: Define the runtime-backed object chain
 
-### Ticket 2: Tie upstream release state to ownership context
-Objective: stop treating upstream release as detached theory.
-Scope: each upstream release entry should reveal which ownership lineage, which acknowledgment lineage, and what operational basis is involved.
-Done when: a reviewer can tell what each release verdict refers to and why.
-Evidence required: screenshots, routes exercised, and one short walkthrough.
+Objective: stop the workspace from floating above the system truth.
 
-### Ticket 3: Represent honest upstream release states
-Objective: make post-release relapse exit operationally truthful.
-Scope: support at least one upstream-released state, one upstream-retained state, and one upstream-rearmed state with visible reasoning.
-Done when: the workspace does not imply fake upstream release certainty.
-Evidence required: screenshots, routes exercised, and one short walkthrough.
-
-### Ticket 4: Add one post-release upstream release Prime Mermaid artifact
-Objective: capture the move from ownership settlement to explicit upstream release control.
-Scope: add one Prime Mermaid artifact for post-release upstream release visibility.
-Done when: the upstream release surface is represented as committed source truth.
-Evidence required: artifact path and one short note on what it governs.
-
-### Ticket 5: Add one narrow smoke path and one narrow test
-Objective: make post-release upstream release visibility reviewable and repeatable.
 Scope:
-- one documented local smoke path from workspace load to memory-entry inspection to callable-convention inspection to invocation inspection to delivery inspection to activation inspection to constrained-output inspection to proof inspection to trust-decision inspection to release-action inspection to rollout inspection to post-release inspection to remediation inspection to remediation-verification inspection to escalation inspection to control inspection to recovery inspection to service-verification inspection to stability inspection to regression-response inspection to regression-resolution inspection to next-path decision inspection to next-path execution inspection to next-path acknowledgment inspection to next-path ownership inspection to upstream release inspection
-- one automated test or lightweight scripted verification for the upstream release surface
-Done when: a reviewer can run the commands without guessing hidden steps.
-Evidence required: exact commands, exact output, screenshot paths, and remaining risks.
+
+- choose or create the minimum durable objects needed for one self-hosting loop:
+  - `request`
+  - `assignment`
+  - `run`
+  - `approval` or `release_decision`
+- use the existing Back Office manifest/runtime rather than parallel ad hoc JSON
+
+Done when: one reviewer can trace a single `solace-browser` improvement request through these objects.
+
+### Ticket 2: Hydrate manager view from Back Office truth
+
+Objective: make the Dev Manager operate on durable records.
+
+Scope:
+
+- surface the chosen request and assignment in the workspace
+- show IDs, titles, status, linked worker, and linked run honestly
+- make it obvious what is runtime-backed vs still derived
+
+Done when: the manager panel is grounded in real records, not just role-derived text.
+
+### Ticket 3: Bind worker inbox/outbox to the same chain
+
+Objective: make worker operation visible as part of the same workflow.
+
+Scope:
+
+- show the selected worker packet as derived from the selected assignment
+- show the run/evidence/artifact path tied to that packet
+- show at least one concrete linkage between assignment and outbox/run result
+
+Done when: the inbox/outbox view is clearly part of the same durable object chain.
+
+### Ticket 4: Add one Prime Mermaid flow artifact
+
+Objective: record the runtime-backed self-hosting loop as source truth.
+
+Scope:
+
+- add one Prime Mermaid artifact for:
+  - request
+  - assignment
+  - worker packet
+  - run
+  - evidence
+  - approval/release decision
+
+Done when: the flow is committed as source truth and matches the real implementation.
+
+### Ticket 5: Add one smoke path and one narrow test
+
+Objective: make the new binding reviewable and repeatable.
+
+Scope:
+
+- one smoke path from workspace load to request selection to assignment inspection to worker packet inspection to run/evidence inspection
+- one automated test asserting that the workspace is reading the runtime-backed chain rather than only role-derived mocks
+
+Done when: a reviewer can prove the path without guessing.
 
 ## Suggested File Targets
 
+- `solace-runtime/src/routes/backoffice.rs`
+- `solace-runtime/src/routes/apps.rs`
+- `data/apps/solace-dev-manager/manifest.yaml`
 - `solace-hub/src/index.html`
 - `solace-hub/src/hub-app.js`
 - `specs/solace-dev/`
@@ -109,7 +173,7 @@ Evidence required: exact commands, exact output, screenshot paths, and remaining
 - changed files
 - exact test/check command output
 - exact routes or APIs exercised
-- sample response payloads
+- sample request/assignment/run payloads
 - artifact/report paths
 - screenshot paths
 - local smoke path
@@ -117,7 +181,7 @@ Evidence required: exact commands, exact output, screenshot paths, and remaining
 
 ## Out Of Scope
 
-- adding new specialist roles beyond manager, design, coder, and QA
-- broad cloud sync, billing, `solaceagi` work
-- unrelated Chromium platform changes
-- rewriting the role stack instead of making post-release upstream release governable
+- adding another long post-release surface chain
+- building cloud sync or `solaceagi`
+- rewriting the entire runtime
+- generic UI polish without durable workflow improvement
