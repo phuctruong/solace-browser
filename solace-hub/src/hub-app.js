@@ -452,6 +452,7 @@
   // ── SAW14: Worker Detail Panel ──
 
   function updateWorkerDetail(appId, runId) {
+    updateWorkerExecutionMode(appId, runId);
     updateWorkerAssignmentPacket(appId, runId);
     updateWorkerInboxOutbox(appId, runId);
     
@@ -596,6 +597,70 @@
       }
     }
   };
+
+  // ── SAM17: Execution Mode & Convention Visibility ──
+
+  function updateWorkerExecutionMode(appId, runId) {
+    var panel = document.getElementById('dev-worker-execution-mode');
+    if (!panel) return;
+
+    var role = DEV_ROLES.find(function(r) { return r.id === appId; });
+    var roleName = role ? role.key : 'unknown';
+    var color = roleColor(roleName);
+
+    var mode = 'UNKNOWN';
+    var modeDesc = 'State cannot be determined from current artifacts.';
+    var convention = 'None';
+
+    if (roleName === 'manager') {
+      mode = 'DISCOVER';
+      modeDesc = 'High-entropy planning. The manager is constructing a new execution graph and routing tasks for a new feature request.';
+      convention = 'solace-dev-workspace.md (Workspace Ruleset)';
+    } else if (roleName === 'design') {
+      mode = 'DISCOVER';
+      modeDesc = 'High-entropy architecture planning. No pre-established UI/UX templates perfectly capture the current workflow.';
+      convention = 'prime-mermaid-substrate.md (Architecture Modeling)';
+    } else if (roleName === 'coder') {
+      mode = 'DISCOVER';
+      modeDesc = 'Translating a net-new design handoff into implementation. Actively writing new code structures.';
+      convention = 'Coding Standards / UI Mappings (Discovering new boundaries)';
+    } else if (roleName === 'qa') {
+      mode = 'REPLAY';
+      modeDesc = 'Low-entropy validation run. Re-running the standard verification playbook against the new implementation.';
+      convention = 'solace-worker-inbox-contract.md (Verification Output Playbook)';
+    }
+
+    var html = '<div style="display:flex;flex-direction:column;gap:0.4rem;font-size:0.75rem;color:var(--sb-on-surface);">';
+    html += '<div style="background:rgba(99,102,241,0.08);padding:0.4rem 0.5rem;border-radius:0.25rem;border-left:2px solid ' + color + ';">';
+    html += '<strong style="color:var(--sb-text-muted);">Active Execution Context:</strong><br/>';
+    html += 'App ID: <code>' + escapeHtml(appId) + '</code><br/>';
+    html += 'Role: <code>' + escapeHtml(roleName) + '</code><br/>';
+    html += 'Run: <code>' + escapeHtml(runId) + '</code><br/>';
+    html += 'Mode Basis: <code>role-derived visible contract</code><br/>';
+    html += 'Convention Basis: <code>visible reusable artifact for current role</code>';
+    html += '</div>';
+
+    html += '<div style="display:flex;gap:0.5rem;flex-wrap:wrap;">';
+    
+    var modeColor = mode === 'REPLAY' ? '#10b981' : '#f59e0b'; // Green for Replay, Amber for Discover
+    var modeBg = mode === 'REPLAY' ? 'rgba(16,185,129,0.1)' : 'rgba(245,158,11,0.1)';
+
+    html += '<div style="flex:1;min-width:200px;background:var(--sb-surface-alt,#1e293b);padding:0.4rem 0.5rem;border-radius:0.25rem;border-left:2px solid ' + modeColor + ';">';
+    html += '<strong style="color:var(--sb-text-muted);font-size:0.75rem;">Execution Mode:</strong><br/>';
+    html += '<div style="margin-top:0.2rem;"><code style="color:' + modeColor + ';background:' + modeBg + ';padding:0.1rem 0.35rem;">' + mode + '</code></div>';
+    html += '<div style="margin-top:0.3rem;font-size:0.7rem;color:var(--sb-on-surface);line-height:1.4;">' + escapeHtml(modeDesc) + '</div>';
+    html += '</div>';
+
+    html += '<div style="flex:1;min-width:200px;background:var(--sb-surface-alt,#1e293b);padding:0.4rem 0.5rem;border-radius:0.25rem;border-left:2px solid ' + color + ';">';
+    html += '<strong style="color:var(--sb-text-muted);font-size:0.75rem;">Governing Convention / Prime Reuse:</strong><br/>';
+    html += '<div style="margin-top:0.2rem;font-family:monospace;color:#818cf8;font-size:0.7rem;line-height:1.4;">' + escapeHtml(convention) + '</div>';
+    html += '<div style="margin-top:0.3rem;font-size:0.65rem;color:var(--sb-text-muted);line-height:1.35;">The specific pre-validated contract or workflow this worker is bounded to during the current run.</div>';
+    html += '</div>';
+
+    html += '</div>';
+    
+    panel.innerHTML = html;
+  }
 
   // ── SAA16: Worker Assignment Packet ──
 
