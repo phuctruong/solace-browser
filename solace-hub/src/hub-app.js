@@ -544,6 +544,7 @@
         var actualRun = runs.find(function(r) { return r.run_id === boundRun.runId; });
         var reportExists = actualRun ? actualRun.report_exists : false;
         var eventsExist = actualRun ? actualRun.events_exist : false;
+        var payloadExists = actualRun ? actualRun.payload_exists : false;
 
         panel.style.display = 'block';
         var html = '<div style="background:var(--sb-surface-alt,#1e293b); padding:0.4rem 0.5rem; border-radius:0.25rem; border-left:2px solid #fcd34d;">';
@@ -560,10 +561,11 @@
         }
         if (eventsExist) {
            html += '<a href="/api/v1/apps/' + boundRun.appId + '/runs/' + boundRun.runId + '/events" target="_blank" style="color:#818cf8; font-size:0.65rem; margin-right:0.4rem;">[↗ View Events API]</a>';
-           html += '<a href="/api/v1/apps/' + boundRun.appId + '/runs/' + boundRun.runId + '/artifact/events.jsonl" target="_blank" style="color:#818cf8; font-size:0.65rem;">[↗ View Events File]</a>';
+           html += '<a href="/api/v1/apps/' + boundRun.appId + '/runs/' + boundRun.runId + '/artifact/events.jsonl" target="_blank" style="color:#818cf8; font-size:0.65rem; margin-right:0.4rem;">[↗ View Events File]</a>';
         } else {
-           html += '<span style="color:#64748b; font-size:0.65rem;">[No Events]</span>';
+           html += '<span style="color:#64748b; font-size:0.65rem; margin-right:0.4rem;">[No Events]</span>';
         }
+        
         html += '</div>';
 
         // --- SAC73 & SAC74 Output ---
@@ -619,13 +621,27 @@
         }
 
         var lastLaunchAction = window.__solaceLastWorkflowLaunchAction;
-        if (lastLaunchAction && lastLaunchAction.requestId === reqId && lastLaunchAction.sourceAssignmentId === active.id) {
+        if (lastLaunchAction && lastLaunchAction.requestId === reqId && (lastLaunchAction.targetAssignmentId === active.id || lastLaunchAction.sourceAssignmentId === active.id)) {
           html += '<div style="margin-top:0.4rem; padding-top:0.4rem; border-top:1px solid #334155;">';
           html += '<strong style="display:block; margin-bottom:0.2rem;">Next-Step Launch State:</strong>';
           html += 'Launched Role: <code>' + escapeHtml(lastLaunchAction.targetRole) + '</code><br/>';
+          html += 'Launched Assignment ID: <code>' + escapeHtml(lastLaunchAction.targetAssignmentId.substring(0, 8)) + '</code><br/>';
           html += 'Launched App: <code>' + escapeHtml(lastLaunchAction.appId) + '</code><br/>';
           html += 'Launched Run ID: <code>' + escapeHtml(lastLaunchAction.runId.substring(0, 8)) + '</code><br/>';
-          html += 'Launch Basis: <code>Workflow-bound routed assignment launch via real runtime run path (SAC76)</code>';
+          html += 'Launch Basis: <code>Workflow-bound routed assignment launch via real runtime run path (SAC76)</code><br/>';
+
+          // --- SAC77 Output ---
+          html += '<strong style="display:block; margin-top:0.3rem; margin-bottom:0.2rem;">Next-Step Inbox Packet State:</strong>';
+          html += 'Packet Role: <code>' + escapeHtml(lastLaunchAction.targetRole) + '</code><br/>';
+          html += 'Packet Assignment ID: <code>' + escapeHtml(lastLaunchAction.targetAssignmentId.substring(0, 8)) + '</code><br/>';
+          if (payloadExists) {
+            html += '<a href="/api/v1/apps/' + boundRun.appId + '/runs/' + boundRun.runId + '/artifact/payload.json" target="_blank" style="color:#34d399; font-weight:600; font-size:0.65rem;">[↗ View Inbox Packet (payload.json)]</a><br/>';
+            html += 'Packet Basis: <code>Workflow-bound launched assignment packet via exact launched run artifact (SAC77)</code>';
+          } else {
+            html += '<span style="color:#64748b; font-size:0.65rem;">[No Inbox Packet]</span><br/>';
+            html += 'Packet Basis: <code>Workflow-bound launched assignment selected, but payload artifact missing for launched run (SAC77)</code>';
+          }
+          // --------------------
           html += '</div>';
         }
 

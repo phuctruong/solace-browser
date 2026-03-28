@@ -14,6 +14,7 @@ def test_hub_app_js_has_launch_action_logic():
     # Assert capturing hook is set inside route mapper
     assert "window.__solaceLastWorkflowRouteAction = {" in content
     assert "window.__solaceLastWorkflowLaunchAction = {" in content
+    assert "lastLaunchAction.targetAssignmentId === active.id || lastLaunchAction.sourceAssignmentId === active.id" in content
     
     # Assert buttons are mapped into UI bindings condition
     assert "Next-Step Route State:<" in content
