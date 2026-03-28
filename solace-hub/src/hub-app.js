@@ -445,7 +445,154 @@
       '<button onclick="window.__solaceCopyInspectionLink()" class="sb-btn sb-btn--sm" id="dev-copy-link-btn" style="font-size:0.65rem;padding:0.2rem 0.5rem;white-space:nowrap;">📋 copy link</button>' +
       '</div>' +
       '</div>';
+
+    updateWorkerDetail(appId, runId);
   }
+
+  // ── SAW14: Worker Detail Panel ──
+
+  function updateWorkerDetail(appId, runId) {
+    var panel = document.getElementById('dev-worker-detail');
+    var diagramPreview = document.getElementById('dev-worker-diagram-preview');
+    var rolePill = document.getElementById('dev-worker-role-pill');
+    if (!panel) return;
+
+    var role = DEV_ROLES.find(function(r) { return r.id === appId; });
+    var roleName = role ? role.key : 'unknown';
+    var color = roleColor(roleName);
+
+    if (rolePill) {
+      rolePill.style.background = '#1e293b';
+      rolePill.style.color = color;
+      rolePill.style.borderLeft = '2px solid ' + color;
+      rolePill.textContent = 'Role: ' + roleName;
+    }
+
+    var handoffDoc = '';
+    if (roleName === 'manager') handoffDoc = 'manager-to-design-handoff.md';
+    if (roleName === 'design') handoffDoc = 'design-to-coder-handoff.md';
+    if (roleName === 'coder') handoffDoc = 'coder-to-qa-handoff.md';
+    var root = '/home/phuc/projects/solace-browser';
+    var outboxPath = root + '/apps/' + appId + '/outbox/runs/' + runId;
+    var diagrams = getWorkerDiagramEntries(roleName);
+    
+    var html = '<div style="display:flex;flex-direction:column;gap:0.4rem;font-size:0.75rem;color:var(--sb-on-surface);">';
+    
+    html += '<div style="background:var(--sb-surface-alt,#1e293b);padding:0.4rem 0.5rem;border-radius:0.25rem;">';
+    html += '<strong style="color:var(--sb-text-muted);">Worker Identity:</strong><br/>';
+    html += 'App ID: <code>' + appId + '</code><br/>';
+    html += 'Role: <code>' + roleName + '</code><br/>';
+    html += 'Artifacts Outbox: <code style="font-size:0.65rem;color:#94a3b8;">' + outboxPath + '</code>';
+    html += '</div>';
+
+    html += '<div style="background:var(--sb-surface-alt,#1e293b);padding:0.4rem 0.5rem;border-radius:0.25rem;">';
+    html += '<strong style="color:var(--sb-text-muted);">Governing Prime Mermaid Diagrams:</strong><br/>';
+    html += '<div style="display:flex;flex-wrap:wrap;gap:0.35rem;margin-top:0.35rem;">';
+    diagrams.forEach(function(diagram, index) {
+      html += '<button onclick="window.__solaceShowWorkerDiagram(\'' + escapeAttr(diagram.id) + '\')" class="sb-btn sb-btn--sm" style="font-size:0.65rem;padding:0.2rem 0.45rem;border-left:2px solid ' + color + ';">' + escapeHtml(diagram.label) + '</button>';
+    });
+    html += '</div>';
+    html += '<div style="font-size:0.65rem;color:var(--sb-text-muted);margin-top:0.35rem;">Use these workspace buttons to inspect the role stack, page map, and current handoff source without relying on editor-only links.</div>';
+    html += '</div>';
+
+    html += '</div>';
+    
+    panel.innerHTML = html;
+    if (diagramPreview) {
+      renderWorkerDiagramPreview(diagrams[0]);
+    }
+  }
+
+  function getWorkerDiagramEntries(roleName) {
+    var entries = [
+      {
+        id: 'role-stack',
+        label: 'role stack',
+        path: 'specs/solace-dev/diagrams/role-stack.prime-mermaid.md',
+        summary: 'The integrated role stack for manager, design, coder, and QA.',
+        action: 'scroll',
+        targetId: 'dev-role-stack-diagram'
+      },
+      {
+        id: 'browser-page-map',
+        label: 'browser page map',
+        path: 'specs/solace-dev/diagrams/browser-page-map.prime-mermaid.md',
+        summary: 'The primary page and state map for solace-browser as the active managed project.',
+        action: 'preview'
+      }
+    ];
+    if (roleName === 'manager') {
+      entries.push({
+        id: 'manager-handoff',
+        label: 'manager handoff',
+        path: 'specs/solace-dev/manager-to-design-handoff.md',
+        summary: 'The manager-to-design contract that starts the specialist flow.',
+        action: 'preview'
+      });
+    } else if (roleName === 'design') {
+      entries.push({
+        id: 'design-handoff',
+        label: 'design handoff',
+        path: 'specs/solace-dev/design-to-coder-handoff.md',
+        summary: 'The design-to-coder handoff that transfers page/state intent into implementation work.',
+        action: 'preview'
+      });
+    } else if (roleName === 'coder') {
+      entries.push({
+        id: 'coder-handoff',
+        label: 'coder handoff',
+        path: 'specs/solace-dev/coder-to-qa-handoff.md',
+        summary: 'The coder-to-QA handoff that transfers runs, artifacts, and review expectations into signoff work.',
+        action: 'preview'
+      });
+    } else if (roleName === 'qa') {
+      entries.push({
+        id: 'qa-workflow',
+        label: 'qa workflow',
+        path: 'specs/solace-dev/diagrams/qa-workflow.prime-mermaid.md',
+        summary: 'The QA workflow that governs findings, signoff, and release gating.',
+        action: 'preview'
+      });
+    }
+    return entries;
+  }
+
+  function renderWorkerDiagramPreview(diagram) {
+    var preview = document.getElementById('dev-worker-diagram-preview');
+    if (!preview || !diagram) return;
+    var note = '';
+    if (diagram.action === 'scroll' && diagram.targetId) {
+      note = 'This diagram already renders inside the workspace below. Use the button again to jump to it.';
+    } else {
+      note = 'This source artifact is now visible from the workspace as a governed path and summary, even when no editor-specific protocol is available.';
+    }
+    preview.innerHTML =
+      '<div style="border-left:2px solid #6366f1;padding:0.45rem 0.65rem;background:rgba(99,102,241,0.08);border-radius:0 0.35rem 0.35rem 0;display:flex;flex-direction:column;gap:0.25rem;">' +
+      '<div style="display:flex;gap:0.35rem;align-items:center;flex-wrap:wrap;">' +
+      '<strong style="font-size:0.72rem;color:var(--sb-on-surface);">' + escapeHtml(diagram.label) + '</strong>' +
+      '<span class="sb-pill" style="background:#1e293b;color:#a5b4fc;font-size:0.6rem;">Prime Mermaid</span>' +
+      '</div>' +
+      '<code style="font-size:0.65rem;color:#cbd5e1;background:var(--sb-surface-alt,#0f172a);padding:0.2rem 0.3rem;border-radius:0.2rem;">' + escapeHtml(diagram.path) + '</code>' +
+      '<div style="font-size:0.68rem;color:var(--sb-text-muted);line-height:1.45;">' + escapeHtml(diagram.summary) + '</div>' +
+      '<div style="font-size:0.65rem;color:var(--sb-text-muted);">' + escapeHtml(note) + '</div>' +
+      '</div>';
+  }
+
+  window.__solaceShowWorkerDiagram = function(diagramId) {
+    var rolePill = document.getElementById('dev-worker-role-pill');
+    var roleText = rolePill ? rolePill.textContent || '' : '';
+    var roleName = roleText.replace(/^Role:\s*/, '').trim();
+    var diagrams = getWorkerDiagramEntries(roleName);
+    var diagram = diagrams.find(function(entry) { return entry.id === diagramId; }) || diagrams[0];
+    if (!diagram) return;
+    renderWorkerDiagramPreview(diagram);
+    if (diagram.action === 'scroll' && diagram.targetId) {
+      var target = document.getElementById(diagram.targetId);
+      if (target && typeof target.scrollIntoView === 'function') {
+        target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    }
+  };
 
   window.__solaceCopyInspectionLink = function() {
     var input = document.getElementById('dev-context-link');

@@ -1,20 +1,20 @@
 # TODO
 
 Repo: `solace-browser`
-Role: Solace Hub + Browser workspace for visible worker detail and diagram-backed Dev context
+Role: Solace Hub + Browser workspace for native worker inbox/outbox visibility
 
 ## Current Round
 
-SAW14 native worker-detail panel and Prime Mermaid diagram access.
+SAI15 native worker inbox/outbox visibility.
 
-The Dev workspace now has explicit, shareable inspection context. The next step is to make the current Solace worker and its governing diagrams visible in the workspace itself so a reviewer can understand who is acting, what role they hold, and what source diagrams define the current Dev flow without leaving Hub.
+The Dev workspace now shows worker identity and governing diagrams. The next step is to make the worker contract operationally legible: a reviewer should be able to see the current role’s inbox inputs, scope-defining source artifacts, and outbox result surfaces directly inside the workspace instead of inferring them only from run history.
 
 ## Worker Inbox
 
-- `northstar`: `Solace Browser is the visible Hub + Dev workspace where manager, design, coder, and QA expose their current worker identity, role detail, and governing Prime Mermaid diagrams directly inside the workspace`
+- `northstar`: `Solace Browser is the visible Hub + Dev workspace where manager, design, coder, and QA expose their current inbox inputs, outbox outputs, and governing source artifacts directly inside the workspace`
 - `worker_mode`: `external_coding_agent`
 - `worker_role`: `coder`
-- `task_statement`: `Add a native worker-detail and diagram-access surface to the Dev workspace while preserving the current integrated role stack, run history, inspection context, and artifact inspection behavior.`
+- `task_statement`: `Add a native worker inbox/outbox surface to the Dev workspace while preserving the current role stack, run history, inspection context, worker detail, and artifact inspection behavior.`
 - `scope_change_policy`: `FAIL_AND_NEW_TASK`
 
 ## Read This First
@@ -41,77 +41,74 @@ Before coding, read and align to:
 - `/home/phuc/projects/solace-prime/reviews/solace-browser-sap11-review-2026-03-28.md`
 - `/home/phuc/projects/solace-prime/reviews/solace-browser-sau12-review-2026-03-28.md`
 - `/home/phuc/projects/solace-prime/reviews/solace-browser-sac13-review-2026-03-28.md`
+- `/home/phuc/projects/solace-prime/reviews/solace-browser-saw14-review-2026-03-28.md`
 - `/home/phuc/projects/solace-browser/specs/solace-dev/storage-model.md`
 - `/home/phuc/projects/solace-browser/specs/solace-dev/manager-to-design-handoff.md`
 - `/home/phuc/projects/solace-browser/specs/solace-dev/design-to-coder-handoff.md`
 - `/home/phuc/projects/solace-browser/specs/solace-dev/coder-to-qa-handoff.md`
-- `/home/phuc/projects/solace-browser/specs/solace-dev/diagrams/role-stack.prime-mermaid.md`
-- `/home/phuc/projects/solace-browser/specs/solace-dev/diagrams/browser-page-map.prime-mermaid.md`
-- `/home/phuc/projects/solace-browser/specs/solace-dev/diagrams/inspection-context-panel.prime-mermaid.md`
 - `/home/phuc/projects/solace-browser/solace-hub/src/hub-app.js`
 - `/home/phuc/projects/solace-browser/solace-hub/src/index.html`
 
 ## Rules
 
-- build on the current integrated Dev workspace, live role cards, run history, inspection context panel, and artifact preview surfaces
-- the workspace must show the currently focused worker role and enough detail to tell what app is acting and where its current source artifacts live
-- Prime Mermaid diagrams should be visible and reachable from inside the workspace, not hidden as repo-only knowledge
-- do not invent worker state the runtime does not know about
-- if a role or diagram set is missing, show that honestly in the workspace
-- keep Prime Mermaid as the source-of-truth for worker-detail and diagram-access flow
+- build on the current integrated Dev workspace, inspection context, worker detail, diagram access, run history, and artifact preview surfaces
+- the workspace must show the current role’s inbox sources and current outbox/result surface explicitly
+- do not invent inbox state the runtime or repo contract does not know about
+- if a role has no current inbox or outbox detail, show that honestly in the workspace
+- keep Prime Mermaid and role handoff docs visible as inbox-governing source artifacts
 - do not expand into cloud sync, billing, `solaceagi`, or unrelated browser platform work
 
 ## Hard Rejection Criteria
 
 The round fails if any of these remain true:
 
-- the workspace still lacks a native worker-detail surface
-- a reviewer still cannot tell which worker app or role is currently in focus without reading repo files
-- Prime Mermaid diagrams are still only discoverable through repo paths instead of the workspace
-- the round only adds diagrams or links without making worker identity and diagram context more usable inside Hub
+- the workspace still does not expose worker inbox inputs directly
+- the workspace still does not expose worker outbox/result state directly
+- a reviewer still has to infer inbox/outbox from repo files or raw run artifacts alone
+- the round only adds diagrams or static text without making the worker contract more operationally legible
 
 ## Required Deliverables
 
 You must produce all of these:
 
-1. one visible worker-detail panel in the Dev workspace
-2. one visible role/app identity path for the active or selected worker context
-3. one native diagram-access path for relevant Prime Mermaid artifacts
-4. one Prime Mermaid source artifact for worker-detail and diagram-access flow
+1. one visible worker inbox panel or section in the Dev workspace
+2. one visible worker outbox panel or section in the Dev workspace
+3. one explicit tie between active worker context and the inbox/outbox surface
+4. one Prime Mermaid source artifact for worker inbox/outbox visibility
 5. one narrow smoke path
 6. one narrow automated test or scripted verification
 
 ## Current Tickets
 
-### Ticket 1: Add a visible worker-detail panel
-Objective: make the current worker identity explicit in the workspace.
-Scope: show worker app id, role, basic live metadata, and relevant source artifact paths or counts in one native panel.
-Done when: a reviewer can identify the current Solace worker context without reading repo files.
+### Ticket 1: Add a visible inbox surface
+Objective: make worker inputs and governing sources explicit.
+Scope: show the current role’s inbox inputs such as handoff source, relevant source artifacts, or contract anchors in one native surface.
+Done when: a reviewer can see what the current worker is operating from without reading repo files.
 Evidence required: screenshots, routes exercised, and one short walkthrough.
 
-### Ticket 2: Tie worker detail to the active Dev context
-Objective: stop treating worker detail as disconnected from the current workspace state.
-Scope: make the worker-detail surface follow the integrated Dev workspace context or selected role focus honestly.
-Done when: a reviewer can tell which role/app is currently being inspected and why.
+### Ticket 2: Add a visible outbox surface
+Objective: make worker outputs explicit.
+Scope: show the current role’s outbox/result surface such as latest run, artifact summary, or current review surface in one native panel.
+Done when: a reviewer can see what the current worker has produced from inside the workspace.
 Evidence required: screenshots, routes exercised, and one short walkthrough.
 
-### Ticket 3: Add native Prime Mermaid diagram access
-Objective: make the governing diagrams visible from the product surface.
-Scope: surface relevant role-stack, handoff, or page-map diagrams inside the Dev workspace via native links, embeds, or previews.
-Done when: a reviewer can open the governing diagrams for the current Dev flow from inside the workspace.
-Evidence required: screenshots, artifact paths, and one short walkthrough.
+### Ticket 3: Tie inbox/outbox to active worker context
+Objective: stop treating worker contract state as disconnected from the selected role/run.
+Scope: the inbox/outbox surface should follow the active worker detail or selected run context honestly.
+Done when: a reviewer can tell which role’s inbox/outbox is being inspected and why.
+Evidence required: screenshots, routes exercised, and one short walkthrough.
 
-### Ticket 4: Add one worker-detail Prime Mermaid artifact
-Objective: capture the move from implicit role knowledge to visible worker context.
-Scope: add one Prime Mermaid artifact for worker-detail and diagram-access flow.
-Done when: the worker-detail surface is represented as committed source truth.
+### Ticket 4: Add one worker inbox/outbox Prime Mermaid artifact
+Objective: capture the move from implicit worker contract state to visible workspace contract state.
+Scope: add one Prime Mermaid artifact for worker inbox/outbox visibility flow.
+Done when: the worker inbox/outbox surface is represented as committed source truth.
 Evidence required: artifact path and one short note on what it governs.
 
 ### Ticket 5: Add one narrow smoke path and one narrow test
-Objective: make worker-detail and diagram access reviewable and repeatable.
+Objective: make worker inbox/outbox visibility reviewable and repeatable.
 Scope:
-- one documented local smoke path from workspace load to worker-detail inspection to diagram access
-- one automated test or lightweight scripted verification for the worker-detail surface
+- one documented local smoke path from workspace load to worker detail to inbox/outbox inspection
+- one automated test or lightweight scripted verification for the worker inbox/outbox surface
 Done when: a reviewer can run the commands without guessing hidden steps.
 Evidence required: exact commands, exact output, screenshot paths, and remaining risks.
 
@@ -139,4 +136,4 @@ Evidence required: exact commands, exact output, screenshot paths, and remaining
 - adding new specialist roles beyond manager, design, coder, and QA
 - broad cloud sync, billing, or `solaceagi` work
 - unrelated Chromium platform changes
-- rewriting the role stack instead of making worker identity and diagrams more visible
+- rewriting the role stack instead of making worker inbox/outbox state more visible
