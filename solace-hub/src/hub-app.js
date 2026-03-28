@@ -622,6 +622,12 @@
 
         var lastLaunchAction = window.__solaceLastWorkflowLaunchAction;
         if (lastLaunchAction && lastLaunchAction.requestId === reqId && (lastLaunchAction.targetAssignmentId === active.id || lastLaunchAction.sourceAssignmentId === active.id)) {
+          var exactPacketTruth =
+            boundRun.basis === 'workflow-launch-session-binding' &&
+            boundRun.assignmentId === lastLaunchAction.targetAssignmentId &&
+            boundRun.appId === lastLaunchAction.appId &&
+            boundRun.runId === lastLaunchAction.runId;
+
           html += '<div style="margin-top:0.4rem; padding-top:0.4rem; border-top:1px solid #334155;">';
           html += '<strong style="display:block; margin-bottom:0.2rem;">Next-Step Launch State:</strong>';
           html += 'Launched Role: <code>' + escapeHtml(lastLaunchAction.targetRole) + '</code><br/>';
@@ -634,9 +640,12 @@
           html += '<strong style="display:block; margin-top:0.3rem; margin-bottom:0.2rem;">Next-Step Inbox Packet State:</strong>';
           html += 'Packet Role: <code>' + escapeHtml(lastLaunchAction.targetRole) + '</code><br/>';
           html += 'Packet Assignment ID: <code>' + escapeHtml(lastLaunchAction.targetAssignmentId.substring(0, 8)) + '</code><br/>';
-          if (payloadExists) {
+          if (payloadExists && exactPacketTruth) {
             html += '<a href="/api/v1/apps/' + boundRun.appId + '/runs/' + boundRun.runId + '/artifact/payload.json" target="_blank" style="color:#34d399; font-weight:600; font-size:0.65rem;">[↗ View Inbox Packet (payload.json)]</a><br/>';
             html += 'Packet Basis: <code>Workflow-bound launched assignment packet via exact launched run artifact (SAC77)</code>';
+          } else if (payloadExists) {
+            html += '<a href="/api/v1/apps/' + boundRun.appId + '/runs/' + boundRun.runId + '/artifact/payload.json" target="_blank" style="color:#fcd34d; font-weight:600; font-size:0.65rem;">[↗ View Inbox Packet (payload.json)]</a><br/>';
+            html += 'Packet Basis: <code>Payload artifact is visible, but current workflow binding fell back away from exact launched next-step run truth (SAC77/SAC78)</code>';
           } else {
             html += '<span style="color:#64748b; font-size:0.65rem;">[No Inbox Packet]</span><br/>';
             html += 'Packet Basis: <code>Workflow-bound launched assignment selected, but payload artifact missing for launched run (SAC77)</code>';
@@ -652,11 +661,36 @@
         }
         html += '</div>';
         
+        // --- SAC78 Inbox Packet Preview Box ---
+        html += '<div id="dev-active-workflow-payload-preview" style="margin-top:0.5rem;"></div>';
+        // --------------------------------------
+
         // --- SAC72 Inline Preview Box ---
         html += '<div id="dev-active-workflow-preview" style="margin-top:0.5rem;"></div>';
         // --------------------------------
         
         content.innerHTML = html;
+
+        // --- SAC78 Fetch Inbox Packet Preview ---
+        var payloadSlot = document.getElementById('dev-active-workflow-payload-preview');
+        if (payloadSlot && lastLaunchAction && lastLaunchAction.requestId === reqId && (lastLaunchAction.targetAssignmentId === active.id || lastLaunchAction.sourceAssignmentId === active.id)) {
+            payloadSlot.innerHTML = '<span style="font-size:0.7rem;color:#94a3b8;">loading inbox packet preview…</span>';
+            if (payloadExists) {
+                fetchArtifactText(boundRun.appId, boundRun.runId, 'payload.json').then(function(res) {
+                    if (!res.missing && document.getElementById('dev-active-workflow-payload-preview')) {
+                        var basisBanner = exactPacketTruth
+                          ? '<div style="font-size:0.65rem;color:#34d399;margin-bottom:0.25rem;">Packet Preview Basis: exact launched next-step run artifact</div>'
+                          : '<div style="font-size:0.65rem;color:#fcd34d;margin-bottom:0.25rem;">Packet Preview Basis: fallback packet preview; current workflow binding is not exact launched-run truth</div>';
+                        document.getElementById('dev-active-workflow-payload-preview').innerHTML = basisBanner + buildPayloadPreview(res.text, boundRun.appId, boundRun.runId);
+                    } else if (document.getElementById('dev-active-workflow-payload-preview')) {
+                        document.getElementById('dev-active-workflow-payload-preview').innerHTML = buildMissingState('payload.json', res.reason || 'missing');
+                    }
+                });
+            } else {
+                payloadSlot.innerHTML = buildMissingState('payload.json', 'missing for launched next-step run');
+            }
+        }
+        // ----------------------------------------
 
         // --- SAC72 Fetch Preview ---
         var previewSlot = document.getElementById('dev-active-workflow-preview');
@@ -668,15 +702,6 @@
                         document.getElementById('dev-active-workflow-preview').innerHTML = buildReportPreview(res.text, boundRun.appId, boundRun.runId);
                     } else if (document.getElementById('dev-active-workflow-preview')) {
                         document.getElementById('dev-active-workflow-preview').innerHTML = '<span style="font-size:0.65rem;color:#fca5a5;">preview unavailable</span>';
-                    }
-                });
-            } else {
-                previewSlot.innerHTML = '<span style="font-size:0.7rem;color:#94a3b8;">loading payload preview…</span>';
-                fetchArtifactText(boundRun.appId, boundRun.runId, 'payload.json').then(function(res) {
-                    if (!res.missing && document.getElementById('dev-active-workflow-preview')) {
-                        document.getElementById('dev-active-workflow-preview').innerHTML = buildPayloadPreview(res.text, boundRun.appId, boundRun.runId);
-                    } else if (document.getElementById('dev-active-workflow-preview')) {
-                        document.getElementById('dev-active-workflow-preview').innerHTML = buildMissingState('payload.json', res.reason || 'missing');
                     }
                 });
             }
