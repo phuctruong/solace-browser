@@ -18,8 +18,8 @@ def test_hub_app_js_has_approval_action_logic():
     assert ">Approve<" in content
     assert ">Reject<" in content
     
-    # Check basis explicitly validates SAC74 states
-    assert '(SAC70/71/72/73/74)' in content
+    # Check basis explicitly validates SAC74-SAC75 states
+    assert '(SAC70/71/72/73/74/75)' in content
 
 def test_smoke_script_exists():
     assert os.path.exists("scripts/smoke-manager-run-approval-action-binding.sh")

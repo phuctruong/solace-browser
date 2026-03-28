@@ -83,6 +83,7 @@
   ];
 
   window.__solaceActiveRequestId = null;
+  window.__solaceLastWorkflowRouteAction = null;
 
   function hydrateActiveWorkflowSelector() {
     var select = document.getElementById('dev-request-select');
@@ -163,14 +164,17 @@
     });
   };
 
-  window.__solaceRouteActiveRequest = function() {
+  window.__solaceRouteActiveRequest = function(overrideTargetRole) {
     var reqId = window.__solaceActiveRequestId;
     if (!reqId) {
       alert("No active request selected to route.");
       return;
     }
-    var sel = document.getElementById('dev-route-role-select');
-    var targetRole = sel ? sel.value : null;
+    var targetRole = overrideTargetRole;
+    if (!targetRole) {
+        var sel = document.getElementById('dev-route-role-select');
+        targetRole = sel ? sel.value : null;
+    }
     if (!targetRole) return;
 
     get('/api/v1/backoffice/solace-dev-manager/assignments').catch(function(){return {items:[]};}).then(function(res) {
@@ -205,6 +209,63 @@
           body: JSON.stringify(body)
       }).then(function() {
           hydrateActiveWorkflowRoutes();
+          hydrateDevWorkspace();
+      });
+    });
+  };
+
+  window.__solaceRouteWorkflowNextStep = function(assignmentId, overrideTargetRole) {
+    var reqId = window.__solaceActiveRequestId;
+    if (!reqId || !assignmentId) return;
+
+    var targetRole = overrideTargetRole;
+    if (!targetRole) return;
+
+    get('/api/v1/backoffice/solace-dev-manager/assignments').catch(function(){return {items:[]};}).then(function(res) {
+      var assignments = res.items || [];
+      var sourceAssignment = assignments.find(function(a) { return a.id === assignmentId && a.request_id === reqId; });
+      if (!sourceAssignment) return;
+
+      var existing = assignments.find(function(a) {
+        return a.request_id === reqId && a.target_role === targetRole;
+      });
+
+      var path = API + '/api/v1/backoffice/solace-dev-manager/assignments';
+      var method = 'POST';
+      var mutation = 'created';
+      var body = {
+        request_id: reqId,
+        target_role: targetRole,
+        details: 'Routed via workflow result (' + sourceAssignment.target_role + ' -> ' + targetRole + ')',
+        status: 'active'
+      };
+
+      if (existing && existing.id) {
+        path += '/' + existing.id;
+        method = 'PUT';
+        mutation = 'updated';
+        body = {
+          request_id: existing.request_id,
+          target_role: existing.target_role,
+          details: existing.details || ('Routed via workflow result (' + sourceAssignment.target_role + ' -> ' + targetRole + ')'),
+          status: 'active'
+        };
+      }
+
+      fetch(path, {
+          method: method,
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify(body)
+      }).then(function(r) { return r.json(); }).then(function(result) {
+          window.__solaceLastWorkflowRouteAction = {
+            requestId: reqId,
+            sourceAssignmentId: assignmentId,
+            targetRole: targetRole,
+            mutation: mutation,
+            assignmentId: (result && result.record && result.record.id) ? result.record.id : (existing ? existing.id : null)
+          };
+          hydrateActiveWorkflowRoutes();
+          hydrateActiveWorkflowResult();
           hydrateDevWorkspace();
       });
     });
@@ -465,10 +526,33 @@
         html += '</div>';
         
         html += '</div>';
+
+        // --- SAC75 Output ---
+        if (linkedApproval) {
+            html += '<div style="margin-top:0.4rem; padding-top:0.4rem; border-top:1px solid #334155;">';
+            html += '<strong style="display:block; margin-bottom:0.2rem;">Route Workflow Next Step:</strong>';
+            html += '<div style="display:flex; gap:0.3rem;">';
+            html += '<button onclick="window.__solaceRouteWorkflowNextStep(\'' + active.id + '\', \'design\')" class="sb-btn sb-btn--sm" style="font-size:0.6rem;padding:0.15rem 0.4rem;background:#3b82f6;color:#fff;border:none;cursor:pointer;">Route to Design</button>';
+            html += '<button onclick="window.__solaceRouteWorkflowNextStep(\'' + active.id + '\', \'coder\')" class="sb-btn sb-btn--sm" style="font-size:0.6rem;padding:0.15rem 0.4rem;background:#10b981;color:#fff;border:none;cursor:pointer;">Route to Coder</button>';
+            html += '<button onclick="window.__solaceRouteWorkflowNextStep(\'' + active.id + '\', \'qa\')" class="sb-btn sb-btn--sm" style="font-size:0.6rem;padding:0.15rem 0.4rem;background:#f59e0b;color:#fff;border:none;cursor:pointer;">Route to QA</button>';
+            html += '</div></div>';
+        }
         // --------------------
 
+        var lastRouteAction = window.__solaceLastWorkflowRouteAction;
+        if (lastRouteAction && lastRouteAction.requestId === reqId && lastRouteAction.sourceAssignmentId === active.id) {
+          html += '<div style="margin-top:0.4rem; padding-top:0.4rem; border-top:1px solid #334155;">';
+          html += '<strong style="display:block; margin-bottom:0.2rem;">Next-Step Route State:</strong>';
+          html += 'Activated Role: <code>' + escapeHtml(lastRouteAction.targetRole) + '</code><br/>';
+          if (lastRouteAction.assignmentId) {
+            html += 'Activated Assignment ID: <code>' + escapeHtml(lastRouteAction.assignmentId.substring(0, 8)) + '</code><br/>';
+          }
+          html += 'Routing Basis: <code>Workflow-bound assignment ' + escapeHtml(lastRouteAction.mutation) + ' via real Back Office assignments path (SAC75)</code>';
+          html += '</div>';
+        }
+
         if (boundRun.basis === 'workflow-launch-session-binding') {
-          html += '<strong style="display:block;margin-top:0.3rem;">Binding Basis:</strong> <code style="background:rgba(252,211,77,0.15);color:#fcd34d;padding:0.1rem 0.3rem;border-radius:0.15rem;">Run execution explicitly bound to workflow launch session state (SAC70/71/72/73/74)</code>';
+          html += '<strong style="display:block;margin-top:0.3rem;">Binding Basis:</strong> <code style="background:rgba(252,211,77,0.15);color:#fcd34d;padding:0.1rem 0.3rem;border-radius:0.15rem;">Run execution explicitly bound to workflow launch session state (SAC70/71/72/73/74/75)</code>';
         } else {
           html += '<strong style="display:block;margin-top:0.3rem;">Binding Basis:</strong> <code style="background:rgba(239,68,68,0.12);color:#fca5a5;padding:0.1rem 0.3rem;border-radius:0.15rem;">Fallback to selected run only; not durable workflow launch proof</code>';
         }
