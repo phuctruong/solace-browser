@@ -55,9 +55,11 @@ def test_hub_app_js_has_artifact_links() -> None:
     ).read_text(encoding="utf-8")
 
     assert "run detail" in hub_app
-    assert "events api" in hub_app
-    assert "report html" in hub_app
-    assert "payload.json and stillwater.json are not exposed as first-class Hub routes yet" in hub_app
+    assert "events API" in hub_app
+    assert "report.html" in hub_app
+    assert "payload.json" in hub_app
+    assert "stillwater.json" in hub_app
+    assert "/artifact/" in hub_app
 
 
 # ── Ticket 3: Event/run-detail visibility ──

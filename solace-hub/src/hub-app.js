@@ -281,7 +281,7 @@
     html += '<strong>run_id:</strong> ' + (runId || '?') + '<br>';
     html += '<strong>report:</strong> ';
     if (reportPath && runId) {
-      html += '<a href="/api/v1/apps/' + appId + '/runs/' + runId + '/report" target="_blank" style="color:#818cf8;">open report.html →</a>';
+      html += '<a href="/api/v1/apps/' + appId + '/runs/' + runId + '/artifact/report.html" target="_blank" style="color:#818cf8;">open report.html →</a>';
     } else {
       html += '<span style="color:#94a3b8;">none</span>';
     }
@@ -301,15 +301,18 @@
       html += '</pre></details>';
     }
 
-    // Artifact links
+    // First-class artifact links (SDA8)
     html += '<div style="margin-top:0.4rem;display:flex;gap:0.3rem;flex-wrap:wrap;">';
     if (runId) {
+      var artifactBase = '/api/v1/apps/' + appId + '/runs/' + runId + '/artifact/';
       html += '<a href="/apps/' + appId + '/runs/' + runId + '" target="_blank" class="sb-btn sb-btn--sm" style="font-size:0.65rem;padding:0.2rem 0.4rem;">run detail</a>';
-      html += '<a href="/api/v1/apps/' + appId + '/runs/' + runId + '/events" target="_blank" class="sb-btn sb-btn--sm" style="font-size:0.65rem;padding:0.2rem 0.4rem;">events api</a>';
-      html += '<a href="/api/v1/apps/' + appId + '/runs/' + runId + '/report" target="_blank" class="sb-btn sb-btn--sm" style="font-size:0.65rem;padding:0.2rem 0.4rem;">report html</a>';
+      html += '<a href="' + artifactBase + 'report.html" target="_blank" class="sb-btn sb-btn--sm" style="font-size:0.65rem;padding:0.2rem 0.4rem;">report.html</a>';
+      html += '<a href="' + artifactBase + 'payload.json" target="_blank" class="sb-btn sb-btn--sm" style="font-size:0.65rem;padding:0.2rem 0.4rem;">payload.json</a>';
+      html += '<a href="' + artifactBase + 'stillwater.json" target="_blank" class="sb-btn sb-btn--sm" style="font-size:0.65rem;padding:0.2rem 0.4rem;">stillwater.json</a>';
+      html += '<a href="' + artifactBase + 'events.jsonl" target="_blank" class="sb-btn sb-btn--sm" style="font-size:0.65rem;padding:0.2rem 0.4rem;">events.jsonl</a>';
+      html += '<a href="/api/v1/apps/' + appId + '/runs/' + runId + '/events" target="_blank" class="sb-btn sb-btn--sm" style="font-size:0.65rem;padding:0.2rem 0.4rem;">events API</a>';
     }
     html += '</div>';
-    html += '<div style="margin-top:0.35rem;font-size:0.68rem;color:#94a3b8;">payload.json and stillwater.json are not exposed as first-class Hub routes yet; use run detail and report routes for current inspection.</div>';
     html += '</div>';
     return html;
   }

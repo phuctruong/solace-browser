@@ -28,9 +28,11 @@ grep -q 'id="dev-last-run"' "solace-hub/src/index.html"
 grep -q 'worker-control-output' "solace-hub/src/index.html"
 echo "  -> OK: Hub inspection containers exist"
 
-echo "[5/6] Checking honest artifact boundary..."
-grep -q 'payload.json and stillwater.json are not exposed as first-class Hub routes yet' "solace-hub/src/hub-app.js"
-echo "  -> OK: artifact boundary is stated honestly"
+echo "[5/6] Checking first-class artifact links..."
+grep -q '/artifact/' "solace-hub/src/hub-app.js"
+grep -q 'payload.json' "solace-hub/src/hub-app.js"
+grep -q 'stillwater.json' "solace-hub/src/hub-app.js"
+echo "  -> OK: first-class artifact links exist"
 
 echo "[6/6] Checking prior live workspace regressions..."
 bash "scripts/smoke-live-workspace.sh" >/dev/null

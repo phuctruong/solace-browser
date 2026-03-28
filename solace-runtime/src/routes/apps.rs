@@ -21,6 +21,10 @@ pub fn routes() -> Router<AppState> {
         )
         .route("/api/v1/workforce", get(workforce_org_chart))
         .route("/api/v1/apps/:app_id/runs", get(list_runs))
+        .route(
+            "/api/v1/apps/:app_id/runs/:run_id/artifact/:filename",
+            get(serve_run_artifact),
+        )
 }
 
 async fn list_apps() -> Json<serde_json::Value> {
@@ -188,4 +192,85 @@ async fn list_runs(
         "runs": runs,
         "count": count,
     })))
+}
+
+// ── SDA8: First-class run artifact serving ──
+
+const ALLOWED_ARTIFACTS: &[&str] = &[
+    "report.html",
+    "payload.json",
+    "stillwater.json",
+    "ripple.json",
+    "events.jsonl",
+    "stdout.txt",
+    "stderr.txt",
+    "evidence.json",
+];
+
+async fn serve_run_artifact(
+    Path((app_id, run_id, filename)): Path<(String, String, String)>,
+) -> impl IntoResponse {
+    // Security: only allow whitelisted filenames
+    if !ALLOWED_ARTIFACTS.contains(&filename.as_str()) {
+        return (
+            StatusCode::FORBIDDEN,
+            [("content-type", "application/json")],
+            format!(r#"{{"error": "artifact not allowed: {}"}}
+"#, filename),
+        )
+            .into_response();
+    }
+
+    let app_dir = match crate::utils::find_app_dir(&app_id) {
+        Some(dir) => dir,
+        None => {
+            return (
+                StatusCode::NOT_FOUND,
+                [("content-type", "application/json")],
+                r#"{"error": "app not found"}
+"#.to_string(),
+            )
+                .into_response();
+        }
+    };
+
+    let artifact_path = app_dir
+        .join("outbox")
+        .join("runs")
+        .join(&run_id)
+        .join(&filename);
+
+    if !artifact_path.exists() {
+        return (
+            StatusCode::NOT_FOUND,
+            [("content-type", "application/json")],
+            format!(r#"{{"error": "artifact not found: {}/{}"}}
+"#, run_id, filename),
+        )
+            .into_response();
+    }
+
+    let content_type = match filename.as_str() {
+        "report.html" => "text/html; charset=utf-8",
+        "payload.json" | "stillwater.json" | "ripple.json" | "evidence.json" => "application/json",
+        "events.jsonl" => "application/x-ndjson",
+        "stdout.txt" | "stderr.txt" => "text/plain; charset=utf-8",
+        _ => "application/octet-stream",
+    };
+
+    match std::fs::read(&artifact_path) {
+        Ok(bytes) => (
+            StatusCode::OK,
+            [("content-type", content_type)],
+            bytes,
+        )
+            .into_response(),
+        Err(e) => (
+            StatusCode::INTERNAL_SERVER_ERROR,
+            [("content-type", "application/json")],
+            format!(r#"{{"error": "read failed: {}"}}
+"#, e).into_bytes(),
+        )
+            .into_response(),
+    }
 }
