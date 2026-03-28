@@ -23,8 +23,8 @@ def test_hub_app_js_has_route_action_logic():
     assert "Next-Step Route State:" in content
     assert "Routing Basis: <code>Workflow-bound assignment " in content
     
-    # Check basis explicitly validates SAC75 states
-    assert '(SAC70/71/72/73/74/75)' in content
+    # Check basis explicitly validates SAC75-SAC76 states
+    assert '(SAC70/71/72/73/74/75/76)' in content
 
 def test_smoke_script_exists():
     assert os.path.exists("scripts/smoke-manager-run-route-action-binding.sh")

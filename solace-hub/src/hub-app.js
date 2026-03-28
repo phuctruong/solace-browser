@@ -84,6 +84,7 @@
 
   window.__solaceActiveRequestId = null;
   window.__solaceLastWorkflowRouteAction = null;
+  window.__solaceLastWorkflowLaunchAction = null;
 
   function hydrateActiveWorkflowSelector() {
     var select = document.getElementById('dev-request-select');
@@ -207,8 +208,17 @@
           method: method,
           headers: {'Content-Type': 'application/json'},
           body: JSON.stringify(body)
-      }).then(function() {
+      }).then(function(r) { return r.json(); }).then(function(result) {
+          var mutation = (existing && existing.id) ? 'updated' : 'created';
+          window.__solaceLastWorkflowRouteAction = {
+            requestId: reqId,
+            sourceAssignmentId: null,
+            targetRole: targetRole,
+            mutation: mutation,
+            assignmentId: (result && result.record && result.record.id) ? result.record.id : (existing ? existing.id : null)
+          };
           hydrateActiveWorkflowRoutes();
+          hydrateActiveWorkflowResult();
           hydrateDevWorkspace();
       });
     });
@@ -267,6 +277,54 @@
           hydrateActiveWorkflowRoutes();
           hydrateActiveWorkflowResult();
           hydrateDevWorkspace();
+      });
+    });
+  };
+
+  window.__solaceLaunchWorkflowNextStep = function(sourceAssignmentId, targetRole, targetAssignmentId) {
+    var reqId = window.__solaceActiveRequestId;
+    if (!reqId || !sourceAssignmentId || !targetRole || !targetAssignmentId) return;
+
+    get('/api/v1/backoffice/solace-dev-manager/assignments').catch(function(){return {items:[]};}).then(function(res) {
+      var assignments = res.items || [];
+      var sourceAssignment = assignments.find(function(a) { return a.id === sourceAssignmentId && a.request_id === reqId; });
+      var targetAssignment = assignments.find(function(a) { return a.id === targetAssignmentId && a.request_id === reqId && a.target_role === targetRole; });
+      if (!sourceAssignment || !targetAssignment) return;
+
+      var roleObj = DEV_ROLES.find(function(r) { return r.key === targetRole; });
+      if (!roleObj) return;
+
+      var appId = roleObj.id;
+      fetch(API + '/api/v1/apps/run/' + appId, {
+        method: 'POST',
+        headers: { 'Authorization': 'Bearer dragon_rider_override' }
+      }).then(function(r) { return r.json().then(function(d) { return { status: r.status, data: d }; }); })
+      .then(function(res) {
+        var data = res.data;
+        if (!data.ok) return;
+
+        var runId = null;
+        if (data.report) {
+          var match = data.report.match(/runs\/([^\/]+)\/artifact\/report\.html/);
+          if (match && match[1]) runId = match[1];
+        }
+        if (!runId) return;
+
+        saveWorkflowLaunchBinding(reqId, targetAssignment.id, appId, runId);
+        window.__solaceLastWorkflowLaunchAction = {
+          requestId: reqId,
+          sourceAssignmentId: sourceAssignmentId,
+          targetAssignmentId: targetAssignment.id,
+          targetRole: targetRole,
+          appId: appId,
+          runId: runId,
+          basis: 'workflow-routed-assignment-launch'
+        };
+        if (window.__solaceSelectRun) {
+          window.__solaceSelectRun(appId, runId, null);
+        }
+        hydrateActiveWorkflowResult();
+        hydrateDevWorkspace();
       });
     });
   };
@@ -335,14 +393,17 @@
     });
   }
 
-  window.__solaceLaunchRoutedFlow = function() {
+  window.__solaceLaunchRoutedFlow = function(overrideRequestedRole) {
     var reqId = window.__solaceActiveRequestId;
     if (!reqId) {
       alert("No active request selected. Cannot launch flow.");
       return;
     }
-    var routeSelect = document.getElementById('dev-route-role-select');
-    var requestedRole = routeSelect ? routeSelect.value : null;
+    var requestedRole = overrideRequestedRole;
+    if (!requestedRole) {
+        var routeSelect = document.getElementById('dev-route-role-select');
+        requestedRole = routeSelect ? routeSelect.value : null;
+    }
 
     var output = document.getElementById('dev-active-workflow-launch-output');
     if (output) {
@@ -547,12 +608,29 @@
           if (lastRouteAction.assignmentId) {
             html += 'Activated Assignment ID: <code>' + escapeHtml(lastRouteAction.assignmentId.substring(0, 8)) + '</code><br/>';
           }
-          html += 'Routing Basis: <code>Workflow-bound assignment ' + escapeHtml(lastRouteAction.mutation) + ' via real Back Office assignments path (SAC75)</code>';
+          html += 'Routing Basis: <code>Workflow-bound assignment ' + escapeHtml(lastRouteAction.mutation) + ' via real Back Office assignments path (SAC75)</code><br/>';
+          
+          // --- SAC76 Output ---
+          html += '<div style="margin-top:0.3rem; display:flex; gap:0.3rem;">';
+          html += '<button onclick="window.__solaceLaunchWorkflowNextStep(\'' + active.id + '\', \'' + escapeHtml(lastRouteAction.targetRole) + '\', \'' + escapeHtml(lastRouteAction.assignmentId || '') + '\')" class="sb-btn sb-btn--sm" style="font-size:0.6rem;padding:0.15rem 0.4rem;background:#0f172a;color:#fff;border:1px solid #3b82f6;cursor:pointer;">Launch Executable (' + escapeHtml(lastRouteAction.targetRole) + ')</button>';
+          html += '</div>';
+          // --------------------
+          html += '</div>';
+        }
+
+        var lastLaunchAction = window.__solaceLastWorkflowLaunchAction;
+        if (lastLaunchAction && lastLaunchAction.requestId === reqId && lastLaunchAction.sourceAssignmentId === active.id) {
+          html += '<div style="margin-top:0.4rem; padding-top:0.4rem; border-top:1px solid #334155;">';
+          html += '<strong style="display:block; margin-bottom:0.2rem;">Next-Step Launch State:</strong>';
+          html += 'Launched Role: <code>' + escapeHtml(lastLaunchAction.targetRole) + '</code><br/>';
+          html += 'Launched App: <code>' + escapeHtml(lastLaunchAction.appId) + '</code><br/>';
+          html += 'Launched Run ID: <code>' + escapeHtml(lastLaunchAction.runId.substring(0, 8)) + '</code><br/>';
+          html += 'Launch Basis: <code>Workflow-bound routed assignment launch via real runtime run path (SAC76)</code>';
           html += '</div>';
         }
 
         if (boundRun.basis === 'workflow-launch-session-binding') {
-          html += '<strong style="display:block;margin-top:0.3rem;">Binding Basis:</strong> <code style="background:rgba(252,211,77,0.15);color:#fcd34d;padding:0.1rem 0.3rem;border-radius:0.15rem;">Run execution explicitly bound to workflow launch session state (SAC70/71/72/73/74/75)</code>';
+          html += '<strong style="display:block;margin-top:0.3rem;">Binding Basis:</strong> <code style="background:rgba(252,211,77,0.15);color:#fcd34d;padding:0.1rem 0.3rem;border-radius:0.15rem;">Run execution explicitly bound to workflow launch session state (SAC70/71/72/73/74/75/76)</code>';
         } else {
           html += '<strong style="display:block;margin-top:0.3rem;">Binding Basis:</strong> <code style="background:rgba(239,68,68,0.12);color:#fca5a5;padding:0.1rem 0.3rem;border-radius:0.15rem;">Fallback to selected run only; not durable workflow launch proof</code>';
         }
