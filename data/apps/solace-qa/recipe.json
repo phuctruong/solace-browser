@@ -1,0 +1,13 @@
+{
+  "name": "solace-qa",
+  "steps": [
+    "receive_assignment",
+    "load_code_artifacts",
+    "load_design_specs",
+    "define_assertions",
+    "execute_validation",
+    "record_findings",
+    "produce_signoff",
+    "update_release_gate"
+  ]
+}

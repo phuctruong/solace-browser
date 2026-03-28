@@ -60,7 +60,20 @@ Coder-specific state produced by the `solace-coder` worker app.
 - **Handoff Contract**: `solace-browser/specs/solace-dev/design-to-coder-handoff.md`
 - **Managed By**: Manager (handoff creation), Design (spec input), Coder (run production), Source Control (Git for diagrams).
 
-## 6. Screenshots and Evidence
+## 6. QA Role Artifacts
+
+QA-specific state produced by the `solace-qa` worker app.
+
+- **QA Source Diagrams**: `solace-browser/specs/solace-dev/diagrams/qa-*.prime-mermaid.md`
+- **QA Worker App State**: `solace-browser/data/apps/solace-qa/` (manifest, inbox/outbox, diagrams, recipe)
+- **QA Handoff Records**: Durable backoffice objects in `qa_handoffs` table under `solace-dev-manager` — REST endpoint: `/api/v1/backoffice/solace-dev-manager/qa_handoffs`
+- **QA Runs**: Durable backoffice objects in `qa_runs` table under `solace-qa` — REST endpoint: `/api/v1/backoffice/solace-qa/qa_runs`
+- **QA Findings**: Durable backoffice objects in `qa_findings` table under `solace-qa` — REST endpoint: `/api/v1/backoffice/solace-qa/qa_findings`
+- **QA Signoffs**: Durable backoffice objects in `qa_signoffs` table under `solace-qa` — REST endpoint: `/api/v1/backoffice/solace-qa/qa_signoffs`
+- **Handoff Contract**: `solace-browser/specs/solace-dev/coder-to-qa-handoff.md`
+- **Managed By**: Manager (handoff creation), Coder (run input), QA (validation/signoff production), Source Control (Git for diagrams).
+
+## 7. Screenshots and Evidence
 Records produced across the flow documenting proof of functionality, validation, or issues.
 
 - **Storage Location (Screenshots)**: Local `/tmp/` during processing, but ultimately transformed/embedded directly into `~/.solace/runtime/evidence.jsonl`.

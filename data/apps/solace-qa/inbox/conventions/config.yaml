@@ -1,0 +1,7 @@
+mode: qa-worker
+project: solace-browser
+upstream_roles:
+  - solace-dev-manager
+  - solace-design
+  - solace-coder
+downstream_roles: []

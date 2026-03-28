@@ -179,6 +179,41 @@ backoffice:
           values: ["pending", "accepted", "completed"]
           required: true
 
+    - name: qa_handoffs
+      display:
+        title: "QA Handoffs"
+        badge: status
+      search: ["code_run_refs", "expected_artifacts", "status"]
+      columns:
+        - name: request_id
+          type: ref:requests
+          required: true
+        - name: assignment_id
+          type: ref:assignments
+          required: true
+        - name: project_id
+          type: ref:projects
+          required: true
+        - name: code_run_refs
+          type: text
+          required: true
+        - name: design_spec_refs
+          type: text
+          required: true
+        - name: assertions
+          type: text
+        - name: evidence_refs
+          type: text
+        - name: constraints
+          type: text
+        - name: expected_artifacts
+          type: text
+          required: true
+        - name: status
+          type: enum
+          values: ["pending", "accepted", "completed"]
+          required: true
+
   views:
     - name: All Requests
       type: table

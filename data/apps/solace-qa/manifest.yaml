@@ -1,0 +1,98 @@
+id: solace-qa
+name: Solace QA
+version: 1.0.0
+domain: localhost
+category: backoffice
+description: "QA worker app for the Solace Dev role architecture — performs adversarial validation over committed code runs, produces findings, signoffs, and release-gate verdicts"
+author: system
+roles:
+  - qa
+
+backoffice:
+  tables:
+    - name: qa_runs
+      display:
+        title: "QA Runs"
+        badge: run_status
+      search: ["code_run_refs", "run_status", "assertions"]
+      columns:
+        - name: assignment_id
+          type: text
+          required: true
+        - name: project_id
+          type: text
+          required: true
+        - name: code_run_refs
+          type: text
+          required: true
+        - name: design_spec_refs
+          type: text
+        - name: run_status
+          type: enum
+          values: ["created", "running", "passed", "failed", "blocked"]
+          required: true
+        - name: assertions
+          type: text
+        - name: regressions
+          type: text
+
+    - name: qa_findings
+      display:
+        title: "QA Findings"
+        badge: severity
+      search: ["severity", "description", "evidence_hash"]
+      columns:
+        - name: run_id
+          type: ref:qa_runs
+          required: true
+        - name: severity
+          type: enum
+          values: ["critical", "major", "minor", "info"]
+          required: true
+        - name: description
+          type: text
+          required: true
+        - name: evidence_hash
+          type: text
+          required: true
+
+    - name: qa_signoffs
+      display:
+        title: "QA Signoffs"
+        badge: verdict
+      search: ["verdict", "approver_role", "release_gate"]
+      columns:
+        - name: run_id
+          type: ref:qa_runs
+          required: true
+        - name: verdict
+          type: enum
+          values: ["approved", "rejected", "conditional"]
+          required: true
+        - name: approver_role
+          type: text
+          required: true
+        - name: notes
+          type: text
+        - name: release_gate
+          type: enum
+          values: ["open", "blocked", "cleared"]
+          required: true
+
+  views:
+    - name: All QA Runs
+      type: table
+      table: qa_runs
+      order_by: "created_at DESC"
+    - name: QA Run Status Board
+      type: kanban
+      table: qa_runs
+      group_by: run_status
+    - name: Findings by Severity
+      type: kanban
+      table: qa_findings
+      group_by: severity
+    - name: Signoff Verdicts
+      type: kanban
+      table: qa_signoffs
+      group_by: verdict
