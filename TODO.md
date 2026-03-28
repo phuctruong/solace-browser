@@ -1,22 +1,22 @@
 # TODO
 
 Repo: `solace-browser`
-Role: Solace Hub + Browser workspace for launched-run result binding
+Role: Solace Hub + Browser workspace for launched-run artifact/evidence linkage
 
 ## Current Round
 
-`SAC70` native launched-run binding back into the selected workflow.
+`SAC71` native launched-run artifact and evidence linkage.
 
-`SAC69` gave the manager an explicit execution launch from the selected routed assignment through the real runtime app/run route.
+`SAC70` made the launched run come back into the selected request/assignment workflow context. That closed the gap between launch and workflow visibility.
 
-The next blocker is result binding. Launch now happens honestly, but the selected request/assignment workflow still needs one explicit visible “latest launched run for this selected workflow” binding so the manager can see that the launch returned into the same chain instead of merely firing a generic app run.
+The next blocker is evidence truth. The manager can now see which run belongs to the active workflow, but the workflow result still needs one explicit artifact/evidence binding so the manager can see what that run produced without relying on generic run browsing.
 
 ## Worker Inbox
 
-- `northstar`: `The Dev Manager must be able to launch a routed assignment and then immediately see that launched run come back into the selected request/assignment workflow context inside Hub.`
+- `northstar`: `The Dev Manager must be able to see the launched run as part of the active workflow and see the first artifact/evidence output of that same run in the same workflow context.`
 - `worker_mode`: `external_coding_agent`
 - `worker_role`: `coder`
-- `task_statement`: `Bind the launched run back into the selected request and active assignment context. Surface one honest latest-launch result line showing request, assignment, app, and run linkage.`
+- `task_statement`: `Bind the launched run result to one visible artifact/evidence surface for the selected request and assignment. Use the existing artifact/report/event paths and keep the binding honest if it is only session-bound.`
 - `scope_change_policy`: `FAIL_AND_NEW_TASK`
 
 ## Read This First
@@ -24,10 +24,9 @@ The next blocker is result binding. Launch now happens honestly, but the selecte
 - `/home/phuc/projects/solace-prime/NORTHSTAR.md`
 - `/home/phuc/projects/solace-prime/ROADMAP.md`
 - `/home/phuc/projects/solace-prime/specs/solace-dev-workspace.md`
-- `/home/phuc/projects/solace-prime/canon/hub/SI5 — Solace Hub as Mission Control.md`
 - `/home/phuc/projects/solace-prime/canon/hub/SI6 — Solace Browser as Execution & Proof Layer.md`
+- `/home/phuc/projects/solace-prime/canon/hub/SI18 — Transparency as a Product Feature.md`
 - `/home/phuc/projects/solace-browser/solace-runtime/src/routes/apps.rs`
-- `/home/phuc/projects/solace-browser/solace-runtime/src/routes/backoffice.rs`
 - `/home/phuc/projects/solace-browser/solace-hub/src/hub-app.js`
 - `/home/phuc/projects/solace-browser/solace-hub/src/index.html`
 
@@ -37,53 +36,54 @@ The next blocker is result binding. Launch now happens honestly, but the selecte
 - request selection is native
 - assignment routing is native
 - execution launch is native
-- the launched run is still not clearly bound back to the selected workflow as a first-class result object
+- launched run binding is now visible
+- first artifact/evidence for the launched run is still not clearly surfaced in the same workflow result box
 
 ## Rules
 
-- do not invent a separate run-tracking model
-- use the existing runtime run output and selection behavior
-- keep the selected request / selected assignment / launched run linkage visible and honest
-- preserve `SAC66` through `SAC69`
+- do not invent a separate artifact model
+- use existing runtime artifact/report/event paths
+- keep the selected request / assignment / launched run / artifact chain honest
+- preserve `SAC66` through `SAC70`
 
 ## Hard Rejection Criteria
 
-- the manager still cannot tell which run belongs to the current selected workflow
-- launched run context is still generic app/run output instead of workflow-bound output
-- the round adds a label but not a real linkage between launch action and selected workflow
+- the manager still cannot tell what the launched run produced
+- artifact/evidence view is still detached from the active workflow result
+- the round adds a label without binding to real artifact/report/event paths
 
 ## Required Deliverables
 
-1. one visible launched-run result surface tied to the selected request
-2. one visible launched-run result surface tied to the active assignment
-3. one honest basis line explaining how the run was bound
-4. one Prime Mermaid artifact for request -> assignment -> launch -> run result
+1. one visible launched-run artifact/evidence surface tied to the selected workflow
+2. one visible link from request -> assignment -> run -> artifact/evidence
+3. one honest basis line describing whether the linkage is session-bound or durable
+4. one Prime Mermaid artifact for request -> assignment -> run -> artifact
 5. one narrow smoke path
 6. one narrow automated test
 
 ## Current Tickets
 
-### Ticket 1: Bind launch result to workflow context
+### Ticket 1: Surface first artifact/evidence for the launched run
 
-Objective: make execution results belong to the selected workflow.
+Objective: make the workflow result useful.
 
 Scope:
 
-- surface the latest launched run for the selected request/assignment
-- show request ID, assignment ID, app ID, and run ID together
+- show one artifact/report/event result for the launched run
+- keep it tied to the selected request and assignment
 
-Done when: a reviewer can see that the launch returned into the same workflow chain.
+Done when: a reviewer can see what the active workflow run produced.
 
-### Ticket 2: Preserve honest runtime basis
+### Ticket 2: Preserve honest binding semantics
 
 Objective: keep the workflow truthful.
 
 Scope:
 
-- show the runtime route or runtime result basis honestly
-- do not imply durable run linkage if it is only session-bound
+- say whether the artifact/evidence linkage is session-bound or durable
+- avoid overstating runtime truth if only the run binding is session-backed
 
-Done when: the result surface is useful without overstating system truth.
+Done when: the surface is useful without exaggerating persistence.
 
 ## Suggested File Targets
 
@@ -98,14 +98,14 @@ Done when: the result surface is useful without overstating system truth.
 - changed files
 - exact test/check command output
 - exact routes or APIs exercised
-- sample launch-result payload
+- sample artifact/evidence payload
 - screenshot paths
 - local smoke path
 - remaining risks
 
 ## Out Of Scope
 
-- redesigning the whole run system
+- redesigning the whole artifact system
 - cloud sync or `solaceagi`
 - unrelated transparency panels
-- generic polish without result linkage
+- generic polish without artifact linkage

@@ -268,6 +268,7 @@
       var active = assignments.filter(function(a) { return a.request_id === reqId && a.status === 'active'; });
       
       if (active.length === 0) {
+        clearWorkflowLaunchBinding();
         if (output) output.textContent += 'Error: No active assignment routed for this request. Please explicitly route a role first.\n';
         return;
       }
@@ -313,6 +314,9 @@
                if (match && match[1]) runId = match[1];
            }
            if (output && runId) output.textContent += 'Run ID: ' + runId + '\n';
+           if (runId) {
+               saveWorkflowLaunchBinding(reqId, chosen.id, appId, runId);
+           }
            
            if (runId && window.__solaceSelectRun) {
                window.__solaceSelectRun(appId, runId, null);
@@ -328,9 +332,74 @@
     });
   }
 
+  function hydrateActiveWorkflowResult() {
+    var panel = document.getElementById('dev-active-workflow-result');
+    var content = document.getElementById('dev-active-workflow-result-content');
+    if (!panel || !content) return;
+
+    var reqId = window.__solaceActiveRequestId;
+    var launchBinding = loadWorkflowLaunchBinding();
+    var selectedRun = loadSelectedRun();
+    var boundRun = null;
+
+    if (launchBinding && launchBinding.requestId === reqId) {
+      boundRun = {
+        requestId: launchBinding.requestId,
+        assignmentId: launchBinding.assignmentId,
+        appId: launchBinding.appId,
+        runId: launchBinding.runId,
+        basis: 'workflow-launch-session-binding'
+      };
+    } else if (selectedRun) {
+      boundRun = {
+        requestId: reqId,
+        assignmentId: null,
+        appId: selectedRun.appId,
+        runId: selectedRun.runId,
+        basis: 'selected-run-fallback'
+      };
+    }
+    
+    if (!reqId || !boundRun) {
+      panel.style.display = 'none';
+      content.innerHTML = '';
+      return;
+    }
+
+    get('/api/v1/backoffice/solace-dev-manager/assignments').catch(function(){return {items:[]};}).then(function(res) {
+      var assignments = res.items || [];
+      var active = assignments.find(function(a) { 
+        if (boundRun.assignmentId && a.id === boundRun.assignmentId) {
+          return true;
+        }
+        return a.request_id === reqId && a.status === 'active' && DEV_ROLES.some(function(r) { return r.key === a.target_role && r.id === boundRun.appId });
+      });
+
+      if (!active) {
+        panel.style.display = 'none';
+        content.innerHTML = '';
+        return;
+      }
+
+      panel.style.display = 'block';
+      var html = '<div style="background:var(--sb-surface-alt,#1e293b); padding:0.4rem 0.5rem; border-radius:0.25rem; border-left:2px solid #fcd34d;">';
+      html += '<strong>Back Office Request ID:</strong> <code>' + reqId.substring(0,8) + '</code><br/>';
+      html += '<strong>Active Assignment ID:</strong> <code>' + active.id.substring(0,8) + '</code> (' + active.target_role + ')<br/>';
+      html += '<strong>Launched Run Target:</strong> <code>' + boundRun.appId + ' / ' + boundRun.runId + '</code><br/>';
+      if (boundRun.basis === 'workflow-launch-session-binding') {
+        html += '<strong style="display:block;margin-top:0.3rem;">Binding Basis:</strong> <code style="background:rgba(252,211,77,0.15);color:#fcd34d;padding:0.1rem 0.3rem;border-radius:0.15rem;">Run execution explicitly bound to workflow launch session state (SAC70)</code>';
+      } else {
+        html += '<strong style="display:block;margin-top:0.3rem;">Binding Basis:</strong> <code style="background:rgba(239,68,68,0.12);color:#fca5a5;padding:0.1rem 0.3rem;border-radius:0.15rem;">Fallback to selected run only; not durable workflow launch proof</code>';
+      }
+      html += '</div>';
+      content.innerHTML = html;
+    });
+  }
+
   function hydrateDevWorkspace() {
     hydrateActiveWorkflowSelector();
     hydrateActiveWorkflowRoutes();
+    hydrateActiveWorkflowResult();
     hydrateHubStatus();
     DEV_ROLES.forEach(function(role) {
       hydrateRoleCard(role);
@@ -502,9 +571,11 @@
     if (eventsExist) {
       fetchRunEvents(appId, runId).then(function(eventsData) {
         showRunInspection(appId, runId, reportExists ? 'exists' : null, eventsData, true);
+        hydrateActiveWorkflowResult();
       });
     } else {
       showRunInspection(appId, runId, reportExists ? 'exists' : null, { events: [], count: 0, chain_valid: false }, true);
+      hydrateActiveWorkflowResult();
     }
   };
 
@@ -539,6 +610,7 @@
   // ── SAP11: Durable Selected-Run State ──
 
   var SELECTED_RUN_KEY = 'solace_dev_selected_run';
+  var WORKFLOW_LAUNCH_BINDING_KEY = 'solace_dev_workflow_launch_binding';
 
   function saveSelectedRun(appId, runId) {
     try {
@@ -558,6 +630,33 @@
 
   function clearSelectedRun() {
     try { sessionStorage.removeItem(SELECTED_RUN_KEY); } catch(e) {}
+  }
+
+  function saveWorkflowLaunchBinding(requestId, assignmentId, appId, runId) {
+    try {
+      sessionStorage.setItem(WORKFLOW_LAUNCH_BINDING_KEY, JSON.stringify({
+        requestId: requestId,
+        assignmentId: assignmentId,
+        appId: appId,
+        runId: runId
+      }));
+    } catch(e) {}
+  }
+
+  function loadWorkflowLaunchBinding() {
+    try {
+      var raw = sessionStorage.getItem(WORKFLOW_LAUNCH_BINDING_KEY);
+      if (!raw) return null;
+      var parsed = JSON.parse(raw);
+      if (parsed && parsed.requestId && parsed.assignmentId && parsed.appId && parsed.runId) {
+        return parsed;
+      }
+    } catch(e) {}
+    return null;
+  }
+
+  function clearWorkflowLaunchBinding() {
+    try { sessionStorage.removeItem(WORKFLOW_LAUNCH_BINDING_KEY); } catch(e) {}
   }
 
   // ── SAU12: URL-Backed Deep-Link Context ──
