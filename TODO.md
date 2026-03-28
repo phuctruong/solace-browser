@@ -1,20 +1,20 @@
 # TODO
 
 Repo: `solace-browser`
-Role: Solace Hub + Browser workspace for native department governance summary and approval pressure visibility
+Role: Solace Hub + Browser workspace for native manager action queue and next-decision visibility
 
 ## Current Round
 
-SAG29 native department governance summary and approval pressure visibility.
+SAA30 native manager action queue and next-decision visibility.
 
-The Dev workspace now shows a promotion audit trail and approval log. The next step is to help the Solace Dev Manager operate the department at a glance: one visible governance summary showing how many promotion decisions are approved, pending, or blocked, where approval pressure is accumulating, and which specialist lanes are creating the most governance load.
+The Dev workspace now shows an aggregate governance summary and approval pressure. The next step is to turn that summary into action: one visible manager action queue showing which promotion or governance decisions need attention next, why they are prioritized, and what the next bounded action is for the Solace Dev Manager.
 
 ## Worker Inbox
 
-- `northstar`: `Solace Browser is the visible operating environment for the Solace Dev department, where the Dev Manager can see both individual decisions and aggregate governance pressure across the department`
+- `northstar`: `Solace Browser is the visible operating environment for the Solace Dev department, where the Dev Manager can see both governance state and the next bounded actions required to operate the department`
 - `worker_mode`: `external_coding_agent`
 - `worker_role`: `coder`
-- `task_statement`: `Add a native department governance summary and approval pressure surface to the Dev workspace while preserving the current role stack, worker detail, diagram access, inbox/outbox visibility, assignment packet, execution mode/convention visibility, human gate visibility, proof visibility, execution graph visibility, convention-store visibility, drift/adaptive replay visibility, hybrid routing visibility, efficiency visibility, per-worker distillation visibility, department memory queue visibility, promotion decision packet visibility, promotion audit trail visibility, run history, inspection context, and artifact inspection behavior.`
+- `task_statement`: `Add a native manager action queue and next-decision surface to the Dev workspace while preserving the current role stack, worker detail, diagram access, inbox/outbox visibility, assignment packet, execution mode/convention visibility, human gate visibility, proof visibility, execution graph visibility, convention-store visibility, drift/adaptive replay visibility, hybrid routing visibility, efficiency visibility, per-worker distillation visibility, department memory queue visibility, promotion decision packet visibility, promotion audit trail visibility, governance summary visibility, run history, inspection context, and artifact inspection behavior.`
 - `scope_change_policy`: `FAIL_AND_NEW_TASK`
 
 ## Read This First
@@ -36,12 +36,12 @@ Before coding, read and align to:
 
 ## Rules
 
-- build on the current integrated Dev workspace and preserve existing role, routing, drift, convention, proof, graph, efficiency, artifact, inspection, per-worker distillation, department memory queue, promotion decision packet, and promotion audit trail surfaces
-- the workspace must show one aggregate governance summary directly
-- the summary must show at least approved, pending, and blocked counts across the department
-- the summary must show one visible notion of approval pressure or governance load by role or lane
-- if summary values are mocked or role-derived rather than runtime-native, show that honestly
-- the panel must fit the Solace company model: Dev Manager sees department-level governance state, not just isolated events
+- build on the current integrated Dev workspace and preserve existing role, routing, drift, convention, proof, graph, efficiency, artifact, inspection, per-worker distillation, department memory queue, promotion decision packet, promotion audit trail, and governance summary surfaces
+- the workspace must show one manager action queue directly
+- the action queue must show at least one next decision, one priority reason, and one bounded next action
+- the queue must tie actions back to specialist or candidate context honestly
+- if action values are mocked or role-derived rather than runtime-native, show that honestly
+- the panel must fit the Solace company model: Dev Manager sees not just state, but the next actionable governance steps
 - keep the surface compatible with the current Prime Mermaid-first source model
 - do not expand into cloud sync, billing, `solaceagi`, or unrelated browser platform work
 
@@ -49,54 +49,54 @@ Before coding, read and align to:
 
 The round fails if any of these remain true:
 
-- the manager still cannot see aggregate governance state across the department
-- a reviewer still cannot tell where approval pressure is accumulating
-- governance summary is presented as fake certainty instead of visible grounded context
-- the round only adds labels without making department governance more operationally legible
+- the manager still cannot see the next bounded governance actions required
+- a reviewer still cannot tell why one action is prioritized over another
+- action queue state is presented as fake certainty instead of visible grounded context
+- the round only adds labels without making manager action more operationally legible
 
 ## Required Deliverables
 
 You must produce all of these:
 
-1. one visible governance summary in the Dev workspace
-2. one visible tie between summary metrics and specialist or lane context
-3. one honest approved/pending/blocked aggregate summary
-4. one honest approval-pressure or governance-load summary
-5. one Prime Mermaid source artifact for governance-summary visibility
+1. one visible manager action queue in the Dev workspace
+2. one visible tie between action items and specialist/candidate context
+3. one honest next-decision or next-action summary
+4. one honest priority or urgency basis summary
+5. one Prime Mermaid source artifact for manager-action visibility
 6. one narrow smoke path
 7. one narrow automated test or scripted verification
 
 ## Current Tickets
 
-### Ticket 1: Add a visible governance summary
-Objective: make department-level governance first-class.
-Scope: show one aggregate summary of promotion governance directly in the workspace.
-Done when: a reviewer can tell the department’s approval state without leaving the workspace.
+### Ticket 1: Add a visible manager action queue
+Objective: make next-step governance first-class.
+Scope: show one visible queue of the next manager decisions or bounded actions directly in the workspace.
+Done when: a reviewer can tell what the Dev Manager should do next without leaving the workspace.
 Evidence required: screenshots, routes exercised, and one short walkthrough.
 
-### Ticket 2: Tie metrics to specialist context
-Objective: stop treating governance summary as detached theory.
-Scope: the summary should reveal which specialist lanes are contributing to approval pressure or completed promotion flow.
-Done when: a reviewer can tell where the governance load is coming from and why.
+### Ticket 2: Tie action items to specialist/candidate context
+Objective: stop treating next actions as detached theory.
+Scope: queue items should reveal which role, candidate, or governance lane they belong to.
+Done when: a reviewer can tell what each action item refers to and why it exists.
 Evidence required: screenshots, routes exercised, and one short walkthrough.
 
-### Ticket 3: Represent honest governance states
-Objective: make governance visibility operationally truthful.
-Scope: support at least approved, pending, and blocked aggregate state plus one honest pressure or backlog indicator.
-Done when: the workspace does not imply fake governance certainty.
+### Ticket 3: Represent honest action and priority states
+Objective: make manager action visibility operationally truthful.
+Scope: support at least one immediate action, one pending queue item, and one lower-priority or blocked item with visible reasoning.
+Done when: the workspace does not imply fake managerial certainty.
 Evidence required: screenshots, routes exercised, and one short walkthrough.
 
-### Ticket 4: Add one governance-summary Prime Mermaid artifact
-Objective: capture the move from audit entries to manager-level governance state.
-Scope: add one Prime Mermaid artifact for governance-summary visibility.
-Done when: the summary is represented as committed source truth.
+### Ticket 4: Add one manager-action Prime Mermaid artifact
+Objective: capture the move from governance state to actionable manager workflow.
+Scope: add one Prime Mermaid artifact for manager-action visibility.
+Done when: the action queue is represented as committed source truth.
 Evidence required: artifact path and one short note on what it governs.
 
 ### Ticket 5: Add one narrow smoke path and one narrow test
-Objective: make governance summary visible, reviewable, and repeatable.
+Objective: make manager action visibility visible, reviewable, and repeatable.
 Scope:
-- one documented local smoke path from workspace load to audit trail to governance summary inspection
-- one automated test or lightweight scripted verification for the summary surface
+- one documented local smoke path from workspace load to governance summary to action-queue inspection
+- one automated test or lightweight scripted verification for the action-queue surface
 Done when: a reviewer can run the commands without guessing hidden steps.
 Evidence required: exact commands, exact output, screenshot paths, and remaining risks.
 
@@ -124,4 +124,4 @@ Evidence required: exact commands, exact output, screenshot paths, and remaining
 - adding new specialist roles beyond manager, design, coder, and QA
 - broad cloud sync, billing, or `solaceagi` work
 - unrelated Chromium platform changes
-- rewriting the role stack instead of making governance summary more visible
+- rewriting the role stack instead of making manager action visibility more visible
