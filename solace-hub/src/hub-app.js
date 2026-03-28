@@ -467,6 +467,7 @@
     updateManagerDirectivePacket(appId, runId);
     updateDelegationHandoffLog(appId, runId);
     updateSpecialistAcceptanceState(appId, runId);
+    updateSpecialistIntakeReadiness(appId, runId);
     updateDepartmentMemoryQueue(appId, runId);
     updateWorkerDriftState(appId, runId);
     updateWorkerRoutingState(appId, runId);
@@ -1896,6 +1897,90 @@
     html += 'Delivery Basis: <code>visible specialist receipt and inbox-delivery state for current handoff context</code><br/>';
     html += 'Evaluation Limit: <code>Verification of Specialist Inbox Delivery</code><br/>';
     html += 'Resolution Bound: <code>Closure of Manager Delegation loop (SI18)</code>';
+    html += '</div>';
+
+    html += '</div>';
+    
+    panel.innerHTML = html;
+  }
+
+  // ── SAR34: Specialist Intake Readiness ──
+
+  function updateSpecialistIntakeReadiness(appId, runId) {
+    var panel = document.getElementById('dev-specialist-intake-readiness-state');
+    if (!panel) return;
+
+    var role = DEV_ROLES.find(function(r) { return r.id === appId; });
+    var roleName = role ? role.key : 'unknown';
+
+    // Mock explicit readiness arrays deriving from SAS33 inbox acceptance logic
+    var readinessLogs = [];
+
+    if (roleName === 'coder') {
+      readinessLogs = [
+        {
+          state: 'Ready',
+          specialist: 'solace-prime-mermaid-coder-v1.2.0',
+          activePacket: 'inbox/coder/packet.json',
+          constraint: 'Environment spun. Dependencies localized. No cascade blocks detected.',
+          color: '#10b981',
+          bg: 'rgba(16,185,129,0.1)'
+        }
+      ];
+    } else if (roleName === 'design') {
+      readinessLogs = [
+        {
+          state: 'Queued',
+          specialist: 'solace-ui-renderer-v1',
+          activePacket: 'inbox/design/command_lock.json',
+          constraint: 'Awaiting primary Coder execution clearance before rendering loop begins.',
+          color: '#f59e0b',
+          bg: 'rgba(245,158,11,0.1)'
+        }
+      ];
+    } else {
+      readinessLogs = [
+        {
+          state: 'Blocked',
+          specialist: 'System Manager',
+          activePacket: 'Intake failed',
+          constraint: 'Out of Context Memory Exception. Specialist partition suspended.',
+          color: '#ef4444',
+          bg: 'rgba(239,68,68,0.1)'
+        }
+      ];
+    }
+
+    var html = '<div style="display:flex;flex-direction:column;gap:0.4rem;font-size:0.75rem;color:var(--sb-on-surface);">';
+    
+    readinessLogs.forEach(function(log) {
+      html += '<div style="background:var(--sb-surface-alt,#1e293b);padding:0.4rem 0.5rem;border-radius:0.25rem;border-left:2px solid ' + log.color + ';display:flex;flex-direction:column;gap:0.3rem;">';
+      
+      html += '<div style="display:flex;align-items:center;justify-content:space-between;">';
+      html += '<strong style="color:var(--sb-on-surface);font-size:0.75rem;text-transform:uppercase;">[Execution Engine -> ' + escapeHtml(log.specialist) + ']</strong>';
+      html += '<code style="color:' + log.color + ';background:' + log.bg + ';padding:0.1rem 0.35rem;text-transform:uppercase;font-size:0.65rem;">' + escapeHtml(log.state) + '</code>';
+      html += '</div>';
+
+      html += '<div style="display:flex;flex-direction:column;gap:0.1rem;">';
+      html += '<div><span style="color:var(--sb-text-muted);font-weight:600;font-size:0.65rem;">Intake Packet:</span> <span style="font-family:monospace;font-size:0.7rem;color:#c084fc;">' + escapeHtml(log.activePacket) + '</span></div>';
+      html += '<div><span style="color:var(--sb-text-muted);font-weight:600;font-size:0.65rem;">Execution Trace:</span> <span style="color:var(--sb-on-surface);">' + escapeHtml(log.constraint) + '</span></div>';
+      
+      // Phuc Forecast bounds (crypto stamping)
+      var dummyHash = btoa(log.state + log.specialist + log.activePacket).substring(0, 16);
+      html += '<div><span style="color:var(--sb-text-muted);font-weight:600;font-size:0.65rem;">Readiness Hash:</span> <code style="font-size:0.6rem;color:#94a3b8;">' + dummyHash + '</code></div>';
+
+      html += '</div>';
+      html += '</div>';
+    });
+
+    html += '<div style="margin-top:0.15rem;font-size:0.65rem;color:#64748b;">';
+    html += '<strong style="color:var(--sb-text-muted);">Active Execution Constraints:</strong><br/>';
+    html += 'Viewer Role: <code>solace-dev-manager</code><br/>';
+    html += 'Selected Worker: <code>' + escapeHtml(appId || 'unknown') + '</code><br/>';
+    html += 'Selected Run: <code>' + escapeHtml(runId || 'latest') + '</code><br/>';
+    html += 'Execution Basis: <code>visible specialist intake clearance and execution-start state for current acceptance context</code><br/>';
+    html += 'Evaluation Limit: <code>Clearance of execution partition dependencies</code><br/>';
+    html += 'Resolution Bound: <code>Proceeds directly to Worker Loop (SI21)</code>';
     html += '</div>';
 
     html += '</div>';
