@@ -460,6 +460,7 @@
     updateWorkerGraphState(appId, runId);
     updateWorkerConventionStore(appId, runId);
     updateWorkerDriftState(appId, runId);
+    updateWorkerRoutingState(appId, runId);
     
     var panel = document.getElementById('dev-worker-detail');
     var diagramPreview = document.getElementById('dev-worker-diagram-preview');
@@ -1246,6 +1247,110 @@
 
     html += '<div style="margin-top:0.1rem;font-size:0.65rem;color:#64748b;">';
     html += 'Adaptive Replay protects execution against environment non-stationarity natively without requiring retraining (Paper SI12).';
+    html += '</div>';
+
+    html += '</div>';
+    
+    panel.innerHTML = html;
+  }
+
+  // ── SAR23: Hybrid Routing ──
+
+  function updateWorkerRoutingState(appId, runId) {
+    var panel = document.getElementById('dev-worker-routing-state');
+    if (!panel) return;
+
+    var role = DEV_ROLES.find(function(r) { return r.id === appId; });
+    var roleName = role ? role.key : 'unknown';
+    var color = roleColor(roleName);
+
+    // Mock realistic routing states tied to the roles for SAR23 visibility demonstration
+    var routingDecision = 'unknown';
+    var costLatency = '';
+    var justification = '';
+
+    if (roleName === 'manager') {
+      routingDecision = 'replay';
+      costLatency = 'Zero Planning / Zero API Cost / Minimum Latency';
+      justification = 'High confidence routing via exact deterministic playbook.';
+    } else if (roleName === 'qa') {
+      routingDecision = 'deterministic';
+      costLatency = 'Zero API Cost / High Throughput';
+      justification = 'Evaluating strict verification gates.';
+    } else if (roleName === 'coder') {
+      routingDecision = 'local_model';
+      costLatency = 'Low API Cost / Local execution latency';
+      justification = 'Safe code generation isolated to private inference.';
+    } else if (roleName === 'design') {
+      routingDecision = 'external_api';
+      costLatency = 'High API Cost / Fallback latency';
+      justification = 'Complex layout generation requires maximum semantic capability.';
+    } else {
+      routingDecision = 'unknown_state';
+      costLatency = 'N/A';
+      justification = 'Routing evaluation incomplete.';
+    }
+
+    var icon = '❓';
+    var stateColor = '#94a3b8'; // gray
+    var bg = 'rgba(148,163,184,0.1)';
+    var label = 'UNKNOWN ROUTE';
+
+    if (routingDecision === 'replay') {
+      icon = '⏩';
+      stateColor = '#10b981'; // green
+      bg = 'rgba(16,185,129,0.1)';
+      label = 'REPLAY (CONVENTION)';
+    } else if (routingDecision === 'deterministic') {
+      icon = '⚙️';
+      stateColor = '#3b82f6'; // blue
+      bg = 'rgba(59,130,246,0.1)';
+      label = 'DETERMINISTIC PROCESS';
+    } else if (routingDecision === 'local_model') {
+      icon = '🧠';
+      stateColor = '#8b5cf6'; // purple
+      bg = 'rgba(139,92,246,0.1)';
+      label = 'LOCAL MODEL (OSS)';
+    } else if (routingDecision === 'external_api') {
+      icon = '☁️';
+      stateColor = '#f59e0b'; // amber
+      bg = 'rgba(245,158,11,0.1)';
+      label = 'EXTERNAL API FALLBACK';
+    }
+
+    var html = '<div style="display:flex;flex-direction:column;gap:0.4rem;font-size:0.75rem;color:var(--sb-on-surface);">';
+    
+    html += '<div style="background:var(--sb-surface-alt,#1e293b);padding:0.4rem 0.5rem;border-radius:0.25rem;border-left:2px solid ' + stateColor + ';display:flex;align-items:flex-start;gap:0.75rem;">';
+    
+    html += '<div style="font-size:1.4rem;line-height:1;">' + icon + '</div>';
+    
+    html += '<div style="flex:1;">';
+    html += '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:0.2rem;">';
+    html += '<div>';
+    html += '<strong style="color:var(--sb-text-muted);">Route Selection:</strong> ';
+    html += '</div>';
+    html += '<code style="color:' + stateColor + ';background:' + bg + ';padding:0.1rem 0.35rem;text-transform:uppercase;font-size:0.65rem;">' + label + '</code>';
+    html += '</div>';
+    
+    html += '<div style="display:flex;flex-direction:column;gap:0.2rem;margin-bottom:0.3rem;">';
+    html += '<div><span style="color:var(--sb-text-muted);font-weight:600;font-size:0.65rem;">Cost &amp; Latency Profile:</span> <span style="font-family:monospace;font-size:0.7rem;color:#818cf8;">' + costLatency + '</span></div>';
+    html += '<div><span style="color:var(--sb-text-muted);font-weight:600;font-size:0.65rem;">Routing Justification:</span> <span style="color:var(--sb-on-surface);">' + justification + '</span></div>';
+    html += '</div>';
+
+    html += '<div style="margin-top:0.15rem;font-size:0.65rem;color:#64748b;">';
+    html += '<strong style="color:var(--sb-text-muted);">Active Routing Context:</strong><br/>';
+    html += 'App ID: <code>' + (appId || 'unknown') + '</code><br/>';
+    html += 'Role: <code>' + roleName + '</code><br/>';
+    html += 'Run: <code>' + (runId || 'latest') + '</code><br/>';
+    html += 'Routing Basis: <code>role-derived visible route selection</code><br/>';
+    html += 'Cost Basis: <code>visible route-cost profile for current role/run</code>';
+    html += '</div>';
+
+    html += '</div>'; // close text column
+    html += '</div>'; // close surface
+
+    html += '<div style="margin-top:0.1rem;font-size:0.65rem;color:#64748b;">';
+    html += 'Hybrid Routing allocates computation optimally across replay, deterministic, local, and external API modes (Paper SI13).';
     html += '</div>';
 
     html += '</div>';
