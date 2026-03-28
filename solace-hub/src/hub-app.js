@@ -488,6 +488,7 @@
     updateSpecialistPostReleaseIncident(appId, runId);
     updateSpecialistPostReleaseClosure(appId, runId);
     updateSpecialistPostReleaseEscalation(appId, runId);
+    updateSpecialistPostReleaseQuarantine(appId, runId);
     updateDepartmentMemoryQueue(appId, runId);
     updateWorkerDriftState(appId, runId);
     updateWorkerRoutingState(appId, runId);
@@ -4046,6 +4047,104 @@
     html += 'Selected Run: <code>' + escapeHtml(selectedRun) + '</code><br/>';
     html += 'Escalation Basis: <code>post-release closure -> reopen or escalation path -> reopened, escalated, or under-observation state</code><br/>';
     html += 'Escalation states are <em>role-derived mocks</em> simulating accountable management paths for failed remediation limits. ';
+    html += 'Resolution Bound: <code>SI21 — The Solace Intelligence System</code>.';
+    html += '</div>';
+
+    html += '</div>';
+    panel.innerHTML = html;
+  }
+
+  // ── SAC55: Specialist Post-Release Quarantine & Override ──
+
+  function updateSpecialistPostReleaseQuarantine(appId, runId) {
+    var panel = document.getElementById('dev-specialist-post-release-quarantine-state');
+    if (!panel) return;
+
+    var viewerRole = 'solace-dev-manager';
+    var selectedWorker = appId || 'unknown';
+    var selectedRun = runId || 'latest';
+    var role = DEV_ROLES.find(function(r) { return r.id === appId; });
+    var roleName = role ? role.key : 'unknown';
+
+    // Quarantine records derived from SAC54 Escalation (role-mocked; shown honestly)
+    var quarantineEntries = [];
+
+    if (roleName === 'qa') {
+      quarantineEntries = [{
+        state: 'Constrained Continuation',
+        escalationLineage: 'Incident Governor [Under Observation]',
+        controlBasis: 'Escalation limits remain within nominal passive inspection variance.',
+        controlVerdict: 'Operations permitted under strict continuous observation. No physical quarantine imposed.',
+        color: '#10b981',
+        bg: 'rgba(16,185,129,0.1)'
+      }];
+    } else if (roleName === 'coder') {
+      quarantineEntries = [{
+        state: 'Manual Override Required',
+        escalationLineage: 'Incident Governor [Reopened]',
+        controlBasis: 'Forced remediation loops exceeded automated retry limits.',
+        controlVerdict: 'Automated remediation frozen. Explicit human override required to resume structural changes.',
+        color: '#f59e0b',
+        bg: 'rgba(245,158,11,0.1)'
+      }];
+    } else if (roleName === 'design') {
+      quarantineEntries = [{
+        state: 'Quarantined',
+        escalationLineage: 'Incident Governor [Escalated]',
+        controlBasis: 'Severe terminal panic verified. Component exceeds safety threshold parameters.',
+        controlVerdict: 'Asset physically quarantined. All operations halted. Rollback isolation locked.',
+        color: '#ef4444',
+        bg: 'rgba(239,68,68,0.1)'
+      }];
+    } else {
+      quarantineEntries = [{
+        state: 'Quarantined',
+        escalationLineage: 'N/A',
+        controlBasis: 'Missing escalation context.',
+        controlVerdict: 'Untracked artifacts default to strict perimeter quarantine.',
+        color: '#64748b',
+        bg: 'rgba(100,116,139,0.1)'
+      }];
+    }
+
+    var quarantineIcon = { 'Constrained Continuation': '🌐', 'Manual Override Required': '🔑', 'Quarantined': '🛑' };
+
+    var html = '<div style="display:flex;flex-direction:column;gap:0.5rem;font-size:0.75rem;color:var(--sb-on-surface);">';
+
+    quarantineEntries.forEach(function(entry) {
+      html += '<div style="background:var(--sb-surface-alt,#1e293b);padding:0.45rem 0.55rem;border-radius:0.3rem;border-left:2px solid ' + entry.color + ';display:flex;flex-direction:column;gap:0.35rem;">';
+
+      // Header
+      html += '<div style="display:flex;align-items:center;justify-content:space-between;">';
+      html += '<strong style="color:var(--sb-on-surface);font-size:0.73rem;">' + (quarantineIcon[entry.state] || '●') + ' Incident Control State</strong>';
+      html += '<code style="color:' + entry.color + ';background:' + entry.bg + ';padding:0.1rem 0.4rem;text-transform:uppercase;font-size:0.63rem;">' + escapeHtml(entry.state) + '</code>';
+      html += '</div>';
+
+      // Context
+      html += '<div style="display:flex;flex-direction:column;gap:0.1rem;">';
+      html += '<div><span style="color:var(--sb-text-muted);font-weight:600;font-size:0.63rem;">Escalation Lineage:</span> <span style="font-family:monospace;font-size:0.68rem;color:#38bdf8;">' + escapeHtml(entry.escalationLineage) + '</span></div>';
+      html += '<div><span style="color:var(--sb-text-muted);font-weight:600;font-size:0.63rem;">Control Basis:</span> <span style="font-family:monospace;font-size:0.68rem;color:#cbd5e1;">' + escapeHtml(entry.controlBasis) + '</span></div>';
+      html += '</div>';
+
+      // Object description
+      html += '<div style="background:#0f172a;border-radius:0.2rem;padding:0.3rem 0.4rem;font-size:0.65rem;color:#cbd5e1;line-height:1.4;">';
+      html += '<code>' + escapeHtml(entry.controlVerdict) + '</code>';
+      html += '</div>';
+
+      // ALCOA+ hash
+      var alcoa = btoa(entry.state + entry.escalationLineage + entry.controlVerdict).substring(0, 16);
+      html += '<div><span style="color:var(--sb-text-muted);font-weight:600;font-size:0.63rem;">Control Hash:</span> <code style="font-size:0.6rem;color:#64748b;">' + alcoa + '</code></div>';
+
+      html += '</div>';
+    });
+
+    html += '<div style="margin-top:0.1rem;font-size:0.63rem;color:#64748b;">';
+    html += '<strong style="color:var(--sb-text-muted);">Audit Constraints:</strong> ';
+    html += 'Viewer Role: <code>' + escapeHtml(viewerRole) + '</code><br/>';
+    html += 'Selected Worker: <code>' + escapeHtml(selectedWorker) + '</code><br/>';
+    html += 'Selected Run: <code>' + escapeHtml(selectedRun) + '</code><br/>';
+    html += 'Control Basis: <code>post-release escalation -> control path -> quarantined, manual-override-required, or constrained-continuation state</code><br/>';
+    html += 'Control states are <em>role-derived mocks</em> simulating severe operational quarantine application bounds. ';
     html += 'Resolution Bound: <code>SI21 — The Solace Intelligence System</code>.';
     html += '</div>';
 
