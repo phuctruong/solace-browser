@@ -213,12 +213,14 @@
   function hydrateActiveWorkflowRoutes() {
     var panel = document.getElementById('dev-active-workflow-routing');
     var list = document.getElementById('dev-active-workflow-routes');
+    var launchPanel = document.getElementById('dev-active-workflow-launch');
     if (!panel || !list) return;
 
     var reqId = window.__solaceActiveRequestId;
     if (!reqId) {
       panel.style.display = 'none';
       list.innerHTML = '';
+      if (launchPanel) launchPanel.style.display = 'none';
       return;
     }
 
@@ -229,6 +231,7 @@
       var active = assignments.filter(function(a) { return a.request_id === reqId; });
       if (active.length === 0) {
         list.innerHTML = 'No assignments routed yet.';
+        if (launchPanel) launchPanel.style.display = 'none';
         return;
       }
       var html = '<strong>Active Routes:</strong> ';
@@ -237,6 +240,91 @@
         return '<span class="sb-pill" style="color:' + color + '; border:1px solid ' + color + '; padding:0.1rem 0.3rem; margin-right:0.3rem;">' + a.target_role + ' (' + a.status + ')</span>';
       });
       list.innerHTML = html + badges.join('');
+      if (launchPanel) launchPanel.style.display = 'block';
+    });
+  }
+
+  window.__solaceLaunchRoutedFlow = function() {
+    var reqId = window.__solaceActiveRequestId;
+    if (!reqId) {
+      alert("No active request selected. Cannot launch flow.");
+      return;
+    }
+    var routeSelect = document.getElementById('dev-route-role-select');
+    var requestedRole = routeSelect ? routeSelect.value : null;
+
+    var output = document.getElementById('dev-active-workflow-launch-output');
+    if (output) {
+      output.style.display = 'block';
+      output.textContent = 'Resolving active assignment for request ID ' + reqId + '...\n';
+      if (requestedRole) {
+        output.textContent += 'Requested launch role: ' + requestedRole + '\n';
+      }
+    }
+
+    // 1. Fetch assignments to find the active target_role for this reqId
+    get('/api/v1/backoffice/solace-dev-manager/assignments').catch(function(){return {items:[]};}).then(function(res) {
+      var assignments = res.items || [];
+      var active = assignments.filter(function(a) { return a.request_id === reqId && a.status === 'active'; });
+      
+      if (active.length === 0) {
+        if (output) output.textContent += 'Error: No active assignment routed for this request. Please explicitly route a role first.\n';
+        return;
+      }
+      
+      var chosen = null;
+      if (requestedRole) {
+        chosen = active.find(function(a) { return a.target_role === requestedRole; }) || null;
+      }
+      if (!chosen) {
+        chosen = active[0];
+      }
+      if (!chosen) {
+        if (output) output.textContent += 'Error: Unable to resolve an executable active assignment.\n';
+        return;
+      }
+
+      var targetRole = chosen.target_role;
+      if (output) output.textContent += 'Resolved target role: ' + targetRole + '\n';
+      if (output) output.textContent += 'Assignment ID: ' + chosen.id + '\n';
+      
+      var roleObj = DEV_ROLES.find(function(r) { return r.key === targetRole; });
+      if (!roleObj) {
+        if (output) output.textContent += 'Error: Target role ' + targetRole + ' does not map to a recognized application.\n';
+        return;
+      }
+
+      var appId = roleObj.id;
+      if (output) output.textContent += 'Executing mapped application: [' + appId + ']\n';
+      if (output) output.textContent += 'Runtime Route: POST /api/v1/apps/run/' + appId + '\n';
+
+      // 2. Map target_role to appId and execute `POST /api/v1/apps/run/{appId}`
+      fetch(API + '/api/v1/apps/run/' + appId, {
+        method: 'POST',
+        headers: { 'Authorization': 'Bearer dragon_rider_override' }
+      }).then(function(r) { return r.json().then(function(d) { return { status: r.status, data: d }; }); })
+      .then(function(res) {
+        var data = res.data;
+        if (data.ok) {
+           if (output) output.textContent += 'Launch SUCCESS (HTTP ' + res.status + '). Worker executing...\n';
+           var runId = null;
+           if (data.report) {
+               var match = data.report.match(/runs\/([^\/]+)\/artifact\/report\.html/);
+               if (match && match[1]) runId = match[1];
+           }
+           if (output && runId) output.textContent += 'Run ID: ' + runId + '\n';
+           
+           if (runId && window.__solaceSelectRun) {
+               window.__solaceSelectRun(appId, runId, null);
+           }
+        } else {
+           if (output) output.textContent += 'Launch FAILED (HTTP ' + res.status + '). See logs.\n';
+           if (output) output.textContent += JSON.stringify(data) + '\n';
+        }
+        hydrateDevWorkspace();
+      }).catch(function(err) {
+        if (output) output.textContent += 'Launch Error: ' + err + '\n';
+      });
     });
   }
 

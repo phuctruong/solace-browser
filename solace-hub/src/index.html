@@ -712,6 +712,15 @@
           <!-- Populated by JS -->
         </div>
       </div>
+      
+      <div id="dev-active-workflow-launch" class="sb-mt-md" style="display:none; border-top:1px solid #334155; padding-top:0.75rem;">
+        <p class="sb-kicker" style="color:#10b981; font-size:0.7rem;">Manager Execution Launch</p>
+        <div style="display:flex; gap:0.5rem; margin-top:0.4rem; align-items:center;">
+          <button class="sb-btn sb-btn--sm" style="border-left:2px solid #10b981; background:#064e3b; color:#6ee7b7;" onclick="window.__solaceLaunchRoutedFlow()">▶ Launch Routed Flow</button>
+        </div>
+        <p class="sb-text-muted sb-mt-xs" style="font-size:0.75rem;">Executes the primary active assignment for the selected request using the target backend application.</p>
+        <pre id="dev-active-workflow-launch-output" class="sb-mt-sm" style="display:none; background:#000; color:#4ade80; padding:0.5rem; font-size:0.65rem; border-radius:0.25rem; max-height:100px; overflow-y:auto; font-family:monospace;"></pre>
+      </div>
     </div>
 
     <!-- ═══════════════════════════════════════════════════════════════
