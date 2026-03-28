@@ -109,6 +109,7 @@
     } else {
        window.__solaceActiveRequestId = reqId;
     }
+    hydrateActiveWorkflowRoutes();
     hydrateDevWorkspace();
   };
 
@@ -134,22 +135,10 @@
               if (!reqData.created) { alert('Failed to create request'); return; }
               var reqId = reqData.record.id;
               
-              // 3. Create active 'coder' assignment immediately so workflow can start
-              fetch(API + '/api/v1/backoffice/solace-dev-manager/assignments', {
-                  method: 'POST',
-                  headers: {'Content-Type': 'application/json'},
-                  body: JSON.stringify({
-                      request_id: reqId,
-                      target_role: 'coder',
-                      details: 'Implementation phase for ' + title,
-                      status: 'active'
-                  })
-              }).then(function() {
-                  // Auto-select this request
-                  window.__solaceSelectRequest(reqId);
-                  // Also refresh dropdown
-                  hydrateActiveWorkflowSelector();
-              });
+              // Auto-select this request
+              window.__solaceSelectRequest(reqId);
+              // Also refresh dropdown
+              hydrateActiveWorkflowSelector();
           });
         }
 
@@ -174,8 +163,86 @@
     });
   };
 
+  window.__solaceRouteActiveRequest = function() {
+    var reqId = window.__solaceActiveRequestId;
+    if (!reqId) {
+      alert("No active request selected to route.");
+      return;
+    }
+    var sel = document.getElementById('dev-route-role-select');
+    var targetRole = sel ? sel.value : null;
+    if (!targetRole) return;
+
+    get('/api/v1/backoffice/solace-dev-manager/assignments').catch(function(){return {items:[]};}).then(function(res) {
+      var assignments = res.items || [];
+      var existing = assignments.find(function(a) {
+        return a.request_id === reqId && a.target_role === targetRole;
+      });
+
+      var path = API + '/api/v1/backoffice/solace-dev-manager/assignments';
+      var method = 'POST';
+      var body = {
+        request_id: reqId,
+        target_role: targetRole,
+        details: 'Routed via Manager Action',
+        status: 'active'
+      };
+
+      if (existing && existing.id) {
+        path += '/' + existing.id;
+        method = 'PUT';
+        body = {
+          request_id: existing.request_id,
+          target_role: existing.target_role,
+          details: existing.details || 'Routed via Manager Action',
+          status: 'active'
+        };
+      }
+
+      fetch(path, {
+          method: method,
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify(body)
+      }).then(function() {
+          hydrateActiveWorkflowRoutes();
+          hydrateDevWorkspace();
+      });
+    });
+  };
+
+  function hydrateActiveWorkflowRoutes() {
+    var panel = document.getElementById('dev-active-workflow-routing');
+    var list = document.getElementById('dev-active-workflow-routes');
+    if (!panel || !list) return;
+
+    var reqId = window.__solaceActiveRequestId;
+    if (!reqId) {
+      panel.style.display = 'none';
+      list.innerHTML = '';
+      return;
+    }
+
+    panel.style.display = 'block';
+    
+    get('/api/v1/backoffice/solace-dev-manager/assignments').catch(function(){return {items:[]};}).then(function(res) {
+      var assignments = res.items || [];
+      var active = assignments.filter(function(a) { return a.request_id === reqId; });
+      if (active.length === 0) {
+        list.innerHTML = 'No assignments routed yet.';
+        return;
+      }
+      var html = '<strong>Active Routes:</strong> ';
+      var badges = active.map(function(a) {
+        var color = a.status === 'active' ? '#6ee7b7' : '#94a3b8';
+        return '<span class="sb-pill" style="color:' + color + '; border:1px solid ' + color + '; padding:0.1rem 0.3rem; margin-right:0.3rem;">' + a.target_role + ' (' + a.status + ')</span>';
+      });
+      list.innerHTML = html + badges.join('');
+    });
+  }
+
   function hydrateDevWorkspace() {
     hydrateActiveWorkflowSelector();
+    hydrateActiveWorkflowRoutes();
     hydrateHubStatus();
     DEV_ROLES.forEach(function(role) {
       hydrateRoleCard(role);

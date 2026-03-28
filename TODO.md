@@ -1,22 +1,22 @@
 # TODO
 
 Repo: `solace-browser`
-Role: Solace Hub + Browser workspace for native assignment routing on selected requests
+Role: Solace Hub + Browser workspace for native assignment execution launch
 
 ## Current Round
 
-`SAC68` native manager assignment routing and explicit role activation.
+`SAC69` native run launch from the selected routed assignment.
 
-`SAC67` made the manager able to create and select a real `solace-browser` request in Hub. That removed the hidden seed dependency for request creation.
+`SAC68` made assignment routing a real manager action. The manager can now choose `design`, `coder`, or `qa` for the selected request and write that routing decision into Back Office honestly.
 
-The next blocker is that role routing is still too implicit. New requests are still hard-wired into an immediate `coder` assignment instead of being managed as an explicit routing decision by the Dev Manager. The next round must make assignment routing visible and intentional for the selected request.
+The next blocker is execution. The selected request and routed assignment still do not give the manager one explicit “run this assignment now” path in Hub. The next round must make the selected request + selected role produce one explicit run-launch action tied to the existing app/run routes.
 
 ## Worker Inbox
 
-- `northstar`: `The Dev Manager must be able to route a selected self-hosting request into the correct specialist lane from Hub itself, and that routing decision must become the visible basis for downstream worker context.`
+- `northstar`: `The Dev Manager must be able to move a selected self-hosting request from request truth into assignment truth and then into one explicit execution launch from Hub itself.`
 - `worker_mode`: `external_coding_agent`
 - `worker_role`: `coder`
-- `task_statement`: `Add a native assignment-routing surface for the selected request. The manager must be able to choose a target role and create or activate the corresponding assignment through the existing Back Office objects.`
+- `task_statement`: `Add a native run-launch surface for the selected routed assignment. The manager must be able to launch the corresponding role app using the existing runtime app/run routes and keep that launch visibly tied to the selected request and routed assignment.`
 - `scope_change_policy`: `FAIL_AND_NEW_TASK`
 
 ## Read This First
@@ -26,85 +26,88 @@ The next blocker is that role routing is still too implicit. New requests are st
 - `/home/phuc/projects/solace-prime/specs/solace-dev-workspace.md`
 - `/home/phuc/projects/solace-prime/specs/solace-dev-role-architecture.md`
 - `/home/phuc/projects/solace-prime/canon/hub/SI5 — Solace Hub as Mission Control.md`
-- `/home/phuc/projects/solace-prime/canon/hub/SI17 — Human-in-the-Loop as a First-Class System Component.md`
-- `/home/phuc/projects/solace-browser/data/apps/solace-dev-manager/manifest.yaml`
+- `/home/phuc/projects/solace-prime/canon/hub/SI6 — Solace Browser as Execution & Proof Layer.md`
+- `/home/phuc/projects/solace-browser/solace-runtime/src/routes/apps.rs`
 - `/home/phuc/projects/solace-browser/solace-runtime/src/routes/backoffice.rs`
 - `/home/phuc/projects/solace-browser/solace-hub/src/hub-app.js`
 - `/home/phuc/projects/solace-browser/solace-hub/src/index.html`
 
 ## Audit Ground Truth
 
-- request creation is now native in Hub
-- selected request state now exists
-- downstream worker context can now follow a selected request
-- assignment routing is still not a first-class manager decision
-- the manager still cannot explicitly choose `design`, `coder`, or `qa` for the selected request inside Hub
+- request creation is native in Hub
+- selected request state is native in Hub
+- assignment routing is now a native manager action
+- execution launch is still implicit and detached from the selected request/assignment chain
+- the manager still cannot explicitly launch the routed specialist lane from the same workflow surface
 
 ## Rules
 
-- do not revert to implicit hard-coded routing
-- use the existing `assignments` Back Office table
-- keep `SAC66` and `SAC67` runtime-backed flow intact
-- make explicit what assignment is active for the selected request
-- preserve honesty about any fallback behavior
+- do not bypass the selected request / selected assignment path
+- use the existing app run route instead of inventing a parallel execution API
+- keep the route from selected request -> assignment -> run honest and visible
+- preserve `SAC66`, `SAC67`, and `SAC68`
 
 ## Hard Rejection Criteria
 
-- routing is still hard-coded only to `coder`
-- the manager still cannot explicitly assign a selected request to a role in Hub
-- selected request does not drive the visible active assignment
-- the round adds only labels without changing the actual request -> assignment truth path
+- the manager still cannot launch the routed assignment from Hub
+- run launch is still detached from the selected request and selected assignment
+- the round adds a button without clearly tying it to the existing runtime app/run path
+- the result reintroduces mock execution state instead of using the actual runtime route
 
 ## Required Deliverables
 
-1. one native assignment-routing control for the selected request
-2. one visible selected-role / active-assignment state
-3. one visible link from routing decision -> assignment context
-4. one Prime Mermaid artifact for request-to-assignment routing
+1. one native run-launch control for the selected routed assignment
+2. one visible link from selected request -> routed role -> launched run
+3. one honest basis line showing which runtime route was used
+4. one Prime Mermaid artifact for request-to-assignment-to-run launch
 5. one narrow smoke path
 6. one narrow automated test
 
 ## Current Tickets
 
-### Ticket 1: Add assignment routing control
+### Ticket 1: Add explicit run launch
 
-Objective: make specialist routing a manager action, not a hidden default.
-
-Scope:
-
-- add one visible control for the selected request
-- allow explicit assignment to at least `design`, `coder`, or `qa`
-- create or activate the relevant assignment record in Back Office
-
-Done when: the manager can route the selected request intentionally from Hub.
-
-### Ticket 2: Surface the active routed assignment
-
-Objective: make downstream role context honest.
+Objective: make execution a manager-visible action.
 
 Scope:
 
-- show which role is currently routed for the selected request
-- ensure assignment context panels follow that routed assignment
+- add one control that launches the selected routed role
+- bind it to the existing runtime app/run route
+- prevent launch when there is no selected request or no routed assignment
 
-Done when: the active assignment is clearly tied to the selected request and chosen role.
+Done when: the manager can explicitly launch one routed role from Hub.
 
-### Ticket 3: Preserve the runtime-backed chain
+### Ticket 2: Surface launch context honestly
 
-Objective: keep the request -> assignment -> artifact/approval chain coherent.
+Objective: stop execution from looking detached.
 
 Scope:
 
-- do not break `SAC66` workflow binding
-- do not break `SAC67` request creation/selection
+- show selected request
+- show active routed assignment
+- show launched role/app target
+- show which runtime route is being used
 
-Done when: routing strengthens the durable chain instead of bypassing it.
+Done when: a reviewer can tell exactly what the launch action is about.
+
+### Ticket 3: Preserve the durable chain
+
+Objective: keep the workflow coherent.
+
+Scope:
+
+- do not break request creation
+- do not break request selection
+- do not break assignment routing
+- keep downstream worker panels compatible with the launched role
+
+Done when: launch strengthens the request -> assignment -> run chain.
 
 ## Suggested File Targets
 
 - `solace-hub/src/index.html`
 - `solace-hub/src/hub-app.js`
-- `solace-runtime/src/routes/backoffice.rs`
+- `solace-runtime/src/routes/apps.rs`
 - `tests/`
 - `scripts/`
 - `specs/solace-dev/`
@@ -114,14 +117,14 @@ Done when: routing strengthens the durable chain instead of bypassing it.
 - changed files
 - exact test/check command output
 - exact routes or APIs exercised
-- sample assignment payload
+- sample launch payload
 - screenshot paths
 - local smoke path
 - remaining risks
 
 ## Out Of Scope
 
-- full workflow redesign
+- workflow redesign beyond launch
 - cloud sync or `solaceagi`
-- another unrelated transparency panel
-- generic polish without manager-driven routing truth
+- unrelated transparency panels
+- generic polish without execution truth

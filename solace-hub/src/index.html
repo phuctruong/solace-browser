@@ -698,6 +698,20 @@
         </select>
         <p class="sb-text-muted sb-mt-xs" style="font-size:0.75rem;">Selected request explicitly binds downstream Assignment, Inbox, and Execution contexts.</p>
       </div>
+      <div id="dev-active-workflow-routing" class="sb-mt-md" style="display:none; border-top:1px solid #334155; padding-top:0.75rem;">
+        <p class="sb-kicker" style="color:#d946ef; font-size:0.7rem;">Manager Assignment Routing</p>
+        <div style="display:flex; gap:0.5rem; margin-top:0.4rem; align-items:center;">
+          <select id="dev-route-role-select" style="padding:0.3rem; background:var(--sb-surface-alt, #0f172a); color:var(--sb-on-surface, #f8fafc); border:1px solid #334155; border-radius:0.25rem; font-size:0.75rem;">
+            <option value="design">Route to Design</option>
+            <option value="coder">Route to Coder</option>
+            <option value="qa">Route to QA</option>
+          </select>
+          <button class="sb-btn sb-btn--sm" style="border-left:2px solid #d946ef;" onclick="window.__solaceRouteActiveRequest()">Deploy Assignment</button>
+        </div>
+        <div id="dev-active-workflow-routes" class="sb-mt-sm" style="font-size:0.75rem; color:var(--sb-text-muted);">
+          <!-- Populated by JS -->
+        </div>
+      </div>
     </div>
 
     <!-- ═══════════════════════════════════════════════════════════════
