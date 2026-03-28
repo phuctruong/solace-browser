@@ -452,6 +452,7 @@
   // ── SAW14: Worker Detail Panel ──
 
   function updateWorkerDetail(appId, runId) {
+    updateWorkerAssignmentPacket(appId, runId);
     updateWorkerInboxOutbox(appId, runId);
     
     var panel = document.getElementById('dev-worker-detail');
@@ -595,6 +596,77 @@
       }
     }
   };
+
+  // ── SAA16: Worker Assignment Packet ──
+
+  function updateWorkerAssignmentPacket(appId, runId) {
+    var panel = document.getElementById('dev-worker-assignment-packet');
+    if (!panel) return;
+
+    var role = DEV_ROLES.find(function(r) { return r.id === appId; });
+    var roleName = role ? role.key : 'unknown';
+    var color = roleColor(roleName);
+    var outboxPath = '/apps/' + appId + '/outbox/runs/' + runId;
+
+    var statement = '';
+    var scopePolicy = 'FAIL_AND_NEW_TASK';
+    var evidence = [];
+
+    if (roleName === 'manager') {
+      statement = 'Triage incoming requests and distribute bounded task packages to specialist roles.';
+      evidence = ['manager-to-design-handoff.md', 'Updated assignment database'];
+    } else if (roleName === 'design') {
+      statement = 'Translate manager assignments into architectural boundaries and explicit data/UI contracts.';
+      evidence = ['design-to-coder-handoff.md', 'Prime Mermaid architectural diagrams'];
+    } else if (roleName === 'coder') {
+      statement = 'Implement the exact design handoff specification without arbitrary scope expansion.';
+      evidence = ['coder-to-qa-handoff.md', 'Source code diffs', 'Passing tests / localized verifications'];
+    } else if (roleName === 'qa') {
+      statement = 'Verify coder implementation against the original design handoff and requirements.';
+      evidence = ['qa-signoffs record', 'Bug triage logs', 'Final review summary'];
+    } else {
+      statement = 'Unknown assignment.';
+      evidence = ['Unknown evidence contract'];
+    }
+
+    var html = '<div style="display:flex;flex-direction:column;gap:0.4rem;font-size:0.75rem;color:var(--sb-on-surface);">';
+
+    html += '<div style="background:rgba(99,102,241,0.08);padding:0.4rem 0.5rem;border-radius:0.25rem;border-left:2px solid ' + color + ';">';
+    html += '<strong style="color:var(--sb-text-muted);">Active Assignment Context:</strong><br/>';
+    html += 'App ID: <code>' + escapeHtml(appId) + '</code><br/>';
+    html += 'Role: <code>' + escapeHtml(roleName) + '</code><br/>';
+    html += 'Run: <code>' + escapeHtml(runId) + '</code><br/>';
+    html += 'Packet Basis: <code>role-derived visible contract</code><br/>';
+    html += 'Outbox Root: <code style="font-size:0.65rem;color:#94a3b8;">' + escapeHtml(outboxPath) + '</code>';
+    html += '</div>';
+    
+    html += '<div style="background:var(--sb-surface-alt,#1e293b);padding:0.4rem 0.5rem;border-radius:0.25rem;border-left:2px solid ' + color + ';">';
+    html += '<strong style="color:var(--sb-text-muted);">Task Statement / Objective:</strong><br/>';
+    html += '<div style="margin-top:0.2rem;font-family:monospace;color:var(--sb-on-surface); line-height:1.4;">' + escapeHtml(statement) + '</div>';
+    html += '</div>';
+
+    html += '<div style="background:var(--sb-surface-alt,#1e293b);padding:0.4rem 0.5rem;border-radius:0.25rem;border-left:2px solid ' + color + ';">';
+    html += '<strong style="color:var(--sb-text-muted);">Scope Change Policy:</strong><br/>';
+    html += '<div style="margin-top:0.2rem;"><code style="color:#ef4444;background:rgba(239,68,68,0.1);padding:0.1rem 0.3rem;">' + escapeHtml(scopePolicy) + '</code></div>';
+    html += '</div>';
+
+    html += '<div style="background:var(--sb-surface-alt,#1e293b);padding:0.4rem 0.5rem;border-radius:0.25rem;border-left:2px solid ' + color + ';">';
+    html += '<strong style="color:var(--sb-text-muted);">Evidence Contract (Required Output):</strong><br/>';
+    html += '<ul style="margin:0.2rem 0 0 1rem;padding:0;color:var(--sb-on-surface);font-family:monospace;font-size:0.7rem;">';
+    evidence.forEach(function(item) {
+      if (item.indexOf('.md') > -1) {
+        html += '<li><code style="color:#818cf8;background:transparent;padding:0;">' + escapeHtml(item) + '</code></li>';
+      } else {
+        html += '<li>' + escapeHtml(item) + '</li>';
+      }
+    });
+    html += '</ul>';
+    html += '</div>';
+
+    html += '</div>';
+    
+    panel.innerHTML = html;
+  }
 
   // ── SAI15: Worker Inbox/Outbox ──
 
