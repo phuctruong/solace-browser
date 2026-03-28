@@ -457,6 +457,7 @@
     updateWorkerInboxOutbox(appId, runId);
     updateWorkerHumanGate(appId, runId);
     updateWorkerProofState(appId, runId);
+    updateWorkerGraphState(appId, runId);
     
     var panel = document.getElementById('dev-worker-detail');
     var diagramPreview = document.getElementById('dev-worker-diagram-preview');
@@ -983,6 +984,75 @@
     html += '</div>';
 
     html += '</div>'; // close row
+
+    html += '</div>';
+    
+    panel.innerHTML = html;
+  }
+
+  // ── SAG20: Execution Graph Trace ──
+
+  function updateWorkerGraphState(appId, runId) {
+    var panel = document.getElementById('dev-worker-graph-state');
+    if (!panel) return;
+
+    var role = DEV_ROLES.find(function(r) { return r.id === appId; });
+    var roleName = role ? role.key : 'unknown';
+    var color = roleColor(roleName);
+
+    // Mock realistic states tied to the roles for SAG20 visibility demonstration (Based on paper SI10)
+    var graphTopology = '';
+    var activeNode = '';
+    var activeNodeType = '';
+
+    if (roleName === 'manager') {
+      graphTopology = 'PLANNER &rarr; ROUTER &rarr; AGGREGATOR';
+      activeNode = 'ROUTER';
+      activeNodeType = 'Deterministic Mode Selection';
+    } else if (roleName === 'design') {
+      graphTopology = 'RETRIEVER &rarr; PLANNER &rarr; EVALUATOR';
+      activeNode = 'PLANNER';
+      activeNodeType = 'Probabilistic Topology Generation';
+    } else if (roleName === 'coder') {
+      graphTopology = 'RETRIEVER &rarr; EXECUTOR &rarr; EVALUATOR';
+      activeNode = 'EXECUTOR';
+      activeNodeType = 'Probabilistic Artifact Generation';
+    } else if (roleName === 'qa') {
+      graphTopology = 'EVALUATOR &rarr; TERMINATOR';
+      activeNode = 'EVALUATOR';
+      activeNodeType = 'Deterministic Validation Gate';
+    } else {
+      graphTopology = 'UNKNOWN_GRAPH';
+      activeNode = 'UNKNOWN';
+      activeNodeType = 'Unknown Node Execution';
+    }
+
+    var html = '<div style="display:flex;flex-direction:column;gap:0.4rem;font-size:0.75rem;color:var(--sb-on-surface);">';
+    html += '<div style="background:rgba(99,102,241,0.08);padding:0.4rem 0.5rem;border-radius:0.25rem;border-left:2px solid ' + color + ';">';
+    html += '<strong style="color:var(--sb-text-muted);">Active Graph Context:</strong><br/>';
+    html += 'App ID: <code>' + escapeHtml(appId) + '</code><br/>';
+    html += 'Role: <code>' + escapeHtml(roleName) + '</code><br/>';
+    html += 'Run: <code>' + escapeHtml(runId) + '</code><br/>';
+    html += 'Graph Basis: <code>role-derived visible execution graph</code><br/>';
+    html += 'Path Basis: <code>visible active stage for current role/run</code>';
+    html += '</div>';
+    
+    html += '<div style="background:var(--sb-surface-alt,#1e293b);padding:0.4rem 0.5rem;border-radius:0.25rem;border-left:2px solid ' + color + ';">';
+    html += '<strong style="color:var(--sb-text-muted);">Solace Execution Graph Structure:</strong><br/>';
+    html += '<div style="font-family:monospace;margin-top:0.3rem;color:#818cf8;background:rgba(129,140,248,0.1);padding:0.3rem 0.5rem;border-radius:0.25rem;">' + graphTopology + '</div>';
+    html += '</div>';
+
+    html += '<div style="background:var(--sb-surface-alt,#1e293b);padding:0.4rem 0.5rem;border-radius:0.25rem;border-left:2px solid ' + color + ';display:flex;align-items:center;gap:0.75rem;">';
+    html += '<div style="font-size:1.4rem;">⚙️</div>';
+    html += '<div>';
+    html += '<strong style="color:var(--sb-text-muted);">Active Node Context:</strong><br/>';
+    html += '<span style="color:var(--sb-on-surface);font-weight:600;">' + escapeHtml(activeNode) + '</span> &mdash; <span style="color:#94a3b8;font-size:0.7rem;">' + escapeHtml(activeNodeType) + '</span>';
+    html += '</div>';
+    html += '</div>';
+
+    html += '<div style="margin-top:0.1rem;font-size:0.65rem;color:#64748b;">';
+    html += 'Execution nodes define verifiable edges connecting Context &rarr; Operations &rarr; Validation (Paper SI10).';
+    html += '</div>';
 
     html += '</div>';
     
