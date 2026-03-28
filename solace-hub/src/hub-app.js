@@ -651,6 +651,28 @@
             html += 'Packet Basis: <code>Workflow-bound launched assignment selected, but payload artifact missing for launched run (SAC77)</code>';
           }
           // --------------------
+
+          // --- SAC79 Output ---
+          html += '<strong style="display:block; margin-top:0.4rem; margin-bottom:0.2rem; color:#60a5fa;">Next-Step Packet Provenance & Handoff Truth:</strong>';
+          html += '<div style="background:rgba(30,41,59,0.5); padding:0.4rem; border-left:2px solid #60a5fa; border-radius:0.15rem; font-size:0.65rem;">';
+          html += 'Source Request ID: <code>' + escapeHtml(lastLaunchAction.requestId.substring(0,8)) + '</code><br/>';
+          if (lastLaunchAction.sourceAssignmentId) {
+             html += 'Source Assignment ID: <code>' + escapeHtml(lastLaunchAction.sourceAssignmentId.substring(0,8)) + '</code><br/>';
+          }
+          html += 'Target Assignment ID: <code>' + escapeHtml(lastLaunchAction.targetAssignmentId.substring(0,8)) + '</code><br/>';
+          html += 'Launched Role: <code>' + escapeHtml(lastLaunchAction.targetRole) + '</code><br/>';
+          html += 'Launched Run ID: <code>' + escapeHtml(lastLaunchAction.runId.substring(0, 8)) + '</code><br/>';
+          
+          if (exactPacketTruth) {
+             html += 'Contract Integrity: <span style="color:#34d399;font-weight:600;">Exact launched-workflow handoff tracked</span><br/>';
+             html += 'Contract Basis: <code>Source assignment, target assignment, launched role, and launched run remain aligned in the exact workflow-bound branch (SAC79)</code>';
+          } else {
+             html += 'Contract Integrity: <span style="color:#fcd34d;font-weight:600;">Fallback handoff tracked</span><br/>';
+             html += 'Contract Basis: <code>Handoff remains visible, but current packet or run view has fallen back away from exact launched-workflow truth (SAC79)</code>';
+          }
+          html += '</div>';
+          // --------------------
+
           html += '</div>';
         }
 
