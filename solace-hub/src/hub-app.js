@@ -677,22 +677,18 @@
           html += '<strong style="display:block; margin-top:0.4rem; margin-bottom:0.2rem; color:#a78bfa;">Next-Step Specialist Pickup Truth:</strong>';
           html += '<div style="background:rgba(30,41,59,0.5); padding:0.4rem; border-left:2px solid #a78bfa; border-radius:0.15rem; font-size:0.65rem;">';
           html += 'Dispatched Specialist: <code>' + escapeHtml(lastLaunchAction.targetRole) + '</code><br/>';
-          html += 'Assigned Packet ID: <code>' + escapeHtml(lastLaunchAction.runId.substring(0, 8)) + '</code><br/>';
+          html += 'Pickup Run ID: <code>' + escapeHtml(lastLaunchAction.runId.substring(0, 8)) + '</code><br/>';
           
           if (eventsExist && exactPacketTruth) {
-             html += 'Pickup Status: <span style="color:#34d399;font-weight:600;">[✓] Specialist Accepted & Executing Native Handoff</span><br/>';
+             html += 'Pickup Status: <span style="color:#34d399;font-weight:600;">[✓] Exact launched-workflow pickup tracked</span><br/>';
+             html += 'Pickup Basis: <code>Events exist for the launched next-step run, and request, assignment, role, and run remain aligned in the exact workflow-bound branch (SAC80)</code>';
           } else if (eventsExist) {
-             html += 'Pickup Status: <span style="color:#fcd34d;font-weight:600;">[?] Specialist Executing Fallback Assignment</span><br/>';
+             html += 'Pickup Status: <span style="color:#fcd34d;font-weight:600;">[?] Fallback pickup tracked</span><br/>';
+             html += 'Pickup Basis: <code>Events exist for a visible next-step run, but the current workflow binding has fallen back away from exact launched-workflow pickup truth (SAC80)</code>';
           } else {
-             html += 'Pickup Status: <span style="color:#94a3b8;font-weight:600;">[ ] Awaiting Specialist Acceptance</span><br/>';
+             html += 'Pickup Status: <span style="color:#94a3b8;font-weight:600;">[ ] Awaiting specialist pickup evidence</span><br/>';
+             html += 'Pickup Basis: <code>No events exist yet for the launched next-step run, so specialist pickup is not proven in the workflow branch (SAC80)</code>';
           }
-          
-          if (exactPacketTruth) {
-             html += 'Receipt Integrity: <span style="color:#34d399;">O(1) unbroken cryptographic receipt mapped</span><br/>';
-          } else {
-             html += 'Receipt Integrity: <span style="color:#fcd34d;">Broken assignment context</span><br/>';
-          }
-          html += 'Receipt Basis: <code>Workflow routed pickup mapping traced continuously from provenance contract (SAC80)</code>';
           html += '</div>';
           // --------------------
 
