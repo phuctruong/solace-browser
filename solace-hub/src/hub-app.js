@@ -474,6 +474,7 @@
     updateSpecialistArtifactProvenance(appId, runId);
     updateSpecialistPromotionCandidate(appId, runId);
     updateSpecialistMemoryAdmission(appId, runId);
+    updateSpecialistMemoryEntry(appId, runId);
     updateDepartmentMemoryQueue(appId, runId);
     updateWorkerDriftState(appId, runId);
     updateWorkerRoutingState(appId, runId);
@@ -2649,6 +2650,112 @@
     html += 'Admission Basis: <code>visible specialist seal-action request and department-memory admission state for current promotion context</code><br/>';
     html += 'Admission values are <em>role-derived mocks</em> until runtime fs pipeline is wired.<br/>';
     html += 'Resolution Bound: <code>SI18 — Transparency as Product Feature</code>.';
+    html += '</div>';
+
+    html += '</div>';
+    panel.innerHTML = html;
+  }
+
+  // ── SAC41: Specialist Memory Entry ──
+
+  function updateSpecialistMemoryEntry(appId, runId) {
+    var panel = document.getElementById('dev-specialist-memory-entry-state');
+    if (!panel) return;
+
+    var role = DEV_ROLES.find(function(r) { return r.id === appId; });
+    var roleName = role ? role.key : 'unknown';
+    var viewerRole = 'solace-dev-manager';
+    var selectedWorker = appId || 'unknown';
+    var selectedRun = runId || 'latest';
+
+    // Convention records derived from SAM40 admission target (role-mocked; shown honestly)
+    var memoryEntries = [];
+
+    if (roleName === 'qa') {
+      memoryEntries = [{
+        state: 'Live',
+        bundleId: 'qa-run-20260328-003',
+        specialist: 'solace-qa-agent-v2',
+        sourcePacket: 'inbox/qa/test-suite.json',
+        conventionTarget: 'tests/e2e/verified-suite-v3.json',
+        objectDesc: 'Reusable end-to-end test convention bound to SI18 governance model.',
+        color: '#10b981',
+        bg: 'rgba(16,185,129,0.1)'
+      }];
+    } else if (roleName === 'coder') {
+      memoryEntries = [{
+        state: 'Draft',
+        bundleId: 'coder-run-20260328-001',
+        specialist: 'solace-prime-mermaid-coder-v1.2.0',
+        sourcePacket: 'inbox/coder/packet.json',
+        conventionTarget: 'tmp/pending-ast-matrix.bin',
+        objectDesc: 'Temporary layout pending bundle seal and SI17 memory admission.',
+        color: '#f59e0b',
+        bg: 'rgba(245,158,11,0.1)'
+      }];
+    } else if (roleName === 'design') {
+      memoryEntries = [{
+        state: 'Revoked',
+        bundleId: 'design-run-20260328-002',
+        specialist: 'solace-ui-renderer-v1',
+        sourcePacket: 'inbox/design/command_lock.json',
+        conventionTarget: 'N/A',
+        objectDesc: 'Memory admission rejected. Bundle outputs purged from convention pool.',
+        color: '#ef4444',
+        bg: 'rgba(239,68,68,0.1)'
+      }];
+    } else {
+      memoryEntries = [{
+        state: 'Revoked',
+        bundleId: 'unknown-bundle',
+        specialist: 'Unbound',
+        sourcePacket: 'N/A',
+        conventionTarget: 'N/A',
+        objectDesc: 'Cannot form memory entry from unbound or untrusted sources.',
+        color: '#64748b',
+        bg: 'rgba(100,116,139,0.1)'
+      }];
+    }
+
+    var stateIcon = { 'Live': '📄', 'Draft': '📝', 'Revoked': '🗑️' };
+
+    var html = '<div style="display:flex;flex-direction:column;gap:0.5rem;font-size:0.75rem;color:var(--sb-on-surface);">';
+
+    memoryEntries.forEach(function(entry) {
+      html += '<div style="background:var(--sb-surface-alt,#1e293b);padding:0.45rem 0.55rem;border-radius:0.3rem;border-left:2px solid ' + entry.color + ';display:flex;flex-direction:column;gap:0.35rem;">';
+
+      // Header
+      html += '<div style="display:flex;align-items:center;justify-content:space-between;">';
+      html += '<strong style="color:var(--sb-on-surface);font-size:0.73rem;">' + (stateIcon[entry.state] || '●') + ' ' + escapeHtml(entry.bundleId) + '</strong>';
+      html += '<code style="color:' + entry.color + ';background:' + entry.bg + ';padding:0.1rem 0.4rem;text-transform:uppercase;font-size:0.63rem;">' + escapeHtml(entry.state) + '</code>';
+      html += '</div>';
+
+      // Context
+      html += '<div style="display:flex;flex-direction:column;gap:0.1rem;">';
+      html += '<div><span style="color:var(--sb-text-muted);font-weight:600;font-size:0.63rem;">Specialist:</span> <span style="font-family:monospace;font-size:0.68rem;color:#c084fc;">' + escapeHtml(entry.specialist) + '</span></div>';
+      html += '<div><span style="color:var(--sb-text-muted);font-weight:600;font-size:0.63rem;">Convention Target:</span> <span style="font-family:monospace;font-size:0.68rem;color:#38bdf8;">' + escapeHtml(entry.conventionTarget) + '</span></div>';
+      html += '</div>';
+
+      // Object description
+      html += '<div style="background:#0f172a;border-radius:0.2rem;padding:0.3rem 0.4rem;font-size:0.65rem;color:#cbd5e1;line-height:1.4;">';
+      html += '<code>' + escapeHtml(entry.objectDesc) + '</code>';
+      html += '</div>';
+
+      // ALCOA+ hash
+      var alcoa = btoa(entry.state + entry.bundleId + entry.conventionTarget).substring(0, 16);
+      html += '<div><span style="color:var(--sb-text-muted);font-weight:600;font-size:0.63rem;">Entry Hash:</span> <code style="font-size:0.6rem;color:#64748b;">' + alcoa + '</code></div>';
+
+      html += '</div>';
+    });
+
+    html += '<div style="margin-top:0.1rem;font-size:0.63rem;color:#64748b;">';
+    html += '<strong style="color:var(--sb-text-muted);">Audit Constraints:</strong> ';
+    html += 'Viewer Role: <code>' + escapeHtml(viewerRole) + '</code><br/>';
+    html += 'Selected Worker: <code>' + escapeHtml(selectedWorker) + '</code><br/>';
+    html += 'Selected Run: <code>' + escapeHtml(selectedRun) + '</code><br/>';
+    html += 'Memory Basis: <code>visible specialist output -> memory admission -> department convention entry</code><br/>';
+    html += 'Entry values are <em>role-derived mocks</em> until runtime registry binding is wired. ';
+    html += 'Resolution Bound: <code>SI21 — The Solace Intelligence System</code>.';
     html += '</div>';
 
     html += '</div>';
