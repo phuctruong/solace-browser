@@ -1,0 +1,11 @@
+{
+  "name": "solace-design",
+  "steps": [
+    "receive_assignment",
+    "load_project_map",
+    "produce_design_specs",
+    "write_draft",
+    "submit_review",
+    "emit_artifacts"
+  ]
+}

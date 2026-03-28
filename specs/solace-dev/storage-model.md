@@ -35,7 +35,19 @@ Durable operational memory encompassing requests, assignments, project scope bou
 - **Compatibility Input**: `data/apps/solace-dev-manager/manifest.yaml`
 - **Tables Used**: `projects`, `requests`, `assignments`, `artifacts`, `approvals`, `releases`.
 
-## 4. Screenshots and Evidence
+## 4. Design Role Artifacts
+
+Design-specific state produced by the `solace-design` worker app.
+
+- **Design Source Diagrams**: `solace-browser/specs/solace-dev/diagrams/browser-*.prime-mermaid.md` and `design-handoff-flow.prime-mermaid.md`
+- **Design Worker App State**: `solace-browser/data/apps/solace-design/` (manifest, inbox/outbox, diagrams, recipe)
+- **Design Handoff Records**: Durable backoffice objects in `design_handoffs` table under `solace-dev-manager` — REST endpoint: `/api/v1/backoffice/solace-dev-manager/design_handoffs`
+- **Design Specs**: Durable backoffice objects in `design_specs` table under `solace-design` — REST endpoint: `/api/v1/backoffice/solace-design/design_specs`
+- **Design Reviews**: Durable backoffice objects in `design_reviews` table under `solace-design` — REST endpoint: `/api/v1/backoffice/solace-design/design_reviews`
+- **Handoff Contract**: `solace-browser/specs/solace-dev/manager-to-design-handoff.md`
+- **Managed By**: Manager (handoff creation), Design (spec production), Source Control (Git for diagrams).
+
+## 5. Screenshots and Evidence
 Records produced across the flow documenting proof of functionality, validation, or issues.
 
 - **Storage Location (Screenshots)**: Local `/tmp/` during processing, but ultimately transformed/embedded directly into `~/.solace/runtime/evidence.jsonl`.

@@ -1,0 +1,5 @@
+{
+  "review_mode": "manager-first",
+  "max_active_specs": 4,
+  "requires_scope_lock": true
+}

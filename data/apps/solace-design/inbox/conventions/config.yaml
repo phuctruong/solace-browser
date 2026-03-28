@@ -1,0 +1,5 @@
+mode: design-worker
+project: solace-browser
+upstream_role: solace-dev-manager
+downstream_roles:
+  - solace-coder
