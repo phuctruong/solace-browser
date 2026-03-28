@@ -471,6 +471,7 @@
     updateSpecialistExecutionActivity(appId, runId);
     updateSpecialistExecutionEvidence(appId, runId);
     updateSpecialistArtifactBundle(appId, runId);
+    updateSpecialistArtifactProvenance(appId, runId);
     updateDepartmentMemoryQueue(appId, runId);
     updateWorkerDriftState(appId, runId);
     updateWorkerRoutingState(appId, runId);
@@ -2301,6 +2302,134 @@
     html += 'Artifact Basis: <code>visible specialist artifact-bundle and run-output state for current evidence context</code><br/>';
     html += 'Bundle values are <em>role-derived mocks</em> until run output path is wired.<br/>';
     html += 'Resolution Bound: <code>SI21 — The Solace Intelligence System</code>.';
+    html += '</div>';
+
+    html += '</div>';
+    panel.innerHTML = html;
+  }
+
+  // ── SAV38: Specialist Artifact Provenance ──
+
+  function updateSpecialistArtifactProvenance(appId, runId) {
+    var panel = document.getElementById('dev-specialist-artifact-provenance-state');
+    if (!panel) return;
+
+    var role = DEV_ROLES.find(function(r) { return r.id === appId; });
+    var roleName = role ? role.key : 'unknown';
+
+    // Provenance entries derived from SAB37 bundle (role-mocked; shown honestly)
+    var provenanceEntries = [];
+
+    if (roleName === 'coder') {
+      provenanceEntries = [{
+        integrity: 'Partial',
+        bundleId: 'coder-run-20260328-001',
+        specialist: 'solace-prime-mermaid-coder-v1.2.0',
+        sourcePacket: 'inbox/coder/packet.json',
+        origin: 'manager-directive → SAD31 → SAH32 → inbox/coder',
+        checks: [
+          { file: 'coder-pass1.json',  result: 'hash-match',   detail: 'sha256:4f3a9c… ✓' },
+          { file: 'ast-matrix.bin',    result: 'hash-match',   detail: 'sha256:8b12de… ✓' },
+          { file: 'final-output.json', result: 'missing',      detail: 'File not yet produced' }
+        ],
+        color: '#f59e0b',
+        bg: 'rgba(245,158,11,0.1)'
+      }];
+    } else if (roleName === 'design') {
+      provenanceEntries = [{
+        integrity: 'Invalid',
+        bundleId: 'design-run-20260328-002',
+        specialist: 'solace-ui-renderer-v1',
+        sourcePacket: 'inbox/design/command_lock.json',
+        origin: 'manager-directive → SAD31 → SAH32 → inbox/design',
+        checks: [
+          { file: 'layout-draft.svg',  result: 'hash-mismatch', detail: 'Expected sha256:cc01… got aa99…' },
+          { file: 'tokens.json',       result: 'missing',        detail: 'File not produced — stall in SAE36' }
+        ],
+        color: '#ef4444',
+        bg: 'rgba(239,68,68,0.1)'
+      }];
+    } else if (roleName === 'qa') {
+      provenanceEntries = [{
+        integrity: 'Verified',
+        bundleId: 'qa-run-20260328-003',
+        specialist: 'solace-qa-agent-v2',
+        sourcePacket: 'inbox/qa/test-suite.json',
+        origin: 'manager-directive → SAD31 → SAH32 → inbox/qa',
+        checks: [
+          { file: 'test-report.json',  result: 'hash-match', detail: 'sha256:7e2f01… ✓' },
+          { file: 'coverage.xml',      result: 'hash-match', detail: 'sha256:3d90bc… ✓' },
+          { file: 'failure-trace.txt', result: 'hash-match', detail: 'sha256:1a55ef… ✓' }
+        ],
+        color: '#10b981',
+        bg: 'rgba(16,185,129,0.1)'
+      }];
+    } else {
+      provenanceEntries = [{
+        integrity: 'Invalid',
+        bundleId: 'unknown-bundle',
+        specialist: 'Unbound',
+        sourcePacket: 'N/A',
+        origin: 'No lane bound',
+        checks: [],
+        color: '#64748b',
+        bg: 'rgba(100,116,139,0.1)'
+      }];
+    }
+
+    var resultIcon = { 'hash-match': '✅', 'hash-mismatch': '❌', 'missing': '⏳' };
+    var resultColor = { 'hash-match': '#10b981', 'hash-mismatch': '#ef4444', 'missing': '#f59e0b' };
+
+    var html = '<div style="display:flex;flex-direction:column;gap:0.5rem;font-size:0.75rem;color:var(--sb-on-surface);">';
+
+    provenanceEntries.forEach(function(entry) {
+      html += '<div style="background:var(--sb-surface-alt,#1e293b);padding:0.45rem 0.55rem;border-radius:0.3rem;border-left:2px solid ' + entry.color + ';display:flex;flex-direction:column;gap:0.35rem;">';
+
+      // Header
+      html += '<div style="display:flex;align-items:center;justify-content:space-between;">';
+      html += '<strong style="color:var(--sb-on-surface);font-size:0.73rem;">🔎 ' + escapeHtml(entry.bundleId) + '</strong>';
+      html += '<code style="color:' + entry.color + ';background:' + entry.bg + ';padding:0.1rem 0.4rem;text-transform:uppercase;font-size:0.63rem;">' + escapeHtml(entry.integrity) + '</code>';
+      html += '</div>';
+
+      // Context
+      html += '<div style="display:flex;flex-direction:column;gap:0.1rem;">';
+      html += '<div><span style="color:var(--sb-text-muted);font-weight:600;font-size:0.63rem;">Specialist:</span> <span style="font-family:monospace;font-size:0.68rem;color:#c084fc;">' + escapeHtml(entry.specialist) + '</span></div>';
+      html += '<div><span style="color:var(--sb-text-muted);font-weight:600;font-size:0.63rem;">Provenance Chain:</span> <span style="font-size:0.63rem;color:#94a3b8;">' + escapeHtml(entry.origin) + '</span></div>';
+      html += '</div>';
+
+      // Integrity check table
+      if (entry.checks.length > 0) {
+        html += '<div style="background:#0f172a;border-radius:0.2rem;padding:0.3rem 0.4rem;display:flex;flex-direction:column;gap:0.12rem;">';
+        entry.checks.forEach(function(c) {
+          var ic = resultIcon[c.result] || '?';
+          var cc = resultColor[c.result] || '#94a3b8';
+          html += '<div style="display:flex;align-items:flex-start;gap:0.35rem;">';
+          html += '<span style="font-size:0.63rem;">' + ic + '</span>';
+          html += '<div style="display:flex;flex-direction:column;gap:0.05rem;">';
+          html += '<code style="font-size:0.63rem;color:#94a3b8;">' + escapeHtml(c.file) + '</code>';
+          html += '<span style="font-size:0.6rem;color:' + cc + ';">' + escapeHtml(c.detail) + '</span>';
+          html += '</div></div>';
+        });
+        html += '</div>';
+      } else {
+        html += '<div style="font-size:0.63rem;color:#475569;"><em>No integrity checks available.</em></div>';
+      }
+
+      // ALCOA+ hash
+      var alcoa = btoa(entry.integrity + entry.bundleId + entry.origin).substring(0, 16);
+      html += '<div><span style="color:var(--sb-text-muted);font-weight:600;font-size:0.63rem;">Provenance Hash:</span> <code style="font-size:0.6rem;color:#64748b;">' + alcoa + '</code></div>';
+
+      html += '</div>';
+    });
+
+    html += '<div style="margin-top:0.1rem;font-size:0.63rem;color:#64748b;">';
+    html += '<strong style="color:var(--sb-text-muted);">Audit Constraints:</strong><br/>';
+    html += 'Viewer Role: <code>solace-dev-manager</code><br/>';
+    html += 'Selected Worker: <code>' + escapeHtml(appId || 'unknown') + '</code><br/>';
+    html += 'Selected Run: <code>' + escapeHtml(runId || 'latest') + '</code><br/>';
+    html += 'Provenance Basis: <code>visible specialist artifact provenance and integrity state for current bundle context</code><br/>';
+    html += 'Provenance values are <em>role-derived mocks</em> until runtime hash path is wired.<br/>';
+    html += 'Resolution Bound: <code>SI18 — Transparency as a Product Feature</code>.';
     html += '</div>';
 
     html += '</div>';
