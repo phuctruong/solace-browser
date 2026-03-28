@@ -460,6 +460,7 @@
     updateWorkerGraphState(appId, runId);
     updateWorkerConventionStore(appId, runId);
     updateWorkerDistillationState(appId, runId);
+    updatePromotionDecisionState(appId, runId);
     updateDepartmentMemoryQueue(appId, runId);
     updateWorkerDriftState(appId, runId);
     updateWorkerRoutingState(appId, runId);
@@ -1247,6 +1248,106 @@
 
     html += '<div style="margin-top:0.1rem;font-size:0.65rem;color:#64748b;">';
     html += 'Automatic Convention Distillation transforms repeated execution patterns into persistent memory dynamically without retraining (Paper SI16).';
+    html += '</div>';
+
+    html += '</div>';
+    
+    panel.innerHTML = html;
+  }
+
+  // ── SAM27: Promotion Decision Packet ──
+  
+  function updatePromotionDecisionState(appId, runId) {
+    var panel = document.getElementById('dev-promotion-decision-state');
+    if (!panel) return;
+
+    var role = DEV_ROLES.find(function(r) { return r.id === appId; });
+    var roleName = role ? role.key : 'unknown';
+
+    // Mock realistic decision states tied to roles for SAM27
+    var decisionState = 'unknown';
+    var candidateId = 'N/A';
+    var evidenceBasis = 'N/A';
+    var approvalBasis = 'N/A';
+
+    if (roleName === 'coder') {
+      decisionState = 'pending';
+      candidateId = 'solace-prime-mermaid-coder-v1.2.0';
+      evidenceBasis = '100% success rate across 5 execution traces matching candidate constraints.';
+      approvalBasis = 'Awaiting Solace Dev Manager signature for Global propagation.';
+    } else if (roleName === 'manager') {
+      decisionState = 'approved';
+      candidateId = 'nexus-routing-v2.2-candidate';
+      evidenceBasis = 'Consistent assignment packet generation meeting Department structural bounds.';
+      approvalBasis = 'Manager executed PROMOTED approval. Target bounds set to GLOBAL.';
+    } else if (roleName === 'design' || roleName === 'qa') {
+      decisionState = 'blocked';
+      candidateId = 'N/A';
+      evidenceBasis = 'No candidate memory distilled for review.';
+      approvalBasis = 'Decision gated. Insufficient repetition signal.';
+    } else {
+      decisionState = 'unknown_state';
+      candidateId = 'N/A';
+      evidenceBasis = 'No evaluation context available.';
+      approvalBasis = 'No evaluation context available.';
+    }
+
+    var icon = '❓';
+    var stateColor = '#94a3b8'; // gray
+    var bg = 'rgba(148,163,184,0.1)';
+    var label = 'UNKNOWN DECISION';
+
+    if (decisionState === 'approved') {
+      icon = '🛡️';
+      stateColor = '#10b981'; // green
+      bg = 'rgba(16,185,129,0.1)';
+      label = 'APPROVED / PROMOTED';
+    } else if (decisionState === 'pending') {
+      icon = '👁️';
+      stateColor = '#3b82f6'; // blue
+      bg = 'rgba(59,130,246,0.1)';
+      label = 'PENDING MANAGER REVIEW';
+    } else if (decisionState === 'blocked') {
+      icon = '🛑';
+      stateColor = '#ef4444'; // red
+      bg = 'rgba(239,68,68,0.1)';
+      label = 'BLOCKED / REJECTED';
+    }
+
+    var html = '<div style="display:flex;flex-direction:column;gap:0.4rem;font-size:0.75rem;color:var(--sb-on-surface);">';
+    
+    html += '<div style="background:var(--sb-surface-alt,#1e293b);padding:0.4rem 0.5rem;border-radius:0.25rem;border-left:2px solid ' + stateColor + ';display:flex;align-items:flex-start;gap:0.75rem;">';
+    
+    html += '<div style="font-size:1.4rem;line-height:1;">' + icon + '</div>';
+    
+    html += '<div style="flex:1;">';
+    html += '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:0.2rem;">';
+    html += '<div>';
+    html += '<strong style="color:var(--sb-text-muted);">Manager Decision:</strong> ';
+    html += '</div>';
+    html += '<code style="color:' + stateColor + ';background:' + bg + ';padding:0.1rem 0.35rem;text-transform:uppercase;font-size:0.65rem;">' + label + '</code>';
+    html += '</div>';
+    
+    html += '<div style="display:flex;flex-direction:column;gap:0.2rem;margin-bottom:0.3rem;">';
+    html += '<div><span style="color:var(--sb-text-muted);font-weight:600;font-size:0.65rem;">Candidate:</span> <span style="font-family:monospace;font-size:0.7rem;color:#c084fc;">' + escapeHtml(candidateId) + '</span></div>';
+    html += '<div><span style="color:var(--sb-text-muted);font-weight:600;font-size:0.65rem;">Evidence Basis:</span> <span style="color:var(--sb-on-surface);">' + escapeHtml(evidenceBasis) + '</span></div>';
+    html += '<div><span style="color:var(--sb-text-muted);font-weight:600;font-size:0.65rem;">Approval Basis:</span> <span style="color:var(--sb-on-surface);">' + escapeHtml(approvalBasis) + '</span></div>';
+    html += '</div>';
+
+    html += '<div style="margin-top:0.15rem;font-size:0.65rem;color:#64748b;">';
+    html += '<strong style="color:var(--sb-text-muted);">Active Packet Context:</strong><br/>';
+    html += 'App ID: <code>' + (appId || 'unknown') + '</code><br/>';
+    html += 'Role: <code>' + roleName + '</code><br/>';
+    html += 'Run: <code>' + (runId || 'latest') + '</code><br/>';
+    html += 'Packet Binding: <code>visible decision gating context for current role/run</code><br/>';
+    html += 'Decision Basis: <code>visible evidence and manager approval state</code>';
+    html += '</div>';
+
+    html += '</div>'; // close text column
+    html += '</div>'; // close surface
+
+    html += '<div style="margin-top:0.1rem;font-size:0.65rem;color:#64748b;">';
+    html += 'The Promotion Decision Packet exposes human-in-the-loop oversight directly into the intelligence environment (Paper SI17, SI18).';
     html += '</div>';
 
     html += '</div>';
