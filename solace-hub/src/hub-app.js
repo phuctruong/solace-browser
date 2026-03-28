@@ -464,6 +464,7 @@
     updatePromotionAuditTrail(appId, runId);
     updateGovernanceSummary(appId, runId);
     updateManagerActionQueue(appId, runId);
+    updateManagerDirectivePacket(appId, runId);
     updateDepartmentMemoryQueue(appId, runId);
     updateWorkerDriftState(appId, runId);
     updateWorkerRoutingState(appId, runId);
@@ -1610,6 +1611,102 @@
 
     html += '<div style="margin-top:0.1rem;font-size:0.65rem;color:#64748b;">';
     html += 'The Action Queue exposes the next explicit judgments required from the Manager, preventing hidden structural drift (Phuc Forecast).';
+    html += '</div>';
+
+    html += '</div>';
+    
+    panel.innerHTML = html;
+  }
+
+  // ── SAD31: Manager Directive Packet ──
+
+  function updateManagerDirectivePacket(appId, runId) {
+    var panel = document.getElementById('dev-manager-directive-packet-state');
+    if (!panel) return;
+
+    var role = DEV_ROLES.find(function(r) { return r.id === appId; });
+    var roleName = role ? role.key : 'unknown';
+
+    // Mock explicit directive derived from the Manager Action Queue bounds for SAD31
+    var directive = {
+      state: 'unknown',
+      action: 'N/A',
+      target: 'N/A',
+      evidence: 'N/A',
+      delegation: 'N/A',
+      color: '#94a3b8',
+      bg: 'rgba(148,163,184,0.1)'
+    };
+
+    if (roleName === 'manager') {
+      directive = {
+        state: 'Immediate',
+        action: 'EXECUTE PROMOTION',
+        target: 'solace-prime-mermaid-coder-v1.2.0 (Coder Lane)',
+        evidence: 'Distillation array returned 100% success rate matching architectural constraints (SAX25).',
+        delegation: 'Sign cryptographic target binding. Re-allocate Coder Lane to Next Target Suite (SAA30).',
+        color: '#ef4444',
+        bg: 'rgba(239,68,68,0.1)'
+      };
+    } else if (roleName === 'coder') {
+      directive = {
+        state: 'Pending',
+        action: 'HALT EXECUTION',
+        target: 'Pending Node (solace-ui-renderer-v1)',
+        evidence: 'Lane producing 40% of blocked decisions. High latency detected.',
+        delegation: 'Awaiting Manager routing directive to inject isolation branch into Dev queue.',
+        color: '#f59e0b',
+        bg: 'rgba(245,158,11,0.1)'
+      };
+    } else if (roleName === 'design' || roleName === 'qa') {
+      directive = {
+        state: 'Blocked',
+        action: 'DEFER',
+        target: 'Department Level Analytics',
+        evidence: 'Dependent sequences unresolved. Insufficient repetition for governance isolation.',
+        delegation: 'No manual intervention required. Continue pipeline monitoring.',
+        color: '#94a3b8',
+        bg: 'rgba(148,163,184,0.1)'
+      };
+    }
+
+    var html = '<div style="display:flex;flex-direction:column;gap:0.4rem;font-size:0.75rem;color:var(--sb-on-surface);">';
+    
+    html += '<div style="background:var(--sb-surface-alt,#1e293b);padding:0.4rem 0.5rem;border-radius:0.25rem;border-left:2px solid ' + directive.color + ';display:flex;flex-direction:column;gap:0.3rem;">';
+    
+    html += '<div style="display:flex;align-items:center;justify-content:space-between;">';
+    html += '<strong style="color:var(--sb-on-surface);font-size:0.8rem;">[' + escapeHtml(directive.action) + ']</strong>';
+    html += '<code style="color:' + directive.color + ';background:' + directive.bg + ';padding:0.1rem 0.35rem;text-transform:uppercase;font-size:0.65rem;">' + escapeHtml(directive.state) + '</code>';
+    html += '</div>';
+
+    html += '<div style="display:flex;flex-direction:column;gap:0.15rem;margin-top:0.2rem;">';
+    html += '<div><span style="color:var(--sb-text-muted);font-weight:600;font-size:0.65rem;">Delegation Target:</span> <span style="font-family:monospace;font-size:0.7rem;color:#c084fc;">' + escapeHtml(directive.target) + '</span></div>';
+    html += '<div><span style="color:var(--sb-text-muted);font-weight:600;font-size:0.65rem;">Trigger Evidence:</span> <span style="color:var(--sb-on-surface);">' + escapeHtml(directive.evidence) + '</span></div>';
+    
+    html += '<div style="margin-top:0.2rem;padding-top:0.2rem;border-top:1px dashed rgba(255,255,255,0.1);">';
+    html += '<span style="color:var(--sb-text-muted);font-weight:600;font-size:0.65rem;">Next Explicit Delegation Step:</span> <br/>';
+    html += '<span style="color:#10b981;font-weight:500;">' + escapeHtml(directive.delegation) + '</span>';
+    html += '</div>';
+
+    // Phuc Forecast bounds (crypto stamping)
+    var dummyHash = btoa(directive.target + directive.action + directive.state).substring(0, 16);
+    html += '<div style="margin-top:0.2rem;"><span style="color:var(--sb-text-muted);font-weight:600;font-size:0.65rem;">Directive Stamp:</span> <code style="font-size:0.6rem;color:#94a3b8;">' + dummyHash + '</code></div>';
+
+    html += '</div>';
+    html += '</div>';
+
+    html += '<div style="margin-top:0.15rem;font-size:0.65rem;color:#64748b;">';
+    html += '<strong style="color:var(--sb-text-muted);">Active Directive Constraints:</strong><br/>';
+    html += 'Viewer Role: <code>solace-dev-manager</code><br/>';
+    html += 'Selected Worker: <code>' + escapeHtml(appId || 'unknown') + '</code><br/>';
+    html += 'Selected Run: <code>' + escapeHtml(runId || 'latest') + '</code><br/>';
+    html += 'Action Source: <code>Manager Action Queue extraction</code><br/>';
+    html += 'Resolution Bound: <code>Requires immediate delegation or approval trace (SI17)</code><br/>';
+    html += 'Directive Basis: <code>visible bounded delegation packet for current governance context</code>';
+    html += '</div>';
+
+    html += '<div style="margin-top:0.1rem;font-size:0.65rem;color:#64748b;">';
+    html += 'The Directive Packet formalizes exactly what action a manager must take and how execution returns to the specialist queue.';
     html += '</div>';
 
     html += '</div>';
