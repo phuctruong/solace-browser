@@ -1,20 +1,20 @@
 # TODO
 
 Repo: `solace-browser`
-Role: Solace Hub + Browser workspace for native post-release return-to-service verification visibility
+Role: Solace Hub + Browser workspace for native post-release sustained-service verification visibility
 
 ## Current Round
 
-`SAC57` native post-release return-to-service verification visibility.
+`SAC58` native post-release sustained-service verification visibility.
 
-The Dev workspace now shows whether quarantine cleared, recovery was authorized, or re-entry stayed blocked. The next step is to make restored service trustworthy: one visible surface showing whether authorized recovery actually returned the system to service, remained provisional, or failed re-entry verification.
+The Dev workspace now shows whether authorized recovery actually returned the system to service, remained provisional, or failed re-entry verification. The next step is to make restored service trustworthy over time: one visible surface showing whether returned service stayed stable, entered regression watch, or relapsed after re-entry.
 
 ## Worker Inbox
 
-- `northstar`: `Solace Browser is the visible operating environment for the Solace Dev department, where the Dev Manager can see trustworthy convention lineages move from proof to trust to signoff to rollout, then see the incident path, remediation path, closure path, escalation path, control path, recovery path, and whether restored systems honestly returned to service or failed re-entry verification`
+- `northstar`: `Solace Browser is the visible operating environment for the Solace Dev department, where the Dev Manager can see trustworthy convention lineages move from proof to trust to signoff to rollout, then see the incident path, remediation path, closure path, escalation path, control path, recovery path, return-to-service path, and whether restored systems honestly stayed stable or relapsed after re-entry`
 - `worker_mode`: `external_coding_agent`
 - `worker_role`: `coder`
-- `task_statement`: `Add a native post-release return-to-service verification panel to the Dev workspace while preserving the current role stack, worker detail, diagram access, inbox/outbox visibility, assignment packet, execution mode/convention visibility, human gate visibility, proof visibility, execution graph visibility, convention-store visibility, drift/adaptive replay visibility, hybrid routing visibility, efficiency visibility, per-worker distillation visibility, department memory queue visibility, promotion decision packet visibility, promotion audit trail visibility, governance summary visibility, manager action queue visibility, manager directive packet visibility, delegation handoff visibility, specialist acceptance visibility, specialist readiness visibility, specialist execution visibility, specialist evidence visibility, specialist artifact visibility, specialist provenance visibility, specialist promotion visibility, specialist memory-admission visibility, department-memory entry visibility, department-memory reuse visibility, convention invocation visibility, convention delivery visibility, convention activation visibility, convention effect visibility, convention proof visibility, convention trust visibility, convention release visibility, convention rollout visibility, post-release health visibility, post-release incident visibility, post-release closure visibility, post-release escalation visibility, post-release quarantine visibility, post-release recovery visibility, run history, inspection context, and artifact inspection behavior.`
+- `task_statement`: `Add a native post-release sustained-service verification panel to the Dev workspace while preserving the current role stack, worker detail, diagram access, inbox/outbox visibility, assignment packet, execution mode/convention visibility, human gate visibility, proof visibility, execution graph visibility, convention-store visibility, drift/adaptive replay visibility, hybrid routing visibility, efficiency visibility, per-worker distillation visibility, department memory queue visibility, promotion decision packet visibility, promotion audit trail visibility, governance summary visibility, manager action queue visibility, manager directive packet visibility, delegation handoff visibility, specialist acceptance visibility, specialist readiness visibility, specialist execution visibility, specialist evidence visibility, specialist artifact visibility, specialist provenance visibility, specialist promotion visibility, specialist memory-admission visibility, department-memory entry visibility, department-memory reuse visibility, convention invocation visibility, convention delivery visibility, convention activation visibility, convention effect visibility, convention proof visibility, convention trust visibility, convention release visibility, convention rollout visibility, post-release health visibility, post-release incident visibility, post-release closure visibility, post-release escalation visibility, post-release quarantine visibility, post-release recovery visibility, post-release return visibility, run history, inspection context, and artifact inspection behavior.`
 - `scope_change_policy`: `FAIL_AND_NEW_TASK`
 
 ## Read This First
@@ -37,62 +37,62 @@ Before coding, read and align to:
 ## Rules
 
 - build on the current integrated Dev workspace and preserve all existing role, routing, drift, convention, proof, graph, efficiency, artifact, inspection, promotion, admission, memory-entry, memory-reuse, convention-invocation, convention-delivery, convention-activation, convention-effect, convention-proof, convention-trust, convention-release, convention-rollout, post-release health, and post-release incident surfaces
-- the workspace must show one direct post-release return-to-service verification panel tied to a visible recovery or re-entry state
-- the surface must show at least one returned-to-service state, one provisional-service state, and one re-entry-failed state
-- the surface must tie service verification back to visible recovery, quarantine, escalation, and operational basis honestly
-- if return-to-service values are mocked or role-derived rather than runtime-native, show that honestly
-- the panel must fit the Solace company model: cleared recovery must eventually produce an explicit service-verification decision, not stop at permission language
+- the workspace must show one direct post-release sustained-service verification panel tied to a visible return-to-service or provisional-service state
+- the surface must show at least one stable-service state, one regression-watch state, and one relapse-detected state
+- the surface must tie sustained-service verification back to visible return-to-service, recovery, and operational basis honestly
+- if sustained-service values are mocked or role-derived rather than runtime-native, show that honestly
+- the panel must fit the Solace company model: restored service must eventually produce an explicit stability decision, not stop at re-entry authorization
 - keep the surface compatible with the current Prime Mermaid-first source model
 - do not expand into cloud sync, billing, `solaceagi`, or unrelated browser platform work
 
 ## Hard Rejection Criteria
 
-- the manager still cannot see whether authorized recovery actually returned the system to service
-- a reviewer still cannot tell whether the current service state is returned-to-service, provisional-service, or re-entry-failed
-- return-to-service state is presented as fake certainty instead of visible grounded context
-- the round only adds labels without making post-release service restoration materially governable
+- the manager still cannot see whether restored service stayed stable after re-entry
+- a reviewer still cannot tell whether the current sustained-service state is stable-service, regression-watch, or relapse-detected
+- sustained-service state is presented as fake certainty instead of visible grounded context
+- the round only adds labels without making post-release service stability materially governable
 
 ## Required Deliverables
 
-1. one visible post-release return-to-service verification panel in the Dev workspace
-2. one visible tie between service state and recovery / quarantine / escalation context
-3. one honest returned-to-service / provisional-service / re-entry-failed summary
-4. one honest service-verification basis summary
-5. one Prime Mermaid source artifact for post-release return-to-service verification visibility
+1. one visible post-release sustained-service verification panel in the Dev workspace
+2. one visible tie between stability state and return-to-service / recovery context
+3. one honest stable-service / regression-watch / relapse-detected summary
+4. one honest sustained-service basis summary
+5. one Prime Mermaid source artifact for post-release sustained-service verification visibility
 6. one narrow smoke path
 7. one narrow automated test or scripted verification
 
 ## Current Tickets
 
-### Ticket 1: Add a visible return-to-service surface
-Objective: make post-recovery outcomes governable.
-Scope: show one visible surface of service verification state attached to an authorized or staged recovery lineage directly in the workspace.
-Done when: a reviewer can tell whether the system truly returned to service without leaving the workspace.
+### Ticket 1: Add a visible sustained-service surface
+Objective: make post-reentry outcomes governable.
+Scope: show one visible surface of stability verification state attached to a returned or provisional service lineage directly in the workspace.
+Done when: a reviewer can tell whether the system truly stayed healthy after return without leaving the workspace.
 Evidence required: screenshots, routes exercised, and one short walkthrough.
 
-### Ticket 2: Tie service state to recovery and control context
-Objective: stop treating restored service as detached theory.
-Scope: each service entry should reveal which recovery lineage, which control path, and what operational basis is involved.
-Done when: a reviewer can tell what each service verdict refers to and why.
+### Ticket 2: Tie stability state to return and recovery context
+Objective: stop treating sustained service as detached theory.
+Scope: each stability entry should reveal which return lineage, which recovery path, and what operational basis is involved.
+Done when: a reviewer can tell what each stability verdict refers to and why.
 Evidence required: screenshots, routes exercised, and one short walkthrough.
 
-### Ticket 3: Represent honest return-to-service states
-Objective: make post-release service restoration operationally truthful.
-Scope: support at least one returned-to-service state, one provisional-service state, and one re-entry-failed state with visible reasoning.
-Done when: the workspace does not imply fake service certainty.
+### Ticket 3: Represent honest sustained-service states
+Objective: make post-release service stability operationally truthful.
+Scope: support at least one stable-service state, one regression-watch state, and one relapse-detected state with visible reasoning.
+Done when: the workspace does not imply fake stability certainty.
 Evidence required: screenshots, routes exercised, and one short walkthrough.
 
-### Ticket 4: Add one post-release return-to-service Prime Mermaid artifact
-Objective: capture the move from recovery authorization to actual service restoration.
-Scope: add one Prime Mermaid artifact for post-release return-to-service verification visibility.
-Done when: the service-verification surface is represented as committed source truth.
+### Ticket 4: Add one post-release sustained-service Prime Mermaid artifact
+Objective: capture the move from return-to-service to measured stability.
+Scope: add one Prime Mermaid artifact for post-release sustained-service verification visibility.
+Done when: the stability surface is represented as committed source truth.
 Evidence required: artifact path and one short note on what it governs.
 
 ### Ticket 5: Add one narrow smoke path and one narrow test
-Objective: make post-release return-to-service visibility reviewable and repeatable.
+Objective: make post-release sustained-service visibility reviewable and repeatable.
 Scope:
-- one documented local smoke path from workspace load to memory-entry inspection to callable-convention inspection to invocation inspection to delivery inspection to activation inspection to constrained-output inspection to proof inspection to trust-decision inspection to release-action inspection to rollout inspection to post-release inspection to remediation inspection to remediation-verification inspection to escalation inspection to control inspection to recovery inspection to service-verification inspection
-- one automated test or lightweight scripted verification for the return-to-service verification surface
+- one documented local smoke path from workspace load to memory-entry inspection to callable-convention inspection to invocation inspection to delivery inspection to activation inspection to constrained-output inspection to proof inspection to trust-decision inspection to release-action inspection to rollout inspection to post-release inspection to remediation inspection to remediation-verification inspection to escalation inspection to control inspection to recovery inspection to service-verification inspection to stability inspection
+- one automated test or lightweight scripted verification for the sustained-service verification surface
 Done when: a reviewer can run the commands without guessing hidden steps.
 Evidence required: exact commands, exact output, screenshot paths, and remaining risks.
 
@@ -120,4 +120,4 @@ Evidence required: exact commands, exact output, screenshot paths, and remaining
 - adding new specialist roles beyond manager, design, coder, and QA
 - broad cloud sync, billing, `solaceagi` work
 - unrelated Chromium platform changes
-- rewriting the role stack instead of making post-release service restoration governable
+- rewriting the role stack instead of making post-release service stability governable

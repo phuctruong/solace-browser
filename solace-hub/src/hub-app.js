@@ -490,6 +490,7 @@
     updateSpecialistPostReleaseEscalation(appId, runId);
     updateSpecialistPostReleaseQuarantine(appId, runId);
     updateSpecialistPostReleaseRecovery(appId, runId);
+    updateSpecialistPostReleaseReturn(appId, runId);
     updateDepartmentMemoryQueue(appId, runId);
     updateWorkerDriftState(appId, runId);
     updateWorkerRoutingState(appId, runId);
@@ -4244,6 +4245,104 @@
     html += 'Selected Run: <code>' + escapeHtml(selectedRun) + '</code><br/>';
     html += 'Recovery Basis: <code>post-release quarantine -> recovery path -> recovery-authorized, re-entry-blocked, or staged-recovery state</code><br/>';
     html += 'Recovery states are <em>role-derived mocks</em> simulating accounted unfreezing loops. ';
+    html += 'Resolution Bound: <code>SI21 — The Solace Intelligence System</code>.';
+    html += '</div>';
+
+    html += '</div>';
+    panel.innerHTML = html;
+  }
+
+  // ── SAQ57: Specialist Post-Release Return-to-Service Verification ──
+
+  function updateSpecialistPostReleaseReturn(appId, runId) {
+    var panel = document.getElementById('dev-specialist-post-release-return-state');
+    if (!panel) return;
+
+    var viewerRole = 'solace-dev-manager';
+    var selectedWorker = appId || 'unknown';
+    var selectedRun = runId || 'latest';
+    var role = DEV_ROLES.find(function(r) { return r.id === appId; });
+    var roleName = role ? role.key : 'unknown';
+
+    // Return-to-service records derived from SAP56 Recovery Authorization (role-mocked; shown honestly)
+    var returnEntries = [];
+
+    if (roleName === 'qa') {
+      returnEntries = [{
+        state: 'Service Restored',
+        recoveryLineage: 'Authorization Gate [Authorized]',
+        serviceBasis: 'Full constraint limits held securely in wild production for 24h.',
+        serviceVerdict: 'Physical re-entry verified. Application service returned to nominal baseline stability with anomaly purged.',
+        color: '#10b981',
+        bg: 'rgba(16,185,129,0.1)'
+      }];
+    } else if (roleName === 'coder') {
+      returnEntries = [{
+        state: 'Provisional Service',
+        recoveryLineage: 'Authorization Gate [Staged Recovery]',
+        serviceBasis: 'Initial re-entry limits held. Ongoing dynamic stress telemetry active.',
+        serviceVerdict: 'Application routing active but constrained. Provisional release gating still applied to limit exposure radius.',
+        color: '#f59e0b',
+        bg: 'rgba(245,158,11,0.1)'
+      }];
+    } else if (roleName === 'design') {
+      returnEntries = [{
+        state: 'Re-entry Failed',
+        recoveryLineage: 'Authorization Gate [Blocked]',
+        serviceBasis: 'Terminal component blockade triggered cascading route faults during theoretical recovery simulation.',
+        serviceVerdict: 'Restoration aborted defensively. Artifact permanently decommissioned. Escalating to deep architectural rewrite.',
+        color: '#ef4444',
+        bg: 'rgba(239,68,68,0.1)'
+      }];
+    } else {
+      returnEntries = [{
+        state: 'Re-entry Failed',
+        recoveryLineage: 'N/A',
+        serviceBasis: 'Missing recovery authorization context.',
+        serviceVerdict: 'Cannot verify service restoration for artifacts possessing no valid recovery permission.',
+        color: '#64748b',
+        bg: 'rgba(100,116,139,0.1)'
+      }];
+    }
+
+    var returnIcon = { 'Service Restored': '✅', 'Provisional Service': '⚠️', 'Re-entry Failed': '💥' };
+
+    var html = '<div style="display:flex;flex-direction:column;gap:0.5rem;font-size:0.75rem;color:var(--sb-on-surface);">';
+
+    returnEntries.forEach(function(entry) {
+      html += '<div style="background:var(--sb-surface-alt,#1e293b);padding:0.45rem 0.55rem;border-radius:0.3rem;border-left:2px solid ' + entry.color + ';display:flex;flex-direction:column;gap:0.35rem;">';
+
+      // Header
+      html += '<div style="display:flex;align-items:center;justify-content:space-between;">';
+      html += '<strong style="color:var(--sb-on-surface);font-size:0.73rem;">' + (returnIcon[entry.state] || '●') + ' Return-to-Service State</strong>';
+      html += '<code style="color:' + entry.color + ';background:' + entry.bg + ';padding:0.1rem 0.4rem;text-transform:uppercase;font-size:0.63rem;">' + escapeHtml(entry.state) + '</code>';
+      html += '</div>';
+
+      // Context
+      html += '<div style="display:flex;flex-direction:column;gap:0.1rem;">';
+      html += '<div><span style="color:var(--sb-text-muted);font-weight:600;font-size:0.63rem;">Recovery Lineage:</span> <span style="font-family:monospace;font-size:0.68rem;color:#38bdf8;">' + escapeHtml(entry.recoveryLineage) + '</span></div>';
+      html += '<div><span style="color:var(--sb-text-muted);font-weight:600;font-size:0.63rem;">Observation Basis:</span> <span style="font-family:monospace;font-size:0.68rem;color:#cbd5e1;">' + escapeHtml(entry.serviceBasis) + '</span></div>';
+      html += '</div>';
+
+      // Object description
+      html += '<div style="background:#0f172a;border-radius:0.2rem;padding:0.3rem 0.4rem;font-size:0.65rem;color:#cbd5e1;line-height:1.4;">';
+      html += '<code>' + escapeHtml(entry.serviceVerdict) + '</code>';
+      html += '</div>';
+
+      // ALCOA+ hash
+      var alcoa = btoa(entry.state + entry.recoveryLineage + entry.serviceVerdict).substring(0, 16);
+      html += '<div><span style="color:var(--sb-text-muted);font-weight:600;font-size:0.63rem;">Service Hash:</span> <code style="font-size:0.6rem;color:#64748b;">' + alcoa + '</code></div>';
+
+      html += '</div>';
+    });
+
+    html += '<div style="margin-top:0.1rem;font-size:0.63rem;color:#64748b;">';
+    html += '<strong style="color:var(--sb-text-muted);">Audit Constraints:</strong> ';
+    html += 'Viewer Role: <code>' + escapeHtml(viewerRole) + '</code><br/>';
+    html += 'Selected Worker: <code>' + escapeHtml(selectedWorker) + '</code><br/>';
+    html += 'Selected Run: <code>' + escapeHtml(selectedRun) + '</code><br/>';
+    html += 'Service Basis: <code>post-release recovery -> service verification path -> returned-to-service, provisional-service, or re-entry-failed state</code><br/>';
+    html += 'Service restoration states are <em>role-derived mocks</em> simulating accounted physical production unfreezing. ';
     html += 'Resolution Bound: <code>SI21 — The Solace Intelligence System</code>.';
     html += '</div>';
 
