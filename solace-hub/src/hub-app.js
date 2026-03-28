@@ -489,6 +489,7 @@
     updateSpecialistPostReleaseClosure(appId, runId);
     updateSpecialistPostReleaseEscalation(appId, runId);
     updateSpecialistPostReleaseQuarantine(appId, runId);
+    updateSpecialistPostReleaseRecovery(appId, runId);
     updateDepartmentMemoryQueue(appId, runId);
     updateWorkerDriftState(appId, runId);
     updateWorkerRoutingState(appId, runId);
@@ -4145,6 +4146,104 @@
     html += 'Selected Run: <code>' + escapeHtml(selectedRun) + '</code><br/>';
     html += 'Control Basis: <code>post-release escalation -> control path -> quarantined, manual-override-required, or constrained-continuation state</code><br/>';
     html += 'Control states are <em>role-derived mocks</em> simulating severe operational quarantine application bounds. ';
+    html += 'Resolution Bound: <code>SI21 — The Solace Intelligence System</code>.';
+    html += '</div>';
+
+    html += '</div>';
+    panel.innerHTML = html;
+  }
+
+  // ── SAP56: Specialist Post-Release Recovery & Re-entry ──
+
+  function updateSpecialistPostReleaseRecovery(appId, runId) {
+    var panel = document.getElementById('dev-specialist-post-release-recovery-state');
+    if (!panel) return;
+
+    var viewerRole = 'solace-dev-manager';
+    var selectedWorker = appId || 'unknown';
+    var selectedRun = runId || 'latest';
+    var role = DEV_ROLES.find(function(r) { return r.id === appId; });
+    var roleName = role ? role.key : 'unknown';
+
+    // Recovery authorization records derived from SAO55 Control Bounds (role-mocked; shown honestly)
+    var recoveryEntries = [];
+
+    if (roleName === 'qa') {
+      recoveryEntries = [{
+        state: 'Authorized',
+        controlLineage: 'Constraint Bound [Constrained Continuation]',
+        recoveryBasis: 'Incident structurally sealed under strict extended oversight without regression.',
+        recoveryVerdict: 'System authorized for full programmatic re-entry. Operational perimeter restrictions lifted.',
+        color: '#10b981',
+        bg: 'rgba(16,185,129,0.1)'
+      }];
+    } else if (roleName === 'coder') {
+      recoveryEntries = [{
+        state: 'Staged Recovery',
+        controlLineage: 'Constraint Bound [Manual Override Required]',
+        recoveryBasis: 'Remediation override successfully signed. Phased unfreezing initiated.',
+        recoveryVerdict: 'System authorized for partial baseline re-entry to prove live stabilization.',
+        color: '#f59e0b',
+        bg: 'rgba(245,158,11,0.1)'
+      }];
+    } else if (roleName === 'design') {
+      recoveryEntries = [{
+        state: 'Blocked',
+        controlLineage: 'Constraint Bound [Quarantined]',
+        recoveryBasis: 'Terminal component failure limits absolutely active.',
+        recoveryVerdict: 'System re-entry categorically denied. Quarantine isolation mathematically intact.',
+        color: '#ef4444',
+        bg: 'rgba(239,68,68,0.1)'
+      }];
+    } else {
+      recoveryEntries = [{
+        state: 'Blocked',
+        controlLineage: 'N/A',
+        recoveryBasis: 'Missing quarantine control context.',
+        recoveryVerdict: 'Cannot authorize untracked artifacts for general system re-entry.',
+        color: '#64748b',
+        bg: 'rgba(100,116,139,0.1)'
+      }];
+    }
+
+    var recoveryIcon = { 'Authorized': '✅', 'Staged Recovery': '🪜', 'Blocked': '🚫' };
+
+    var html = '<div style="display:flex;flex-direction:column;gap:0.5rem;font-size:0.75rem;color:var(--sb-on-surface);">';
+
+    recoveryEntries.forEach(function(entry) {
+      html += '<div style="background:var(--sb-surface-alt,#1e293b);padding:0.45rem 0.55rem;border-radius:0.3rem;border-left:2px solid ' + entry.color + ';display:flex;flex-direction:column;gap:0.35rem;">';
+
+      // Header
+      html += '<div style="display:flex;align-items:center;justify-content:space-between;">';
+      html += '<strong style="color:var(--sb-on-surface);font-size:0.73rem;">' + (recoveryIcon[entry.state] || '●') + ' Recovery & Re-entry State</strong>';
+      html += '<code style="color:' + entry.color + ';background:' + entry.bg + ';padding:0.1rem 0.4rem;text-transform:uppercase;font-size:0.63rem;">' + escapeHtml(entry.state) + '</code>';
+      html += '</div>';
+
+      // Context
+      html += '<div style="display:flex;flex-direction:column;gap:0.1rem;">';
+      html += '<div><span style="color:var(--sb-text-muted);font-weight:600;font-size:0.63rem;">Control Lineage:</span> <span style="font-family:monospace;font-size:0.68rem;color:#38bdf8;">' + escapeHtml(entry.controlLineage) + '</span></div>';
+      html += '<div><span style="color:var(--sb-text-muted);font-weight:600;font-size:0.63rem;">Recovery Basis:</span> <span style="font-family:monospace;font-size:0.68rem;color:#cbd5e1;">' + escapeHtml(entry.recoveryBasis) + '</span></div>';
+      html += '</div>';
+
+      // Object description
+      html += '<div style="background:#0f172a;border-radius:0.2rem;padding:0.3rem 0.4rem;font-size:0.65rem;color:#cbd5e1;line-height:1.4;">';
+      html += '<code>' + escapeHtml(entry.recoveryVerdict) + '</code>';
+      html += '</div>';
+
+      // ALCOA+ hash
+      var alcoa = btoa(entry.state + entry.controlLineage + entry.recoveryVerdict).substring(0, 16);
+      html += '<div><span style="color:var(--sb-text-muted);font-weight:600;font-size:0.63rem;">Authorization Hash:</span> <code style="font-size:0.6rem;color:#64748b;">' + alcoa + '</code></div>';
+
+      html += '</div>';
+    });
+
+    html += '<div style="margin-top:0.1rem;font-size:0.63rem;color:#64748b;">';
+    html += '<strong style="color:var(--sb-text-muted);">Audit Constraints:</strong> ';
+    html += 'Viewer Role: <code>' + escapeHtml(viewerRole) + '</code><br/>';
+    html += 'Selected Worker: <code>' + escapeHtml(selectedWorker) + '</code><br/>';
+    html += 'Selected Run: <code>' + escapeHtml(selectedRun) + '</code><br/>';
+    html += 'Recovery Basis: <code>post-release quarantine -> recovery path -> recovery-authorized, re-entry-blocked, or staged-recovery state</code><br/>';
+    html += 'Recovery states are <em>role-derived mocks</em> simulating accounted unfreezing loops. ';
     html += 'Resolution Bound: <code>SI21 — The Solace Intelligence System</code>.';
     html += '</div>';
 
