@@ -493,6 +493,7 @@
     updateSpecialistPostReleaseReturn(appId, runId);
     updateSpecialistPostReleaseSustained(appId, runId);
     updateSpecialistPostReleaseRegression(appId, runId);
+    updateSpecialistPostReleaseRegressionResolution(appId, runId);
     updateDepartmentMemoryQueue(appId, runId);
     updateWorkerDriftState(appId, runId);
     updateWorkerRoutingState(appId, runId);
@@ -4541,6 +4542,104 @@
     html += 'Selected Run: <code>' + escapeHtml(selectedRun) + '</code><br/>';
     html += 'Response Basis: <code>post-release sustained-service -> regression-response path -> rollback-triggered, live-mitigation, or containment-escalated state</code><br/>';
     html += 'Regression response paths are <em>role-derived mocks</em> simulating accounted physical mitigation logic. ';
+    html += 'Resolution Bound: <code>SI21 — The Solace Intelligence System</code>.';
+    html += '</div>';
+
+    html += '</div>';
+    panel.innerHTML = html;
+  }
+
+  // ── SAC60: Specialist Post-Release Regression Resolution ──
+
+  function updateSpecialistPostReleaseRegressionResolution(appId, runId) {
+    var panel = document.getElementById('dev-specialist-post-release-regression-resolution-state');
+    if (!panel) return;
+
+    var role = DEV_ROLES.find(function(r) { return r.id === appId; });
+    var roleName = role ? role.key : 'unknown';
+    var viewerRole = 'solace-dev-manager';
+    var selectedWorker = appId || 'unknown';
+    var selectedRun = runId || 'latest';
+
+    // Regression-resolution records derived from SAS59 Regression Response (role-mocked; shown honestly)
+    var resolutionEntries = [];
+
+    if (roleName === 'qa') {
+      resolutionEntries = [{
+        state: 'Resolved After Mitigation',
+        responseLineage: 'Physical Response Gate [Live Mitigation]',
+        resolutionBasis: 'Dynamic hotfix stabilised baseline metrics for 24h without requiring deep traffic severance.',
+        resolutionVerdict: 'Component has successfully survived regression loop. Relapse fully cleared and mitigated.',
+        color: '#10b981',
+        bg: 'rgba(16,185,129,0.1)'
+      }];
+    } else if (roleName === 'coder') {
+      resolutionEntries = [{
+        state: 'Staged Recovery Reopened',
+        responseLineage: 'Physical Response Gate [Rollback Triggered]',
+        resolutionBasis: 'Rollback stabilised production. New convention synthesized to retry resolution under partial exposure bounds.',
+        resolutionVerdict: 'Artifact granted permission to re-enter Staged Recovery loops. Strict unfreezing gate re-applied.',
+        color: '#f59e0b',
+        bg: 'rgba(245,158,11,0.1)'
+      }];
+    } else if (roleName === 'design') {
+      resolutionEntries = [{
+        state: 'Architecture Reset Required',
+        responseLineage: 'Physical Response Gate [Containment Escalated]',
+        resolutionBasis: 'Component deemed mathematically unrecoverable under current schema. Total failure confirmed.',
+        resolutionVerdict: 'Component purged from active trust matrices. Formal deep rewrite directive issued upstream.',
+        color: '#ef4444',
+        bg: 'rgba(239,68,68,0.1)'
+      }];
+    } else {
+      resolutionEntries = [{
+        state: 'Architecture Reset Required',
+        responseLineage: 'N/A',
+        resolutionBasis: 'Missing regression response tracking context.',
+        resolutionVerdict: 'Cannot resolve regressions lacking a valid physical mitigation trajectory.',
+        color: '#64748b',
+        bg: 'rgba(100,116,139,0.1)'
+      }];
+    }
+
+    var resolutionIcon = { 'Resolved After Mitigation': '✅', 'Staged Recovery Reopened': '🔄', 'Architecture Reset Required': '💥' };
+
+    var html = '<div style="display:flex;flex-direction:column;gap:0.5rem;font-size:0.75rem;color:var(--sb-on-surface);">';
+
+    resolutionEntries.forEach(function(entry) {
+      html += '<div style="background:var(--sb-surface-alt,#1e293b);padding:0.45rem 0.55rem;border-radius:0.3rem;border-left:2px solid ' + entry.color + ';display:flex;flex-direction:column;gap:0.35rem;">';
+
+      // Header
+      html += '<div style="display:flex;align-items:center;justify-content:space-between;">';
+      html += '<strong style="color:var(--sb-on-surface);font-size:0.73rem;">' + (resolutionIcon[entry.state] || '●') + ' Regression Resolution Gate</strong>';
+      html += '<code style="color:' + entry.color + ';background:' + entry.bg + ';padding:0.1rem 0.4rem;text-transform:uppercase;font-size:0.63rem;">' + escapeHtml(entry.state) + '</code>';
+      html += '</div>';
+
+      // Context
+      html += '<div style="display:flex;flex-direction:column;gap:0.1rem;">';
+      html += '<div><span style="color:var(--sb-text-muted);font-weight:600;font-size:0.63rem;">Response Lineage:</span> <span style="font-family:monospace;font-size:0.68rem;color:#38bdf8;">' + escapeHtml(entry.responseLineage) + '</span></div>';
+      html += '<div><span style="color:var(--sb-text-muted);font-weight:600;font-size:0.63rem;">Decision Basis:</span> <span style="font-family:monospace;font-size:0.68rem;color:#cbd5e1;">' + escapeHtml(entry.resolutionBasis) + '</span></div>';
+      html += '</div>';
+
+      // Object description
+      html += '<div style="background:#0f172a;border-radius:0.2rem;padding:0.3rem 0.4rem;font-size:0.65rem;color:#cbd5e1;line-height:1.4;">';
+      html += '<code>' + escapeHtml(entry.resolutionVerdict) + '</code>';
+      html += '</div>';
+
+      // ALCOA+ hash
+      var alcoa = btoa(entry.state + entry.responseLineage + entry.resolutionVerdict).substring(0, 16);
+      html += '<div><span style="color:var(--sb-text-muted);font-weight:600;font-size:0.63rem;">Resolution Hash:</span> <code style="font-size:0.6rem;color:#64748b;">' + alcoa + '</code></div>';
+
+      html += '</div>';
+    });
+
+    html += '<div style="margin-top:0.1rem;font-size:0.63rem;color:#64748b;">';
+    html += '<strong style="color:var(--sb-text-muted);">Audit Constraints:</strong> ';
+    html += 'Viewer Role: <code>' + escapeHtml(viewerRole) + '</code><br/>';
+    html += 'Selected Worker: <code>' + escapeHtml(selectedWorker) + '</code><br/>';
+    html += 'Selected Run: <code>' + escapeHtml(selectedRun) + '</code><br/>';
+    html += 'Resolution Basis: <code>post-release regression-response -> regression-resolution path -> resolved-after-mitigation, staged-recovery-reopened, or architecture-reset-required state</code><br/>';
+    html += 'Regression resolution paths are <em>role-derived mocks</em> simulating closure of physical response loops. ';
     html += 'Resolution Bound: <code>SI21 — The Solace Intelligence System</code>.';
     html += '</div>';
 
