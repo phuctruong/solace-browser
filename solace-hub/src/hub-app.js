@@ -459,6 +459,7 @@
     updateWorkerProofState(appId, runId);
     updateWorkerGraphState(appId, runId);
     updateWorkerConventionStore(appId, runId);
+    updateWorkerDistillationState(appId, runId);
     updateWorkerDriftState(appId, runId);
     updateWorkerRoutingState(appId, runId);
     updateWorkerEfficiencyState(appId, runId);
@@ -1150,6 +1151,101 @@
 
     html += '<div style="margin-top:0.1rem;font-size:0.65rem;color:#64748b;">';
     html += 'The Convention Store acts as persistent intelligence, converting ephemeral ripple execution into reusable caching layers according to SI14.';
+    html += '</div>';
+
+    html += '</div>';
+    
+    panel.innerHTML = html;
+  }
+
+  // ── SAX25: Automatic Convention Distillation ──
+
+  function updateWorkerDistillationState(appId, runId) {
+    var panel = document.getElementById('dev-worker-distillation-state');
+    if (!panel) return;
+
+    var role = DEV_ROLES.find(function(r) { return r.id === appId; });
+    var roleName = role ? role.key : 'unknown';
+    var color = roleColor(roleName);
+
+    // Mock realistic distillation states for SAX25 visibility demonstration
+    var distillationState = 'unknown';
+    var candidateId = 'N/A';
+    var basis = 'N/A';
+
+    if (roleName === 'coder') {
+      distillationState = 'promoted';
+      candidateId = 'solace-prime-mermaid-coder-v1.2.0';
+      basis = 'Mature structural repetition (100% success rate across 5 traces). Promoted to SHARED memory.';
+    } else if (roleName === 'manager') {
+      distillationState = 'pending_candidate';
+      candidateId = 'nexus-routing-v2.2-candidate';
+      basis = 'Consistent assignment packet generation detected. Pending human validation gate for GLOBAL promotion.';
+    } else if (roleName === 'design' || roleName === 'qa') {
+      distillationState = 'blocked';
+      candidateId = 'N/A';
+      basis = 'Zero high-confidence repetition detected. Execution remains at Discover tier (Ripple).';
+    } else {
+      distillationState = 'unknown_state';
+      candidateId = 'N/A';
+      basis = 'Distillation evaluation incomplete.';
+    }
+
+    var icon = '❓';
+    var stateColor = '#94a3b8'; // gray
+    var bg = 'rgba(148,163,184,0.1)';
+    var label = 'UNKNOWN DISTILLATION STATE';
+
+    if (distillationState === 'promoted') {
+      icon = '💎';
+      stateColor = '#10b981'; // green
+      bg = 'rgba(16,185,129,0.1)';
+      label = 'PROMOTED / REPLAYABLE';
+    } else if (distillationState === 'pending_candidate') {
+      icon = '🧪';
+      stateColor = '#f59e0b'; // amber
+      bg = 'rgba(245,158,11,0.1)';
+      label = 'CANDIDATE PENDING';
+    } else if (distillationState === 'blocked') {
+      icon = '⛔';
+      stateColor = '#ef4444'; // red
+      bg = 'rgba(239,68,68,0.1)';
+      label = 'BLOCKED / NO CANDIDATE';
+    }
+
+    var html = '<div style="display:flex;flex-direction:column;gap:0.4rem;font-size:0.75rem;color:var(--sb-on-surface);">';
+    
+    html += '<div style="background:var(--sb-surface-alt,#1e293b);padding:0.4rem 0.5rem;border-radius:0.25rem;border-left:2px solid ' + stateColor + ';display:flex;align-items:flex-start;gap:0.75rem;">';
+    
+    html += '<div style="font-size:1.4rem;line-height:1;">' + icon + '</div>';
+    
+    html += '<div style="flex:1;">';
+    html += '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:0.2rem;">';
+    html += '<div>';
+    html += '<strong style="color:var(--sb-text-muted);">Promotion Status:</strong> ';
+    html += '</div>';
+    html += '<code style="color:' + stateColor + ';background:' + bg + ';padding:0.1rem 0.35rem;text-transform:uppercase;font-size:0.65rem;">' + label + '</code>';
+    html += '</div>';
+    
+    html += '<div style="display:flex;flex-direction:column;gap:0.2rem;margin-bottom:0.3rem;">';
+    html += '<div><span style="color:var(--sb-text-muted);font-weight:600;font-size:0.65rem;">Candidate Convention:</span> <span style="font-family:monospace;font-size:0.7rem;color:#818cf8;">' + escapeHtml(candidateId) + '</span></div>';
+    html += '<div><span style="color:var(--sb-text-muted);font-weight:600;font-size:0.65rem;">Distillation Basis:</span> <span style="color:var(--sb-on-surface);">' + escapeHtml(basis) + '</span></div>';
+    html += '</div>';
+
+    html += '<div style="margin-top:0.15rem;font-size:0.65rem;color:#64748b;">';
+    html += '<strong style="color:var(--sb-text-muted);">Active Distillation Context:</strong><br/>';
+    html += 'App ID: <code>' + (appId || 'unknown') + '</code><br/>';
+    html += 'Role: <code>' + roleName + '</code><br/>';
+    html += 'Run: <code>' + (runId || 'latest') + '</code><br/>';
+    html += 'Promotion Basis: <code>role-derived visible convention promotion state</code><br/>';
+    html += 'Evidence Basis: <code>visible repetition and validation signal for current role/run</code>';
+    html += '</div>';
+
+    html += '</div>'; // close text column
+    html += '</div>'; // close surface
+
+    html += '<div style="margin-top:0.1rem;font-size:0.65rem;color:#64748b;">';
+    html += 'Automatic Convention Distillation transforms repeated execution patterns into persistent memory dynamically without retraining (Paper SI16).';
     html += '</div>';
 
     html += '</div>';
