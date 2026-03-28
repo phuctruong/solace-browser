@@ -476,6 +476,7 @@
     updateSpecialistMemoryAdmission(appId, runId);
     updateSpecialistMemoryEntry(appId, runId);
     updateSpecialistMemoryReuse(appId, runId);
+    updateSpecialistConventionInvocation(appId, runId);
     updateDepartmentMemoryQueue(appId, runId);
     updateWorkerDriftState(appId, runId);
     updateWorkerRoutingState(appId, runId);
@@ -2859,6 +2860,104 @@
     html += 'Reuse Basis: <code>visible department-memory entry -> callable convention -> next directive or worker packet</code><br/>';
     html += 'Reuse values are <em>role-derived mocks</em> until runtime packet binder is wired. ';
     html += 'Resolution Bound: <code>SI9 — Conventions as Core Product Object</code>.';
+    html += '</div>';
+
+    html += '</div>';
+    panel.innerHTML = html;
+  }
+
+  // ── SAE43: Specialist Convention Invocation ──
+
+  function updateSpecialistConventionInvocation(appId, runId) {
+    var panel = document.getElementById('dev-specialist-convention-invocation-state');
+    if (!panel) return;
+
+    var role = DEV_ROLES.find(function(r) { return r.id === appId; });
+    var roleName = role ? role.key : 'unknown';
+    var viewerRole = 'solace-dev-manager';
+    var selectedWorker = appId || 'unknown';
+    var selectedRun = runId || 'latest';
+
+    // Invocation records derived from SAW42 reuse target (role-mocked; shown honestly)
+    var invocationEntries = [];
+
+    if (roleName === 'qa') {
+      invocationEntries = [{
+        state: 'Invoked',
+        conventionTarget: 'tests/e2e/verified-suite-v3.json',
+        nextDirective: 'SI-CODER-011: Implement Graph Routing Logic',
+        invocationContext: 'Convention successfully injected into Coder inbox packet outbox/coder/inbox/packet-011.json. Execution bound.',
+        color: '#10b981',
+        bg: 'rgba(16,185,129,0.1)'
+      }];
+    } else if (roleName === 'coder') {
+      invocationEntries = [{
+        state: 'Queued',
+        conventionTarget: 'tmp/pending-ast-matrix.bin',
+        nextDirective: 'SI-MGR-002: Review AST Matrix Structural Bounds',
+        invocationContext: 'Draft memory queued for manual manager invocation. Awaiting SI17 oversight trigger.',
+        color: '#f59e0b',
+        bg: 'rgba(245,158,11,0.1)'
+      }];
+    } else if (roleName === 'design') {
+      invocationEntries = [{
+        state: 'Blocked',
+        conventionTarget: 'N/A',
+        nextDirective: 'N/A',
+        invocationContext: 'No reusable memory exists to invoke. Execution route terminated.',
+        color: '#ef4444',
+        bg: 'rgba(239,68,68,0.1)'
+      }];
+    } else {
+      invocationEntries = [{
+        state: 'Blocked',
+        conventionTarget: 'N/A',
+        nextDirective: 'N/A',
+        invocationContext: 'Invalid routing path. Unbound tasks cannot generate callable conventions.',
+        color: '#64748b',
+        bg: 'rgba(100,116,139,0.1)'
+      }];
+    }
+
+    var invokeIcon = { 'Invoked': '📍', 'Queued': '⏳', 'Blocked': '🚫' };
+
+    var html = '<div style="display:flex;flex-direction:column;gap:0.5rem;font-size:0.75rem;color:var(--sb-on-surface);">';
+
+    invocationEntries.forEach(function(entry) {
+      html += '<div style="background:var(--sb-surface-alt,#1e293b);padding:0.45rem 0.55rem;border-radius:0.3rem;border-left:2px solid ' + entry.color + ';display:flex;flex-direction:column;gap:0.35rem;">';
+
+      // Header
+      html += '<div style="display:flex;align-items:center;justify-content:space-between;">';
+      html += '<strong style="color:var(--sb-on-surface);font-size:0.73rem;">' + (invokeIcon[entry.state] || '●') + ' Routing Step</strong>';
+      html += '<code style="color:' + entry.color + ';background:' + entry.bg + ';padding:0.1rem 0.4rem;text-transform:uppercase;font-size:0.63rem;">' + escapeHtml(entry.state) + '</code>';
+      html += '</div>';
+
+      // Context
+      html += '<div style="display:flex;flex-direction:column;gap:0.1rem;">';
+      html += '<div><span style="color:var(--sb-text-muted);font-weight:600;font-size:0.63rem;">Memory Object:</span> <span style="font-family:monospace;font-size:0.68rem;color:#38bdf8;">' + escapeHtml(entry.conventionTarget) + '</span></div>';
+      html += '<div><span style="color:var(--sb-text-muted);font-weight:600;font-size:0.63rem;">Next Directive:</span> <span style="font-family:monospace;font-size:0.68rem;color:#60a5fa;">' + escapeHtml(entry.nextDirective) + '</span></div>';
+      html += '</div>';
+
+      // Object description
+      html += '<div style="background:#0f172a;border-radius:0.2rem;padding:0.3rem 0.4rem;font-size:0.65rem;color:#cbd5e1;line-height:1.4;">';
+      html += '<code>' + escapeHtml(entry.invocationContext) + '</code>';
+      html += '</div>';
+
+      // ALCOA+ hash
+      var alcoa = btoa(entry.state + entry.conventionTarget + entry.nextDirective).substring(0, 16);
+      html += '<div><span style="color:var(--sb-text-muted);font-weight:600;font-size:0.63rem;">Routing Hash:</span> <code style="font-size:0.6rem;color:#64748b;">' + alcoa + '</code></div>';
+
+      html += '</div>';
+    });
+
+    html += '<div style="margin-top:0.1rem;font-size:0.63rem;color:#64748b;">';
+    html += '<strong style="color:var(--sb-text-muted);">Audit Constraints:</strong> ';
+    html += 'Viewer Role: <code>' + escapeHtml(viewerRole) + '</code><br/>';
+    html += 'Selected Worker: <code>' + escapeHtml(selectedWorker) + '</code><br/>';
+    html += 'Selected Run: <code>' + escapeHtml(selectedRun) + '</code><br/>';
+    html += 'Invocation Basis: <code>callable department-memory entry -> convention invocation -> next directive or worker packet</code><br/>';
+    html += 'Invocation routes are <em>role-derived mocks</em> until runtime fs binding is wired. ';
+    html += 'Resolution Bound: <code>SI10 — The Solace Execution Graph</code>.';
     html += '</div>';
 
     html += '</div>';
