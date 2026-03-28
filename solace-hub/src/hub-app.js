@@ -470,6 +470,7 @@
     updateSpecialistIntakeReadiness(appId, runId);
     updateSpecialistExecutionActivity(appId, runId);
     updateSpecialistExecutionEvidence(appId, runId);
+    updateSpecialistArtifactBundle(appId, runId);
     updateDepartmentMemoryQueue(appId, runId);
     updateWorkerDriftState(appId, runId);
     updateWorkerRoutingState(appId, runId);
@@ -2180,6 +2181,126 @@
     html += 'Evidence Basis: <code>visible specialist output-log and execution-evidence state for current activity context</code><br/>';
     html += 'Evidence values are <em>role-derived mocks</em> until runtime log path is wired.<br/>';
     html += 'Resolution Bound: <code>SI18 — Transparency as Product Feature</code>.';
+    html += '</div>';
+
+    html += '</div>';
+    panel.innerHTML = html;
+  }
+
+  // ── SAB37: Specialist Artifact Bundle ──
+
+  function updateSpecialistArtifactBundle(appId, runId) {
+    var panel = document.getElementById('dev-specialist-artifact-bundle-state');
+    if (!panel) return;
+
+    var role = DEV_ROLES.find(function(r) { return r.id === appId; });
+    var roleName = role ? role.key : 'unknown';
+
+    // Bundle entries derived from SAE36 evidence streams (role-mocked; shown honestly)
+    var bundles = [];
+
+    if (roleName === 'coder') {
+      bundles = [{
+        state: 'Partial',
+        bundleId: 'coder-run-20260328-001',
+        specialist: 'solace-prime-mermaid-coder-v1.2.0',
+        sourcePacket: 'inbox/coder/packet.json',
+        artifacts: [
+          { name: 'coder-pass1.json',   size: '14.2 KB',  status: 'written' },
+          { name: 'ast-matrix.bin',     size: '88.7 KB',  status: 'written' },
+          { name: 'final-output.json',  size: '—',        status: 'pending' }
+        ],
+        color: '#f59e0b',
+        bg: 'rgba(245,158,11,0.1)'
+      }];
+    } else if (roleName === 'design') {
+      bundles = [{
+        state: 'Open',
+        bundleId: 'design-run-20260328-002',
+        specialist: 'solace-ui-renderer-v1',
+        sourcePacket: 'inbox/design/command_lock.json',
+        artifacts: [
+          { name: 'layout-draft.svg',   size: '—',        status: 'pending' },
+          { name: 'tokens.json',        size: '—',        status: 'pending' }
+        ],
+        color: '#3b82f6',
+        bg: 'rgba(59,130,246,0.1)'
+      }];
+    } else if (roleName === 'qa') {
+      bundles = [{
+        state: 'Sealed',
+        bundleId: 'qa-run-20260328-003',
+        specialist: 'solace-qa-agent-v2',
+        sourcePacket: 'inbox/qa/test-suite.json',
+        artifacts: [
+          { name: 'test-report.json',   size: '6.1 KB',   status: 'written' },
+          { name: 'coverage.xml',       size: '22.4 KB',  status: 'written' },
+          { name: 'failure-trace.txt',  size: '1.3 KB',   status: 'written' }
+        ],
+        color: '#10b981',
+        bg: 'rgba(16,185,129,0.1)'
+      }];
+    } else {
+      bundles = [{
+        state: 'Open',
+        bundleId: 'unknown-bundle',
+        specialist: 'Unbound',
+        sourcePacket: 'N/A',
+        artifacts: [],
+        color: '#64748b',
+        bg: 'rgba(100,116,139,0.1)'
+      }];
+    }
+
+    var html = '<div style="display:flex;flex-direction:column;gap:0.5rem;font-size:0.75rem;color:var(--sb-on-surface);">';
+
+    bundles.forEach(function(bundle) {
+      html += '<div style="background:var(--sb-surface-alt,#1e293b);padding:0.45rem 0.55rem;border-radius:0.3rem;border-left:2px solid ' + bundle.color + ';display:flex;flex-direction:column;gap:0.35rem;">';
+
+      // Header
+      html += '<div style="display:flex;align-items:center;justify-content:space-between;">';
+      html += '<strong style="color:var(--sb-on-surface);font-size:0.73rem;">📦 ' + escapeHtml(bundle.bundleId) + '</strong>';
+      html += '<code style="color:' + bundle.color + ';background:' + bundle.bg + ';padding:0.1rem 0.4rem;text-transform:uppercase;font-size:0.63rem;">' + escapeHtml(bundle.state) + '</code>';
+      html += '</div>';
+
+      // Context
+      html += '<div style="display:flex;flex-direction:column;gap:0.1rem;">';
+      html += '<div><span style="color:var(--sb-text-muted);font-weight:600;font-size:0.63rem;">Specialist:</span> <span style="font-family:monospace;font-size:0.68rem;color:#c084fc;">' + escapeHtml(bundle.specialist) + '</span></div>';
+      html += '<div><span style="color:var(--sb-text-muted);font-weight:600;font-size:0.63rem;">Source Packet:</span> <span style="font-family:monospace;font-size:0.63rem;">' + escapeHtml(bundle.sourcePacket) + '</span></div>';
+      html += '</div>';
+
+      // Artifact file table
+      if (bundle.artifacts.length > 0) {
+        html += '<div style="background:#0f172a;border-radius:0.2rem;padding:0.3rem 0.4rem;display:flex;flex-direction:column;gap:0.12rem;">';
+        bundle.artifacts.forEach(function(a) {
+          var statusColor = a.status === 'written' ? '#10b981' : '#64748b';
+          html += '<div style="display:flex;align-items:center;justify-content:space-between;">';
+          html += '<code style="font-size:0.63rem;color:#94a3b8;">' + escapeHtml(a.name) + '</code>';
+          html += '<span style="display:flex;gap:0.4rem;">';
+          html += '<code style="font-size:0.6rem;color:#475569;">' + escapeHtml(a.size) + '</code>';
+          html += '<code style="font-size:0.6rem;color:' + statusColor + ';">' + escapeHtml(a.status) + '</code>';
+          html += '</span></div>';
+        });
+        html += '</div>';
+      } else {
+        html += '<div style="font-size:0.63rem;color:#475569;"><em>No artifacts written yet.</em></div>';
+      }
+
+      // ALCOA+ hash
+      var alcoa = btoa(bundle.state + bundle.bundleId + bundle.specialist).substring(0, 16);
+      html += '<div><span style="color:var(--sb-text-muted);font-weight:600;font-size:0.63rem;">Bundle Hash:</span> <code style="font-size:0.6rem;color:#64748b;">' + alcoa + '</code></div>';
+
+      html += '</div>';
+    });
+
+    html += '<div style="margin-top:0.1rem;font-size:0.63rem;color:#64748b;">';
+    html += '<strong style="color:var(--sb-text-muted);">Audit Constraints:</strong><br/>';
+    html += 'Viewer Role: <code>solace-dev-manager</code><br/>';
+    html += 'Selected Worker: <code>' + escapeHtml(appId || 'unknown') + '</code><br/>';
+    html += 'Selected Run: <code>' + escapeHtml(runId || 'latest') + '</code><br/>';
+    html += 'Artifact Basis: <code>visible specialist artifact-bundle and run-output state for current evidence context</code><br/>';
+    html += 'Bundle values are <em>role-derived mocks</em> until run output path is wired.<br/>';
+    html += 'Resolution Bound: <code>SI21 — The Solace Intelligence System</code>.';
     html += '</div>';
 
     html += '</div>';
