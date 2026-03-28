@@ -98,6 +98,7 @@
     var historyHTML = '';
     var latestRun = null;
     var latestRunAppId = null;
+    var staleSelection = null;
     var pending = DEV_ROLES.length;
 
     DEV_ROLES.forEach(function(role) {
@@ -156,21 +157,48 @@
         historyPanel.style.display = 'block';
       }
 
-      // Hydrate latest-known run into inspection panel
+      // SAP11: Check for stored selection first
+      var stored = loadSelectedRun();
+      if (stored && inspectionPanel) {
+        // Verify stored selection exists in current runs list
+        var storedRow = document.getElementById('run-row-' + stored.appId + '-' + stored.runId);
+        if (storedRow) {
+          // Stored selection is still valid — restore it
+          restoreSelectedRun(stored.appId, stored.runId, storedRow);
+          return;
+        } else {
+          // Stored selection is stale — record fallback and continue to latest run
+          staleSelection = stored;
+          clearSelectedRun();
+        }
+      }
+
+      // Default: hydrate latest-known run into inspection panel
       if (latestRun && latestRunAppId && inspectionPanel) {
         var runId = latestRun.run_id;
+        saveSelectedRun(latestRunAppId, runId);
         if (latestRun.events_exist) {
           fetchRunEvents(latestRunAppId, runId).then(function(eventsData) {
             showRunInspection(latestRunAppId, runId, latestRun.report_exists ? 'exists' : null, eventsData, true);
+            if (staleSelection) {
+              prependStaleFallbackNotice(staleSelection.appId, staleSelection.runId, latestRunAppId, runId);
+            }
           });
         } else {
           showRunInspection(latestRunAppId, runId, latestRun.report_exists ? 'exists' : null, { events: [], count: 0, chain_valid: false }, true);
+          if (staleSelection) {
+            prependStaleFallbackNotice(staleSelection.appId, staleSelection.runId, latestRunAppId, runId);
+          }
         }
 
         // Update last-run badge and mark selected row
         var lastRunBadge = document.getElementById('dev-last-run');
         if (lastRunBadge) {
-          lastRunBadge.innerHTML = '<span class="sb-pill" style="background:#064e3b;color:#6ee7b7;font-size:0.7rem;">selected: ' + latestRunAppId + ' @ ' + runId + '</span>';
+          if (staleSelection) {
+            lastRunBadge.innerHTML = '<span class="sb-pill" style="background:#78350f;color:#fcd34d;font-size:0.7rem;">fallback: ' + latestRunAppId + ' @ ' + runId + '</span>';
+          } else {
+            lastRunBadge.innerHTML = '<span class="sb-pill" style="background:#064e3b;color:#6ee7b7;font-size:0.7rem;">selected: ' + latestRunAppId + ' @ ' + runId + '</span>';
+          }
         }
         highlightSelectedRun(latestRunAppId, runId);
       }
@@ -183,6 +211,9 @@
   window.__solaceSelectRun = function(appId, runId, clickedEl) {
     var reportExists = clickedEl && clickedEl.dataset ? clickedEl.dataset.reportExists === 'true' : false;
     var eventsExist = clickedEl && clickedEl.dataset ? clickedEl.dataset.eventsExists === 'true' : true;
+
+    // SAP11: Persist selection
+    saveSelectedRun(appId, runId);
 
     // Update selected-state badge
     var lastRunBadge = document.getElementById('dev-last-run');
@@ -228,6 +259,61 @@
         btn.style.color = '#fff';
         btn.textContent = '● viewing';
       }
+    }
+  }
+
+  // ── SAP11: Durable Selected-Run State ──
+
+  var SELECTED_RUN_KEY = 'solace_dev_selected_run';
+
+  function saveSelectedRun(appId, runId) {
+    try {
+      sessionStorage.setItem(SELECTED_RUN_KEY, JSON.stringify({ appId: appId, runId: runId }));
+    } catch(e) {}
+  }
+
+  function loadSelectedRun() {
+    try {
+      var raw = sessionStorage.getItem(SELECTED_RUN_KEY);
+      if (!raw) return null;
+      var parsed = JSON.parse(raw);
+      if (parsed && parsed.appId && parsed.runId) return parsed;
+    } catch(e) {}
+    return null;
+  }
+
+  function clearSelectedRun() {
+    try { sessionStorage.removeItem(SELECTED_RUN_KEY); } catch(e) {}
+  }
+
+  function restoreSelectedRun(appId, runId, storedRow) {
+    var btn = storedRow ? storedRow.querySelector('.sat10-select-run') : null;
+    var reportExists = btn && btn.dataset ? btn.dataset.reportExists === 'true' : false;
+    var eventsExist = btn && btn.dataset ? btn.dataset.eventsExists === 'true' : true;
+    var lastRunBadge = document.getElementById('dev-last-run');
+    if (lastRunBadge) {
+      lastRunBadge.innerHTML = '<span class="sb-pill" style="background:#064e3b;color:#6ee7b7;font-size:0.7rem;">restored: ' + appId + ' @ ' + runId + '</span>';
+    }
+    highlightSelectedRun(appId, runId);
+    if (eventsExist) {
+      fetchRunEvents(appId, runId).then(function(eventsData) {
+        showRunInspection(appId, runId, reportExists ? 'exists' : null, eventsData, true);
+      });
+    } else {
+      showRunInspection(appId, runId, reportExists ? 'exists' : null, { events: [], count: 0, chain_valid: false }, true);
+    }
+  }
+
+  function prependStaleFallbackNotice(oldAppId, oldRunId, newAppId, newRunId) {
+    var inspectionPanel = document.getElementById('dev-run-inspection');
+    if (inspectionPanel) {
+      inspectionPanel.innerHTML =
+        '<div style="border-left:3px solid #f59e0b;padding:0.5rem 0.75rem;background:rgba(245,158,11,0.08);border-radius:0 0.5rem 0.5rem 0;">' +
+        '<strong style="font-size:0.8rem;color:var(--sb-on-surface);">Stored selection expired</strong>' +
+        '<div style="font-size:0.72rem;color:var(--sb-text-muted);margin-top:0.2rem;">' +
+        'Previously selected <code>' + oldAppId + ' / ' + oldRunId + '</code> is no longer in the runs list. ' +
+        'Falling back to <code>' + newAppId + ' / ' + newRunId + '</code>.</div></div>' +
+        inspectionPanel.innerHTML;
     }
   }
 
