@@ -1,20 +1,20 @@
 # TODO
 
 Repo: `solace-browser`
-Role: Solace Hub + Browser workspace for native delegation handoff log and specialist dispatch visibility
+Role: Solace Hub + Browser workspace for native specialist acceptance state and inbox-delivery visibility
 
 ## Current Round
 
-SAH32 native delegation handoff log and specialist dispatch visibility.
+SAS33 native specialist acceptance state and inbox-delivery visibility.
 
-The Dev workspace now shows one bounded manager directive packet. The next step is to make that directive operational: one visible handoff log showing which specialist or lane the directive was dispatched to, what handoff payload or target it carries, and whether the delegation is pending, accepted, or blocked.
+The Dev workspace now shows one bounded delegation handoff log. The next step is to make that handoff operationally credible: one visible acceptance surface showing whether the selected specialist actually accepted the directive, whether the handoff reached the worker inbox, and whether delivery is pending, confirmed, or rejected.
 
 ## Worker Inbox
 
-- `northstar`: `Solace Browser is the visible operating environment for the Solace Dev department, where the Dev Manager can see not just directives, but the actual handoff path into specialist execution`
+- `northstar`: `Solace Browser is the visible operating environment for the Solace Dev department, where the Dev Manager can see directives enter specialist lanes and confirm whether the specialist actually received and accepted the work`
 - `worker_mode`: `external_coding_agent`
 - `worker_role`: `coder`
-- `task_statement`: `Add a native delegation handoff log and specialist dispatch visibility surface to the Dev workspace while preserving the current role stack, worker detail, diagram access, inbox/outbox visibility, assignment packet, execution mode/convention visibility, human gate visibility, proof visibility, execution graph visibility, convention-store visibility, drift/adaptive replay visibility, hybrid routing visibility, efficiency visibility, per-worker distillation visibility, department memory queue visibility, promotion decision packet visibility, promotion audit trail visibility, governance summary visibility, manager action queue visibility, manager directive packet visibility, run history, inspection context, and artifact inspection behavior.`
+- `task_statement`: `Add a native specialist acceptance state and inbox-delivery visibility surface to the Dev workspace while preserving the current role stack, worker detail, diagram access, inbox/outbox visibility, assignment packet, execution mode/convention visibility, human gate visibility, proof visibility, execution graph visibility, convention-store visibility, drift/adaptive replay visibility, hybrid routing visibility, efficiency visibility, per-worker distillation visibility, department memory queue visibility, promotion decision packet visibility, promotion audit trail visibility, governance summary visibility, manager action queue visibility, manager directive packet visibility, delegation handoff visibility, run history, inspection context, and artifact inspection behavior.`
 - `scope_change_policy`: `FAIL_AND_NEW_TASK`
 
 ## Read This First
@@ -36,63 +36,63 @@ Before coding, read and align to:
 
 ## Rules
 
-- build on the current integrated Dev workspace and preserve existing role, routing, drift, convention, proof, graph, efficiency, artifact, inspection, per-worker distillation, department memory queue, promotion decision packet, promotion audit trail, governance summary, manager action queue, and manager directive packet surfaces
-- the workspace must show one delegation handoff log directly
-- the handoff log must show at least one target specialist or lane, one dispatch payload or target, and one pending/accepted/blocked dispatch state
-- the log must tie dispatch state back to directive and specialist context honestly
-- if dispatch values are mocked or role-derived rather than runtime-native, show that honestly
-- the panel must fit the Solace company model: Dev Manager directives must visibly enter specialist lanes
+- build on the current integrated Dev workspace and preserve existing role, routing, drift, convention, proof, graph, efficiency, artifact, inspection, per-worker distillation, department memory queue, promotion decision packet, promotion audit trail, governance summary, manager action queue, manager directive packet, and delegation handoff surfaces
+- the workspace must show one specialist acceptance/inbox-delivery surface directly
+- the surface must show at least one pending delivery, one confirmed acceptance, and one rejected or unavailable delivery state
+- the surface must tie delivery state back to specialist, directive, inbox target, and handoff context honestly
+- if acceptance values are mocked or role-derived rather than runtime-native, show that honestly
+- the panel must fit the Solace company model: Dev Manager directives must not stop at dispatch; specialist receipt and acceptance must be visible
 - keep the surface compatible with the current Prime Mermaid-first source model
 - do not expand into cloud sync, billing, `solaceagi`, or unrelated browser platform work
 
 ## Hard Rejection Criteria
 
-- the manager still cannot see where a directive was dispatched
-- a reviewer still cannot tell whether a specialist handoff is pending, accepted, or blocked
-- handoff state is presented as fake certainty instead of visible grounded context
-- the round only adds labels without making specialist dispatch more operationally legible
+- the manager still cannot see whether a specialist actually received the handoff
+- a reviewer still cannot tell whether inbox delivery is pending, confirmed, or rejected
+- delivery state is presented as fake certainty instead of visible grounded context
+- the round only adds labels without making specialist acceptance more operationally legible
 
 ## Required Deliverables
 
-1. one visible delegation handoff log in the Dev workspace
-2. one visible tie between handoff entries and directive/specialist context
-3. one honest pending/accepted/blocked dispatch summary
-4. one honest handoff-payload or dispatch-basis summary
-5. one Prime Mermaid source artifact for delegation-handoff visibility
+1. one visible specialist acceptance / inbox-delivery surface in the Dev workspace
+2. one visible tie between acceptance entries and specialist/directive/inbox context
+3. one honest pending/confirmed/rejected delivery summary
+4. one honest inbox-target or delivery-basis summary
+5. one Prime Mermaid source artifact for specialist acceptance visibility
 6. one narrow smoke path
 7. one narrow automated test or scripted verification
 
 ## Current Tickets
 
-### Ticket 1: Add a visible delegation handoff log
-Objective: make specialist dispatch first-class.
-Scope: show one visible log of manager directives entering specialist lanes directly in the workspace.
-Done when: a reviewer can tell where a directive is going without leaving the workspace.
+### Ticket 1: Add a visible specialist acceptance surface
+Objective: make inbox delivery first-class.
+Scope: show one visible surface of manager directives reaching specialist inboxes directly in the workspace.
+Done when: a reviewer can tell whether a worker actually received the handoff without leaving the workspace.
 Evidence required: screenshots, routes exercised, and one short walkthrough.
 
-### Ticket 2: Tie handoff entries to directive and specialist context
-Objective: stop treating dispatch as detached theory.
-Scope: each entry should reveal which directive, which specialist/lane, and what payload or target is involved.
-Done when: a reviewer can tell what each dispatch entry refers to and why.
+### Ticket 2: Tie acceptance entries to specialist, directive, and inbox context
+Objective: stop treating delivery as detached theory.
+Scope: each entry should reveal which directive, which specialist, and what inbox target or worker surface is involved.
+Done when: a reviewer can tell what each acceptance entry refers to and why.
 Evidence required: screenshots, routes exercised, and one short walkthrough.
 
-### Ticket 3: Represent honest handoff states
-Objective: make specialist dispatch visibility operationally truthful.
-Scope: support at least one pending dispatch, one accepted dispatch, and one blocked or deferred dispatch with visible reasoning.
-Done when: the workspace does not imply fake delegation certainty.
+### Ticket 3: Represent honest delivery states
+Objective: make specialist receipt visibility operationally truthful.
+Scope: support at least one pending delivery, one confirmed acceptance, and one rejected or unavailable delivery with visible reasoning.
+Done when: the workspace does not imply fake acceptance certainty.
 Evidence required: screenshots, routes exercised, and one short walkthrough.
 
-### Ticket 4: Add one delegation-handoff Prime Mermaid artifact
-Objective: capture the move from manager directive to specialist dispatch.
-Scope: add one Prime Mermaid artifact for delegation-handoff visibility.
-Done when: the handoff log is represented as committed source truth.
+### Ticket 4: Add one specialist-acceptance Prime Mermaid artifact
+Objective: capture the move from delegation handoff to specialist inbox delivery.
+Scope: add one Prime Mermaid artifact for specialist acceptance visibility.
+Done when: the acceptance surface is represented as committed source truth.
 Evidence required: artifact path and one short note on what it governs.
 
 ### Ticket 5: Add one narrow smoke path and one narrow test
-Objective: make delegation handoff visibility visible, reviewable, and repeatable.
+Objective: make specialist acceptance visibility visible, reviewable, and repeatable.
 Scope:
-- one documented local smoke path from workspace load to directive packet to handoff-log inspection
-- one automated test or lightweight scripted verification for the handoff surface
+- one documented local smoke path from workspace load to directive packet to handoff log to specialist acceptance inspection
+- one automated test or lightweight scripted verification for the acceptance surface
 Done when: a reviewer can run the commands without guessing hidden steps.
 Evidence required: exact commands, exact output, screenshot paths, and remaining risks.
 
@@ -120,4 +120,4 @@ Evidence required: exact commands, exact output, screenshot paths, and remaining
 - adding new specialist roles beyond manager, design, coder, and QA
 - broad cloud sync, billing, or `solaceagi` work
 - unrelated Chromium platform changes
-- rewriting the role stack instead of making delegation handoff more visible
+- rewriting the role stack instead of making specialist acceptance more visible

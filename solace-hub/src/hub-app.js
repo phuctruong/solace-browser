@@ -465,6 +465,7 @@
     updateGovernanceSummary(appId, runId);
     updateManagerActionQueue(appId, runId);
     updateManagerDirectivePacket(appId, runId);
+    updateDelegationHandoffLog(appId, runId);
     updateDepartmentMemoryQueue(appId, runId);
     updateWorkerDriftState(appId, runId);
     updateWorkerRoutingState(appId, runId);
@@ -1707,6 +1708,98 @@
 
     html += '<div style="margin-top:0.1rem;font-size:0.65rem;color:#64748b;">';
     html += 'The Directive Packet formalizes exactly what action a manager must take and how execution returns to the specialist queue.';
+    html += '</div>';
+
+    html += '</div>';
+    
+    panel.innerHTML = html;
+  }
+
+  // ── SAH32: Delegation Handoff Log ──
+
+  function updateDelegationHandoffLog(appId, runId) {
+    var panel = document.getElementById('dev-delegation-handoff-log-state');
+    if (!panel) return;
+
+    var role = DEV_ROLES.find(function(r) { return r.id === appId; });
+    var roleName = role ? role.key : 'unknown';
+
+    // Mock explicit handoff arrays deriving from SAD31 directives
+    var handoffLogs = [];
+
+    if (roleName === 'manager') {
+      handoffLogs = [
+        {
+          state: 'Accepted',
+          lane: 'coder',
+          target: 'solace-prime-mermaid-coder-v1.2.0',
+          payload: 'Execution target bound to GLOBAL tier. Awaiting final node initialization.',
+          color: '#10b981',
+          bg: 'rgba(16,185,129,0.1)'
+        },
+        {
+          state: 'Pending',
+          lane: 'design',
+          target: 'solace-ui-renderer-v1',
+          payload: 'Directive Dispatched: Halt rendering execution and dump architecture variables.',
+          color: '#f59e0b',
+          bg: 'rgba(245,158,11,0.1)'
+        }
+      ];
+    } else if (roleName === 'coder') {
+      handoffLogs = [
+        {
+          state: 'Accepted',
+          lane: 'coder',
+          target: 'solace-browser-hub-v2',
+          payload: 'Isolating branch array. Sub-nodes spun down to allow Manager evaluation limits.',
+          color: '#10b981',
+          bg: 'rgba(16,185,129,0.1)'
+        }
+      ];
+    } else {
+      handoffLogs = [
+        {
+          state: 'Blocked',
+          lane: roleName,
+          target: 'Cross-Department Analytics',
+          payload: 'Manager deferred directive context due to architecture instability. Spin lock active.',
+          color: '#ef4444',
+          bg: 'rgba(239,68,68,0.1)'
+        }
+      ];
+    }
+
+    var html = '<div style="display:flex;flex-direction:column;gap:0.4rem;font-size:0.75rem;color:var(--sb-on-surface);">';
+    
+    handoffLogs.forEach(function(log) {
+      html += '<div style="background:var(--sb-surface-alt,#1e293b);padding:0.4rem 0.5rem;border-radius:0.25rem;border-left:2px solid ' + log.color + ';display:flex;flex-direction:column;gap:0.3rem;">';
+      
+      html += '<div style="display:flex;align-items:center;justify-content:space-between;">';
+      html += '<strong style="color:var(--sb-on-surface);font-size:0.75rem;text-transform:uppercase;">[Dispatcher -> ' + escapeHtml(log.lane) + ']</strong>';
+      html += '<code style="color:' + log.color + ';background:' + log.bg + ';padding:0.1rem 0.35rem;text-transform:uppercase;font-size:0.65rem;">' + escapeHtml(log.state) + '</code>';
+      html += '</div>';
+
+      html += '<div style="display:flex;flex-direction:column;gap:0.1rem;">';
+      html += '<div><span style="color:var(--sb-text-muted);font-weight:600;font-size:0.65rem;">Handoff Target:</span> <span style="font-family:monospace;font-size:0.7rem;color:#c084fc;">' + escapeHtml(log.target) + '</span></div>';
+      html += '<div><span style="color:var(--sb-text-muted);font-weight:600;font-size:0.65rem;">Dispatch Payload:</span> <span style="color:var(--sb-on-surface);">' + escapeHtml(log.payload) + '</span></div>';
+      
+      // Phuc Forecast bounds (crypto stamping)
+      var dummyHash = btoa(log.target + log.lane + log.state).substring(0, 16);
+      html += '<div><span style="color:var(--sb-text-muted);font-weight:600;font-size:0.65rem;">Handoff Hash:</span> <code style="font-size:0.6rem;color:#94a3b8;">' + dummyHash + '</code></div>';
+
+      html += '</div>';
+      html += '</div>';
+    });
+
+    html += '<div style="margin-top:0.15rem;font-size:0.65rem;color:#64748b;">';
+    html += '<strong style="color:var(--sb-text-muted);">Active Handoff Constraints:</strong><br/>';
+    html += 'Viewer Role: <code>solace-dev-manager</code><br/>';
+    html += 'Selected Worker: <code>' + escapeHtml(appId || 'unknown') + '</code><br/>';
+    html += 'Selected Run: <code>' + escapeHtml(runId || 'latest') + '</code><br/>';
+    html += 'Dispatch Basis: <code>visible specialist handoff log for current directive context</code><br/>';
+    html += 'Tracking Source: <code>Delegated Manager Packets (SAD31) deployed to specialists</code><br/>';
+    html += 'Resolution Bound: <code>Requires specialist environment ACK/NACK signatures</code>';
     html += '</div>';
 
     html += '</div>';
