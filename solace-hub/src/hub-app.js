@@ -466,6 +466,7 @@
     updateManagerActionQueue(appId, runId);
     updateManagerDirectivePacket(appId, runId);
     updateDelegationHandoffLog(appId, runId);
+    updateSpecialistAcceptanceState(appId, runId);
     updateDepartmentMemoryQueue(appId, runId);
     updateWorkerDriftState(appId, runId);
     updateWorkerRoutingState(appId, runId);
@@ -1800,6 +1801,101 @@
     html += 'Dispatch Basis: <code>visible specialist handoff log for current directive context</code><br/>';
     html += 'Tracking Source: <code>Delegated Manager Packets (SAD31) deployed to specialists</code><br/>';
     html += 'Resolution Bound: <code>Requires specialist environment ACK/NACK signatures</code>';
+    html += '</div>';
+
+    html += '</div>';
+    
+    panel.innerHTML = html;
+  }
+
+  // ── SAS33: Specialist Acceptance State ──
+
+  function updateSpecialistAcceptanceState(appId, runId) {
+    var panel = document.getElementById('dev-specialist-acceptance-state');
+    if (!panel) return;
+
+    var role = DEV_ROLES.find(function(r) { return r.id === appId; });
+    var roleName = role ? role.key : 'unknown';
+
+    // Mock explicit acceptance arrays deriving from SAH32 handoff logic
+    var acceptanceLogs = [];
+
+    if (roleName === 'coder') {
+      acceptanceLogs = [
+        {
+          state: 'Confirmed',
+          origin: 'manager',
+          directive: 'Review Promotion',
+          inboxTarget: '/home/phuc/projects/solace-prime/inbox/coder/packet.json',
+          color: '#10b981',
+          bg: 'rgba(16,185,129,0.1)'
+        }
+      ];
+    } else if (roleName === 'design') {
+      acceptanceLogs = [
+        {
+          state: 'Pending',
+          origin: 'manager',
+          directive: 'Halt rendering execution and dump architecture variables.',
+          inboxTarget: '/home/phuc/projects/solace-prime/inbox/design/command_lock.json',
+          color: '#f59e0b',
+          bg: 'rgba(245,158,11,0.1)'
+        }
+      ];
+    } else if (roleName === 'manager') {
+      acceptanceLogs = [
+        {
+          state: 'Confirmed',
+          origin: 'system',
+          directive: 'Delegation Outbox Delivery Verified',
+          inboxTarget: 'manager-outbox/specialist-queue-bound',
+          color: '#10b981',
+          bg: 'rgba(16,185,129,0.1)'
+        }
+      ];
+    } else {
+      acceptanceLogs = [
+        {
+          state: 'Rejected',
+          origin: 'manager',
+          directive: 'Unresolved node cascades',
+          inboxTarget: 'Unreachable. Inbox partition closed.',
+          color: '#ef4444',
+          bg: 'rgba(239,68,68,0.1)'
+        }
+      ];
+    }
+
+    var html = '<div style="display:flex;flex-direction:column;gap:0.4rem;font-size:0.75rem;color:var(--sb-on-surface);">';
+    
+    acceptanceLogs.forEach(function(log) {
+      html += '<div style="background:var(--sb-surface-alt,#1e293b);padding:0.4rem 0.5rem;border-radius:0.25rem;border-left:2px solid ' + log.color + ';display:flex;flex-direction:column;gap:0.3rem;">';
+      
+      html += '<div style="display:flex;align-items:center;justify-content:space-between;">';
+      html += '<strong style="color:var(--sb-on-surface);font-size:0.75rem;text-transform:uppercase;">[Inbox Target -> ' + escapeHtml(log.origin) + ']</strong>';
+      html += '<code style="color:' + log.color + ';background:' + log.bg + ';padding:0.1rem 0.35rem;text-transform:uppercase;font-size:0.65rem;">' + escapeHtml(log.state) + '</code>';
+      html += '</div>';
+
+      html += '<div style="display:flex;flex-direction:column;gap:0.1rem;">';
+      html += '<div><span style="color:var(--sb-text-muted);font-weight:600;font-size:0.65rem;">Bound Directive:</span> <span style="font-family:monospace;font-size:0.7rem;color:#c084fc;">' + escapeHtml(log.directive) + '</span></div>';
+      html += '<div><span style="color:var(--sb-text-muted);font-weight:600;font-size:0.65rem;">Inbox Trace:</span> <span style="color:var(--sb-on-surface);">' + escapeHtml(log.inboxTarget) + '</span></div>';
+      
+      // Phuc Forecast bounds (crypto stamping)
+      var dummyHash = btoa(log.state + log.directive + log.inboxTarget).substring(0, 16);
+      html += '<div><span style="color:var(--sb-text-muted);font-weight:600;font-size:0.65rem;">Receipt Hash:</span> <code style="font-size:0.6rem;color:#94a3b8;">' + dummyHash + '</code></div>';
+
+      html += '</div>';
+      html += '</div>';
+    });
+
+    html += '<div style="margin-top:0.15rem;font-size:0.65rem;color:#64748b;">';
+    html += '<strong style="color:var(--sb-text-muted);">Active Acceptance Constraints:</strong><br/>';
+    html += 'Viewer Role: <code>solace-dev-manager</code><br/>';
+    html += 'Selected Worker: <code>' + escapeHtml(appId || 'unknown') + '</code><br/>';
+    html += 'Selected Run: <code>' + escapeHtml(runId || 'latest') + '</code><br/>';
+    html += 'Delivery Basis: <code>visible specialist receipt and inbox-delivery state for current handoff context</code><br/>';
+    html += 'Evaluation Limit: <code>Verification of Specialist Inbox Delivery</code><br/>';
+    html += 'Resolution Bound: <code>Closure of Manager Delegation loop (SI18)</code>';
     html += '</div>';
 
     html += '</div>';
