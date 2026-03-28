@@ -651,7 +651,7 @@
   </div>
   </div><!-- end tab-overview -->
 
-  <!-- TAB: DEV WORKSPACE — Integrated Shell (SDX4) -->
+  <!-- TAB: DEV WORKSPACE — Live Hydrated Shell (SDH5) -->
   <div id="tab-dev" class="hub-tab-panel sh-tab-panel-hidden">
 
     <!-- ═══════════════════════════════════════════════════════════════
@@ -663,9 +663,10 @@
           <p class="sb-kicker" style="font-size: 1.1rem; letter-spacing: 0.04em;">Integrated Dev Workspace</p>
           <h2 style="margin: 0.25rem 0 0; font-size: 1.5rem; font-weight: 700; color: var(--sb-on-surface);">solace-browser</h2>
         </div>
-        <div style="display:flex; gap: 0.5rem; align-items:center;">
+        <div style="display:flex; gap: 0.5rem; align-items:center; flex-wrap:wrap;">
           <span class="sb-pill sb-pill--info">4 roles active</span>
-          <span class="sb-pill" style="background: var(--sb-surface-alt, #1e293b); color: var(--sb-on-surface);">SDX4</span>
+          <span class="sb-pill" style="background: var(--sb-surface-alt, #1e293b); color: var(--sb-on-surface);">SDH5</span>
+          <span id="dev-live-status" style="display:inline-flex; gap:0.25rem; flex-wrap:wrap;"><span class="sb-pill" style="background:#1e293b;color:#94a3b8;font-size:0.7rem;">loading…</span></span>
         </div>
       </div>
       <p class="sb-text-muted sb-mt-sm">Hub + Dev workspace where manager, design, coder, and QA operate on the same durable objects.</p>
@@ -691,7 +692,7 @@
       <div class="sb-card" id="role-card-manager" style="border-left: 3px solid #d946ef;">
         <div class="hub-flex-between">
           <p class="sb-kicker" style="color: #d946ef;">Manager</p>
-          <span class="sb-pill sb-pill--info" style="font-size: 0.65rem;">solace-dev-manager</span>
+          <span id="role-live-manager"><span class="sb-pill sb-pill--info" style="font-size: 0.65rem;">solace-dev-manager</span></span>
         </div>
         <p class="sb-text-muted" style="font-size: 0.8rem;">Triage requests, route work, approve artifacts, gate releases.</p>
         <details class="sb-mt-sm" id="role-detail-manager">
@@ -703,11 +704,11 @@
             <span class="sb-text-muted" style="font-size:0.8rem;">previews · drafts · reports · suggestions · runs</span>
             <strong style="font-size:0.75rem; text-transform:uppercase; color:var(--sb-text-muted);">Backoffice Tables</strong>
             <div style="display:flex; flex-wrap:wrap; gap:0.4rem;">
-              <a href="/backoffice/solace-dev-manager/requests" target="_blank" class="sb-btn sb-btn--sm" style="font-size:0.75rem; padding:0.3rem 0.6rem;">requests</a>
-              <a href="/backoffice/solace-dev-manager/assignments" target="_blank" class="sb-btn sb-btn--sm" style="font-size:0.75rem; padding:0.3rem 0.6rem;">assignments</a>
-              <a href="/backoffice/solace-dev-manager/approvals" target="_blank" class="sb-btn sb-btn--sm" style="font-size:0.75rem; padding:0.3rem 0.6rem;">approvals</a>
-              <a href="/backoffice/solace-dev-manager/artifacts" target="_blank" class="sb-btn sb-btn--sm" style="font-size:0.75rem; padding:0.3rem 0.6rem;">artifacts</a>
-              <a href="/backoffice/solace-dev-manager/releases" target="_blank" class="sb-btn sb-btn--sm" style="font-size:0.75rem; padding:0.3rem 0.6rem;">releases</a>
+              <a href="/backoffice/solace-dev-manager/requests" target="_blank" class="sb-btn sb-btn--sm" style="font-size:0.75rem; padding:0.3rem 0.6rem;">requests <span id="live-count-manager-requests" class="sb-pill" style="font-size:0.6rem;background:#6366f1;color:#fff;margin-left:0.25rem;display:none;"></span></a>
+              <a href="/backoffice/solace-dev-manager/assignments" target="_blank" class="sb-btn sb-btn--sm" style="font-size:0.75rem; padding:0.3rem 0.6rem;">assignments <span id="live-count-manager-assignments" class="sb-pill" style="font-size:0.6rem;background:#6366f1;color:#fff;margin-left:0.25rem;display:none;"></span></a>
+              <a href="/backoffice/solace-dev-manager/approvals" target="_blank" class="sb-btn sb-btn--sm" style="font-size:0.75rem; padding:0.3rem 0.6rem;">approvals <span id="live-count-manager-approvals" class="sb-pill" style="font-size:0.6rem;background:#6366f1;color:#fff;margin-left:0.25rem;display:none;"></span></a>
+              <a href="/backoffice/solace-dev-manager/artifacts" target="_blank" class="sb-btn sb-btn--sm" style="font-size:0.75rem; padding:0.3rem 0.6rem;">artifacts <span id="live-count-manager-artifacts" class="sb-pill" style="font-size:0.6rem;background:#6366f1;color:#fff;margin-left:0.25rem;display:none;"></span></a>
+              <a href="/backoffice/solace-dev-manager/releases" target="_blank" class="sb-btn sb-btn--sm" style="font-size:0.75rem; padding:0.3rem 0.6rem;">releases <span id="live-count-manager-releases" class="sb-pill" style="font-size:0.6rem;background:#6366f1;color:#fff;margin-left:0.25rem;display:none;"></span></a>
             </div>
             <strong style="font-size:0.75rem; text-transform:uppercase; color:var(--sb-text-muted);">Handoffs Owned</strong>
             <div style="display:flex; flex-wrap:wrap; gap:0.4rem;">
@@ -723,7 +724,7 @@
       <div class="sb-card" id="role-card-design" style="border-left: 3px solid #3b82f6;">
         <div class="hub-flex-between">
           <p class="sb-kicker" style="color: #3b82f6;">Design</p>
-          <span class="sb-pill sb-pill--info" style="font-size: 0.65rem;">solace-design</span>
+          <span id="role-live-design"><span class="sb-pill sb-pill--info" style="font-size: 0.65rem;">solace-design</span></span>
         </div>
         <p class="sb-text-muted" style="font-size: 0.8rem;">Page maps, UI state diagrams, component specs, and design reviews.</p>
         <details class="sb-mt-sm" id="role-detail-design">
@@ -735,8 +736,8 @@
             <span class="sb-text-muted" style="font-size:0.8rem;">previews · drafts · reports · suggestions · runs</span>
             <strong style="font-size:0.75rem; text-transform:uppercase; color:var(--sb-text-muted);">Backoffice Tables</strong>
             <div style="display:flex; flex-wrap:wrap; gap:0.4rem;">
-              <a href="/backoffice/solace-design/design_specs" target="_blank" class="sb-btn sb-btn--sm" style="font-size:0.75rem; padding:0.3rem 0.6rem;">design_specs</a>
-              <a href="/backoffice/solace-design/design_reviews" target="_blank" class="sb-btn sb-btn--sm" style="font-size:0.75rem; padding:0.3rem 0.6rem;">design_reviews</a>
+              <a href="/backoffice/solace-design/design_specs" target="_blank" class="sb-btn sb-btn--sm" style="font-size:0.75rem; padding:0.3rem 0.6rem;">design_specs <span id="live-count-design-design_specs" class="sb-pill" style="font-size:0.6rem;background:#6366f1;color:#fff;margin-left:0.25rem;display:none;"></span></a>
+              <a href="/backoffice/solace-design/design_reviews" target="_blank" class="sb-btn sb-btn--sm" style="font-size:0.75rem; padding:0.3rem 0.6rem;">design_reviews <span id="live-count-design-design_reviews" class="sb-pill" style="font-size:0.6rem;background:#6366f1;color:#fff;margin-left:0.25rem;display:none;"></span></a>
             </div>
             <strong style="font-size:0.75rem; text-transform:uppercase; color:var(--sb-text-muted);">Handoff Contract</strong>
             <span class="sb-text-muted" style="font-size:0.8rem;">manager-to-design-handoff.md</span>
@@ -748,7 +749,7 @@
       <div class="sb-card" id="role-card-coder" style="border-left: 3px solid #10b981;">
         <div class="hub-flex-between">
           <p class="sb-kicker" style="color: #10b981;">Coder</p>
-          <span class="sb-pill sb-pill--info" style="font-size: 0.65rem;">solace-coder</span>
+          <span id="role-live-coder"><span class="sb-pill sb-pill--info" style="font-size: 0.65rem;">solace-coder</span></span>
         </div>
         <p class="sb-text-muted" style="font-size: 0.8rem;">Bounded code changes, test output, diff summaries, and evidence hashes.</p>
         <details class="sb-mt-sm" id="role-detail-coder">
@@ -760,9 +761,9 @@
             <span class="sb-text-muted" style="font-size:0.8rem;">previews · drafts · reports · suggestions · runs</span>
             <strong style="font-size:0.75rem; text-transform:uppercase; color:var(--sb-text-muted);">Backoffice Tables</strong>
             <div style="display:flex; flex-wrap:wrap; gap:0.4rem;">
-              <a href="/backoffice/solace-coder/code_runs" target="_blank" class="sb-btn sb-btn--sm" style="font-size:0.75rem; padding:0.3rem 0.6rem;">code_runs</a>
-              <a href="/backoffice/solace-coder/code_artifacts" target="_blank" class="sb-btn sb-btn--sm" style="font-size:0.75rem; padding:0.3rem 0.6rem;">code_artifacts</a>
-              <a href="/backoffice/solace-coder/coder_reviews" target="_blank" class="sb-btn sb-btn--sm" style="font-size:0.75rem; padding:0.3rem 0.6rem;">coder_reviews</a>
+              <a href="/backoffice/solace-coder/code_runs" target="_blank" class="sb-btn sb-btn--sm" style="font-size:0.75rem; padding:0.3rem 0.6rem;">code_runs <span id="live-count-coder-code_runs" class="sb-pill" style="font-size:0.6rem;background:#6366f1;color:#fff;margin-left:0.25rem;display:none;"></span></a>
+              <a href="/backoffice/solace-coder/code_artifacts" target="_blank" class="sb-btn sb-btn--sm" style="font-size:0.75rem; padding:0.3rem 0.6rem;">code_artifacts <span id="live-count-coder-code_artifacts" class="sb-pill" style="font-size:0.6rem;background:#6366f1;color:#fff;margin-left:0.25rem;display:none;"></span></a>
+              <a href="/backoffice/solace-coder/coder_reviews" target="_blank" class="sb-btn sb-btn--sm" style="font-size:0.75rem; padding:0.3rem 0.6rem;">coder_reviews <span id="live-count-coder-coder_reviews" class="sb-pill" style="font-size:0.6rem;background:#6366f1;color:#fff;margin-left:0.25rem;display:none;"></span></a>
             </div>
             <strong style="font-size:0.75rem; text-transform:uppercase; color:var(--sb-text-muted);">Handoff Contract</strong>
             <span class="sb-text-muted" style="font-size:0.8rem;">design-to-coder-handoff.md</span>
@@ -774,7 +775,7 @@
       <div class="sb-card" id="role-card-qa" style="border-left: 3px solid #f59e0b;">
         <div class="hub-flex-between">
           <p class="sb-kicker" style="color: #f59e0b;">QA</p>
-          <span class="sb-pill sb-pill--info" style="font-size: 0.65rem;">solace-qa</span>
+          <span id="role-live-qa"><span class="sb-pill sb-pill--info" style="font-size: 0.65rem;">solace-qa</span></span>
         </div>
         <p class="sb-text-muted" style="font-size: 0.8rem;">Adversarial validation, findings, signoffs, and release gating.</p>
         <details class="sb-mt-sm" id="role-detail-qa">
@@ -786,9 +787,9 @@
             <span class="sb-text-muted" style="font-size:0.8rem;">previews · drafts · reports · suggestions · runs</span>
             <strong style="font-size:0.75rem; text-transform:uppercase; color:var(--sb-text-muted);">Backoffice Tables</strong>
             <div style="display:flex; flex-wrap:wrap; gap:0.4rem;">
-              <a href="/backoffice/solace-qa/qa_runs" target="_blank" class="sb-btn sb-btn--sm" style="font-size:0.75rem; padding:0.3rem 0.6rem;">qa_runs</a>
-              <a href="/backoffice/solace-qa/qa_findings" target="_blank" class="sb-btn sb-btn--sm" style="font-size:0.75rem; padding:0.3rem 0.6rem;">qa_findings</a>
-              <a href="/backoffice/solace-qa/qa_signoffs" target="_blank" class="sb-btn sb-btn--sm" style="font-size:0.75rem; padding:0.3rem 0.6rem;">qa_signoffs</a>
+              <a href="/backoffice/solace-qa/qa_runs" target="_blank" class="sb-btn sb-btn--sm" style="font-size:0.75rem; padding:0.3rem 0.6rem;">qa_runs <span id="live-count-qa-qa_runs" class="sb-pill" style="font-size:0.6rem;background:#6366f1;color:#fff;margin-left:0.25rem;display:none;"></span></a>
+              <a href="/backoffice/solace-qa/qa_findings" target="_blank" class="sb-btn sb-btn--sm" style="font-size:0.75rem; padding:0.3rem 0.6rem;">qa_findings <span id="live-count-qa-qa_findings" class="sb-pill" style="font-size:0.6rem;background:#6366f1;color:#fff;margin-left:0.25rem;display:none;"></span></a>
+              <a href="/backoffice/solace-qa/qa_signoffs" target="_blank" class="sb-btn sb-btn--sm" style="font-size:0.75rem; padding:0.3rem 0.6rem;">qa_signoffs <span id="live-count-qa-qa_signoffs" class="sb-pill" style="font-size:0.6rem;background:#6366f1;color:#fff;margin-left:0.25rem;display:none;"></span></a>
             </div>
             <strong style="font-size:0.75rem; text-transform:uppercase; color:var(--sb-text-muted);">Handoff Contract</strong>
             <span class="sb-text-muted" style="font-size:0.8rem;">coder-to-qa-handoff.md</span>
@@ -829,6 +830,7 @@
         <span class="sb-pill" style="background: var(--sb-surface-alt, #1e293b); color: var(--sb-on-surface); font-size: 0.65rem;">POST /api/v1/apps/run/:app_id</span>
       </div>
       <p class="sb-text-muted sb-mt-sm">Queue a worker run for any role in the stack. Requires <code>Bearer sw_sk_*</code> auth.</p>
+      <div id="dev-last-run" class="sb-mt-sm"></div>
       <div class="sb-mt-md" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 0.75rem;">
         <button class="sb-btn sb-btn--sm" id="run-worker-manager" style="border-left: 3px solid #d946ef;" onclick="window.__solaceRunWorker('solace-dev-manager')">
           <strong>&#9654; Run Manager</strong>
@@ -846,24 +848,7 @@
       <pre id="worker-control-output" class="sb-mt-sm" style="font-size: 0.75rem; background: var(--sb-surface-alt, #0f172a); padding: 0.75rem; border-radius: 0.5rem; max-height: 200px; overflow-y: auto; display: none;"></pre>
     </div>
 
-    <script>
-      window.__solaceRunWorker = function(appId) {
-        var output = document.getElementById('worker-control-output');
-        output.style.display = 'block';
-        output.textContent = 'Queuing worker run for ' + appId + '...\n';
-        fetch('http://localhost:8888/api/v1/apps/run/' + appId, {
-          method: 'POST',
-          headers: { 'Authorization': 'Bearer dragon_rider_override' }
-        })
-        .then(function(r) { return r.json(); })
-        .then(function(data) {
-          output.textContent += JSON.stringify(data, null, 2) + '\n';
-        })
-        .catch(function(err) {
-          output.textContent += 'Error: ' + err.message + '\n';
-        });
-      };
-    </script>
+    <!-- Worker run function now in hub-app.js (SDH5) -->
 
   </div>
 
