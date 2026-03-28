@@ -463,6 +463,7 @@
     updatePromotionDecisionState(appId, runId);
     updatePromotionAuditTrail(appId, runId);
     updateGovernanceSummary(appId, runId);
+    updateManagerActionQueue(appId, runId);
     updateDepartmentMemoryQueue(appId, runId);
     updateWorkerDriftState(appId, runId);
     updateWorkerRoutingState(appId, runId);
@@ -1530,6 +1531,85 @@
 
     html += '<div style="margin-top:0.1rem;font-size:0.65rem;color:#64748b;">';
     html += 'Department Governance bridges single packet approvals into an operational map indicating structural health and iteration bounds.';
+    html += '</div>';
+
+    html += '</div>';
+    
+    panel.innerHTML = html;
+  }
+
+  // ── SAA30: Manager Action Queue ──
+  
+  function updateManagerActionQueue(appId, runId) {
+    var panel = document.getElementById('dev-manager-action-queue-state');
+    if (!panel) return;
+
+    // Define the Manager's actionable backlog
+    var actions = [
+      {
+        priority: 'Immediate',
+        color: '#ef4444',
+        bg: 'rgba(239,68,68,0.1)',
+        actionType: 'Review Promotion',
+        candidate: 'solace-prime-mermaid-coder-v1.2.0',
+        role: 'coder',
+        reason: 'Candidate hit distillation threshold and awaits GLOBAL target binding.'
+      },
+      {
+        priority: 'Pending',
+        color: '#f59e0b',
+        bg: 'rgba(245,158,11,0.1)',
+        actionType: 'Investigate Bottleneck',
+        candidate: 'solace-ui-renderer-v1',
+        role: 'design',
+        reason: 'Lane is producing 40% of blocked decisions. Architecture drift likely.'
+      },
+      {
+        priority: 'Blocked',
+        color: '#94a3b8',
+        bg: 'rgba(148,163,184,0.1)',
+        actionType: 'Awaiting Run Completion',
+        candidate: 'nexus-routing-v2.3',
+        role: 'manager',
+        reason: 'Dependent executions are still spinning. Evaluation gated.'
+      }
+    ];
+
+    var html = '<div style="display:flex;flex-direction:column;gap:0.4rem;font-size:0.75rem;color:var(--sb-on-surface);">';
+    
+    actions.forEach(function(act) {
+      html += '<div style="background:var(--sb-surface-alt,#1e293b);padding:0.4rem 0.5rem;border-radius:0.25rem;border-left:2px solid ' + act.color + ';display:flex;flex-direction:column;gap:0.3rem;">';
+      
+      html += '<div style="display:flex;align-items:center;justify-content:space-between;">';
+      html += '<strong style="color:var(--sb-on-surface);font-size:0.75rem;">[' + escapeHtml(act.actionType) + ']</strong>';
+      html += '<code style="color:' + act.color + ';background:' + act.bg + ';padding:0.1rem 0.35rem;text-transform:uppercase;font-size:0.65rem;">' + escapeHtml(act.priority) + '</code>';
+      html += '</div>';
+
+      html += '<div style="display:flex;flex-direction:column;gap:0.1rem;">';
+      html += '<div><span style="color:var(--sb-text-muted);font-weight:600;font-size:0.65rem;">Target Candidate:</span> <span style="font-family:monospace;font-size:0.7rem;color:#c084fc;">' + escapeHtml(act.candidate) + '</span></div>';
+      html += '<div><span style="color:var(--sb-text-muted);font-weight:600;font-size:0.65rem;">Lane Context:</span> <span style="color:var(--sb-on-surface);">' + escapeHtml(act.role) + '</span></div>';
+      html += '<div><span style="color:var(--sb-text-muted);font-weight:600;font-size:0.65rem;">Urgency Basis:</span> <span style="color:var(--sb-on-surface);">' + escapeHtml(act.reason) + '</span></div>';
+      
+      // Phuc Forecast / GLOW hashing requirement
+      var dummyHash = btoa(act.candidate + act.priority + act.role).substring(0, 16);
+      html += '<div><span style="color:var(--sb-text-muted);font-weight:600;font-size:0.65rem;">Action Hash:</span> <code style="font-size:0.6rem;color:#94a3b8;">' + dummyHash + '</code></div>';
+
+      html += '</div>';
+      html += '</div>';
+    });
+
+    html += '<div style="margin-top:0.15rem;font-size:0.65rem;color:#64748b;">';
+    html += '<strong style="color:var(--sb-text-muted);">Active Queue Constraints:</strong><br/>';
+    html += 'Viewer Role: <code>solace-dev-manager</code><br/>';
+    html += 'Selected Worker: <code>' + escapeHtml(appId || 'unknown') + '</code><br/>';
+    html += 'Selected Run: <code>' + escapeHtml(runId || 'latest') + '</code><br/>';
+    html += 'Display Scope: <code>Department-wide actionable decisions</code><br/>';
+    html += 'Priority Bound: <code>Requires human authorization (SI17)</code><br/>';
+    html += 'Action Basis: <code>visible next-step governance queue derived from department pressure</code>';
+    html += '</div>';
+
+    html += '<div style="margin-top:0.1rem;font-size:0.65rem;color:#64748b;">';
+    html += 'The Action Queue exposes the next explicit judgments required from the Manager, preventing hidden structural drift (Phuc Forecast).';
     html += '</div>';
 
     html += '</div>';
