@@ -139,7 +139,91 @@
     });
   }
 
-  // Upgraded worker run with structured feedback
+  // ── SDR6: Run Inspection + Upgraded Worker Control ──
+
+  // Extract run_id from a report path like ".../outbox/runs/20260328-051200/report.html"
+  function extractRunId(reportPath) {
+    if (!reportPath) return null;
+    var parts = reportPath.replace(/\\/g, '/').split('/');
+    for (var i = 0; i < parts.length; i++) {
+      if (parts[i] === 'runs' && i + 1 < parts.length && /^\d{8}-\d{6}$/.test(parts[i+1])) {
+        return parts[i+1];
+      }
+    }
+    return null;
+  }
+
+  // Fetch and display run events
+  function fetchRunEvents(appId, runId) {
+    return get('/api/v1/apps/' + appId + '/runs/' + runId + '/events')
+      .then(function(data) { return data; })
+      .catch(function() { return { events: [], count: 0, chain_valid: false, error: true }; });
+  }
+
+  // Build the run inspection panel HTML
+  function buildRunInspectionHTML(appId, runId, reportPath, eventsData, statusOk) {
+    var statusPill = statusOk
+      ? '<span class="sb-pill" style="background:#064e3b;color:#6ee7b7;font-size:0.65rem;">PASS</span>'
+      : '<span class="sb-pill" style="background:#450a0a;color:#fca5a5;font-size:0.65rem;">FAIL</span>';
+
+    var chainPill = eventsData.chain_valid
+      ? '<span class="sb-pill" style="background:#064e3b;color:#6ee7b7;font-size:0.65rem;">chain ✓</span>'
+      : '<span class="sb-pill" style="background:#78350f;color:#fcd34d;font-size:0.65rem;">chain ?</span>';
+
+    var eventCount = eventsData.count || 0;
+    var eventsPill = '<span class="sb-pill" style="background:#1e293b;color:#e2e8f0;font-size:0.65rem;">' + eventCount + ' events</span>';
+
+    var html = '<div style="border-left:3px solid #6366f1;padding:0.5rem 0.75rem;margin-top:0.5rem;background:rgba(99,102,241,0.08);border-radius:0 0.5rem 0.5rem 0;">';
+    html += '<div style="display:flex;gap:0.4rem;flex-wrap:wrap;align-items:center;">';
+    html += '<strong style="font-size:0.8rem;color:var(--sb-on-surface);">' + appId + '</strong> ';
+    html += statusPill + ' ' + chainPill + ' ' + eventsPill;
+    html += '</div>';
+    html += '<div style="margin-top:0.4rem;font-size:0.75rem;color:var(--sb-text-muted);">';
+    html += '<strong>run_id:</strong> ' + (runId || '?') + '<br>';
+    html += '<strong>report:</strong> ';
+    if (reportPath && runId) {
+      html += '<a href="/api/v1/apps/' + appId + '/runs/' + runId + '/report" target="_blank" style="color:#818cf8;">open report.html →</a>';
+    } else {
+      html += '<span style="color:#94a3b8;">none</span>';
+    }
+    html += '</div>';
+
+    // Events detail (collapsed)
+    if (eventCount > 0 && eventsData.events) {
+      html += '<details style="margin-top:0.4rem;">';
+      html += '<summary style="cursor:pointer;font-size:0.7rem;color:var(--sb-text-muted);">show ' + eventCount + ' events</summary>';
+      html += '<pre style="font-size:0.65rem;background:var(--sb-surface-alt,#0f172a);padding:0.5rem;border-radius:0.25rem;max-height:150px;overflow-y:auto;margin-top:0.25rem;">';
+      eventsData.events.forEach(function(ev) {
+        var ts = ev.timestamp || '';
+        var type = ev.event_type || ev.type || '?';
+        var detail = ev.detail || ev.metadata || '';
+        html += ts.slice(11, 19) + ' [' + type + '] ' + (typeof detail === 'string' ? detail : JSON.stringify(detail)) + '\n';
+      });
+      html += '</pre></details>';
+    }
+
+    // Artifact links
+    html += '<div style="margin-top:0.4rem;display:flex;gap:0.3rem;flex-wrap:wrap;">';
+    if (runId) {
+      html += '<a href="/apps/' + appId + '/runs/' + runId + '" target="_blank" class="sb-btn sb-btn--sm" style="font-size:0.65rem;padding:0.2rem 0.4rem;">run detail</a>';
+      html += '<a href="/api/v1/apps/' + appId + '/runs/' + runId + '/events" target="_blank" class="sb-btn sb-btn--sm" style="font-size:0.65rem;padding:0.2rem 0.4rem;">events api</a>';
+      html += '<a href="/api/v1/apps/' + appId + '/runs/' + runId + '/report" target="_blank" class="sb-btn sb-btn--sm" style="font-size:0.65rem;padding:0.2rem 0.4rem;">report html</a>';
+    }
+    html += '</div>';
+    html += '<div style="margin-top:0.35rem;font-size:0.68rem;color:#94a3b8;">payload.json and stillwater.json are not exposed as first-class Hub routes yet; use run detail and report routes for current inspection.</div>';
+    html += '</div>';
+    return html;
+  }
+
+  // Render inspection into the panel
+  function showRunInspection(appId, runId, reportPath, eventsData, statusOk) {
+    var panel = document.getElementById('dev-run-inspection');
+    if (!panel) return;
+    panel.innerHTML = buildRunInspectionHTML(appId, runId, reportPath, eventsData, statusOk);
+    panel.style.display = 'block';
+  }
+
+  // Upgraded worker run with full inspection pipeline
   window.__solaceRunWorker = function(appId) {
     var output = document.getElementById('worker-control-output');
     var lastRun = document.getElementById('dev-last-run');
@@ -156,10 +240,12 @@
       var ts2 = new Date().toISOString().slice(11, 19);
       var data = res.data;
       var statusCode = res.status;
+      var runId = extractRunId(data.report);
 
       if (data.ok) {
         output.textContent += '[' + ts2 + '] ✓ Run completed (HTTP ' + statusCode + ')\n';
         output.textContent += 'Report: ' + (data.report || 'none') + '\n';
+        output.textContent += 'Run ID: ' + (runId || 'unknown') + '\n';
       } else {
         output.textContent += '[' + ts2 + '] ✗ Run failed (HTTP ' + statusCode + ')\n';
         output.textContent += 'Error: ' + (data.error || JSON.stringify(data)) + '\n';
@@ -169,9 +255,18 @@
       // Update last-run badge
       if (lastRun) {
         var pill = data.ok
-          ? '<span class="sb-pill" style="background:#064e3b;color:#6ee7b7;font-size:0.7rem;">last: ' + appId + ' ✓ ' + ts2 + '</span>'
+          ? '<span class="sb-pill" style="background:#064e3b;color:#6ee7b7;font-size:0.7rem;">last: ' + appId + ' ✓ ' + (runId || ts2) + '</span>'
           : '<span class="sb-pill" style="background:#450a0a;color:#fca5a5;font-size:0.7rem;">last: ' + appId + ' ✗ ' + ts2 + '</span>';
         lastRun.innerHTML = pill;
+      }
+
+      // Fetch events and show inspection panel
+      if (runId) {
+        fetchRunEvents(appId, runId).then(function(eventsData) {
+          showRunInspection(appId, runId, data.report, eventsData, !!data.ok);
+        });
+      } else {
+        showRunInspection(appId, null, data.report, { events: [], count: 0, chain_valid: false }, !!data.ok);
       }
     })
     .catch(function(err) {
@@ -180,6 +275,7 @@
       if (lastRun) {
         lastRun.innerHTML = '<span class="sb-pill" style="background:#450a0a;color:#fca5a5;font-size:0.7rem;">last: ' + appId + ' ✗ ' + ts2 + '</span>';
       }
+      showRunInspection(appId, null, null, { events: [], count: 0, chain_valid: false, error: true }, false);
     });
   };
 
