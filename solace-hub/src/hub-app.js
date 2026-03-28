@@ -472,6 +472,7 @@
     updateSpecialistExecutionEvidence(appId, runId);
     updateSpecialistArtifactBundle(appId, runId);
     updateSpecialistArtifactProvenance(appId, runId);
+    updateSpecialistPromotionCandidate(appId, runId);
     updateDepartmentMemoryQueue(appId, runId);
     updateWorkerDriftState(appId, runId);
     updateWorkerRoutingState(appId, runId);
@@ -2430,6 +2431,126 @@
     html += 'Provenance Basis: <code>visible specialist artifact provenance and integrity state for current bundle context</code><br/>';
     html += 'Provenance values are <em>role-derived mocks</em> until runtime hash path is wired.<br/>';
     html += 'Resolution Bound: <code>SI18 — Transparency as a Product Feature</code>.';
+    html += '</div>';
+
+    html += '</div>';
+    panel.innerHTML = html;
+  }
+
+  // ── SAP39: Specialist Promotion Candidate ──
+
+  function updateSpecialistPromotionCandidate(appId, runId) {
+    var panel = document.getElementById('dev-specialist-promotion-candidate-state');
+    if (!panel) return;
+
+    var role = DEV_ROLES.find(function(r) { return r.id === appId; });
+    var roleName = role ? role.key : 'unknown';
+
+    // Promotion entries derived from SAV38 provenance (role-mocked; shown honestly)
+    var candidates = [];
+
+    if (roleName === 'coder') {
+      candidates = [{
+        status: 'Provisional',
+        bundleId: 'coder-run-20260328-001',
+        specialist: 'solace-prime-mermaid-coder-v1.2.0',
+        sourcePacket: 'inbox/coder/packet.json',
+        basis: 'Provenance check: Partial. final-output.json not yet produced.',
+        blockers: ['Awaiting final-output.json write completion'],
+        gate: 'Human gate (SI17) required before promoting to department memory',
+        color: '#f59e0b',
+        bg: 'rgba(245,158,11,0.1)'
+      }];
+    } else if (roleName === 'design') {
+      candidates = [{
+        status: 'Disqualified',
+        bundleId: 'design-run-20260328-002',
+        specialist: 'solace-ui-renderer-v1',
+        sourcePacket: 'inbox/design/command_lock.json',
+        basis: 'Provenance check: Invalid. Hash mismatch on layout-draft.svg; tokens.json missing.',
+        blockers: [
+          'hash-mismatch: layout-draft.svg (Expected sha256:cc01… got aa99…)',
+          'missing: tokens.json'
+        ],
+        gate: 'Must re-run design lane with corrected packet',
+        color: '#ef4444',
+        bg: 'rgba(239,68,68,0.1)'
+      }];
+    } else if (roleName === 'qa') {
+      candidates = [{
+        status: 'Ready-to-Seal',
+        bundleId: 'qa-run-20260328-003',
+        specialist: 'solace-qa-agent-v2',
+        sourcePacket: 'inbox/qa/test-suite.json',
+        basis: 'Provenance check: Verified. All 3 artifacts hash-matched.',
+        blockers: [],
+        gate: 'Human gate (SI17) — manager must approve seal action',
+        color: '#10b981',
+        bg: 'rgba(16,185,129,0.1)'
+      }];
+    } else {
+      candidates = [{
+        status: 'Disqualified',
+        bundleId: 'unknown-bundle',
+        specialist: 'Unbound',
+        sourcePacket: 'N/A',
+        basis: 'No specialist lane bound. Provenance chain incomplete.',
+        blockers: ['No lane registered'],
+        gate: 'N/A',
+        color: '#64748b',
+        bg: 'rgba(100,116,139,0.1)'
+      }];
+    }
+
+    var statusIcon = { 'Ready-to-Seal': '🟢', 'Provisional': '🟡', 'Disqualified': '🔴' };
+
+    var html = '<div style="display:flex;flex-direction:column;gap:0.5rem;font-size:0.75rem;color:var(--sb-on-surface);">';
+
+    candidates.forEach(function(c) {
+      html += '<div style="background:var(--sb-surface-alt,#1e293b);padding:0.45rem 0.55rem;border-radius:0.3rem;border-left:2px solid ' + c.color + ';display:flex;flex-direction:column;gap:0.35rem;">';
+
+      // Header
+      html += '<div style="display:flex;align-items:center;justify-content:space-between;">';
+      html += '<strong style="color:var(--sb-on-surface);font-size:0.73rem;">' + (statusIcon[c.status] || '●') + ' ' + escapeHtml(c.bundleId) + '</strong>';
+      html += '<code style="color:' + c.color + ';background:' + c.bg + ';padding:0.1rem 0.4rem;text-transform:uppercase;font-size:0.63rem;">' + escapeHtml(c.status) + '</code>';
+      html += '</div>';
+
+      // Context
+      html += '<div style="display:flex;flex-direction:column;gap:0.1rem;">';
+      html += '<div><span style="color:var(--sb-text-muted);font-weight:600;font-size:0.63rem;">Specialist:</span> <span style="font-family:monospace;font-size:0.68rem;color:#c084fc;">' + escapeHtml(c.specialist) + '</span></div>';
+      html += '<div><span style="color:var(--sb-text-muted);font-weight:600;font-size:0.63rem;">Promotion Basis:</span> <span style="font-size:0.63rem;color:#94a3b8;">' + escapeHtml(c.basis) + '</span></div>';
+      html += '</div>';
+
+      // Blockers
+      if (c.blockers.length > 0) {
+        html += '<div style="background:#0f172a;border-radius:0.2rem;padding:0.3rem 0.4rem;display:flex;flex-direction:column;gap:0.1rem;">';
+        html += '<span style="font-size:0.6rem;color:#64748b;font-weight:600;">BLOCKERS</span>';
+        c.blockers.forEach(function(b) {
+          html += '<div style="display:flex;align-items:center;gap:0.25rem;"><span style="color:#ef4444;font-size:0.63rem;">⚠</span><code style="font-size:0.6rem;color:#94a3b8;">' + escapeHtml(b) + '</code></div>';
+        });
+        html += '</div>';
+      } else {
+        html += '<div style="font-size:0.63rem;color:#10b981;"><em>No blockers — all gates clear.</em></div>';
+      }
+
+      // Gate
+      html += '<div><span style="color:var(--sb-text-muted);font-weight:600;font-size:0.63rem;">Seal Gate:</span> <span style="font-size:0.63rem;color:#cbd5e1;">' + escapeHtml(c.gate) + '</span></div>';
+
+      // ALCOA+ hash
+      var alcoa = btoa(c.status + c.bundleId + c.basis).substring(0, 16);
+      html += '<div><span style="color:var(--sb-text-muted);font-weight:600;font-size:0.63rem;">Promotion Hash:</span> <code style="font-size:0.6rem;color:#64748b;">' + alcoa + '</code></div>';
+
+      html += '</div>';
+    });
+
+    html += '<div style="margin-top:0.1rem;font-size:0.63rem;color:#64748b;">';
+    html += '<strong style="color:var(--sb-text-muted);">Audit Constraints:</strong><br/>';
+    html += 'Viewer Role: <code>solace-dev-manager</code><br/>';
+    html += 'Selected Worker: <code>' + escapeHtml(appId || 'unknown') + '</code><br/>';
+    html += 'Selected Run: <code>' + escapeHtml(runId || 'latest') + '</code><br/>';
+    html += 'Promotion Basis: <code>visible specialist promotion-candidate and seal-readiness state for current provenance context</code><br/>';
+    html += 'Promotion values are <em>role-derived mocks</em> until runtime provenance path is wired.<br/>';
+    html += 'Resolution Bound: <code>SI17 — Human-in-the-Loop as First-Class Component</code>.';
     html += '</div>';
 
     html += '</div>';
