@@ -1,20 +1,20 @@
 # TODO
 
 Repo: `solace-browser`
-Role: Solace Hub + Browser workspace for native convention-release action and manager signoff visibility
+Role: Solace Hub + Browser workspace for native convention-release execution and rollout visibility
 
 ## Current Round
 
-`SAC49` native convention-release action and manager signoff visibility.
+`SAC50` native convention-release execution and rollout visibility.
 
-The Dev workspace now shows whether a convention lineage is trusted or blocked for continued use. The next step is to make that decision operational: one visible surface showing whether a trusted lineage has an actual release or promotion action pending, approved, or denied by the Dev Manager, and what signoff basis produced that action.
+The Dev workspace now shows whether a convention lineage has manager signoff for release or promotion. The next step is to make that decision real in the system: one visible surface showing whether the approved lineage was actually executed into rollout, whether the rollout is live, staged, or aborted, and what release-execution basis produced that state.
 
 ## Worker Inbox
 
-- `northstar`: `Solace Browser is the visible operating environment for the Solace Dev department, where the Dev Manager can see directives become trustworthy outputs, see those outputs enter department memory, see that memory become callable and operational, and see whether the resulting convention lineage is actually approved, denied, or waiting on release action`
+- `northstar`: `Solace Browser is the visible operating environment for the Solace Dev department, where the Dev Manager can see trustworthy convention lineages move from proof to trust to explicit signoff and then into real rollout or rejection`
 - `worker_mode`: `external_coding_agent`
 - `worker_role`: `coder`
-- `task_statement`: `Add a native convention-release action and manager signoff panel to the Dev workspace while preserving the current role stack, worker detail, diagram access, inbox/outbox visibility, assignment packet, execution mode/convention visibility, human gate visibility, proof visibility, execution graph visibility, convention-store visibility, drift/adaptive replay visibility, hybrid routing visibility, efficiency visibility, per-worker distillation visibility, department memory queue visibility, promotion decision packet visibility, promotion audit trail visibility, governance summary visibility, manager action queue visibility, manager directive packet visibility, delegation handoff visibility, specialist acceptance visibility, specialist readiness visibility, specialist execution visibility, specialist evidence visibility, specialist artifact visibility, specialist provenance visibility, specialist promotion visibility, specialist memory-admission visibility, department-memory entry visibility, department-memory reuse visibility, convention invocation visibility, convention delivery visibility, convention activation visibility, convention effect visibility, convention proof visibility, convention trust visibility, run history, inspection context, and artifact inspection behavior.`
+- `task_statement`: `Add a native convention-release execution and rollout panel to the Dev workspace while preserving the current role stack, worker detail, diagram access, inbox/outbox visibility, assignment packet, execution mode/convention visibility, human gate visibility, proof visibility, execution graph visibility, convention-store visibility, drift/adaptive replay visibility, hybrid routing visibility, efficiency visibility, per-worker distillation visibility, department memory queue visibility, promotion decision packet visibility, promotion audit trail visibility, governance summary visibility, manager action queue visibility, manager directive packet visibility, delegation handoff visibility, specialist acceptance visibility, specialist readiness visibility, specialist execution visibility, specialist evidence visibility, specialist artifact visibility, specialist provenance visibility, specialist promotion visibility, specialist memory-admission visibility, department-memory entry visibility, department-memory reuse visibility, convention invocation visibility, convention delivery visibility, convention activation visibility, convention effect visibility, convention proof visibility, convention trust visibility, convention release visibility, run history, inspection context, and artifact inspection behavior.`
 - `scope_change_policy`: `FAIL_AND_NEW_TASK`
 
 ## Read This First
@@ -36,63 +36,63 @@ Before coding, read and align to:
 
 ## Rules
 
-- build on the current integrated Dev workspace and preserve all existing role, routing, drift, convention, proof, graph, efficiency, artifact, inspection, promotion, admission, memory-entry, memory-reuse, convention-invocation, convention-delivery, convention-activation, convention-effect, convention-proof, and convention-trust surfaces
-- the workspace must show one direct convention-release or manager-signoff panel tied to a visible trust decision
-- the surface must show at least one approved state, one pending-signoff state, and one denied state
-- the surface must tie action state back to visible trust context, proof context, lineage context, and manager signoff basis honestly
-- if action values are mocked or role-derived rather than runtime-native, show that honestly
-- the panel must fit the Solace company model: trust decisions must become explicit manager actions, not stop at status display
+- build on the current integrated Dev workspace and preserve all existing role, routing, drift, convention, proof, graph, efficiency, artifact, inspection, promotion, admission, memory-entry, memory-reuse, convention-invocation, convention-delivery, convention-activation, convention-effect, convention-proof, convention-trust, and convention-release surfaces
+- the workspace must show one direct convention-rollout or release-execution panel tied to a visible release action
+- the surface must show at least one live-rollout state, one staged-rollout state, and one aborted-rollout state
+- the surface must tie rollout state back to visible release context, trust context, lineage context, and rollout basis honestly
+- if rollout values are mocked or role-derived rather than runtime-native, show that honestly
+- the panel must fit the Solace company model: manager signoff must become visible rollout or explicit non-rollout, not stop at action approval
 - keep the surface compatible with the current Prime Mermaid-first source model
 - do not expand into cloud sync, billing, `solaceagi`, or unrelated browser platform work
 
 ## Hard Rejection Criteria
 
-- the manager still cannot see whether a trusted convention lineage is actually approved, pending, or denied for release or promotion
-- a reviewer still cannot tell whether the current action verdict is approved, pending, or denied
-- action state is presented as fake certainty instead of visible grounded context
-- the round only adds labels without making manager signoff materially inspectable
+- the manager still cannot see whether an approved convention lineage actually rolled out
+- a reviewer still cannot tell whether the current rollout verdict is live, staged, or aborted
+- rollout state is presented as fake certainty instead of visible grounded context
+- the round only adds labels without making release execution materially inspectable
 
 ## Required Deliverables
 
-1. one visible convention-release or manager-signoff panel in the Dev workspace
-2. one visible tie between action state and trust / proof / lineage / signoff context
-3. one honest approved / pending / denied summary
-4. one honest signoff-basis or release-action basis summary
-5. one Prime Mermaid source artifact for convention-release visibility
+1. one visible convention-rollout or release-execution panel in the Dev workspace
+2. one visible tie between rollout state and release / trust / lineage / rollout context
+3. one honest live / staged / aborted summary
+4. one honest rollout-basis or release-execution basis summary
+5. one Prime Mermaid source artifact for convention-rollout visibility
 6. one narrow smoke path
 7. one narrow automated test or scripted verification
 
 ## Current Tickets
 
-### Ticket 1: Add a visible convention-release surface
-Objective: make trust decisions actionable.
-Scope: show one visible surface of manager release or promotion action attached to a trusted or blocked convention lineage directly in the workspace.
-Done when: a reviewer can tell what action is pending or approved for the current convention lineage without leaving the workspace.
+### Ticket 1: Add a visible convention-rollout surface
+Objective: make signoff decisions operational.
+Scope: show one visible surface of rollout or release execution attached to an approved or denied convention lineage directly in the workspace.
+Done when: a reviewer can tell whether the current convention lineage actually rolled out without leaving the workspace.
 Evidence required: screenshots, routes exercised, and one short walkthrough.
 
-### Ticket 2: Tie action state to trust and signoff context
-Objective: stop treating release decisions as detached theory.
-Scope: each action entry should reveal which trust verdict, which lineage, and what signoff basis is involved.
-Done when: a reviewer can tell what each action verdict refers to and why.
+### Ticket 2: Tie rollout state to release and lineage context
+Objective: stop treating rollout as detached theory.
+Scope: each rollout entry should reveal which release verdict, which convention lineage, and what rollout basis is involved.
+Done when: a reviewer can tell what each rollout verdict refers to and why.
 Evidence required: screenshots, routes exercised, and one short walkthrough.
 
-### Ticket 3: Represent honest action states
-Objective: make release action operationally truthful.
-Scope: support at least one approved state, one pending state, and one denied state with visible reasoning.
-Done when: the workspace does not imply fake action certainty.
+### Ticket 3: Represent honest rollout states
+Objective: make release execution operationally truthful.
+Scope: support at least one live state, one staged state, and one aborted state with visible reasoning.
+Done when: the workspace does not imply fake rollout certainty.
 Evidence required: screenshots, routes exercised, and one short walkthrough.
 
-### Ticket 4: Add one convention-release Prime Mermaid artifact
-Objective: capture the move from trust verdict to explicit manager action.
-Scope: add one Prime Mermaid artifact for convention-release visibility.
-Done when: the release-action surface is represented as committed source truth.
+### Ticket 4: Add one convention-rollout Prime Mermaid artifact
+Objective: capture the move from manager signoff to actual rollout state.
+Scope: add one Prime Mermaid artifact for convention-rollout visibility.
+Done when: the rollout surface is represented as committed source truth.
 Evidence required: artifact path and one short note on what it governs.
 
 ### Ticket 5: Add one narrow smoke path and one narrow test
-Objective: make convention-release action visible, reviewable, and repeatable.
+Objective: make convention-rollout state visible, reviewable, and repeatable.
 Scope:
-- one documented local smoke path from workspace load to memory-entry inspection to callable-convention inspection to invocation inspection to delivery inspection to activation inspection to constrained-output inspection to proof inspection to trust-decision inspection to release-action inspection
-- one automated test or lightweight scripted verification for the release-action surface
+- one documented local smoke path from workspace load to memory-entry inspection to callable-convention inspection to invocation inspection to delivery inspection to activation inspection to constrained-output inspection to proof inspection to trust-decision inspection to release-action inspection to rollout inspection
+- one automated test or lightweight scripted verification for the rollout surface
 Done when: a reviewer can run the commands without guessing hidden steps.
 Evidence required: exact commands, exact output, screenshot paths, and remaining risks.
 
@@ -120,4 +120,4 @@ Evidence required: exact commands, exact output, screenshot paths, and remaining
 - adding new specialist roles beyond manager, design, coder, and QA
 - broad cloud sync, billing, `solaceagi` work
 - unrelated Chromium platform changes
-- rewriting the role stack instead of making manager signoff inspectable
+- rewriting the role stack instead of making rollout inspectable
