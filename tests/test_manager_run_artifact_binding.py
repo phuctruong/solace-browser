@@ -16,8 +16,8 @@ def test_hub_app_js_has_artifact_binding_logic():
     assert "/runs/' + boundRun.runId + '/events" in content
     assert "/artifact/events.jsonl" in content
     
-    # Check basis explicitly validates SAC71 states
-    assert '(SAC70/71/72/73)' in content
+    # Check basis explicitly validates SAC71-SAC74 states
+    assert '(SAC70/71/72/73/74)' in content
 
 def test_smoke_script_exists():
     assert os.path.exists("scripts/smoke-manager-run-artifact-binding.sh")

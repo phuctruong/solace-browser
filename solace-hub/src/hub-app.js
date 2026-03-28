@@ -210,6 +210,36 @@
     });
   };
 
+  window.__solaceSignoffWorkflow = function(assignmentId, existingId, status) {
+    if (!assignmentId) return;
+    
+    var payload = {
+        assignment_id: assignmentId,
+        approver_role: 'manager',
+        status: status,
+        notes: (status === 'approved' ? 'Manager natively verified the workflow execution output.' : 'Manager rejected the workflow execution output.')
+    };
+
+    var url = API + '/api/v1/backoffice/solace-dev-manager/approvals';
+    var method = 'POST';
+    
+    if (existingId) {
+        url += '/' + existingId;
+        method = 'PUT';
+    }
+
+    fetch(url, {
+        method: method,
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify(payload)
+    }).then(function(r) { return r.json(); }).then(function(res) {
+        if (!res.created && !res.updated) {
+            console.warn('Signoff mutation failed', res);
+        }
+        hydrateActiveWorkflowResult();
+    });
+  };
+
   function hydrateActiveWorkflowRoutes() {
     var panel = document.getElementById('dev-active-workflow-routing');
     var list = document.getElementById('dev-active-workflow-routes');
@@ -414,8 +444,9 @@
         }
         html += '</div>';
 
-        // --- SAC73 Output ---
-        html += '<div style="margin-top:0.3rem; padding-top:0.3rem; border-top:1px solid #334155;">';
+        // --- SAC73 & SAC74 Output ---
+        html += '<div style="margin-top:0.3rem; padding-top:0.3rem; border-top:1px solid #334155; display:flex; align-items:center; justify-content:space-between;">';
+        html += '<div>';
         html += '<strong style="display:block; margin-bottom:0.1rem;">Approval State:</strong>';
         if (linkedApproval) {
             var color = linkedApproval.status === 'approved' ? '#6ee7b7' : (linkedApproval.status === 'rejected' ? '#fca5a5' : '#fcd34d');
@@ -426,10 +457,18 @@
             html += '<span style="font-size:0.65rem; color:var(--sb-text-muted); margin-left:0.4rem;">No manager approval registered for assignment.</span>';
         }
         html += '</div>';
+
+        var linkedId = linkedApproval ? linkedApproval.id : '';
+        html += '<div style="display:flex; gap:0.3rem;">';
+        html += '<button onclick="window.__solaceSignoffWorkflow(\'' + active.id + '\', \'' + linkedId + '\', \'approved\')" class="sb-btn sb-btn--sm" style="font-size:0.6rem;padding:0.15rem 0.4rem;background:#064e3b;color:#34d399;font-weight:600;border:1px solid #059669;cursor:pointer;">Approve</button>';
+        html += '<button onclick="window.__solaceSignoffWorkflow(\'' + active.id + '\', \'' + linkedId + '\', \'rejected\')" class="sb-btn sb-btn--sm" style="font-size:0.6rem;padding:0.15rem 0.4rem;background:#4c0519;color:#fca5a5;border:1px solid #e11d48;cursor:pointer;">Reject</button>';
+        html += '</div>';
+        
+        html += '</div>';
         // --------------------
 
         if (boundRun.basis === 'workflow-launch-session-binding') {
-          html += '<strong style="display:block;margin-top:0.3rem;">Binding Basis:</strong> <code style="background:rgba(252,211,77,0.15);color:#fcd34d;padding:0.1rem 0.3rem;border-radius:0.15rem;">Run execution explicitly bound to workflow launch session state (SAC70/71/72/73)</code>';
+          html += '<strong style="display:block;margin-top:0.3rem;">Binding Basis:</strong> <code style="background:rgba(252,211,77,0.15);color:#fcd34d;padding:0.1rem 0.3rem;border-radius:0.15rem;">Run execution explicitly bound to workflow launch session state (SAC70/71/72/73/74)</code>';
         } else {
           html += '<strong style="display:block;margin-top:0.3rem;">Binding Basis:</strong> <code style="background:rgba(239,68,68,0.12);color:#fca5a5;padding:0.1rem 0.3rem;border-radius:0.15rem;">Fallback to selected run only; not durable workflow launch proof</code>';
         }
