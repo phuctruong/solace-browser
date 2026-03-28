@@ -82,7 +82,100 @@
     { id: 'solace-qa',          key: 'qa',       tables: ['qa_runs','qa_findings','qa_signoffs'] }
   ];
 
+  window.__solaceActiveRequestId = null;
+
+  function hydrateActiveWorkflowSelector() {
+    var select = document.getElementById('dev-request-select');
+    if (!select) return;
+    
+    get('/api/v1/backoffice/solace-dev-manager/requests').catch(function(){return {items:[]};}).then(function(res) {
+      // Preserve current selection if any
+      var currentVal = window.__solaceActiveRequestId;
+      
+      var items = res.items || [];
+      var html = '<option value="">-- No Active Request (Fallback Mode) --</option>';
+      items.forEach(function(req) {
+        var label = '[' + req.ticket_type + '] ' + req.title + ' (' + req.id.substring(0,8) + ')';
+        var selected = (req.id === currentVal) ? ' selected' : '';
+        html += '<option value="' + req.id + '"' + selected + '>' + escapeHtml(label) + '</option>';
+      });
+      select.innerHTML = html;
+    });
+  }
+
+  window.__solaceSelectRequest = function(reqId) {
+    if (!reqId) {
+       window.__solaceActiveRequestId = null;
+    } else {
+       window.__solaceActiveRequestId = reqId;
+    }
+    hydrateDevWorkspace();
+  };
+
+  window.__solaceCreateSac67Request = function() {
+    var title = prompt("Enter new Solace Browser request title:", "SAC67 Native Manager Request");
+    if (!title) return;
+    
+    // 1. Get Project ID for 'solace-browser'
+    get('/api/v1/backoffice/solace-dev-manager/projects').catch(function(){return {items:[]};}).then(function(res) {
+        var items = res.items || [];
+        var proj = items.find(function(p) { return p.repository === 'solace-browser'; });
+        function createRequestForProject(projectId) {
+          fetch(API + '/api/v1/backoffice/solace-dev-manager/requests', {
+              method: 'POST',
+              headers: {'Content-Type': 'application/json'},
+              body: JSON.stringify({
+                  project_id: projectId,
+                  ticket_type: 'feature',
+                  title: title,
+                  status: 'assigned'
+              })
+          }).then(function(r) { return r.json(); }).then(function(reqData) {
+              if (!reqData.created) { alert('Failed to create request'); return; }
+              var reqId = reqData.record.id;
+              
+              // 3. Create active 'coder' assignment immediately so workflow can start
+              fetch(API + '/api/v1/backoffice/solace-dev-manager/assignments', {
+                  method: 'POST',
+                  headers: {'Content-Type': 'application/json'},
+                  body: JSON.stringify({
+                      request_id: reqId,
+                      target_role: 'coder',
+                      details: 'Implementation phase for ' + title,
+                      status: 'active'
+                  })
+              }).then(function() {
+                  // Auto-select this request
+                  window.__solaceSelectRequest(reqId);
+                  // Also refresh dropdown
+                  hydrateActiveWorkflowSelector();
+              });
+          });
+        }
+
+        if (proj) {
+          createRequestForProject(proj.id);
+          return;
+        }
+
+        // 2. Create project on demand so the flow is self-hosting, not seed-script dependent
+        fetch(API + '/api/v1/backoffice/solace-dev-manager/projects', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({
+                name: 'Solace Browser',
+                repository: 'solace-browser',
+                description: 'Self-hosted Solace Dev workspace target project'
+            })
+        }).then(function(r) { return r.json(); }).then(function(projectData) {
+            if (!projectData.created) { alert('Failed to create solace-browser project'); return; }
+            createRequestForProject(projectData.record.id);
+        });
+    });
+  };
+
   function hydrateDevWorkspace() {
+    hydrateActiveWorkflowSelector();
     hydrateHubStatus();
     DEV_ROLES.forEach(function(role) {
       hydrateRoleCard(role);
@@ -732,7 +825,13 @@
       var artifacts = (responses[2] && responses[2].items) ? responses[2].items : [];
       var approvals = (responses[3] && responses[3].items) ? responses[3].items : [];
 
-      var activeAssgn = assignments.find(function(a) { return a.target_role === roleName && a.status === 'active'; }) || assignments.find(function(a) { return a.target_role === roleName; });
+      var paramsRequestId = window.__solaceActiveRequestId;
+      var activeAssgn = null;
+      if (paramsRequestId) {
+        activeAssgn = assignments.find(function(a) { return a.request_id === paramsRequestId && a.target_role === roleName; });
+      } else {
+        activeAssgn = assignments.find(function(a) { return a.target_role === roleName && a.status === 'active'; }) || assignments.find(function(a) { return a.target_role === roleName; });
+      }
       var reqInfo = null;
       var linkedArtifact = null;
       var linkedApproval = null;
@@ -760,10 +859,19 @@
         if (linkedApproval && linkedApproval.status) {
           evidence.push('Back Office Approval: ' + linkedApproval.status);
         }
-        basisHtml = '<code>runtime-backed dynamic API (SAC66)</code>';
+        
+        if (paramsRequestId) {
+          basisHtml = '<code style="background:rgba(99,102,241,0.15);color:#818cf8;">Explicitly selected request (SAC67)</code>';
+        } else {
+          basisHtml = '<code>runtime-backed dynamic API (SAC66)</code>';
+        }
       } else {
-        statement = 'No active Back Office assignments found for role: ' + roleName + '. Execute seed script to bind runtime.';
-        evidence.push('None - API offline or unseeded');
+        if (paramsRequestId) {
+          statement = 'Selected Request has no valid assignment for role: ' + roleName + '. Create or route an assignment for this request.';
+        } else {
+          statement = 'No active Back Office assignments found for role: ' + roleName + '. Create or select an explicit request to route work into this role.';
+        }
+        evidence.push('None - API offline, unseeded, or unrouted');
         basisHtml = '<code style="background:rgba(239,68,68,0.1);color:#ef4444;">disconnected / fallback mock</code>';
       }
 
@@ -835,7 +943,14 @@
       var assignments = (responses[0] && responses[0].items) ? responses[0].items : [];
       var artifacts = (responses[1] && responses[1].items) ? responses[1].items : [];
       var approvals = (responses[2] && responses[2].items) ? responses[2].items : [];
-      var activeAssgn = assignments.find(function(a) { return a.target_role === roleName && a.status === 'active'; }) || assignments.find(function(a) { return a.target_role === roleName; });
+      var activeAssgn = null;
+      var paramsRequestId = window.__solaceActiveRequestId;
+      if (paramsRequestId) {
+        activeAssgn = assignments.find(function(a) { return a.request_id === paramsRequestId && a.target_role === roleName; });
+      } else {
+        activeAssgn = assignments.find(function(a) { return a.target_role === roleName && a.status === 'active'; }) || assignments.find(function(a) { return a.target_role === roleName; });
+      }
+
       var linkedArtifact = null;
       var linkedApproval = null;
       if (activeAssgn) {
@@ -848,7 +963,11 @@
       var basisHtml = '';
 
       if (activeAssgn) {
-        basisHtml = '<code>runtime-backed dynamic API (SAC66)</code>';
+        if (paramsRequestId) {
+          basisHtml = '<code style="background:rgba(99,102,241,0.15);color:#818cf8;">Explicitly selected request (SAC67)</code>';
+        } else {
+          basisHtml = '<code>runtime-backed dynamic API (SAZ66)</code>';
+        }
         inbox = ['Back Office Request Parent Object', 'Back Office Assignment Object (' + activeAssgn.id.substring(0,8) + ')'];
         outbox = ['Worker Run Artifacts (' + runId + ')', 'App Outbox / Runs'];
         if (linkedArtifact && linkedArtifact.file_path) {

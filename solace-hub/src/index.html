@@ -683,6 +683,24 @@
     </div>
 
     <!-- ═══════════════════════════════════════════════════════════════
+         SECTION 1b: ACTIVE WORKFLOW (SAC67)
+         ═══════════════════════════════════════════════════════════════ -->
+    <div class="sb-card sb-mt-md" id="dev-active-workflow-card" style="border-left: 3px solid #6366f1;">
+      <div class="hub-flex-between">
+        <div>
+          <p class="sb-kicker" style="color:#6366f1;">Active Dev Workflow</p>
+        </div>
+        <button class="sb-btn sb-btn--sm sb-btn--primary" onclick="window.__solaceCreateSac67Request()">+ New Dev Request</button>
+      </div>
+      <div id="dev-active-workflow-selector" class="sb-mt-sm">
+        <select id="dev-request-select" onchange="window.__solaceSelectRequest(this.value)" style="width:100%; padding:0.4rem; background:var(--sb-surface-alt, #0f172a); color:var(--sb-on-surface, #f8fafc); border:1px solid #334155; border-radius:0.25rem;">
+          <option value="">-- No Active Request (Fallback Mode) --</option>
+        </select>
+        <p class="sb-text-muted sb-mt-xs" style="font-size:0.75rem;">Selected request explicitly binds downstream Assignment, Inbox, and Execution contexts.</p>
+      </div>
+    </div>
+
+    <!-- ═══════════════════════════════════════════════════════════════
          SECTION 2: ROLE ROSTER  (Tickets 1 + 2)
          Four roles in a 2x2 grid, each expandable to show detail
          ═══════════════════════════════════════════════════════════════ -->

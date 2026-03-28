@@ -1,22 +1,22 @@
 # TODO
 
 Repo: `solace-browser`
-Role: Solace Hub + Browser workspace for runtime-backed request creation and active workflow selection
+Role: Solace Hub + Browser workspace for native assignment routing on selected requests
 
 ## Current Round
 
-`SAC67` native manager request creation and request-selection truth.
+`SAC68` native manager assignment routing and explicit role activation.
 
-`SAC66` was the first real pivot away from pure role-derived visibility. The Hub now reads a real Back Office request/assignment/artifact/approval chain for one workflow.
+`SAC67` made the manager able to create and select a real `solace-browser` request in Hub. That removed the hidden seed dependency for request creation.
 
-That is progress, but it is still not self-hosting enough because the workflow currently depends on an external seed script. The next step is to let the Dev Manager create and select the active `solace-browser` request directly in Hub, then drive the rest of the runtime-backed workflow from that selected request.
+The next blocker is that role routing is still too implicit. New requests are still hard-wired into an immediate `coder` assignment instead of being managed as an explicit routing decision by the Dev Manager. The next round must make assignment routing visible and intentional for the selected request.
 
 ## Worker Inbox
 
-- `northstar`: `Solace Browser must let the Dev Manager initiate and inspect one real self-hosting request in the browser itself, not only through external seeding scripts.`
+- `northstar`: `The Dev Manager must be able to route a selected self-hosting request into the correct specialist lane from Hub itself, and that routing decision must become the visible basis for downstream worker context.`
 - `worker_mode`: `external_coding_agent`
 - `worker_role`: `coder`
-- `task_statement`: `Add one native manager request-creation and request-selection path in Hub, backed by the existing Back Office objects, and use that selected request as the visible basis for assignment and worker workflow context.`
+- `task_statement`: `Add a native assignment-routing surface for the selected request. The manager must be able to choose a target role and create or activate the corresponding assignment through the existing Back Office objects.`
 - `scope_change_policy`: `FAIL_AND_NEW_TASK`
 
 ## Read This First
@@ -26,81 +26,79 @@ That is progress, but it is still not self-hosting enough because the workflow c
 - `/home/phuc/projects/solace-prime/specs/solace-dev-workspace.md`
 - `/home/phuc/projects/solace-prime/specs/solace-dev-role-architecture.md`
 - `/home/phuc/projects/solace-prime/canon/hub/SI5 — Solace Hub as Mission Control.md`
-- `/home/phuc/projects/solace-prime/canon/hub/SI6 — Solace Browser as Execution & Proof Layer.md`
 - `/home/phuc/projects/solace-prime/canon/hub/SI17 — Human-in-the-Loop as a First-Class System Component.md`
-- `/home/phuc/projects/solace-browser/solace-runtime/src/routes/backoffice.rs`
 - `/home/phuc/projects/solace-browser/data/apps/solace-dev-manager/manifest.yaml`
+- `/home/phuc/projects/solace-browser/solace-runtime/src/routes/backoffice.rs`
 - `/home/phuc/projects/solace-browser/solace-hub/src/hub-app.js`
 - `/home/phuc/projects/solace-browser/solace-hub/src/index.html`
 
 ## Audit Ground Truth
 
-- Back Office objects now exist and are being read for one workflow.
-- The current runtime-backed path still depends on `scripts/seed-saz66-runtime-binding.sh`.
-- The manager still cannot create the canonical request directly inside the Hub workspace.
-- Active workflow selection is still too implicit and too dependent on role/run context.
+- request creation is now native in Hub
+- selected request state now exists
+- downstream worker context can now follow a selected request
+- assignment routing is still not a first-class manager decision
+- the manager still cannot explicitly choose `design`, `coder`, or `qa` for the selected request inside Hub
 
 ## Rules
 
-- do not revert to a new mock panel
-- use the existing `projects`, `requests`, `assignments`, `artifacts`, and `approvals` Back Office objects
-- keep the manager flow honest about what is runtime-backed and what is still fallback
-- preserve the current integrated workspace and `SAC66` binding
-- do not introduce a second parallel request model
+- do not revert to implicit hard-coded routing
+- use the existing `assignments` Back Office table
+- keep `SAC66` and `SAC67` runtime-backed flow intact
+- make explicit what assignment is active for the selected request
+- preserve honesty about any fallback behavior
 
 ## Hard Rejection Criteria
 
-- the manager still cannot create one real `solace-browser` request from Hub
-- the visible active workflow is still determined only by fallback role/run context
-- request selection does not visibly drive assignment and worker context
-- the result depends entirely on an external seed script again
+- routing is still hard-coded only to `coder`
+- the manager still cannot explicitly assign a selected request to a role in Hub
+- selected request does not drive the visible active assignment
+- the round adds only labels without changing the actual request -> assignment truth path
 
 ## Required Deliverables
 
-1. one native Hub request-creation path for `solace-browser`
-2. one visible active-request selection surface
-3. one visible link from selected request -> assignment context
-4. one visible link from selected request -> worker inbox/outbox context
-5. one Prime Mermaid artifact for request creation and selection
-6. one narrow smoke path
-7. one narrow automated test
+1. one native assignment-routing control for the selected request
+2. one visible selected-role / active-assignment state
+3. one visible link from routing decision -> assignment context
+4. one Prime Mermaid artifact for request-to-assignment routing
+5. one narrow smoke path
+6. one narrow automated test
 
 ## Current Tickets
 
-### Ticket 1: Add native request creation
+### Ticket 1: Add assignment routing control
 
-Objective: make the manager able to start the self-hosting loop inside Hub.
-
-Scope:
-
-- create one narrow UI path that creates a `requests` record in `solace-dev-manager`
-- tie it to the `solace-browser` project
-- keep the interaction minimal and reviewable
-
-Done when: a reviewer can create a real `solace-browser` request from the Hub workspace.
-
-### Ticket 2: Add active request selection
-
-Objective: make the workflow basis explicit.
+Objective: make specialist routing a manager action, not a hidden default.
 
 Scope:
 
-- show a visible selected request in the manager workspace
-- make selected request context flow into assignment and worker panels
-- keep fallback mode explicit if no request is selected
+- add one visible control for the selected request
+- allow explicit assignment to at least `design`, `coder`, or `qa`
+- create or activate the relevant assignment record in Back Office
 
-Done when: a reviewer can tell which request the current workflow is about.
+Done when: the manager can route the selected request intentionally from Hub.
 
-### Ticket 3: Preserve runtime-backed linkage
+### Ticket 2: Surface the active routed assignment
 
-Objective: keep `SAC66` intact while making it manager-driven.
+Objective: make downstream role context honest.
 
 Scope:
 
-- ensure assignment, artifact, and approval reads still work
-- ensure selected request drives the same durable chain
+- show which role is currently routed for the selected request
+- ensure assignment context panels follow that routed assignment
 
-Done when: the new manager path strengthens the existing runtime-backed chain instead of bypassing it.
+Done when: the active assignment is clearly tied to the selected request and chosen role.
+
+### Ticket 3: Preserve the runtime-backed chain
+
+Objective: keep the request -> assignment -> artifact/approval chain coherent.
+
+Scope:
+
+- do not break `SAC66` workflow binding
+- do not break `SAC67` request creation/selection
+
+Done when: routing strengthens the durable chain instead of bypassing it.
 
 ## Suggested File Targets
 
@@ -116,14 +114,14 @@ Done when: the new manager path strengthens the existing runtime-backed chain in
 - changed files
 - exact test/check command output
 - exact routes or APIs exercised
-- sample created request payload
+- sample assignment payload
 - screenshot paths
 - local smoke path
 - remaining risks
 
 ## Out Of Scope
 
-- broad workflow redesign
+- full workflow redesign
 - cloud sync or `solaceagi`
-- another long post-release panel chain
-- generic polish without manager-driven runtime truth
+- another unrelated transparency panel
+- generic polish without manager-driven routing truth
