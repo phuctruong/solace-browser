@@ -651,130 +651,220 @@
   </div>
   </div><!-- end tab-overview -->
 
-  <!-- TAB: DEV WORKSPACE -->
+  <!-- TAB: DEV WORKSPACE — Integrated Shell (SDX4) -->
   <div id="tab-dev" class="hub-tab-panel sh-tab-panel-hidden">
-    <div class="sb-card">
+
+    <!-- ═══════════════════════════════════════════════════════════════
+         SECTION 1: PROJECT CONTEXT HEADER  (Ticket 3)
+         ═══════════════════════════════════════════════════════════════ -->
+    <div class="sb-card" id="dev-project-header">
       <div class="hub-flex-between">
-        <p class="sb-kicker">Dev Manager Workspace</p>
-        <span class="sb-pill sb-pill--info">solace-browser project active</span>
+        <div>
+          <p class="sb-kicker" style="font-size: 1.1rem; letter-spacing: 0.04em;">Integrated Dev Workspace</p>
+          <h2 style="margin: 0.25rem 0 0; font-size: 1.5rem; font-weight: 700; color: var(--sb-on-surface);">solace-browser</h2>
+        </div>
+        <div style="display:flex; gap: 0.5rem; align-items:center;">
+          <span class="sb-pill sb-pill--info">4 roles active</span>
+          <span class="sb-pill" style="background: var(--sb-surface-alt, #1e293b); color: var(--sb-on-surface);">SDX4</span>
+        </div>
       </div>
-      <p class="sb-text-muted">Manage requests, assignments, and approvals across design, coder, and QA roles.</p>
-      <div class="sb-mt-md" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem;">
-        <a href="/backoffice/solace-dev-manager/requests" target="_blank" class="sb-btn sb-btn--sm" style="display:flex; flex-direction:column; align-items:flex-start; height:auto; padding: 0.75rem;">
-          <strong style="margin-bottom:0.25rem;">Requests</strong>
-          <span class="sb-text-muted" style="font-weight:normal; text-align:left;">Triage features and bugs</span>
-        </a>
-        <a href="/backoffice/solace-dev-manager/assignments" target="_blank" class="sb-btn sb-btn--sm" style="display:flex; flex-direction:column; align-items:flex-start; height:auto; padding: 0.75rem;">
-          <strong style="margin-bottom:0.25rem;">Assignments</strong>
-          <span class="sb-text-muted" style="font-weight:normal; text-align:left;">Route work to specialists</span>
-        </a>
-        <a href="/backoffice/solace-dev-manager/approvals" target="_blank" class="sb-btn sb-btn--sm" style="display:flex; flex-direction:column; align-items:flex-start; height:auto; padding: 0.75rem;">
-          <strong style="margin-bottom:0.25rem;">Approvals</strong>
-          <span class="sb-text-muted" style="font-weight:normal; text-align:left;">Review QA & Design signoffs</span>
-        </a>
-        <a href="/backoffice/solace-dev-manager/artifacts" target="_blank" class="sb-btn sb-btn--sm" style="display:flex; flex-direction:column; align-items:flex-start; height:auto; padding: 0.75rem;">
-          <strong style="margin-bottom:0.25rem;">Artifacts & Evidence</strong>
-          <span class="sb-text-muted" style="font-weight:normal; text-align:left;">Inspect proofs of work</span>
-        </a>
-        <a href="/backoffice/solace-dev-manager/projects" target="_blank" class="sb-btn sb-btn--sm" style="display:flex; flex-direction:column; align-items:flex-start; height:auto; padding: 0.75rem;">
-          <strong style="margin-bottom:0.25rem;">Projects Map</strong>
-          <span class="sb-text-muted" style="font-weight:normal; text-align:left;">View tracked repositories</span>
-        </a>
-        <a href="/backoffice/solace-dev-manager" target="_blank" class="sb-btn sb-btn--sm sb-btn--primary" style="display:flex; flex-direction:column; align-items:flex-start; height:auto; padding: 0.75rem;">
-          <strong style="margin-bottom:0.25rem;">Backoffice Dashboard &rarr;</strong>
-          <span class="sb-text-muted" style="font-weight:normal; text-align:left; color:var(--sb-on-primary-soft, #fff);">Open raw schema views</span>
-        </a>
+      <p class="sb-text-muted sb-mt-sm">Hub + Dev workspace where manager, design, coder, and QA operate on the same durable objects.</p>
+
+      <!-- Project Quick Links -->
+      <div class="sb-mt-md" style="display:flex; flex-wrap:wrap; gap: 0.75rem;">
+        <a href="/backoffice/solace-dev-manager/projects" target="_blank" class="sb-btn sb-btn--sm">Projects Map</a>
+        <a href="/backoffice/solace-dev-manager/requests" target="_blank" class="sb-btn sb-btn--sm">Requests</a>
+        <a href="/backoffice/solace-dev-manager/assignments" target="_blank" class="sb-btn sb-btn--sm">Assignments</a>
+        <a href="/backoffice/solace-dev-manager/approvals" target="_blank" class="sb-btn sb-btn--sm">Approvals</a>
+        <a href="/backoffice/solace-dev-manager/artifacts" target="_blank" class="sb-btn sb-btn--sm">Artifacts &amp; Evidence</a>
+        <a href="/backoffice/solace-dev-manager" target="_blank" class="sb-btn sb-btn--sm sb-btn--primary">Backoffice Dashboard &rarr;</a>
       </div>
     </div>
 
-    <!-- Design Workspace Card -->
-    <div class="sb-card sb-mt-md" id="design-workspace-card">
-      <div class="hub-flex-between">
-        <p class="sb-kicker" style="color: var(--sb-accent, #3b82f6);">Design Workspace</p>
-        <span class="sb-pill sb-pill--info">solace-design role active</span>
+    <!-- ═══════════════════════════════════════════════════════════════
+         SECTION 2: ROLE ROSTER  (Tickets 1 + 2)
+         Four roles in a 2x2 grid, each expandable to show detail
+         ═══════════════════════════════════════════════════════════════ -->
+    <div class="sb-mt-md" id="dev-role-roster" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 1rem;">
+
+      <!-- ── Manager ── -->
+      <div class="sb-card" id="role-card-manager" style="border-left: 3px solid #d946ef;">
+        <div class="hub-flex-between">
+          <p class="sb-kicker" style="color: #d946ef;">Manager</p>
+          <span class="sb-pill sb-pill--info" style="font-size: 0.65rem;">solace-dev-manager</span>
+        </div>
+        <p class="sb-text-muted" style="font-size: 0.8rem;">Triage requests, route work, approve artifacts, gate releases.</p>
+        <details class="sb-mt-sm" id="role-detail-manager">
+          <summary style="cursor:pointer; font-weight:600; font-size:0.85rem; color:var(--sb-on-surface);">Inbox / Outbox / Artifacts &darr;</summary>
+          <div class="sb-mt-sm" style="display:flex; flex-direction:column; gap:0.5rem;">
+            <strong style="font-size:0.75rem; text-transform:uppercase; color:var(--sb-text-muted);">Inbox</strong>
+            <span class="sb-text-muted" style="font-size:0.8rem;">prompts · templates · assets · policies · datasets · requests · conventions</span>
+            <strong style="font-size:0.75rem; text-transform:uppercase; color:var(--sb-text-muted);">Outbox</strong>
+            <span class="sb-text-muted" style="font-size:0.8rem;">previews · drafts · reports · suggestions · runs</span>
+            <strong style="font-size:0.75rem; text-transform:uppercase; color:var(--sb-text-muted);">Backoffice Tables</strong>
+            <div style="display:flex; flex-wrap:wrap; gap:0.4rem;">
+              <a href="/backoffice/solace-dev-manager/requests" target="_blank" class="sb-btn sb-btn--sm" style="font-size:0.75rem; padding:0.3rem 0.6rem;">requests</a>
+              <a href="/backoffice/solace-dev-manager/assignments" target="_blank" class="sb-btn sb-btn--sm" style="font-size:0.75rem; padding:0.3rem 0.6rem;">assignments</a>
+              <a href="/backoffice/solace-dev-manager/approvals" target="_blank" class="sb-btn sb-btn--sm" style="font-size:0.75rem; padding:0.3rem 0.6rem;">approvals</a>
+              <a href="/backoffice/solace-dev-manager/artifacts" target="_blank" class="sb-btn sb-btn--sm" style="font-size:0.75rem; padding:0.3rem 0.6rem;">artifacts</a>
+              <a href="/backoffice/solace-dev-manager/releases" target="_blank" class="sb-btn sb-btn--sm" style="font-size:0.75rem; padding:0.3rem 0.6rem;">releases</a>
+            </div>
+            <strong style="font-size:0.75rem; text-transform:uppercase; color:var(--sb-text-muted);">Handoffs Owned</strong>
+            <div style="display:flex; flex-wrap:wrap; gap:0.4rem;">
+              <a href="/backoffice/solace-dev-manager/design_handoffs" target="_blank" class="sb-btn sb-btn--sm" style="font-size:0.75rem; padding:0.3rem 0.6rem;">design_handoffs</a>
+              <a href="/backoffice/solace-dev-manager/coder_handoffs" target="_blank" class="sb-btn sb-btn--sm" style="font-size:0.75rem; padding:0.3rem 0.6rem;">coder_handoffs</a>
+              <a href="/backoffice/solace-dev-manager/qa_handoffs" target="_blank" class="sb-btn sb-btn--sm" style="font-size:0.75rem; padding:0.3rem 0.6rem;">qa_handoffs</a>
+            </div>
+          </div>
+        </details>
       </div>
-      <p class="sb-text-muted">Create and review page maps, UI state diagrams, and component specs for solace-browser.</p>
-      <div class="sb-mt-md" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem;">
-        <a href="/backoffice/solace-design/design_specs" target="_blank" class="sb-btn sb-btn--sm" style="display:flex; flex-direction:column; align-items:flex-start; height:auto; padding: 0.75rem;">
-          <strong style="margin-bottom:0.25rem;">Design Specs</strong>
-          <span class="sb-text-muted" style="font-weight:normal; text-align:left;">Page, state, and component specs</span>
-        </a>
-        <a href="/backoffice/solace-design/design_reviews" target="_blank" class="sb-btn sb-btn--sm" style="display:flex; flex-direction:column; align-items:flex-start; height:auto; padding: 0.75rem;">
-          <strong style="margin-bottom:0.25rem;">Design Reviews</strong>
-          <span class="sb-text-muted" style="font-weight:normal; text-align:left;">Review and approve specs</span>
-        </a>
-        <a href="/backoffice/solace-dev-manager/design_handoffs" target="_blank" class="sb-btn sb-btn--sm" style="display:flex; flex-direction:column; align-items:flex-start; height:auto; padding: 0.75rem;">
-          <strong style="margin-bottom:0.25rem;">Design Handoffs</strong>
-          <span class="sb-text-muted" style="font-weight:normal; text-align:left;">Manager-to-design assignments</span>
-        </a>
-        <a href="/backoffice/solace-design" target="_blank" class="sb-btn sb-btn--sm sb-btn--primary" style="display:flex; flex-direction:column; align-items:flex-start; height:auto; padding: 0.75rem;">
-          <strong style="margin-bottom:0.25rem;">Design Dashboard &rarr;</strong>
-          <span class="sb-text-muted" style="font-weight:normal; text-align:left; color:var(--sb-on-primary-soft, #fff);">Open design backoffice</span>
-        </a>
+
+      <!-- ── Design ── -->
+      <div class="sb-card" id="role-card-design" style="border-left: 3px solid #3b82f6;">
+        <div class="hub-flex-between">
+          <p class="sb-kicker" style="color: #3b82f6;">Design</p>
+          <span class="sb-pill sb-pill--info" style="font-size: 0.65rem;">solace-design</span>
+        </div>
+        <p class="sb-text-muted" style="font-size: 0.8rem;">Page maps, UI state diagrams, component specs, and design reviews.</p>
+        <details class="sb-mt-sm" id="role-detail-design">
+          <summary style="cursor:pointer; font-weight:600; font-size:0.85rem; color:var(--sb-on-surface);">Inbox / Outbox / Artifacts &darr;</summary>
+          <div class="sb-mt-sm" style="display:flex; flex-direction:column; gap:0.5rem;">
+            <strong style="font-size:0.75rem; text-transform:uppercase; color:var(--sb-text-muted);">Inbox</strong>
+            <span class="sb-text-muted" style="font-size:0.8rem;">prompts · templates · assets · policies · datasets · requests · conventions</span>
+            <strong style="font-size:0.75rem; text-transform:uppercase; color:var(--sb-text-muted);">Outbox</strong>
+            <span class="sb-text-muted" style="font-size:0.8rem;">previews · drafts · reports · suggestions · runs</span>
+            <strong style="font-size:0.75rem; text-transform:uppercase; color:var(--sb-text-muted);">Backoffice Tables</strong>
+            <div style="display:flex; flex-wrap:wrap; gap:0.4rem;">
+              <a href="/backoffice/solace-design/design_specs" target="_blank" class="sb-btn sb-btn--sm" style="font-size:0.75rem; padding:0.3rem 0.6rem;">design_specs</a>
+              <a href="/backoffice/solace-design/design_reviews" target="_blank" class="sb-btn sb-btn--sm" style="font-size:0.75rem; padding:0.3rem 0.6rem;">design_reviews</a>
+            </div>
+            <strong style="font-size:0.75rem; text-transform:uppercase; color:var(--sb-text-muted);">Handoff Contract</strong>
+            <span class="sb-text-muted" style="font-size:0.8rem;">manager-to-design-handoff.md</span>
+          </div>
+        </details>
+      </div>
+
+      <!-- ── Coder ── -->
+      <div class="sb-card" id="role-card-coder" style="border-left: 3px solid #10b981;">
+        <div class="hub-flex-between">
+          <p class="sb-kicker" style="color: #10b981;">Coder</p>
+          <span class="sb-pill sb-pill--info" style="font-size: 0.65rem;">solace-coder</span>
+        </div>
+        <p class="sb-text-muted" style="font-size: 0.8rem;">Bounded code changes, test output, diff summaries, and evidence hashes.</p>
+        <details class="sb-mt-sm" id="role-detail-coder">
+          <summary style="cursor:pointer; font-weight:600; font-size:0.85rem; color:var(--sb-on-surface);">Inbox / Outbox / Artifacts &darr;</summary>
+          <div class="sb-mt-sm" style="display:flex; flex-direction:column; gap:0.5rem;">
+            <strong style="font-size:0.75rem; text-transform:uppercase; color:var(--sb-text-muted);">Inbox</strong>
+            <span class="sb-text-muted" style="font-size:0.8rem;">prompts · templates · assets · policies · datasets · requests · conventions</span>
+            <strong style="font-size:0.75rem; text-transform:uppercase; color:var(--sb-text-muted);">Outbox</strong>
+            <span class="sb-text-muted" style="font-size:0.8rem;">previews · drafts · reports · suggestions · runs</span>
+            <strong style="font-size:0.75rem; text-transform:uppercase; color:var(--sb-text-muted);">Backoffice Tables</strong>
+            <div style="display:flex; flex-wrap:wrap; gap:0.4rem;">
+              <a href="/backoffice/solace-coder/code_runs" target="_blank" class="sb-btn sb-btn--sm" style="font-size:0.75rem; padding:0.3rem 0.6rem;">code_runs</a>
+              <a href="/backoffice/solace-coder/code_artifacts" target="_blank" class="sb-btn sb-btn--sm" style="font-size:0.75rem; padding:0.3rem 0.6rem;">code_artifacts</a>
+              <a href="/backoffice/solace-coder/coder_reviews" target="_blank" class="sb-btn sb-btn--sm" style="font-size:0.75rem; padding:0.3rem 0.6rem;">coder_reviews</a>
+            </div>
+            <strong style="font-size:0.75rem; text-transform:uppercase; color:var(--sb-text-muted);">Handoff Contract</strong>
+            <span class="sb-text-muted" style="font-size:0.8rem;">design-to-coder-handoff.md</span>
+          </div>
+        </details>
+      </div>
+
+      <!-- ── QA ── -->
+      <div class="sb-card" id="role-card-qa" style="border-left: 3px solid #f59e0b;">
+        <div class="hub-flex-between">
+          <p class="sb-kicker" style="color: #f59e0b;">QA</p>
+          <span class="sb-pill sb-pill--info" style="font-size: 0.65rem;">solace-qa</span>
+        </div>
+        <p class="sb-text-muted" style="font-size: 0.8rem;">Adversarial validation, findings, signoffs, and release gating.</p>
+        <details class="sb-mt-sm" id="role-detail-qa">
+          <summary style="cursor:pointer; font-weight:600; font-size:0.85rem; color:var(--sb-on-surface);">Inbox / Outbox / Artifacts &darr;</summary>
+          <div class="sb-mt-sm" style="display:flex; flex-direction:column; gap:0.5rem;">
+            <strong style="font-size:0.75rem; text-transform:uppercase; color:var(--sb-text-muted);">Inbox</strong>
+            <span class="sb-text-muted" style="font-size:0.8rem;">prompts · templates · assets · policies · datasets · requests · conventions</span>
+            <strong style="font-size:0.75rem; text-transform:uppercase; color:var(--sb-text-muted);">Outbox</strong>
+            <span class="sb-text-muted" style="font-size:0.8rem;">previews · drafts · reports · suggestions · runs</span>
+            <strong style="font-size:0.75rem; text-transform:uppercase; color:var(--sb-text-muted);">Backoffice Tables</strong>
+            <div style="display:flex; flex-wrap:wrap; gap:0.4rem;">
+              <a href="/backoffice/solace-qa/qa_runs" target="_blank" class="sb-btn sb-btn--sm" style="font-size:0.75rem; padding:0.3rem 0.6rem;">qa_runs</a>
+              <a href="/backoffice/solace-qa/qa_findings" target="_blank" class="sb-btn sb-btn--sm" style="font-size:0.75rem; padding:0.3rem 0.6rem;">qa_findings</a>
+              <a href="/backoffice/solace-qa/qa_signoffs" target="_blank" class="sb-btn sb-btn--sm" style="font-size:0.75rem; padding:0.3rem 0.6rem;">qa_signoffs</a>
+            </div>
+            <strong style="font-size:0.75rem; text-transform:uppercase; color:var(--sb-text-muted);">Handoff Contract</strong>
+            <span class="sb-text-muted" style="font-size:0.8rem;">coder-to-qa-handoff.md</span>
+          </div>
+        </details>
       </div>
     </div>
 
-    <!-- Coder Workspace Card -->
-    <div class="sb-card sb-mt-md" id="coder-workspace-card">
+    <!-- ═══════════════════════════════════════════════════════════════
+         SECTION 3: DEV ROLE STACK DIAGRAM  (Ticket 3 + 5)
+         ═══════════════════════════════════════════════════════════════ -->
+    <div class="sb-card sb-mt-md" id="dev-role-stack-diagram">
       <div class="hub-flex-between">
-        <p class="sb-kicker" style="color: var(--sb-success, #10b981);">Coder Workspace</p>
-        <span class="sb-pill sb-pill--info">solace-coder role active</span>
+        <p class="sb-kicker">Dev Role Stack &mdash; solace-browser</p>
+        <span class="sb-pill sb-pill--info sh-pill-xs">Prime Mermaid Source</span>
       </div>
-      <p class="sb-text-muted">Implement bounded code changes, run tests, and produce diff summaries and evidence for solace-browser.</p>
-      <div class="sb-mt-md" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem;">
-        <a href="/backoffice/solace-coder/code_runs" target="_blank" class="sb-btn sb-btn--sm" style="display:flex; flex-direction:column; align-items:flex-start; height:auto; padding: 0.75rem;">
-          <strong style="margin-bottom:0.25rem;">Code Runs</strong>
-          <span class="sb-text-muted" style="font-weight:normal; text-align:left;">Implementation runs and test output</span>
-        </a>
-        <a href="/backoffice/solace-coder/code_artifacts" target="_blank" class="sb-btn sb-btn--sm" style="display:flex; flex-direction:column; align-items:flex-start; height:auto; padding: 0.75rem;">
-          <strong style="margin-bottom:0.25rem;">Code Artifacts</strong>
-          <span class="sb-text-muted" style="font-weight:normal; text-align:left;">Changed files and evidence hashes</span>
-        </a>
-        <a href="/backoffice/solace-coder/coder_reviews" target="_blank" class="sb-btn sb-btn--sm" style="display:flex; flex-direction:column; align-items:flex-start; height:auto; padding: 0.75rem;">
-          <strong style="margin-bottom:0.25rem;">Code Reviews</strong>
-          <span class="sb-text-muted" style="font-weight:normal; text-align:left;">Review and approve code runs</span>
-        </a>
-        <a href="/backoffice/solace-dev-manager/coder_handoffs" target="_blank" class="sb-btn sb-btn--sm" style="display:flex; flex-direction:column; align-items:flex-start; height:auto; padding: 0.75rem;">
-          <strong style="margin-bottom:0.25rem;">Coder Handoffs</strong>
-          <span class="sb-text-muted" style="font-weight:normal; text-align:left;">Design-to-coder assignments</span>
-        </a>
-        <a href="/backoffice/solace-coder" target="_blank" class="sb-btn sb-btn--sm sb-btn--primary" style="display:flex; flex-direction:column; align-items:flex-start; height:auto; padding: 0.75rem;">
-          <strong style="margin-bottom:0.25rem;">Coder Dashboard &rarr;</strong>
-          <span class="sb-text-muted" style="font-weight:normal; text-align:left; color:var(--sb-on-primary-soft, #fff);">Open coder backoffice</span>
-        </a>
+      <div class="mermaid" style="margin-top:0.75rem; text-align:center;">
+        graph TD
+          Manager["Manager (d946ef)"] -->|design_handoffs| Design["Design (3b82f6)"]
+          Design -->|design_specs| Manager
+          Manager -->|coder_handoffs| Coder["Coder (10b981)"]
+          Design -->|approved specs| Coder
+          Coder -->|code_runs| Manager
+          Manager -->|qa_handoffs| QA["QA (f59e0b)"]
+          Coder -->|sealed runs| QA
+          Design -->|approved specs| QA
+          QA -->|qa_signoffs| Manager
+          QA -->|release gate| Release["Release"]
       </div>
     </div>
 
-    <!-- QA Workspace Card -->
-    <div class="sb-card sb-mt-md" id="qa-workspace-card">
+    <!-- ═══════════════════════════════════════════════════════════════
+         SECTION 4: WORKER CONTROL  (Ticket 4)
+         ═══════════════════════════════════════════════════════════════ -->
+    <div class="sb-card sb-mt-md" id="dev-worker-control">
       <div class="hub-flex-between">
-        <p class="sb-kicker" style="color: var(--sb-warning, #f59e0b);">QA Workspace</p>
-        <span class="sb-pill sb-pill--info">solace-qa role active</span>
+        <p class="sb-kicker">Worker Control</p>
+        <span class="sb-pill" style="background: var(--sb-surface-alt, #1e293b); color: var(--sb-on-surface); font-size: 0.65rem;">POST /api/v1/apps/run/:app_id</span>
       </div>
-      <p class="sb-text-muted">Adversarial validation, findings, signoffs, and release gating for solace-browser.</p>
-      <div class="sb-mt-md" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem;">
-        <a href="/backoffice/solace-qa/qa_runs" target="_blank" class="sb-btn sb-btn--sm" style="display:flex; flex-direction:column; align-items:flex-start; height:auto; padding: 0.75rem;">
-          <strong style="margin-bottom:0.25rem;">QA Runs</strong>
-          <span class="sb-text-muted" style="font-weight:normal; text-align:left;">Validation runs and assertions</span>
-        </a>
-        <a href="/backoffice/solace-qa/qa_findings" target="_blank" class="sb-btn sb-btn--sm" style="display:flex; flex-direction:column; align-items:flex-start; height:auto; padding: 0.75rem;">
-          <strong style="margin-bottom:0.25rem;">QA Findings</strong>
-          <span class="sb-text-muted" style="font-weight:normal; text-align:left;">Regressions and issues by severity</span>
-        </a>
-        <a href="/backoffice/solace-qa/qa_signoffs" target="_blank" class="sb-btn sb-btn--sm" style="display:flex; flex-direction:column; align-items:flex-start; height:auto; padding: 0.75rem;">
-          <strong style="margin-bottom:0.25rem;">QA Signoffs</strong>
-          <span class="sb-text-muted" style="font-weight:normal; text-align:left;">Verdicts and release gate state</span>
-        </a>
-        <a href="/backoffice/solace-dev-manager/qa_handoffs" target="_blank" class="sb-btn sb-btn--sm" style="display:flex; flex-direction:column; align-items:flex-start; height:auto; padding: 0.75rem;">
-          <strong style="margin-bottom:0.25rem;">QA Handoffs</strong>
-          <span class="sb-text-muted" style="font-weight:normal; text-align:left;">Coder-to-QA assignments</span>
-        </a>
-        <a href="/backoffice/solace-qa" target="_blank" class="sb-btn sb-btn--sm sb-btn--primary" style="display:flex; flex-direction:column; align-items:flex-start; height:auto; padding: 0.75rem;">
-          <strong style="margin-bottom:0.25rem;">QA Dashboard &rarr;</strong>
-          <span class="sb-text-muted" style="font-weight:normal; text-align:left; color:var(--sb-on-primary-soft, #fff);">Open QA backoffice</span>
-        </a>
+      <p class="sb-text-muted sb-mt-sm">Queue a worker run for any role in the stack. Requires <code>Bearer sw_sk_*</code> auth.</p>
+      <div class="sb-mt-md" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 0.75rem;">
+        <button class="sb-btn sb-btn--sm" id="run-worker-manager" style="border-left: 3px solid #d946ef;" onclick="window.__solaceRunWorker('solace-dev-manager')">
+          <strong>&#9654; Run Manager</strong>
+        </button>
+        <button class="sb-btn sb-btn--sm" id="run-worker-design" style="border-left: 3px solid #3b82f6;" onclick="window.__solaceRunWorker('solace-design')">
+          <strong>&#9654; Run Design</strong>
+        </button>
+        <button class="sb-btn sb-btn--sm" id="run-worker-coder" style="border-left: 3px solid #10b981;" onclick="window.__solaceRunWorker('solace-coder')">
+          <strong>&#9654; Run Coder</strong>
+        </button>
+        <button class="sb-btn sb-btn--sm" id="run-worker-qa" style="border-left: 3px solid #f59e0b;" onclick="window.__solaceRunWorker('solace-qa')">
+          <strong>&#9654; Run QA</strong>
+        </button>
       </div>
+      <pre id="worker-control-output" class="sb-mt-sm" style="font-size: 0.75rem; background: var(--sb-surface-alt, #0f172a); padding: 0.75rem; border-radius: 0.5rem; max-height: 200px; overflow-y: auto; display: none;"></pre>
     </div>
+
+    <script>
+      window.__solaceRunWorker = function(appId) {
+        var output = document.getElementById('worker-control-output');
+        output.style.display = 'block';
+        output.textContent = 'Queuing worker run for ' + appId + '...\n';
+        fetch('http://localhost:8888/api/v1/apps/run/' + appId, {
+          method: 'POST',
+          headers: { 'Authorization': 'Bearer dragon_rider_override' }
+        })
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
+          output.textContent += JSON.stringify(data, null, 2) + '\n';
+        })
+        .catch(function(err) {
+          output.textContent += 'Error: ' + err.message + '\n';
+        });
+      };
+    </script>
+
   </div>
 
 
