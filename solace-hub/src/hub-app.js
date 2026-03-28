@@ -479,6 +479,7 @@
     updateSpecialistConventionInvocation(appId, runId);
     updateSpecialistConventionDelivery(appId, runId);
     updateSpecialistConventionActivation(appId, runId);
+    updateSpecialistConventionEffect(appId, runId);
     updateDepartmentMemoryQueue(appId, runId);
     updateWorkerDriftState(appId, runId);
     updateWorkerRoutingState(appId, runId);
@@ -3156,6 +3157,104 @@
     html += 'Activation Basis: <code>delivered convention -> target runtime binding -> active execution constraint</code><br/>';
     html += 'Activation values are <em>role-derived mocks</em> until intelligence runtime loop is wired. ';
     html += 'Resolution Bound: <code>SI21 — The Solace Intelligence System</code>.';
+    html += '</div>';
+
+    html += '</div>';
+    panel.innerHTML = html;
+  }
+
+  // ── SAF46: Specialist Convention Effect & Constrained Output ──
+
+  function updateSpecialistConventionEffect(appId, runId) {
+    var panel = document.getElementById('dev-specialist-convention-effect-state');
+    if (!panel) return;
+
+    var role = DEV_ROLES.find(function(r) { return r.id === appId; });
+    var roleName = role ? role.key : 'unknown';
+    var viewerRole = 'solace-dev-manager';
+    var selectedWorker = appId || 'unknown';
+    var selectedRun = runId || 'latest';
+
+    // Effect records derived from SAC45 activation target (role-mocked; shown honestly)
+    var effectEntries = [];
+
+    if (roleName === 'qa') {
+      effectEntries = [{
+        state: 'Visible',
+        targetRuntime: 'outbox/coder/runs/c-run-20260328-999',
+        producedArtifact: 'outbox/coder/runs/c-run-20260328-999/test-matrix-results.json',
+        effectBasis: 'Constrained outputs detected matching active conventions. Test assertions enforced structural layout.',
+        color: '#10b981',
+        bg: 'rgba(16,185,129,0.1)'
+      }];
+    } else if (roleName === 'coder') {
+      effectEntries = [{
+        state: 'Partial',
+        targetRuntime: 'outbox/manager/runs/pending-eval',
+        producedArtifact: 'tmp/eval-staging-diff.patch',
+        effectBasis: 'Runtime execution halted before structural closure. Pre-flight artifacts generated but incomplete.',
+        color: '#f59e0b',
+        bg: 'rgba(245,158,11,0.1)'
+      }];
+    } else if (roleName === 'design') {
+      effectEntries = [{
+        state: 'Absent',
+        targetRuntime: 'N/A',
+        producedArtifact: 'N/A',
+        effectBasis: 'No active runtime identified. Unable to measure constraint efficacy.',
+        color: '#ef4444',
+        bg: 'rgba(239,68,68,0.1)'
+      }];
+    } else {
+      effectEntries = [{
+        state: 'Absent',
+        targetRuntime: 'N/A',
+        producedArtifact: 'N/A',
+        effectBasis: 'Invalid capability. Unbound tasks do not yield constrained output telemetry.',
+        color: '#64748b',
+        bg: 'rgba(100,116,139,0.1)'
+      }];
+    }
+
+    var effectIcon = { 'Visible': '✨', 'Partial': '〰️', 'Absent': '❌' };
+
+    var html = '<div style="display:flex;flex-direction:column;gap:0.5rem;font-size:0.75rem;color:var(--sb-on-surface);">';
+
+    effectEntries.forEach(function(entry) {
+      html += '<div style="background:var(--sb-surface-alt,#1e293b);padding:0.45rem 0.55rem;border-radius:0.3rem;border-left:2px solid ' + entry.color + ';display:flex;flex-direction:column;gap:0.35rem;">';
+
+      // Header
+      html += '<div style="display:flex;align-items:center;justify-content:space-between;">';
+      html += '<strong style="color:var(--sb-on-surface);font-size:0.73rem;">' + (effectIcon[entry.state] || '●') + ' Terminal Output Footprint</strong>';
+      html += '<code style="color:' + entry.color + ';background:' + entry.bg + ';padding:0.1rem 0.4rem;text-transform:uppercase;font-size:0.63rem;">' + escapeHtml(entry.state) + '</code>';
+      html += '</div>';
+
+      // Context
+      html += '<div style="display:flex;flex-direction:column;gap:0.1rem;">';
+      html += '<div><span style="color:var(--sb-text-muted);font-weight:600;font-size:0.63rem;">Target Runtime:</span> <span style="font-family:monospace;font-size:0.68rem;color:#a855f7;">' + escapeHtml(entry.targetRuntime) + '</span></div>';
+      html += '<div><span style="color:var(--sb-text-muted);font-weight:600;font-size:0.63rem;">Produced Artifact:</span> <span style="font-family:monospace;font-size:0.68rem;color:#facc15;">' + escapeHtml(entry.producedArtifact) + '</span></div>';
+      html += '</div>';
+
+      // Object description
+      html += '<div style="background:#0f172a;border-radius:0.2rem;padding:0.3rem 0.4rem;font-size:0.65rem;color:#cbd5e1;line-height:1.4;">';
+      html += '<code>' + escapeHtml(entry.effectBasis) + '</code>';
+      html += '</div>';
+
+      // ALCOA+ hash
+      var alcoa = btoa(entry.state + entry.targetRuntime + entry.producedArtifact).substring(0, 16);
+      html += '<div><span style="color:var(--sb-text-muted);font-weight:600;font-size:0.63rem;">Effect Hash:</span> <code style="font-size:0.6rem;color:#64748b;">' + alcoa + '</code></div>';
+
+      html += '</div>';
+    });
+
+    html += '<div style="margin-top:0.1rem;font-size:0.63rem;color:#64748b;">';
+    html += '<strong style="color:var(--sb-text-muted);">Audit Constraints:</strong> ';
+    html += 'Viewer Role: <code>' + escapeHtml(viewerRole) + '</code><br/>';
+    html += 'Selected Worker: <code>' + escapeHtml(selectedWorker) + '</code><br/>';
+    html += 'Selected Run: <code>' + escapeHtml(selectedRun) + '</code><br/>';
+    html += 'Effect Basis: <code>active convention -> constrained runtime -> visible artifact or output shift</code><br/>';
+    html += 'Effect telemetry is <em>role-derived mocked</em> until final output parser verification is wired. ';
+    html += 'Resolution Bound: <code>SI18 — Transparency as a Product Feature</code>.';
     html += '</div>';
 
     html += '</div>';
