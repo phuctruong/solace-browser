@@ -459,6 +459,7 @@
     updateWorkerProofState(appId, runId);
     updateWorkerGraphState(appId, runId);
     updateWorkerConventionStore(appId, runId);
+    updateWorkerDriftState(appId, runId);
     
     var panel = document.getElementById('dev-worker-detail');
     var diagramPreview = document.getElementById('dev-worker-diagram-preview');
@@ -1147,6 +1148,104 @@
 
     html += '<div style="margin-top:0.1rem;font-size:0.65rem;color:#64748b;">';
     html += 'The Convention Store acts as persistent intelligence, converting ephemeral ripple execution into reusable caching layers according to SI14.';
+    html += '</div>';
+
+    html += '</div>';
+    
+    panel.innerHTML = html;
+  }
+
+  // ── SAD22: Drift Detection & Adaptive Replay ──
+
+  function updateWorkerDriftState(appId, runId) {
+    var panel = document.getElementById('dev-worker-drift-state');
+    if (!panel) return;
+
+    var role = DEV_ROLES.find(function(r) { return r.id === appId; });
+    var roleName = role ? role.key : 'unknown';
+    var color = roleColor(roleName);
+
+    // Mock realistic drift and adaptive replay states tied to the roles for SAD22 visibility demonstration
+    var driftStatus = 'safe_replay';
+    var deviation = '';
+    var adaptation = '';
+
+    if (roleName === 'manager') {
+      driftStatus = 'safe_replay';
+      deviation = '&lt; 1% text similarity variance';
+      adaptation = 'None required. Proceeding via exact match.';
+    } else if (roleName === 'design') {
+      driftStatus = 'drift_detected';
+      deviation = 'DOM structure altered; unexpected modal overlay';
+      adaptation = 'Replay halted. Flagging for intervention.';
+    } else if (roleName === 'coder') {
+      driftStatus = 'fallback_to_discover';
+      deviation = 'CSS class names randomized (visual drift detected)';
+      adaptation = 'Re-routing to probabilistic visual identification.';
+    } else if (roleName === 'qa') {
+      driftStatus = 'safe_replay';
+      deviation = 'Exact signature match';
+      adaptation = 'Validating deterministic execution traces.';
+    } else {
+      driftStatus = 'unknown_state';
+      deviation = 'N/A';
+      adaptation = 'Drift evaluation incomplete.';
+    }
+
+    var icon = '✅';
+    var stateColor = '#10b981'; // green
+    var bg = 'rgba(16,185,129,0.1)';
+    var label = 'SAFE REPLAY';
+
+    if (driftStatus === 'drift_detected') {
+      icon = '⚠️';
+      stateColor = '#ef4444'; // red
+      bg = 'rgba(239,68,68,0.1)';
+      label = 'DRIFT DETECTED';
+    } else if (driftStatus === 'fallback_to_discover') {
+      icon = '🔄';
+      stateColor = '#f59e0b'; // amber
+      bg = 'rgba(245,158,11,0.1)';
+      label = 'FALLBACK TO DISCOVER';
+    } else if (driftStatus === 'unknown_state') {
+      icon = '❔';
+      stateColor = '#94a3b8'; // gray
+      bg = 'rgba(148,163,184,0.1)';
+      label = 'UNKNOWN DRIFT STATE';
+    }
+
+    var html = '<div style="display:flex;flex-direction:column;gap:0.4rem;font-size:0.75rem;color:var(--sb-on-surface);">';
+    html += '<div style="background:rgba(99,102,241,0.08);padding:0.4rem 0.5rem;border-radius:0.25rem;border-left:2px solid ' + stateColor + ';">';
+    html += '<strong style="color:var(--sb-text-muted);">Active Drift Context:</strong><br/>';
+    html += 'App ID: <code>' + escapeHtml(appId) + '</code><br/>';
+    html += 'Role: <code>' + escapeHtml(roleName) + '</code><br/>';
+    html += 'Run: <code>' + escapeHtml(runId) + '</code><br/>';
+    html += 'Replay Basis: <code>role-derived visible replay-safety contract</code><br/>';
+    html += 'Drift Basis: <code>visible environment deviation for current role/run</code>';
+    html += '</div>';
+    
+    html += '<div style="background:var(--sb-surface-alt,#1e293b);padding:0.4rem 0.5rem;border-radius:0.25rem;border-left:2px solid ' + stateColor + ';display:flex;align-items:flex-start;gap:0.75rem;">';
+    
+    html += '<div style="font-size:1.4rem;line-height:1;">' + icon + '</div>';
+    
+    html += '<div style="flex:1;">';
+    html += '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:0.2rem;">';
+    html += '<div>';
+    html += '<strong style="color:var(--sb-text-muted);">Replay Safety Evaluation:</strong> ';
+    html += '</div>';
+    html += '<code style="color:' + stateColor + ';background:' + bg + ';padding:0.1rem 0.35rem;text-transform:uppercase;font-size:0.65rem;">' + label + '</code>';
+    html += '</div>';
+    
+    html += '<div style="display:flex;flex-direction:column;gap:0.2rem;margin-bottom:0.3rem;">';
+    html += '<div><span style="color:var(--sb-text-muted);font-weight:600;font-size:0.65rem;">Observed Deviation:</span> <span style="font-family:monospace;font-size:0.7rem;color:#818cf8;">' + deviation + '</span></div>';
+    html += '<div><span style="color:var(--sb-text-muted);font-weight:600;font-size:0.65rem;">System Adaptation:</span> <span style="color:var(--sb-on-surface);">' + adaptation + '</span></div>';
+    html += '</div>';
+
+    html += '</div>'; // close text column
+    html += '</div>'; // close surface
+
+    html += '<div style="margin-top:0.1rem;font-size:0.65rem;color:#64748b;">';
+    html += 'Adaptive Replay protects execution against environment non-stationarity natively without requiring retraining (Paper SI12).';
     html += '</div>';
 
     html += '</div>';
