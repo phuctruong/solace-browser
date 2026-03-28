@@ -460,6 +460,7 @@
     updateWorkerGraphState(appId, runId);
     updateWorkerConventionStore(appId, runId);
     updateWorkerDistillationState(appId, runId);
+    updateDepartmentMemoryQueue(appId, runId);
     updateWorkerDriftState(appId, runId);
     updateWorkerRoutingState(appId, runId);
     updateWorkerEfficiencyState(appId, runId);
@@ -1250,6 +1251,107 @@
 
     html += '</div>';
     
+    panel.innerHTML = html;
+  }
+
+  // ── SAQ26: Department Memory Queue ──
+
+  function updateDepartmentMemoryQueue(appId, runId) {
+    var panel = document.getElementById('dev-department-memory-queue');
+    if (!panel) return;
+
+    var queueItems = [
+      {
+        appId: 'solace-dev-manager',
+        role: 'manager',
+        state: 'pending',
+        candidateId: 'nexus-routing-v2.2-candidate',
+        basis: 'Consistent assignment packet generation detected. Pending human validation gate for GLOBAL promotion.',
+        runRef: 'manager-run-routing-01'
+      },
+      {
+        appId: 'solace-coder',
+        role: 'coder',
+        state: 'promoted',
+        candidateId: 'solace-prime-mermaid-coder-v1.2.0',
+        basis: 'Mature structural repetition (100% success rate across 5 traces). Promoted to SHARED memory.',
+        runRef: 'coder-run-mermaid-05'
+      },
+      {
+        appId: 'solace-design',
+        role: 'design',
+        state: 'blocked',
+        candidateId: 'N/A',
+        basis: 'No stable visual convention repetition yet. Output remains discover-tier.',
+        runRef: 'design-run-layout-02'
+      },
+      {
+        appId: 'solace-qa',
+        role: 'qa',
+        state: 'blocked',
+        candidateId: 'N/A',
+        basis: 'Verification traces are high-value but not yet reusable as a promoted department convention.',
+        runRef: 'qa-run-falsifier-03'
+      }
+    ];
+
+    var counts = { promoted: 0, pending: 0, blocked: 0 };
+    queueItems.forEach(function(item) {
+      if (item.state === 'promoted') counts.promoted += 1;
+      else if (item.state === 'pending') counts.pending += 1;
+      else counts.blocked += 1;
+    });
+
+    var html = '<div style="display:flex;flex-direction:column;gap:0.45rem;font-size:0.75rem;color:var(--sb-on-surface);">';
+    html += '<div style="display:flex;gap:0.35rem;flex-wrap:wrap;">';
+    html += '<span class="sb-pill" style="background:rgba(16,185,129,0.12);color:#10b981;">promoted ' + counts.promoted + '</span>';
+    html += '<span class="sb-pill" style="background:rgba(245,158,11,0.12);color:#f59e0b;">pending ' + counts.pending + '</span>';
+    html += '<span class="sb-pill" style="background:rgba(239,68,68,0.12);color:#ef4444;">blocked ' + counts.blocked + '</span>';
+    html += '</div>';
+
+    queueItems.forEach(function(item) {
+      var color = '#94a3b8';
+      var bg = 'rgba(148,163,184,0.1)';
+      var label = 'UNKNOWN';
+      if (item.state === 'promoted') {
+        color = '#10b981';
+        bg = 'rgba(16,185,129,0.1)';
+        label = 'PROMOTED';
+      } else if (item.state === 'pending') {
+        color = '#f59e0b';
+        bg = 'rgba(245,158,11,0.1)';
+        label = 'PENDING REVIEW';
+      } else if (item.state === 'blocked') {
+        color = '#ef4444';
+        bg = 'rgba(239,68,68,0.1)';
+        label = 'BLOCKED';
+      }
+
+      var isActive = item.appId === appId;
+      html += '<div style="background:var(--sb-surface-alt,#1e293b);padding:0.45rem 0.55rem;border-radius:0.3rem;border-left:2px solid ' + color + ';' + (isActive ? 'box-shadow:0 0 0 1px rgba(129,140,248,0.35);' : '') + '">';
+      html += '<div style="display:flex;align-items:center;justify-content:space-between;gap:0.5rem;margin-bottom:0.2rem;">';
+      html += '<strong style="font-size:0.72rem;">' + escapeHtml(item.appId) + '</strong>';
+      html += '<code style="color:' + color + ';background:' + bg + ';padding:0.1rem 0.35rem;font-size:0.65rem;">' + label + '</code>';
+      html += '</div>';
+      html += '<div style="display:flex;flex-direction:column;gap:0.16rem;font-size:0.69rem;">';
+      html += '<div><span style="color:var(--sb-text-muted);font-weight:600;">Role:</span> <code>' + escapeHtml(item.role) + '</code></div>';
+      html += '<div><span style="color:var(--sb-text-muted);font-weight:600;">Candidate:</span> <span style="font-family:monospace;color:#818cf8;">' + escapeHtml(item.candidateId) + '</span></div>';
+      html += '<div><span style="color:var(--sb-text-muted);font-weight:600;">Run Reference:</span> <code>' + escapeHtml(item.runRef) + '</code></div>';
+      html += '<div><span style="color:var(--sb-text-muted);font-weight:600;">Review Basis:</span> <span>' + escapeHtml(item.basis) + '</span></div>';
+      html += '</div>';
+      html += '</div>';
+    });
+
+    html += '<div style="margin-top:0.1rem;font-size:0.65rem;color:#64748b;">';
+    html += '<strong style="color:var(--sb-text-muted);">Active Queue Context:</strong><br/>';
+    html += 'Viewer Role: <code>solace-dev-manager</code><br/>';
+    html += 'Selected Worker: <code>' + (appId || 'unknown') + '</code><br/>';
+    html += 'Selected Run: <code>' + (runId || 'latest') + '</code><br/>';
+    html += 'Queue Basis: <code>manager-facing visible department memory review queue</code><br/>';
+    html += 'Promotion Basis: <code>role-derived visible promotion status across specialists</code>';
+    html += '</div>';
+
+    html += '</div>';
     panel.innerHTML = html;
   }
 
