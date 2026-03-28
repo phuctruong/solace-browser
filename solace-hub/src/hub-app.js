@@ -469,6 +469,7 @@
     updateSpecialistAcceptanceState(appId, runId);
     updateSpecialistIntakeReadiness(appId, runId);
     updateSpecialistExecutionActivity(appId, runId);
+    updateSpecialistExecutionEvidence(appId, runId);
     updateDepartmentMemoryQueue(appId, runId);
     updateWorkerDriftState(appId, runId);
     updateWorkerRoutingState(appId, runId);
@@ -2070,6 +2071,118 @@
 
     html += '</div>';
     
+    panel.innerHTML = html;
+  }
+
+  // ── SAE36: Specialist Execution Evidence ──
+
+  function updateSpecialistExecutionEvidence(appId, runId) {
+    var panel = document.getElementById('dev-specialist-execution-evidence-state');
+    if (!panel) return;
+
+    var role = DEV_ROLES.find(function(r) { return r.id === appId; });
+    var roleName = role ? role.key : 'unknown';
+
+    // Evidence entries derived from SAX35 activity signals (role-mocked; shown honestly)
+    var evidenceLogs = [];
+
+    if (roleName === 'coder') {
+      evidenceLogs = [
+        {
+          state: 'Streaming',
+          specialist: 'solace-prime-mermaid-coder-v1.2.0',
+          activePacket: 'inbox/coder/packet.json',
+          logLines: [
+            '[00:00.12] AST parse pass 1/3 complete — 412 nodes resolved',
+            '[00:00.38] Type-check layer engaged — 0 critical errors',
+            '[00:00.61] Writing interim artifact: /tmp/coder-pass1.json'
+          ],
+          color: '#10b981',
+          bg: 'rgba(16,185,129,0.1)'
+        }
+      ];
+    } else if (roleName === 'design') {
+      evidenceLogs = [
+        {
+          state: 'Stalled',
+          specialist: 'solace-ui-renderer-v1',
+          activePacket: 'inbox/design/command_lock.json',
+          logLines: [
+            '[00:01.04] Awaiting structural hash from Coder lane',
+            '[00:06.00] No hash received — renderer blocked at gate SI17',
+            '[00:12.00] Heartbeat timeout (2/3) — partition suspended'
+          ],
+          color: '#f59e0b',
+          bg: 'rgba(245,158,11,0.1)'
+        }
+      ];
+    } else if (roleName === 'qa') {
+      evidenceLogs = [
+        {
+          state: 'Terminated',
+          specialist: 'solace-qa-agent-v2',
+          activePacket: 'inbox/qa/test-suite.json',
+          logLines: [
+            '[00:00.05] Test harness initialised — 18 suites loaded',
+            '[00:00.22] Suite 3 FAIL: assertion mismatch on node boundary',
+            '[00:00.23] Fatal — run aborted with exit code 1'
+          ],
+          color: '#ef4444',
+          bg: 'rgba(239,68,68,0.1)'
+        }
+      ];
+    } else {
+      evidenceLogs = [
+        {
+          state: 'Terminated',
+          specialist: 'System Manager',
+          activePacket: 'N/A',
+          logLines: ['[00:00.00] No specialist lane bound. Evidence stream closed.'],
+          color: '#ef4444',
+          bg: 'rgba(239,68,68,0.1)'
+        }
+      ];
+    }
+
+    var html = '<div style="display:flex;flex-direction:column;gap:0.5rem;font-size:0.75rem;color:var(--sb-on-surface);">';
+
+    evidenceLogs.forEach(function(log) {
+      html += '<div style="background:var(--sb-surface-alt,#1e293b);padding:0.45rem 0.55rem;border-radius:0.3rem;border-left:2px solid ' + log.color + ';display:flex;flex-direction:column;gap:0.35rem;">';
+
+      // Header row
+      html += '<div style="display:flex;align-items:center;justify-content:space-between;">';
+      html += '<strong style="color:var(--sb-on-surface);font-size:0.73rem;text-transform:uppercase;">[Evidence Stream → ' + escapeHtml(log.specialist) + ']</strong>';
+      html += '<code style="color:' + log.color + ';background:' + log.bg + ';padding:0.1rem 0.4rem;text-transform:uppercase;font-size:0.63rem;">' + escapeHtml(log.state) + '</code>';
+      html += '</div>';
+
+      // Packet ref
+      html += '<div><span style="color:var(--sb-text-muted);font-weight:600;font-size:0.63rem;">Source Packet:</span> <span style="font-family:monospace;font-size:0.68rem;color:#c084fc;">' + escapeHtml(log.activePacket) + '</span></div>';
+
+      // Log lines
+      html += '<div style="background:#0f172a;border-radius:0.2rem;padding:0.3rem 0.4rem;display:flex;flex-direction:column;gap:0.15rem;">';
+      log.logLines.forEach(function(line) {
+        html += '<code style="font-size:0.63rem;color:#94a3b8;white-space:pre-wrap;">' + escapeHtml(line) + '</code>';
+      });
+      html += '</div>';
+
+      // ALCOA+ hash
+      var alcoa = btoa(log.state + log.specialist + log.logLines[0]).substring(0, 16);
+      html += '<div><span style="color:var(--sb-text-muted);font-weight:600;font-size:0.63rem;">Evidence Hash:</span> <code style="font-size:0.6rem;color:#64748b;">' + alcoa + '</code></div>';
+
+      html += '</div>';
+    });
+
+    html += '<div style="margin-top:0.1rem;font-size:0.63rem;color:#64748b;">';
+    html += '<strong style="color:var(--sb-text-muted);">Audit Constraints:</strong><br/>';
+    html += 'Viewer Role: <code>solace-dev-manager</code><br/>';
+    html += 'Selected Worker: <code>' + escapeHtml(appId || 'unknown') + '</code><br/>';
+    html += 'Selected Run: <code>' + escapeHtml(runId || 'latest') + '</code><br/>';
+    html += 'Evidence Basis: <code>visible specialist output-log and execution-evidence state for current activity context</code><br/>';
+    html += 'Evidence values are <em>role-derived mocks</em> until runtime log path is wired.<br/>';
+    html += 'Resolution Bound: <code>SI18 — Transparency as Product Feature</code>.';
+    html += '</div>';
+
+    html += '</div>';
     panel.innerHTML = html;
   }
 
