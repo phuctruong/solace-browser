@@ -456,6 +456,7 @@
     updateWorkerAssignmentPacket(appId, runId);
     updateWorkerInboxOutbox(appId, runId);
     updateWorkerHumanGate(appId, runId);
+    updateWorkerProofState(appId, runId);
     
     var panel = document.getElementById('dev-worker-detail');
     var diagramPreview = document.getElementById('dev-worker-diagram-preview');
@@ -880,6 +881,109 @@
     }
 
     html += '</div>';
+    html += '</div>';
+    
+    panel.innerHTML = html;
+    html += '</div>';
+    
+    panel.innerHTML = html;
+  }
+
+  // ── SAT19: Transparency & Proof State ──
+
+  function updateWorkerProofState(appId, runId) {
+    var panel = document.getElementById('dev-worker-proof-state');
+    if (!panel) return;
+
+    var role = DEV_ROLES.find(function(r) { return r.id === appId; });
+    var roleName = role ? role.key : 'unknown';
+    var color = roleColor(roleName);
+
+    // Mock realistic states tied to the roles for SAT19 visibility demonstration
+    var state = 'missing';
+    var available = [];
+    var unproven = [];
+
+    if (roleName === 'manager') {
+      state = 'proven';
+      available = ['Routing Trace Logs', 'Ticket Database Entry'];
+      unproven = ['None (Deterministic)'];
+    } else if (roleName === 'design') {
+      state = 'partial';
+      available = ['design-to-coder-handoff.md', 'Prime Mermaid Diagrams'];
+      unproven = ['Human Architect Countersignature', 'Edge-Case Layouts'];
+    } else if (roleName === 'coder') {
+      state = 'missing';
+      available = ['Local Log Traces'];
+      unproven = ['Automated Test Passing Hashes', 'Visual Snapshot Diffs', 'QA Review Signoff'];
+    } else if (roleName === 'qa') {
+      state = 'proven';
+      available = ['Full Automated Test Output', 'Visual Regression Hashes', 'qa-signoffs record'];
+      unproven = ['None (Fully Certified)'];
+    }
+
+    var icon = '❓';
+    var stateColor = '#ef4444'; // red (missing)
+    var bg = 'rgba(239,68,68,0.1)';
+
+    if (state === 'proven') {
+      icon = '🛡️';
+      stateColor = '#10b981'; // green
+      bg = 'rgba(16,185,129,0.1)';
+    } else if (state === 'partial') {
+      icon = '⚖️';
+      stateColor = '#f59e0b'; // amber
+      bg = 'rgba(245,158,11,0.1)';
+    }
+
+    var html = '<div style="display:flex;flex-direction:column;gap:0.4rem;font-size:0.75rem;color:var(--sb-on-surface);">';
+    html += '<div style="background:rgba(99,102,241,0.08);padding:0.4rem 0.5rem;border-radius:0.25rem;border-left:2px solid ' + color + ';">';
+    html += '<strong style="color:var(--sb-text-muted);">Active Proof Context:</strong><br/>';
+    html += 'App ID: <code>' + escapeHtml(appId) + '</code><br/>';
+    html += 'Role: <code>' + escapeHtml(roleName) + '</code><br/>';
+    html += 'Run: <code>' + escapeHtml(runId) + '</code><br/>';
+    html += 'Proof Basis: <code>role-derived visible evidence contract</code><br/>';
+    html += 'Transparency Basis: <code>visible proof state for current role/run</code>';
+    html += '</div>';
+    
+    html += '<div style="background:var(--sb-surface-alt,#1e293b);padding:0.4rem 0.5rem;border-radius:0.25rem;border-left:2px solid ' + stateColor + ';display:flex;align-items:center;gap:0.5rem;">';
+    html += '<div style="font-size:1.2rem;">' + icon + '</div>';
+    html += '<div>';
+    html += '<strong style="color:var(--sb-text-muted);">Certification Level:</strong> ';
+    html += '<code style="color:' + stateColor + ';background:' + bg + ';padding:0.1rem 0.35rem;text-transform:uppercase;">' + state + '</code>';
+    html += '<div style="font-size:0.65rem;color:#94a3b8;margin-top:0.1rem;">Software 5.0 systems require all outputs to be mathematically or visually proven (Paper SI18).</div>';
+    html += '</div></div>';
+
+    html += '<div style="display:flex;gap:0.5rem;flex-wrap:wrap;">';
+
+    html += '<div style="flex:1;min-width:200px;background:var(--sb-surface-alt,#1e293b);padding:0.4rem 0.5rem;border-radius:0.25rem;border-left:2px solid ' + color + ';">';
+    html += '<strong style="color:var(--sb-text-muted);">Evidence Present:</strong><br/>';
+    html += '<ul style="margin:0.2rem 0 0 1rem;padding:0;color:var(--sb-on-surface);font-family:monospace;font-size:0.7rem;">';
+    available.forEach(function(item) {
+      if (item.indexOf('.md') > -1) {
+        html += '<li><code style="color:#818cf8;background:transparent;padding:0;">' + escapeHtml(item) + '</code></li>';
+      } else {
+        html += '<li style="color:#10b981;">' + escapeHtml(item) + '</li>';
+      }
+    });
+    html += '</ul>';
+    html += '</div>';
+
+    html += '<div style="flex:1;min-width:200px;background:var(--sb-surface-alt,#1e293b);padding:0.4rem 0.5rem;border-radius:0.25rem;border-left:2px solid #ef4444;">';
+    html += '<strong style="color:var(--sb-text-muted);">Unproven / Missing Elements:</strong><br/>';
+    html += '<ul style="margin:0.2rem 0 0 1rem;padding:0;color:var(--sb-on-surface);font-family:monospace;font-size:0.7rem;">';
+    unproven.forEach(function(item) {
+      if (item.indexOf('None') === 0) {
+        html += '<li style="color:#94a3b8;list-style:none;margin-left:-1rem;">' + escapeHtml(item) + '</li>';
+      } else {
+        html += '<li style="color:#ef4444;">' + escapeHtml(item) + '</li>';
+      }
+    });
+    html += '</ul>';
+    html += '</div>';
+
+    html += '</div>'; // close row
+
     html += '</div>';
     
     panel.innerHTML = html;
