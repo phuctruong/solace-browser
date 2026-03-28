@@ -1,0 +1,12 @@
+{
+  "name": "solace-coder",
+  "steps": [
+    "receive_assignment",
+    "load_design_specs",
+    "identify_target_files",
+    "implement_changes",
+    "run_tests",
+    "record_evidence",
+    "submit_review"
+  ]
+}

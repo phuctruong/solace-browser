@@ -1,0 +1,4 @@
+scope_change_policy: FAIL_AND_NEW_TASK
+evidence_required: true
+prime_mermaid_first: true
+requires_design_approval: true

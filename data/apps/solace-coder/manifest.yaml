@@ -1,0 +1,90 @@
+id: solace-coder
+name: Solace Coder
+version: 1.0.0
+domain: localhost
+category: backoffice
+description: "Coder worker app for the Solace Dev role architecture — implements bounded code changes from manager assignments and approved design specs, produces diff summaries and test evidence"
+author: system
+roles:
+  - coder
+
+backoffice:
+  tables:
+    - name: code_runs
+      display:
+        title: "Code Runs"
+        badge: run_status
+      search: ["target_files", "run_status", "diff_summary"]
+      columns:
+        - name: assignment_id
+          type: text
+          required: true
+        - name: project_id
+          type: text
+          required: true
+        - name: target_files
+          type: text
+          required: true
+        - name: design_spec_refs
+          type: text
+        - name: run_status
+          type: enum
+          values: ["created", "running", "passed", "failed", "sealed"]
+          required: true
+        - name: diff_summary
+          type: text
+        - name: test_output
+          type: text
+
+    - name: code_artifacts
+      display:
+        title: "Code Artifacts"
+        badge: change_type
+      search: ["file_path", "change_type", "evidence_hash"]
+      columns:
+        - name: run_id
+          type: ref:code_runs
+          required: true
+        - name: file_path
+          type: text
+          required: true
+        - name: change_type
+          type: enum
+          values: ["added", "modified", "deleted"]
+          required: true
+        - name: evidence_hash
+          type: text
+          required: true
+
+    - name: coder_reviews
+      display:
+        title: "Code Reviews"
+        badge: verdict
+      search: ["reviewer_role", "verdict", "notes"]
+      columns:
+        - name: run_id
+          type: ref:code_runs
+          required: true
+        - name: reviewer_role
+          type: text
+          required: true
+        - name: verdict
+          type: enum
+          values: ["approved", "rejected", "needs_revision"]
+          required: true
+        - name: notes
+          type: text
+
+  views:
+    - name: All Code Runs
+      type: table
+      table: code_runs
+      order_by: "created_at DESC"
+    - name: Run Status Board
+      type: kanban
+      table: code_runs
+      group_by: run_status
+    - name: Pending Reviews
+      type: kanban
+      table: coder_reviews
+      group_by: verdict

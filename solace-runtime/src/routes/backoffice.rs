@@ -123,6 +123,7 @@ async fn list_backoffice_apps(State(_state): State<AppState>) -> Json<Value> {
         "backoffice-forms",
         "solace-dev-manager",
         "solace-design",
+        "solace-coder",
     ];
     let mut apps = Vec::new();
 
@@ -373,6 +374,7 @@ async fn backoffice_home(State(_state): State<AppState>) -> Html<String> {
         "backoffice-forms",
         "solace-dev-manager",
         "solace-design",
+        "solace-coder",
     ];
     let mut cards = String::new();
 

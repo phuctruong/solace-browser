@@ -144,6 +144,41 @@ backoffice:
           values: ["pending", "accepted", "completed"]
           required: true
 
+    - name: coder_handoffs
+      display:
+        title: "Coder Handoffs"
+        badge: status
+      search: ["target_files", "expected_artifacts", "status"]
+      columns:
+        - name: request_id
+          type: ref:requests
+          required: true
+        - name: assignment_id
+          type: ref:assignments
+          required: true
+        - name: project_id
+          type: ref:projects
+          required: true
+        - name: design_spec_refs
+          type: text
+          required: true
+        - name: target_files
+          type: text
+          required: true
+        - name: page_scope
+          type: text
+        - name: state_scope
+          type: text
+        - name: constraints
+          type: text
+        - name: expected_artifacts
+          type: text
+          required: true
+        - name: status
+          type: enum
+          values: ["pending", "accepted", "completed"]
+          required: true
+
   views:
     - name: All Requests
       type: table

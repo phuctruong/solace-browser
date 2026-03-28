@@ -1,0 +1,6 @@
+{
+  "review_mode": "manager-first",
+  "max_active_runs": 4,
+  "requires_scope_lock": true,
+  "requires_design_approval": true
+}
