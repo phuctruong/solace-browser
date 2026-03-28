@@ -22,7 +22,7 @@ def test_hub_app_js_has_result_binding_logic():
     assert 'var launchBinding = loadWorkflowLaunchBinding();' in content
     assert 'var selectedRun = loadSelectedRun();' in content
     assert 'get(\'/api/v1/backoffice/solace-dev-manager/assignments\')' in content
-    assert 'Run execution explicitly bound to workflow launch session state (SAC70)' in content
+    assert 'Run execution explicitly bound to workflow launch session state (SAC70/71)' in content
     assert 'Fallback to selected run only; not durable workflow launch proof' in content
     assert 'saveWorkflowLaunchBinding' in content
 

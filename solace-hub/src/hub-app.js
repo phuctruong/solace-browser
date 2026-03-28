@@ -381,18 +381,41 @@
         return;
       }
 
-      panel.style.display = 'block';
-      var html = '<div style="background:var(--sb-surface-alt,#1e293b); padding:0.4rem 0.5rem; border-radius:0.25rem; border-left:2px solid #fcd34d;">';
-      html += '<strong>Back Office Request ID:</strong> <code>' + reqId.substring(0,8) + '</code><br/>';
-      html += '<strong>Active Assignment ID:</strong> <code>' + active.id.substring(0,8) + '</code> (' + active.target_role + ')<br/>';
-      html += '<strong>Launched Run Target:</strong> <code>' + boundRun.appId + ' / ' + boundRun.runId + '</code><br/>';
-      if (boundRun.basis === 'workflow-launch-session-binding') {
-        html += '<strong style="display:block;margin-top:0.3rem;">Binding Basis:</strong> <code style="background:rgba(252,211,77,0.15);color:#fcd34d;padding:0.1rem 0.3rem;border-radius:0.15rem;">Run execution explicitly bound to workflow launch session state (SAC70)</code>';
-      } else {
-        html += '<strong style="display:block;margin-top:0.3rem;">Binding Basis:</strong> <code style="background:rgba(239,68,68,0.12);color:#fca5a5;padding:0.1rem 0.3rem;border-radius:0.15rem;">Fallback to selected run only; not durable workflow launch proof</code>';
-      }
-      html += '</div>';
-      content.innerHTML = html;
+      get('/api/v1/apps/' + boundRun.appId + '/runs').catch(function(){return {runs:[]};}).then(function(runData) {
+        var runs = runData.runs || [];
+        var actualRun = runs.find(function(r) { return r.run_id === boundRun.runId; });
+        var reportExists = actualRun ? actualRun.report_exists : false;
+        var eventsExist = actualRun ? actualRun.events_exist : false;
+
+        panel.style.display = 'block';
+        var html = '<div style="background:var(--sb-surface-alt,#1e293b); padding:0.4rem 0.5rem; border-radius:0.25rem; border-left:2px solid #fcd34d;">';
+        html += '<strong>Back Office Request ID:</strong> <code>' + reqId.substring(0,8) + '</code><br/>';
+        html += '<strong>Active Assignment ID:</strong> <code>' + active.id.substring(0,8) + '</code> (' + active.target_role + ')<br/>';
+        html += '<strong>Launched Run Target:</strong> <code>' + boundRun.appId + ' / ' + boundRun.runId + '</code><br/>';
+
+        html += '<div style="margin-top:0.3rem; padding-top:0.3rem; border-top:1px solid #334155;">';
+        html += '<strong style="display:block; margin-bottom:0.1rem;">Run Artifacts:</strong>';
+        if (reportExists) {
+           html += '<a href="/api/v1/apps/' + boundRun.appId + '/runs/' + boundRun.runId + '/artifact/report.html" target="_blank" style="color:#818cf8; font-size:0.65rem; margin-right:0.4rem;">[↗ View Final Report]</a>';
+        } else {
+           html += '<span style="color:#64748b; font-size:0.65rem; margin-right:0.4rem;">[No Report]</span>';
+        }
+        if (eventsExist) {
+           html += '<a href="/api/v1/apps/' + boundRun.appId + '/runs/' + boundRun.runId + '/events" target="_blank" style="color:#818cf8; font-size:0.65rem; margin-right:0.4rem;">[↗ View Events API]</a>';
+           html += '<a href="/api/v1/apps/' + boundRun.appId + '/runs/' + boundRun.runId + '/artifact/events.jsonl" target="_blank" style="color:#818cf8; font-size:0.65rem;">[↗ View Events File]</a>';
+        } else {
+           html += '<span style="color:#64748b; font-size:0.65rem;">[No Events]</span>';
+        }
+        html += '</div>';
+
+        if (boundRun.basis === 'workflow-launch-session-binding') {
+          html += '<strong style="display:block;margin-top:0.3rem;">Binding Basis:</strong> <code style="background:rgba(252,211,77,0.15);color:#fcd34d;padding:0.1rem 0.3rem;border-radius:0.15rem;">Run execution explicitly bound to workflow launch session state (SAC70/71)</code>';
+        } else {
+          html += '<strong style="display:block;margin-top:0.3rem;">Binding Basis:</strong> <code style="background:rgba(239,68,68,0.12);color:#fca5a5;padding:0.1rem 0.3rem;border-radius:0.15rem;">Fallback to selected run only; not durable workflow launch proof</code>';
+        }
+        html += '</div>';
+        content.innerHTML = html;
+      });
     });
   }
 
