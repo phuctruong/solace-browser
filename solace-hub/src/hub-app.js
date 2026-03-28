@@ -409,12 +409,42 @@
         html += '</div>';
 
         if (boundRun.basis === 'workflow-launch-session-binding') {
-          html += '<strong style="display:block;margin-top:0.3rem;">Binding Basis:</strong> <code style="background:rgba(252,211,77,0.15);color:#fcd34d;padding:0.1rem 0.3rem;border-radius:0.15rem;">Run execution explicitly bound to workflow launch session state (SAC70/71)</code>';
+          html += '<strong style="display:block;margin-top:0.3rem;">Binding Basis:</strong> <code style="background:rgba(252,211,77,0.15);color:#fcd34d;padding:0.1rem 0.3rem;border-radius:0.15rem;">Run execution explicitly bound to workflow launch session state (SAC70/71/72)</code>';
         } else {
           html += '<strong style="display:block;margin-top:0.3rem;">Binding Basis:</strong> <code style="background:rgba(239,68,68,0.12);color:#fca5a5;padding:0.1rem 0.3rem;border-radius:0.15rem;">Fallback to selected run only; not durable workflow launch proof</code>';
         }
         html += '</div>';
+        
+        // --- SAC72 Inline Preview Box ---
+        html += '<div id="dev-active-workflow-preview" style="margin-top:0.5rem;"></div>';
+        // --------------------------------
+        
         content.innerHTML = html;
+
+        // --- SAC72 Fetch Preview ---
+        var previewSlot = document.getElementById('dev-active-workflow-preview');
+        if (previewSlot) {
+            if (reportExists) {
+                previewSlot.innerHTML = '<span style="font-size:0.7rem;color:#94a3b8;">loading report preview…</span>';
+                fetchArtifactText(boundRun.appId, boundRun.runId, 'report.html').then(function(res) {
+                    if (!res.missing && document.getElementById('dev-active-workflow-preview')) {
+                        document.getElementById('dev-active-workflow-preview').innerHTML = buildReportPreview(res.text, boundRun.appId, boundRun.runId);
+                    } else if (document.getElementById('dev-active-workflow-preview')) {
+                        document.getElementById('dev-active-workflow-preview').innerHTML = '<span style="font-size:0.65rem;color:#fca5a5;">preview unavailable</span>';
+                    }
+                });
+            } else {
+                previewSlot.innerHTML = '<span style="font-size:0.7rem;color:#94a3b8;">loading payload preview…</span>';
+                fetchArtifactText(boundRun.appId, boundRun.runId, 'payload.json').then(function(res) {
+                    if (!res.missing && document.getElementById('dev-active-workflow-preview')) {
+                        document.getElementById('dev-active-workflow-preview').innerHTML = buildPayloadPreview(res.text, boundRun.appId, boundRun.runId);
+                    } else if (document.getElementById('dev-active-workflow-preview')) {
+                        document.getElementById('dev-active-workflow-preview').innerHTML = buildMissingState('payload.json', res.reason || 'missing');
+                    }
+                });
+            }
+        }
+        // ---------------------------
       });
     });
   }
