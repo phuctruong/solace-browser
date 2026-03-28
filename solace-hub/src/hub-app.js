@@ -458,6 +458,7 @@
     updateWorkerHumanGate(appId, runId);
     updateWorkerProofState(appId, runId);
     updateWorkerGraphState(appId, runId);
+    updateWorkerConventionStore(appId, runId);
     
     var panel = document.getElementById('dev-worker-detail');
     var diagramPreview = document.getElementById('dev-worker-diagram-preview');
@@ -1052,6 +1053,100 @@
 
     html += '<div style="margin-top:0.1rem;font-size:0.65rem;color:#64748b;">';
     html += 'Execution nodes define verifiable edges connecting Context &rarr; Operations &rarr; Validation (Paper SI10).';
+    html += '</div>';
+
+    html += '</div>';
+    
+    panel.innerHTML = html;
+  }
+
+  // ── SAC21: Convention Store Binding ──
+
+  function updateWorkerConventionStore(appId, runId) {
+    var panel = document.getElementById('dev-worker-convention-store');
+    if (!panel) return;
+
+    var role = DEV_ROLES.find(function(r) { return r.id === appId; });
+    var roleName = role ? role.key : 'unknown';
+    var color = roleColor(roleName);
+
+    // Mock realistic convention states tied to the roles for SAC21 visibility demonstration
+    var conventionId = 'null_convention';
+    var storeLevel = 'N/A';
+    var replayStatus = 'discover_only';
+    var desc = 'No matching convention. Operating in discover-only ripple mode.';
+
+    if (roleName === 'manager') {
+      conventionId = 'nexus-routing-v2.1';
+      storeLevel = 'GLOBAL';
+      replayStatus = 'replayable';
+      desc = 'Global marketplace convention for parsing incoming intent into constrained dev roles.';
+    } else if (roleName === 'design') {
+      conventionId = 'ui-topology-draft';
+      storeLevel = 'LOCAL';
+      replayStatus = 'partial';
+      desc = 'Local unvalidated workflow. Requires structural integrity tests before caching.';
+    } else if (roleName === 'coder') {
+      conventionId = 'solace-prime-mermaid-coder-v1.2.0';
+      storeLevel = 'SHARED';
+      replayStatus = 'replayable';
+      desc = 'Shared team convention enforcing strict prime-coder rules and evidence generation.';
+    } else if (roleName === 'qa') {
+      conventionId = 'null_convention';
+      storeLevel = 'N/A';
+      replayStatus = 'discover_only';
+      desc = 'No matching convention. Operating in discover-only boundary-exploration mode.';
+    }
+
+    var icon = '🔍';
+    var stateColor = '#94a3b8'; // gray
+    var bg = 'rgba(148,163,184,0.1)';
+
+    if (replayStatus === 'replayable') {
+      icon = '📦';
+      stateColor = '#10b981'; // green
+      bg = 'rgba(16,185,129,0.1)';
+    } else if (replayStatus === 'partial') {
+      icon = '⏳';
+      stateColor = '#f59e0b'; // amber
+      bg = 'rgba(245,158,11,0.1)';
+    }
+
+    var html = '<div style="display:flex;flex-direction:column;gap:0.4rem;font-size:0.75rem;color:var(--sb-on-surface);">';
+    html += '<div style="background:rgba(99,102,241,0.08);padding:0.4rem 0.5rem;border-radius:0.25rem;border-left:2px solid ' + stateColor + ';">';
+    html += '<strong style="color:var(--sb-text-muted);">Active Convention Context:</strong><br/>';
+    html += 'App ID: <code>' + escapeHtml(appId) + '</code><br/>';
+    html += 'Role: <code>' + escapeHtml(roleName) + '</code><br/>';
+    html += 'Run: <code>' + escapeHtml(runId) + '</code><br/>';
+    html += 'Convention Basis: <code>role-derived visible convention binding</code><br/>';
+    html += 'Replay Basis: <code>visible convention maturity for current role/run</code>';
+    html += '</div>';
+    
+    html += '<div style="background:var(--sb-surface-alt,#1e293b);padding:0.4rem 0.5rem;border-radius:0.25rem;border-left:2px solid ' + stateColor + ';display:flex;align-items:flex-start;gap:0.75rem;">';
+    
+    html += '<div style="font-size:1.4rem;line-height:1;">' + icon + '</div>';
+    
+    html += '<div style="flex:1;">';
+    html += '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:0.2rem;">';
+    html += '<div>';
+    html += '<strong style="color:var(--sb-text-muted);">Active Convention:</strong> ';
+    html += '<code style="color:' + stateColor + ';background:transparent;padding:0;font-size:0.75rem;">' + escapeHtml(conventionId) + '</code>';
+    html += '</div>';
+    html += '<code style="color:' + stateColor + ';background:' + bg + ';padding:0.1rem 0.35rem;text-transform:uppercase;font-size:0.65rem;">' + replayStatus + '</code>';
+    html += '</div>';
+    
+    html += '<div style="display:flex;align-items:center;gap:0.4rem;margin-bottom:0.3rem;">';
+    html += '<strong style="color:var(--sb-text-muted);font-size:0.65rem;">Store Ring:</strong> ';
+    html += '<span style="font-size:0.65rem;color:#818cf8;background:rgba(129,140,248,0.1);padding:0.1rem 0.3rem;border-radius:0.15rem;">' + storeLevel + '</span>';
+    html += '</div>';
+
+    html += '<div style="font-size:0.7rem;color:#94a3b8;line-height:1.4;">' + escapeHtml(desc) + '</div>';
+    html += '</div>'; // close text column
+
+    html += '</div>'; // close surface
+
+    html += '<div style="margin-top:0.1rem;font-size:0.65rem;color:#64748b;">';
+    html += 'The Convention Store acts as persistent intelligence, converting ephemeral ripple execution into reusable caching layers according to SI14.';
     html += '</div>';
 
     html += '</div>';
