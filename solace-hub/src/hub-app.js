@@ -571,12 +571,32 @@
       
       var linkedApproval = approvals.find(function(item) { return item.assignment_id === active.id; }) || null;
 
-      get('/api/v1/apps/' + boundRun.appId + '/runs').catch(function(){return {runs:[]};}).then(function(runData) {
+      // --- SAC88 Synchronous Nested Execution Fetch ---
+      var nestedLaunchAction = window.__solaceLastWorkflowNestedLaunchAction;
+      var nestedAppId = nestedLaunchAction && nestedLaunchAction.requestId === reqId ? nestedLaunchAction.appId : null;
+      var runPromises = [
+          get('/api/v1/apps/' + boundRun.appId + '/runs').catch(function(){return {runs:[]};})
+      ];
+      if (nestedAppId) {
+          runPromises.push(get('/api/v1/apps/' + nestedAppId + '/runs').catch(function(){return {runs:[]};}));
+      }
+
+      Promise.all(runPromises).then(function(runResponses) {
+        var runData = runResponses[0];
+        var nestedRunData = runResponses[1] || {runs:[]};
+
         var runs = runData.runs || [];
         var actualRun = runs.find(function(r) { return r.run_id === boundRun.runId; });
         var reportExists = actualRun ? actualRun.report_exists : false;
         var eventsExist = actualRun ? actualRun.events_exist : false;
         var payloadExists = actualRun ? actualRun.payload_exists : false;
+
+        var nestedActualRun = null;
+        if (nestedLaunchAction) {
+            nestedActualRun = (nestedRunData.runs || []).find(function(r) { return r.run_id === nestedLaunchAction.runId; });
+        }
+        var nestedEventsExist = nestedActualRun ? nestedActualRun.events_exist : false;
+        // ----------------------------------------------
 
         panel.style.display = 'block';
         var html = '<div style="background:var(--sb-surface-alt,#1e293b); padding:0.4rem 0.5rem; border-radius:0.25rem; border-left:2px solid #fcd34d;">';
@@ -985,6 +1005,11 @@
                         nestedLaunchAction.targetAssignmentId === targetRouteAction.assignmentId &&
                         nestedLaunchAction.targetRole === targetRouteAction.targetRole
                     ) {
+                        var exactNestedLaunchTruth = !!(
+                            exactPacketTruth &&
+                            nestedLaunchAction.sourceRole === lastLaunchAction.targetRole &&
+                            nestedLaunchAction.sourceRunId === lastLaunchAction.runId
+                        );
                         appHtml += '<div style="margin-top:0.4rem; padding-top:0.4rem; border-top:1px solid #334155;">';
                         appHtml += '<strong style="display:block; margin-bottom:0.2rem; color:#60a5fa;">Next-Step Destination Launch Truth:</strong>';
                         appHtml += '<div style="background:rgba(30,41,59,0.5); padding:0.4rem; border-left:2px solid #60a5fa; border-radius:0.15rem; font-size:0.65rem;">';
@@ -999,7 +1024,7 @@
                         appHtml += 'Nested Target Assignment ID: <code>' + escapeHtml(nestedLaunchAction.targetAssignmentId.substring(0, 8)) + '</code><br/>';
                         appHtml += 'Nested Launched Role: <code>' + escapeHtml(nestedLaunchAction.targetRole) + '</code><br/>';
                         appHtml += 'Nested Launched Run ID: <code>' + escapeHtml(nestedLaunchAction.runId.substring(0, 8)) + '</code><br/>';
-                        if (exactPacketTruth) {
+                        if (exactNestedLaunchTruth) {
                             appHtml += 'Destination Launch Branch: <span style="color:#34d399;font-weight:600;">[✓] Exact launched-workflow destination launch tracked</span><br/>';
                             appHtml += 'Destination Launch Basis: <code>Workflow launched the routed destination assignment while request, source assignment, target assignment, role, and run remained aligned in the exact launched-workflow branch (SAC87)</code>';
                         } else {
@@ -1007,6 +1032,35 @@
                             appHtml += 'Destination Launch Basis: <code>Workflow launched a visible matching destination assignment, but the current workflow binding has fallen back away from exact launched-workflow destination launch truth (SAC87)</code>';
                         }
                         appHtml += '</div></div>';
+
+                        // --- SAC88 Next-Step Destination Pickup Truth ---
+                        appHtml += '<div style="margin-top:0.4rem; padding-top:0.4rem; border-top:1px solid #334155;">';
+                        appHtml += '<strong style="display:block; margin-bottom:0.2rem; color:#2dd4bf;">Next-Step Destination Pickup Truth:</strong>';
+                        appHtml += '<div style="background:rgba(30,41,59,0.5); padding:0.4rem; border-left:2px solid #2dd4bf; border-radius:0.15rem; font-size:0.65rem;">';
+                        appHtml += 'Nested Source Request ID: <code>' + escapeHtml(nestedLaunchAction.requestId.substring(0, 8)) + '</code><br/>';
+                        appHtml += 'Nested Source Assignment ID: <code>' + escapeHtml(nestedLaunchAction.sourceAssignmentId.substring(0, 8)) + '</code><br/>';
+                        if (nestedLaunchAction.sourceRole) {
+                            appHtml += 'Nested Source Role: <code>' + escapeHtml(nestedLaunchAction.sourceRole) + '</code><br/>';
+                        }
+                        if (nestedLaunchAction.sourceRunId) {
+                            appHtml += 'Nested Source Run ID: <code>' + escapeHtml(nestedLaunchAction.sourceRunId.substring(0, 8)) + '</code><br/>';
+                        }
+                        appHtml += 'Nested Target Assignment ID: <code>' + escapeHtml(nestedLaunchAction.targetAssignmentId.substring(0, 8)) + '</code><br/>';
+                        appHtml += 'Dispatched Nested Specialist: <code>' + escapeHtml(nestedLaunchAction.targetRole) + '</code><br/>';
+                        appHtml += 'Nested Pickup Run ID: <code>' + escapeHtml(nestedLaunchAction.runId.substring(0, 8)) + '</code><br/>';
+                        
+                        if (nestedEventsExist && exactNestedLaunchTruth) {
+                            appHtml += 'Destination Pickup Status: <span style="color:#34d399;font-weight:600;">[✓] Exact launched-workflow destination pickup tracked</span><br/>';
+                            appHtml += 'Destination Pickup Basis: <code>Events exist for the launched nested target run, and request, source assignment, target assignment, role, and run remain aligned in the exact launched-workflow branch (SAC88)</code>';
+                        } else if (nestedEventsExist) {
+                            appHtml += 'Destination Pickup Status: <span style="color:#fcd34d;font-weight:600;">[?] Fallback destination pickup tracked</span><br/>';
+                            appHtml += 'Destination Pickup Basis: <code>Events exist for a visible nested target run, but the current workflow binding has fallen back away from exact launched-workflow destination pickup truth (SAC88)</code>';
+                        } else {
+                            appHtml += 'Destination Pickup Status: <span style="color:#94a3b8;font-weight:600;">[ ] Awaiting destination specialist pickup evidence</span><br/>';
+                            appHtml += 'Destination Pickup Basis: <code>No events exist yet for the launched nested target run, so specialist destination pickup is not proven in the workflow branch (SAC88)</code>';
+                        }
+                        appHtml += '</div></div>';
+                        // ------------------------------------------------
                     } else {
                         appHtml += '<div style="margin-top:0.4rem; padding-top:0.4rem; border-top:1px solid #334155;">';
                         appHtml += '<strong style="display:block; margin-bottom:0.2rem; color:#60a5fa;">Next-Step Destination Launch Truth:</strong>';
