@@ -928,6 +928,44 @@
                     }
                 }
                 appHtml += '</div></div>';
+
+                // --- SAC86 Next-Step Destination Truth ---
+                var targetRouteAction = window.__solaceLastWorkflowRouteAction;
+                if (targetRouteAction && targetRouteAction.requestId === reqId && targetRouteAction.sourceAssignmentId === lastLaunchAction.targetAssignmentId) {
+                    appHtml += '<div style="margin-top:0.4rem; padding-top:0.4rem; border-top:1px solid #334155;">';
+                    appHtml += '<strong style="display:block; margin-bottom:0.2rem; color:#a78bfa;">Next-Step Destination Truth:</strong>';
+                    appHtml += '<div style="background:rgba(30,41,59,0.5); padding:0.4rem; border-left:2px solid #a78bfa; border-radius:0.15rem; font-size:0.65rem;">';
+                    appHtml += 'Source Request ID: <code>' + escapeHtml(reqId.substring(0, 8)) + '</code><br/>';
+                    appHtml += 'Source Assignment ID: <code>' + escapeHtml(lastLaunchAction.targetAssignmentId.substring(0, 8)) + '</code><br/>';
+                    appHtml += 'Source Role: <code>' + escapeHtml(lastLaunchAction.targetRole) + '</code><br/>';
+                    appHtml += 'Source Run ID: <code>' + escapeHtml(lastLaunchAction.runId.substring(0, 8)) + '</code><br/>';
+                    appHtml += 'Destination Target Role: <code>' + escapeHtml(targetRouteAction.targetRole) + '</code><br/>';
+                    if (targetRouteAction.assignmentId) {
+                        appHtml += 'Destination Assignment ID: <code>' + escapeHtml(targetRouteAction.assignmentId.substring(0, 8)) + '</code><br/>';
+                    }
+                    appHtml += 'Destination Mutation Mode: <code>' + escapeHtml(targetRouteAction.mutation) + '</code><br/>';
+                    if (exactPacketTruth) {
+                        appHtml += 'Destination Branch: <span style="color:#34d399;font-weight:600;">[✓] Exact launched-workflow destination branch tracked</span><br/>';
+                        appHtml += 'Destination Basis: <code>Workflow routed destination branch ' + escapeHtml(targetRouteAction.mutation) + ' while request, assignment, role, and run remained aligned in the exact workflow-bound branch (SAC86)</code>';
+                    } else {
+                        appHtml += 'Destination Branch: <span style="color:#fcd34d;font-weight:600;">[?] Fallback destination branch tracked</span><br/>';
+                        appHtml += 'Destination Basis: <code>Workflow routed destination branch ' + escapeHtml(targetRouteAction.mutation) + ' for a visible matching assignment, but the current workflow binding has fallen back away from exact launched-workflow destination truth (SAC86)</code>';
+                    }
+                    appHtml += '</div>';
+                    
+                    appHtml += '<div style="margin-top:0.3rem; display:flex; gap:0.3rem;">';
+                    appHtml += '<button onclick="window.__solaceLaunchWorkflowNextStep(\'' + targetRouteAction.sourceAssignmentId + '\', \'' + escapeHtml(targetRouteAction.targetRole) + '\', \'' + escapeHtml(targetRouteAction.assignmentId || '') + '\')" class="sb-btn sb-btn--sm" style="font-size:0.6rem;padding:0.15rem 0.4rem;background:#0f172a;color:#fff;border:1px solid #3b82f6;cursor:pointer;">Launch Executable Destination (' + escapeHtml(targetRouteAction.targetRole) + ')</button>';
+                    appHtml += '</div></div>';
+                } else if (lastSignoffResult.success) {
+                    appHtml += '<div style="margin-top:0.4rem; padding-top:0.4rem; border-top:1px solid #334155;">';
+                    appHtml += '<strong style="display:block; margin-bottom:0.2rem; color:#a78bfa;">Route Next-Step Destination:</strong>';
+                    appHtml += '<div style="display:flex; gap:0.3rem;">';
+                    appHtml += '<button onclick="window.__solaceRouteWorkflowNextStep(\'' + lastLaunchAction.targetAssignmentId + '\', \'design\')" class="sb-btn sb-btn--sm" style="font-size:0.6rem;padding:0.15rem 0.4rem;background:#3b82f6;color:#fff;border:none;cursor:pointer;">Route Destination to Design</button>';
+                    appHtml += '<button onclick="window.__solaceRouteWorkflowNextStep(\'' + lastLaunchAction.targetAssignmentId + '\', \'coder\')" class="sb-btn sb-btn--sm" style="font-size:0.6rem;padding:0.15rem 0.4rem;background:#10b981;color:#fff;border:none;cursor:pointer;">Route Destination to Coder</button>';
+                    appHtml += '<button onclick="window.__solaceRouteWorkflowNextStep(\'' + lastLaunchAction.targetAssignmentId + '\', \'qa\')" class="sb-btn sb-btn--sm" style="font-size:0.6rem;padding:0.15rem 0.4rem;background:#f59e0b;color:#fff;border:none;cursor:pointer;">Route Destination to QA</button>';
+                    appHtml += '</div></div>';
+                }
+                // -----------------------------------------
             }
             // ---------------------------------------------
 
