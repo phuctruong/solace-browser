@@ -860,6 +860,26 @@
                 appHtml += 'Approval Basis: <code>Approval state is visible for a matching assignment, but the current workflow binding has fallen back away from exact launched-workflow approval truth (SAC83)</code>';
             }
             appHtml += '</div>';
+
+            // --- SAC84 Generate Approval Actions ---
+            var targetLinkedId = targetApproval ? targetApproval.id : '';
+            appHtml += '<div style="margin-top:0.4rem; padding-top:0.4rem; border-top:1px solid #334155;">';
+            appHtml += '<strong style="display:block; margin-bottom:0.2rem;">Next-Step Approval Action:</strong>';
+            appHtml += 'Action Target Assignment ID: <code>' + escapeHtml(lastLaunchAction.targetAssignmentId.substring(0, 8)) + '</code><br/>';
+            appHtml += 'Action Target Role: <code>' + escapeHtml(lastLaunchAction.targetRole) + '</code><br/>';
+            appHtml += 'Action Target Run ID: <code>' + escapeHtml(lastLaunchAction.runId.substring(0, 8)) + '</code><br/>';
+            appHtml += '<div style="display:flex; gap:0.3rem;">';
+            appHtml += '<button onclick="window.__solaceSignoffWorkflow(\'' + lastLaunchAction.targetAssignmentId + '\', \'' + targetLinkedId + '\', \'approved\')" class="sb-btn sb-btn--sm" style="font-size:0.6rem;padding:0.15rem 0.4rem;background:#064e3b;color:#34d399;font-weight:600;border:1px solid #059669;cursor:pointer;">Approve Target</button>';
+            appHtml += '<button onclick="window.__solaceSignoffWorkflow(\'' + lastLaunchAction.targetAssignmentId + '\', \'' + targetLinkedId + '\', \'rejected\')" class="sb-btn sb-btn--sm" style="font-size:0.6rem;padding:0.15rem 0.4rem;background:#4c0519;color:#fca5a5;border:1px solid #e11d48;cursor:pointer;">Reject Target</button>';
+            appHtml += '</div>';
+            if (exactPacketTruth) {
+                appHtml += 'Action Basis: <code>Approval action will ' + (targetLinkedId ? 'update' : 'create') + ' the approval row for the launched target assignment while request, assignment, role, and run remain aligned in the exact workflow-bound branch (SAC84)</code>';
+            } else {
+                appHtml += 'Action Basis: <code>Approval action targets the visible matching assignment, but the current workflow binding has fallen back away from exact launched-workflow approval action truth (SAC84)</code>';
+            }
+            appHtml += '</div>';
+            // ---------------------------------------
+
             approvalSlot.innerHTML = appHtml;
         }
         // -------------------------------------------------
