@@ -1,22 +1,22 @@
 # TODO
 
 Repo: `solace-browser`
-Role: Solace Hub + Browser workspace for workflow-bound next-step destination execution evidence truth
+Role: Solace Hub + Browser workspace for workflow-bound next-step destination output truth
 
 ## Current Round
 
-`SAC89` native workflow-bound next-step destination execution evidence truth.
+`SAC90` native workflow-bound next-step destination output truth.
 
-`SAC88` made the workflow result box able to show whether the launched next-step destination branch has actually been picked up on the same workflow branch.
+`SAC89` made the workflow result box able to show whether the launched next-step destination branch has produced exact execution evidence on the same workflow branch.
 
-The next blocker is execution evidence truth for that launched destination branch. The manager can now inspect request truth, assignment truth, run truth, packet truth, provenance truth, pickup truth, execution evidence truth, output truth, approval truth, approval action truth, approval result truth, destination truth, destination launch truth, and destination pickup truth, but still cannot inspect whether that launched destination branch has produced exact execution evidence from the same workflow box.
+The next blocker is output truth for that launched destination branch. The manager can now inspect request truth, assignment truth, run truth, packet truth, provenance truth, pickup truth, execution evidence truth, output truth, approval truth, approval action truth, approval result truth, destination truth, destination launch truth, destination pickup truth, and destination execution evidence truth, but still cannot inspect whether that launched destination branch has produced exact output truth from the same workflow box.
 
 ## Worker Inbox
 
-- `northstar`: `The Dev Manager must be able to move a real workflow from request -> assignment -> worker inbox packet -> run -> evidence -> approval -> next routed assignment -> next launch -> next specialist pickup -> next specialist execution evidence -> next specialist output -> next specialist approval truth -> next specialist approval action -> next specialist approval result -> next specialist destination truth -> next specialist destination launch truth -> next specialist destination pickup truth -> next specialist destination execution evidence truth inside Solace Hub with each step inspectable and mutable from one honest workflow surface.`
+- `northstar`: `The Dev Manager must be able to move a real workflow from request -> assignment -> worker inbox packet -> run -> evidence -> approval -> next routed assignment -> next launch -> next specialist pickup -> next specialist execution evidence -> next specialist output -> next specialist approval truth -> next specialist approval action -> next specialist approval result -> next specialist destination truth -> next specialist destination launch truth -> next specialist destination pickup truth -> next specialist destination execution evidence truth -> next specialist destination output truth inside Solace Hub with each step inspectable and mutable from one honest workflow surface.`
 - `worker_mode`: `external_coding_agent`
 - `worker_role`: `coder`
-- `task_statement`: `Add one workflow-bound next-step destination execution evidence truth block into the active workflow result area. Keep it tied to the selected request, source assignment, target assignment, launched role, launched run, destination launch truth, destination pickup truth, packet provenance, pickup truth, execution evidence truth, output truth, approval truth, approval action truth, approval result truth, and destination truth already present in the chain.`
+- `task_statement`: `Add one workflow-bound next-step destination output truth block into the active workflow result area. Keep it tied to the selected request, source assignment, target assignment, launched role, launched run, destination launch truth, destination pickup truth, destination execution evidence truth, packet provenance, pickup truth, execution evidence truth, output truth, approval truth, approval action truth, approval result truth, and destination truth already present in the chain.`
 - `scope_change_policy`: `FAIL_AND_NEW_TASK`
 
 ## Communication Protocol
@@ -59,7 +59,7 @@ Maintain one local evidence chain for every new claim:
 - `/home/phuc/projects/solace-prime/canon/hub/SI17 — Human-in-the-Loop as a First-Class System Component.md`
 - `/home/phuc/projects/solace-prime/canon/hub/SI18 — Transparency as a Product Feature.md`
 - `/home/phuc/projects/solace-browser/solace-hub/src/hub-app.js`
-- `/home/phuc/projects/solace-browser/tests/test_manager_run_specialist_destination_pickup_truth.py`
+- `/home/phuc/projects/solace-browser/tests/test_manager_run_specialist_destination_execution_evidence_truth.py`
 
 ## Audit Ground Truth
 
@@ -85,55 +85,56 @@ Maintain one local evidence chain for every new claim:
 - workflow-bound next-step destination truth is visible
 - workflow-bound next-step destination launch truth is visible
 - workflow-bound next-step destination pickup truth is visible
-- next-step destination execution evidence truth for that exact launched destination branch is still not visible in the same workflow box
+- workflow-bound next-step destination execution evidence truth is visible
+- next-step destination output truth for that exact launched destination branch is still not visible in the same workflow box
 
 ## Rules
 
-- do not invent a second destination execution evidence model
+- do not invent a second destination output model
 - use the existing request, assignment, run, packet, provenance, pickup, execution evidence, output, approval, approval action, approval result, and destination context already present in the workflow chain
-- keep the destination execution evidence truth bound to the active workflow request/assignment/run result
-- do not fake “specialist branch destination executed” unless the result box can clearly state the target role and exact launched destination branch context it belongs to
-- preserve `SAC66` through `SAC88`
+- keep the destination output truth bound to the active workflow request/assignment/run result
+- do not fake “specialist branch destination output exists” unless the result box can clearly state the target role and exact launched destination branch context it belongs to
+- preserve `SAC66` through `SAC89`
 
 ## Hard Rejection Criteria
 
-- the manager still cannot inspect next-step destination execution evidence truth from the workflow result area
-- the destination execution evidence view is detached from the launched target assignment or launched run
-- the panel shows generic role prose instead of explicit destination execution evidence truth
-- the result area claims destination execution evidence truth without clearly stating which request, source assignment, target assignment, role, and run the evidence belongs to
+- the manager still cannot inspect next-step destination output truth from the workflow result area
+- the destination output truth view is detached from the launched target assignment or launched run
+- the panel shows generic role prose instead of explicit destination output truth
+- the result area claims destination output truth without clearly stating which request, source assignment, target assignment, role, and run the output belongs to
 
 ## Required Deliverables
 
-1. one visible workflow-bound next-step destination execution evidence truth block in the result area
-2. one explicit link from request -> assignment -> approval -> next-step route -> next-step launch -> next-step packet preview -> next-step packet provenance -> next-step specialist pickup -> next-step specialist execution evidence -> next-step specialist output -> next-step specialist approval truth -> next-step specialist approval action -> next-step specialist approval result -> next-step specialist destination truth -> next-step specialist destination launch truth -> next-step specialist destination pickup truth -> next-step specialist destination execution evidence truth
-3. one honest basis line describing whether the destination execution evidence view is exact launched-workflow truth or a weaker fallback
-4. one Prime Mermaid artifact for request -> assignment -> approval -> next-step route -> next-step launch -> next-step packet preview -> next-step packet provenance -> next-step specialist pickup -> next-step specialist execution evidence -> next-step specialist output -> next-step specialist approval truth -> next-step specialist approval action -> next-step specialist approval result -> next-step specialist destination truth -> next-step specialist destination launch truth -> next-step specialist destination pickup truth -> next-step specialist destination execution evidence truth
+1. one visible workflow-bound next-step destination output truth block in the result area
+2. one explicit link from request -> assignment -> approval -> next-step route -> next-step launch -> next-step packet preview -> next-step packet provenance -> next-step specialist pickup -> next-step specialist execution evidence -> next-step specialist output -> next-step specialist approval truth -> next-step specialist approval action -> next-step specialist approval result -> next-step specialist destination truth -> next-step specialist destination launch truth -> next-step specialist destination pickup truth -> next-step specialist destination execution evidence truth -> next-step specialist destination output truth
+3. one honest basis line describing whether the destination output view is exact launched-workflow truth or a weaker fallback
+4. one Prime Mermaid artifact for request -> assignment -> approval -> next-step route -> next-step launch -> next-step packet preview -> next-step packet provenance -> next-step specialist pickup -> next-step specialist execution evidence -> next-step specialist output -> next-step specialist approval truth -> next-step specialist approval action -> next-step specialist approval result -> next-step specialist destination truth -> next-step specialist destination launch truth -> next-step specialist destination pickup truth -> next-step specialist destination execution evidence truth -> next-step specialist destination output truth
 5. one narrow smoke path
 6. one narrow automated test
 
 ## Current Tickets
 
-### Ticket 1: Add workflow-bound next-step destination execution evidence truth
+### Ticket 1: Add workflow-bound next-step destination output truth
 
-Objective: make the launched destination branch traceable into actual execution evidence truth, not just pickup.
-
-Scope:
-
-- show next-step destination execution evidence truth from the workflow result area
-- tie it to the launched destination role, assignment, run, destination launch truth, destination pickup truth, packet preview, packet provenance, pickup truth, execution evidence truth, output truth, approval truth, approval action truth, approval result truth, and destination truth
-
-Done when: a reviewer can see whether the exact launched next-step destination branch has actually produced execution evidence without leaving the workflow result context.
-
-### Ticket 2: Preserve honest destination execution evidence context
-
-Objective: keep the destination execution evidence display truthful.
+Objective: make the launched destination branch traceable into actual output truth, not just execution evidence.
 
 Scope:
 
-- make clear which request, source assignment, target assignment, role, and run the destination execution evidence belongs to
-- make clear whether the destination execution evidence state is exact launched-workflow truth or weaker fallback
+- show next-step destination output truth from the workflow result area
+- tie it to the launched destination role, assignment, run, destination launch truth, destination pickup truth, destination execution evidence truth, packet preview, packet provenance, pickup truth, execution evidence truth, output truth, approval truth, approval action truth, approval result truth, and destination truth
 
-Done when: the destination execution evidence display is useful without obscuring system truth.
+Done when: a reviewer can see whether the exact launched next-step destination branch has actually produced output truth without leaving the workflow result context.
+
+### Ticket 2: Preserve honest destination output context
+
+Objective: keep the destination output display truthful.
+
+Scope:
+
+- make clear which request, source assignment, target assignment, role, and run the destination output belongs to
+- make clear whether the destination output state is exact launched-workflow truth or weaker fallback
+
+Done when: the destination output display is useful without obscuring system truth.
 
 ## Suggested File Targets
 
@@ -147,7 +148,7 @@ Done when: the destination execution evidence display is useful without obscurin
 - changed files
 - exact test/check command output
 - exact routes or APIs exercised
-- sample next-step specialist destination execution evidence basis
+- sample next-step specialist destination output basis
 - screenshot paths
 - local smoke path
 - remaining risks
@@ -157,4 +158,4 @@ Done when: the destination execution evidence display is useful without obscurin
 - redesigning the whole inbox model
 - adding cloud sync or `solaceagi`
 - unrelated dashboard polish
-- fake destination execution evidence truth without exact request/assignment/run packet relationship
+- fake destination output truth without exact request/assignment/run packet relationship

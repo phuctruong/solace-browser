@@ -13,6 +13,129 @@
     return fetch(API + path).then(function(r) { return r.json(); });
   }
 
+  function fetchBackofficeItems(table) {
+    return get('/api/v1/backoffice/solace-dev-manager/' + table)
+      .catch(function() { return { items: [] }; })
+      .then(function(res) { return res.items || []; });
+  }
+
+  function upsertBackofficeRecord(table, id, payload) {
+    var url = API + '/api/v1/backoffice/solace-dev-manager/' + table + (id ? '/' + id : '');
+    return fetch(url, {
+      method: id ? 'PUT' : 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    }).then(function(r) { return r.json(); });
+  }
+
+  function sortNewestFirst(items) {
+    return (items || []).slice().sort(function(a, b) {
+      var aKey = (a && (a.updated_at || a.created_at || a.id)) || '';
+      var bKey = (b && (b.updated_at || b.created_at || b.id)) || '';
+      return String(bKey).localeCompare(String(aKey));
+    });
+  }
+
+  function nextDirectiveTargetForRole(roleName) {
+    if (roleName === 'qa') return 'coder';
+    if (roleName === 'design') return 'coder';
+    if (roleName === 'coder') return 'qa';
+    return 'manager';
+  }
+
+  function syncWorkflowPromotionRecords(assignmentId, status, launchCtx) {
+    if (!assignmentId) return Promise.resolve({ skipped: true, reason: 'missing-assignment' });
+
+    return Promise.all([
+      fetchBackofficeItems('assignments'),
+      fetchBackofficeItems('requests'),
+      fetchBackofficeItems('memory_entries'),
+      fetchBackofficeItems('conventions'),
+      fetchBackofficeItems('releases')
+    ]).then(function(data) {
+      var assignments = data[0] || [];
+      var requests = data[1] || [];
+      var memoryEntries = data[2] || [];
+      var conventions = data[3] || [];
+      var releases = data[4] || [];
+
+      var assignment = assignments.find(function(item) { return item.id === assignmentId; }) || null;
+      if (!assignment) return { skipped: true, reason: 'assignment-not-found' };
+
+      var request = requests.find(function(item) { return item.id === assignment.request_id; }) || null;
+      if (!request || !request.project_id) return { skipped: true, reason: 'request-or-project-missing' };
+
+      var roleName = (launchCtx && launchCtx.targetAssignmentId === assignmentId && launchCtx.targetRole) || assignment.target_role || 'manager';
+      var runId = (launchCtx && launchCtx.targetAssignmentId === assignmentId && launchCtx.runId) || '';
+      var shortId = assignmentId.substring(0, 8);
+      var promotedStatus = status === 'approved' ? 'promoted' : 'rejected';
+      var existingMemory = memoryEntries.find(function(item) { return item.assignment_id === assignmentId; }) || null;
+      var memoryPayload = {
+        request_id: assignment.request_id,
+        assignment_id: assignmentId,
+        project_id: request.project_id,
+        role: roleName,
+        run_id: runId,
+        entry_type: 'convention',
+        title: roleName + '-workflow-' + shortId,
+        summary: status === 'approved'
+          ? 'Manager approved the ' + roleName + ' workflow branch and promoted it into durable department memory.'
+          : 'Manager rejected the ' + roleName + ' workflow branch and preserved the rejected branch as durable memory for audit and reuse boundaries.',
+        status: promotedStatus,
+        artifact_refs: 'assignment:' + assignmentId + ';run:' + (runId || 'none')
+      };
+
+      return upsertBackofficeRecord('memory_entries', existingMemory ? existingMemory.id : null, memoryPayload)
+        .then(function(memoryRes) {
+          var memoryRecord = (memoryRes && memoryRes.record) ? memoryRes.record : existingMemory;
+          if (!memoryRecord || status !== 'approved') {
+            return { memory: memoryRecord, convention: null, release: null };
+          }
+
+          var promotedCount = memoryEntries.filter(function(item) {
+            return item.role === roleName && item.status === 'promoted';
+          }).length;
+          if (!existingMemory || existingMemory.status !== 'promoted') {
+            promotedCount += 1;
+          }
+
+          var conventionName = roleName + '-workflow-convention';
+          var existingConvention = conventions.find(function(item) {
+            return item.memory_entry_id === memoryRecord.id || item.name === conventionName;
+          }) || null;
+          var conventionStatus = promotedCount >= 3 ? 'active' : 'candidate';
+          var conventionPayload = {
+            memory_entry_id: memoryRecord.id,
+            source_role: roleName,
+            name: conventionName,
+            trigger: 'manager-approved ' + roleName + ' workflow branch',
+            scope: 'solace-dev-manager routed assignments in solace-browser',
+            proof_basis: 'assignment:' + assignmentId + ';run:' + (runId || 'none') + ';memory:' + memoryRecord.id,
+            status: conventionStatus
+          };
+
+          var releaseVersion = 'workflow-' + roleName + '-' + shortId;
+          var existingRelease = releases.find(function(item) { return item.version === releaseVersion; }) || null;
+          var releasePayload = {
+            project_id: request.project_id,
+            version: releaseVersion,
+            evidence_bundle: 'assignment:' + assignmentId + ';run:' + (runId || 'none') + ';memory:' + memoryRecord.id
+          };
+
+          return Promise.all([
+            upsertBackofficeRecord('conventions', existingConvention ? existingConvention.id : null, conventionPayload),
+            upsertBackofficeRecord('releases', existingRelease ? existingRelease.id : null, releasePayload)
+          ]).then(function(results) {
+            return {
+              memory: memoryRecord,
+              convention: results[0] && results[0].record ? results[0].record : existingConvention,
+              release: results[1] && results[1].record ? results[1].record : existingRelease
+            };
+          });
+        });
+    });
+  }
+
   function postEvalResult(payload) {
     return fetch(API + '/api/v1/hub/eval-result', {
       method: 'POST',
@@ -76,7 +199,7 @@
   // ── SDH5: Live Dev Workspace Hydration ──
 
   var DEV_ROLES = [
-    { id: 'solace-dev-manager', key: 'manager', tables: ['requests','assignments','approvals','artifacts','releases','projects','design_handoffs','coder_handoffs','qa_handoffs'] },
+    { id: 'solace-dev-manager', key: 'manager', tables: ['requests','assignments','approvals','artifacts','releases','projects','memory_entries','conventions','design_handoffs','coder_handoffs','qa_handoffs'] },
     { id: 'solace-design',      key: 'design',  tables: ['design_specs','design_reviews'] },
     { id: 'solace-coder',       key: 'coder',   tables: ['code_runs','code_artifacts','coder_reviews'] },
     { id: 'solace-qa',          key: 'qa',       tables: ['qa_runs','qa_findings','qa_signoffs'] }
@@ -387,7 +510,12 @@
         if (!res.created && !res.updated) {
             console.warn('Signoff mutation failed', res);
         }
-        hydrateActiveWorkflowResult();
+        syncWorkflowPromotionRecords(assignmentId, status, launchCtx)
+          .catch(function(err) { console.warn('Promotion sync failed', err); })
+          .then(function() {
+            hydrateActiveWorkflowResult();
+            hydrateDevWorkspace();
+          });
     });
   };
 
@@ -998,13 +1126,14 @@
 
                     // --- SAC87 Next-Step Destination Launch Truth ---
                     var nestedLaunchAction = window.__solaceLastWorkflowNestedLaunchAction;
-                    if (
+                    var nestedLaunchMatchesCurrentBranch = !!(
                         nestedLaunchAction &&
                         nestedLaunchAction.requestId === reqId &&
                         nestedLaunchAction.sourceAssignmentId === lastLaunchAction.targetAssignmentId &&
                         nestedLaunchAction.targetAssignmentId === targetRouteAction.assignmentId &&
                         nestedLaunchAction.targetRole === targetRouteAction.targetRole
-                    ) {
+                    );
+                    if (nestedLaunchMatchesCurrentBranch) {
                         var exactNestedLaunchTruth = !!(
                             exactPacketTruth &&
                             nestedLaunchAction.sourceRole === lastLaunchAction.targetRole &&
@@ -1061,6 +1190,10 @@
                         }
                         appHtml += '</div></div>';
                         // ------------------------------------------------
+
+                        // --- SAC89 Next-Step Destination Execution Evidence Truth (Container) ---
+                        appHtml += '<div id="dev-nested-active-workflow-evidence-preview" style="margin-top:0.5rem;"></div>';
+                        // ------------------------------------------------------------------------
                     } else {
                         appHtml += '<div style="margin-top:0.4rem; padding-top:0.4rem; border-top:1px solid #334155;">';
                         appHtml += '<strong style="display:block; margin-bottom:0.2rem; color:#60a5fa;">Next-Step Destination Launch Truth:</strong>';
@@ -1092,6 +1225,47 @@
             // ---------------------------------------------
 
             approvalSlot.innerHTML = appHtml;
+
+            // --- SAC89 Fetch Nested Specialist Execution Evidence Truth ---
+            var nestedEvidenceSlot = document.getElementById('dev-nested-active-workflow-evidence-preview');
+            if (nestedEvidenceSlot && nestedLaunchMatchesCurrentBranch) {
+                if (nestedEventsExist) {
+                    nestedEvidenceSlot.innerHTML = '<strong style="display:block; margin-top:0.4rem; color:#2dd4bf;">Next-Step Destination Execution Evidence Truth:</strong>' +
+                                             '<div style="background:rgba(30,41,59,0.5); padding:0.4rem; border-left:2px solid #2dd4bf; border-radius:0.15rem; font-size:0.65rem; margin-bottom:0.5rem;">' +
+                                             'Nested Source Request ID: <code>' + escapeHtml(nestedLaunchAction.requestId.substring(0, 8)) + '</code><br/>' +
+                                             'Nested Source Assignment ID: <code>' + escapeHtml(nestedLaunchAction.sourceAssignmentId.substring(0, 8)) + '</code><br/>' +
+                                             (nestedLaunchAction.sourceRole ? 'Nested Source Role: <code>' + escapeHtml(nestedLaunchAction.sourceRole) + '</code><br/>' : '') +
+                                             (nestedLaunchAction.sourceRunId ? 'Nested Source Run ID: <code>' + escapeHtml(nestedLaunchAction.sourceRunId.substring(0, 8)) + '</code><br/>' : '') +
+                                             'Nested Target Assignment ID: <code>' + escapeHtml(nestedLaunchAction.targetAssignmentId.substring(0, 8)) + '</code><br/>' +
+                                             'Dispatched Nested Specialist: <code>' + escapeHtml(nestedLaunchAction.targetRole) + '</code><br/>' +
+                                             'Nested Evidence Run ID: <code>' + escapeHtml(nestedLaunchAction.runId.substring(0, 8)) + '</code><br/>' +
+                                             (exactNestedLaunchTruth 
+                                                ? 'Destination Evidence Status: <span style="color:#34d399;font-weight:600;">[✓] Exact launched-workflow destination execution evidence tracked</span><br/>Destination Evidence Basis: <code>Events exist for the launched nested target run, and request, source assignment, target assignment, role, and run remain aligned in the exact launched-workflow branch (SAC89)</code>' 
+                                                : 'Destination Evidence Status: <span style="color:#fcd34d;font-weight:600;">[?] Fallback destination execution evidence tracked</span><br/>Destination Evidence Basis: <code>Events exist for a visible nested target run, but the current workflow binding has fallen back away from exact launched-workflow destination execution evidence truth (SAC89)</code>') +
+                                             '<div id="dev-nested-evidence-fetch-target" style="margin-top:0.4rem;"><span style="color:#94a3b8;">loading destination execution evidence…</span></div></div>';
+                    
+                    fetchArtifactText(nestedLaunchAction.appId, nestedLaunchAction.runId, 'events.jsonl').then(function(res) {
+                        if (!res.missing && document.getElementById('dev-nested-evidence-fetch-target')) {
+                            document.getElementById('dev-nested-evidence-fetch-target').innerHTML = buildEventsPreview(res.text, nestedLaunchAction.appId, nestedLaunchAction.runId);
+                        } else if (document.getElementById('dev-nested-evidence-fetch-target')) {
+                            document.getElementById('dev-nested-evidence-fetch-target').innerHTML = buildMissingState('events.jsonl', res.reason || 'missing');
+                        }
+                    });
+                } else {
+                    nestedEvidenceSlot.innerHTML = '<strong style="display:block; margin-top:0.4rem; color:#94a3b8;">Next-Step Destination Execution Evidence Truth:</strong>' +
+                                             '<div style="background:rgba(30,41,59,0.5); padding:0.4rem; border-left:2px solid #475569; border-radius:0.15rem; font-size:0.65rem; margin-bottom:0.5rem; color:#64748b;">' +
+                                             'Nested Source Request ID: <code>' + escapeHtml(nestedLaunchAction.requestId.substring(0, 8)) + '</code><br/>' +
+                                             'Nested Source Assignment ID: <code>' + escapeHtml(nestedLaunchAction.sourceAssignmentId.substring(0, 8)) + '</code><br/>' +
+                                             (nestedLaunchAction.sourceRole ? 'Nested Source Role: <code>' + escapeHtml(nestedLaunchAction.sourceRole) + '</code><br/>' : '') +
+                                             (nestedLaunchAction.sourceRunId ? 'Nested Source Run ID: <code>' + escapeHtml(nestedLaunchAction.sourceRunId.substring(0, 8)) + '</code><br/>' : '') +
+                                             'Nested Target Assignment ID: <code>' + escapeHtml(nestedLaunchAction.targetAssignmentId.substring(0, 8)) + '</code><br/>' +
+                                             'Dispatched Nested Specialist: <code>' + escapeHtml(nestedLaunchAction.targetRole) + '</code><br/>' +
+                                             'Nested Evidence Run ID: <code>' + escapeHtml(nestedLaunchAction.runId.substring(0, 8)) + '</code><br/>' +
+                                             'Destination Evidence Status: <span style="color:#94a3b8;font-weight:600;">[ ] Awaiting destination execution evidence</span><br/><code>No events.jsonl artifact exists yet for the launched nested target run, so specialist destination execution is not proven in the workflow branch (SAC89)</code></div>';
+                }
+            }
+            // -----------------------------------------------------------------
+
         }
         // -------------------------------------------------
       });
@@ -3840,98 +4014,70 @@
     var selectedWorker = appId || 'unknown';
     var selectedRun = runId || 'latest';
 
-    // Convention records derived from SAM40 admission target (role-mocked; shown honestly)
-    var memoryEntries = [];
+    panel.innerHTML = '<span style="font-size:0.7rem;color:#94a3b8;">loading runtime-backed memory entries...</span>';
 
-    if (roleName === 'qa') {
-      memoryEntries = [{
-        state: 'Live',
-        bundleId: 'qa-run-20260328-003',
-        specialist: 'solace-qa-agent-v2',
-        sourcePacket: 'inbox/qa/test-suite.json',
-        conventionTarget: 'tests/e2e/verified-suite-v3.json',
-        objectDesc: 'Reusable end-to-end test convention bound to SI18 governance model.',
-        color: '#10b981',
-        bg: 'rgba(16,185,129,0.1)'
-      }];
-    } else if (roleName === 'coder') {
-      memoryEntries = [{
-        state: 'Draft',
-        bundleId: 'coder-run-20260328-001',
-        specialist: 'solace-prime-mermaid-coder-v1.2.0',
-        sourcePacket: 'inbox/coder/packet.json',
-        conventionTarget: 'tmp/pending-ast-matrix.bin',
-        objectDesc: 'Temporary layout pending bundle seal and SI17 memory admission.',
-        color: '#f59e0b',
-        bg: 'rgba(245,158,11,0.1)'
-      }];
-    } else if (roleName === 'design') {
-      memoryEntries = [{
-        state: 'Revoked',
-        bundleId: 'design-run-20260328-002',
-        specialist: 'solace-ui-renderer-v1',
-        sourcePacket: 'inbox/design/command_lock.json',
-        conventionTarget: 'N/A',
-        objectDesc: 'Memory admission rejected. Bundle outputs purged from convention pool.',
-        color: '#ef4444',
-        bg: 'rgba(239,68,68,0.1)'
-      }];
-    } else {
-      memoryEntries = [{
-        state: 'Revoked',
-        bundleId: 'unknown-bundle',
-        specialist: 'Unbound',
-        sourcePacket: 'N/A',
-        conventionTarget: 'N/A',
-        objectDesc: 'Cannot form memory entry from unbound or untrusted sources.',
-        color: '#64748b',
-        bg: 'rgba(100,116,139,0.1)'
-      }];
-    }
+    Promise.all([
+      fetchBackofficeItems('memory_entries'),
+      fetchBackofficeItems('conventions')
+    ]).then(function(data) {
+      var entries = sortNewestFirst((data[0] || []).filter(function(item) { return item.role === roleName; }));
+      var conventions = data[1] || [];
+      var entry = entries[0] || null;
+      var convention = entry ? (conventions.find(function(item) { return item.memory_entry_id === entry.id; }) || null) : null;
 
-    var stateIcon = { 'Live': '📄', 'Draft': '📝', 'Revoked': '🗑️' };
+      var rows = [];
+      if (entry) {
+        var state = entry.status === 'promoted' ? 'Live' : (entry.status === 'candidate' ? 'Draft' : 'Revoked');
+        rows.push({
+          state: state,
+          bundleId: entry.run_id || entry.assignment_id || entry.id,
+          specialist: roleName,
+          conventionTarget: convention ? convention.name : (entry.title || 'N/A'),
+          objectDesc: entry.summary || 'Runtime-backed memory entry present.',
+          color: state === 'Live' ? '#10b981' : (state === 'Draft' ? '#f59e0b' : '#ef4444'),
+          bg: state === 'Live' ? 'rgba(16,185,129,0.1)' : (state === 'Draft' ? 'rgba(245,158,11,0.1)' : 'rgba(239,68,68,0.1)')
+        });
+      } else {
+        rows.push({
+          state: 'Empty',
+          bundleId: 'no-memory-entry',
+          specialist: roleName,
+          conventionTarget: 'N/A',
+          objectDesc: 'No runtime-backed memory entry exists yet for this specialist role.',
+          color: '#64748b',
+          bg: 'rgba(100,116,139,0.1)'
+        });
+      }
 
-    var html = '<div style="display:flex;flex-direction:column;gap:0.5rem;font-size:0.75rem;color:var(--sb-on-surface);">';
+      var stateIcon = { 'Live': '📄', 'Draft': '📝', 'Revoked': '🗑️', 'Empty': '∅' };
+      var html = '<div style="display:flex;flex-direction:column;gap:0.5rem;font-size:0.75rem;color:var(--sb-on-surface);">';
 
-    memoryEntries.forEach(function(entry) {
-      html += '<div style="background:var(--sb-surface-alt,#1e293b);padding:0.45rem 0.55rem;border-radius:0.3rem;border-left:2px solid ' + entry.color + ';display:flex;flex-direction:column;gap:0.35rem;">';
+      rows.forEach(function(item) {
+        html += '<div style="background:var(--sb-surface-alt,#1e293b);padding:0.45rem 0.55rem;border-radius:0.3rem;border-left:2px solid ' + item.color + ';display:flex;flex-direction:column;gap:0.35rem;">';
+        html += '<div style="display:flex;align-items:center;justify-content:space-between;">';
+        html += '<strong style="color:var(--sb-on-surface);font-size:0.73rem;">' + (stateIcon[item.state] || '●') + ' ' + escapeHtml(item.bundleId) + '</strong>';
+        html += '<code style="color:' + item.color + ';background:' + item.bg + ';padding:0.1rem 0.4rem;text-transform:uppercase;font-size:0.63rem;">' + escapeHtml(item.state) + '</code>';
+        html += '</div>';
+        html += '<div><span style="color:var(--sb-text-muted);font-weight:600;font-size:0.63rem;">Specialist:</span> <span style="font-family:monospace;font-size:0.68rem;color:#c084fc;">' + escapeHtml(item.specialist) + '</span></div>';
+        html += '<div><span style="color:var(--sb-text-muted);font-weight:600;font-size:0.63rem;">Convention Target:</span> <span style="font-family:monospace;font-size:0.68rem;color:#38bdf8;">' + escapeHtml(item.conventionTarget) + '</span></div>';
+        html += '<div style="background:#0f172a;border-radius:0.2rem;padding:0.3rem 0.4rem;font-size:0.65rem;color:#cbd5e1;line-height:1.4;"><code>' + escapeHtml(item.objectDesc) + '</code></div>';
+        html += '<div><span style="color:var(--sb-text-muted);font-weight:600;font-size:0.63rem;">Entry Hash:</span> <code style="font-size:0.6rem;color:#64748b;">' + btoa(item.state + item.bundleId + item.conventionTarget).substring(0, 16) + '</code></div>';
+        html += '</div>';
+      });
 
-      // Header
-      html += '<div style="display:flex;align-items:center;justify-content:space-between;">';
-      html += '<strong style="color:var(--sb-on-surface);font-size:0.73rem;">' + (stateIcon[entry.state] || '●') + ' ' + escapeHtml(entry.bundleId) + '</strong>';
-      html += '<code style="color:' + entry.color + ';background:' + entry.bg + ';padding:0.1rem 0.4rem;text-transform:uppercase;font-size:0.63rem;">' + escapeHtml(entry.state) + '</code>';
-      html += '</div>';
-
-      // Context
-      html += '<div style="display:flex;flex-direction:column;gap:0.1rem;">';
-      html += '<div><span style="color:var(--sb-text-muted);font-weight:600;font-size:0.63rem;">Specialist:</span> <span style="font-family:monospace;font-size:0.68rem;color:#c084fc;">' + escapeHtml(entry.specialist) + '</span></div>';
-      html += '<div><span style="color:var(--sb-text-muted);font-weight:600;font-size:0.63rem;">Convention Target:</span> <span style="font-family:monospace;font-size:0.68rem;color:#38bdf8;">' + escapeHtml(entry.conventionTarget) + '</span></div>';
-      html += '</div>';
-
-      // Object description
-      html += '<div style="background:#0f172a;border-radius:0.2rem;padding:0.3rem 0.4rem;font-size:0.65rem;color:#cbd5e1;line-height:1.4;">';
-      html += '<code>' + escapeHtml(entry.objectDesc) + '</code>';
-      html += '</div>';
-
-      // ALCOA+ hash
-      var alcoa = btoa(entry.state + entry.bundleId + entry.conventionTarget).substring(0, 16);
-      html += '<div><span style="color:var(--sb-text-muted);font-weight:600;font-size:0.63rem;">Entry Hash:</span> <code style="font-size:0.6rem;color:#64748b;">' + alcoa + '</code></div>';
-
-      html += '</div>';
+      html += '<div style="margin-top:0.1rem;font-size:0.63rem;color:#64748b;">';
+      html += '<strong style="color:var(--sb-text-muted);">Audit Constraints:</strong> ';
+      html += 'Viewer Role: <code>' + escapeHtml(viewerRole) + '</code><br/>';
+      html += 'Selected Worker: <code>' + escapeHtml(selectedWorker) + '</code><br/>';
+      html += 'Selected Run: <code>' + escapeHtml(selectedRun) + '</code><br/>';
+      html += 'Memory Basis: <code>real Back Office memory_entries table linked to optional convention record</code><br/>';
+      html += 'Entry values are <em>runtime-backed</em> when present; empty state is shown honestly when absent. ';
+      html += 'Resolution Bound: <code>SI21 — The Solace Intelligence System</code>.';
+      html += '</div></div>';
+      panel.innerHTML = html;
+    }).catch(function(err) {
+      panel.innerHTML = '<span style="font-size:0.7rem;color:#fca5a5;">memory entry load failed: ' + escapeHtml(String(err)) + '</span>';
     });
-
-    html += '<div style="margin-top:0.1rem;font-size:0.63rem;color:#64748b;">';
-    html += '<strong style="color:var(--sb-text-muted);">Audit Constraints:</strong> ';
-    html += 'Viewer Role: <code>' + escapeHtml(viewerRole) + '</code><br/>';
-    html += 'Selected Worker: <code>' + escapeHtml(selectedWorker) + '</code><br/>';
-    html += 'Selected Run: <code>' + escapeHtml(selectedRun) + '</code><br/>';
-    html += 'Memory Basis: <code>visible specialist output -> memory admission -> department convention entry</code><br/>';
-    html += 'Entry values are <em>role-derived mocks</em> until runtime registry binding is wired. ';
-    html += 'Resolution Bound: <code>SI21 — The Solace Intelligence System</code>.';
-    html += '</div>';
-
-    html += '</div>';
-    panel.innerHTML = html;
   }
 
   // ── SAW42: Specialist Memory Reuse ──
@@ -3946,94 +4092,70 @@
     var selectedWorker = appId || 'unknown';
     var selectedRun = runId || 'latest';
 
-    // Reuse records derived from SAC41 memory entry target (role-mocked; shown honestly)
-    var reuseEntries = [];
+    panel.innerHTML = '<span style="font-size:0.7rem;color:#94a3b8;">loading runtime-backed convention reuse...</span>';
 
-    if (roleName === 'qa') {
-      reuseEntries = [{
-        state: 'Callable',
-        memoryId: 'tests/e2e/verified-suite-v3.json',
-        specialist: 'solace-qa-agent-v2',
-        nextTarget: 'coder',
-        reuseBasis: 'End-to-end suite is live in memory store. Automatically queued into the next Coder packet as a verification constraint.',
-        color: '#10b981',
-        bg: 'rgba(16,185,129,0.1)'
-      }];
-    } else if (roleName === 'coder') {
-      reuseEntries = [{
-        state: 'Limited',
-        memoryId: 'tmp/pending-ast-matrix.bin',
-        specialist: 'solace-prime-mermaid-coder-v1.2.0',
-        nextTarget: 'manager',
-        reuseBasis: 'Memory object is only in Draft state. Can be manually invoked by manager for visual inspection, but blocked from autonomous specialist runs.',
-        color: '#f59e0b',
-        bg: 'rgba(245,158,11,0.1)'
-      }];
-    } else if (roleName === 'design') {
-      reuseEntries = [{
-        state: 'Blocked',
-        memoryId: 'N/A',
-        specialist: 'solace-ui-renderer-v1',
-        nextTarget: 'N/A',
-        reuseBasis: 'Memory admission was revoked. No reusable objects available for subsequent workers.',
-        color: '#ef4444',
-        bg: 'rgba(239,68,68,0.1)'
-      }];
-    } else {
-      reuseEntries = [{
-        state: 'Blocked',
-        memoryId: 'N/A',
-        specialist: 'Unbound',
-        nextTarget: 'N/A',
-        reuseBasis: 'No valid memory context to make callable.',
-        color: '#64748b',
-        bg: 'rgba(100,116,139,0.1)'
-      }];
-    }
+    Promise.all([
+      fetchBackofficeItems('conventions'),
+      fetchBackofficeItems('memory_entries')
+    ]).then(function(data) {
+      var conventions = sortNewestFirst((data[0] || []).filter(function(item) { return item.source_role === roleName; }));
+      var entries = data[1] || [];
+      var convention = conventions[0] || null;
+      var linkedMemory = convention ? (entries.find(function(item) { return item.id === convention.memory_entry_id; }) || null) : null;
 
-    var reuseIcon = { 'Callable': '⚡', 'Limited': '⚠️', 'Blocked': '🚫' };
+      var rows = [];
+      if (convention) {
+        var state = convention.status === 'active' ? 'Callable' : (convention.status === 'candidate' ? 'Limited' : 'Blocked');
+        rows.push({
+          state: state,
+          memoryId: convention.name,
+          specialist: roleName,
+          nextTarget: nextDirectiveTargetForRole(roleName),
+          reuseBasis: convention.proof_basis || (linkedMemory ? linkedMemory.summary : 'Runtime-backed convention present.'),
+          color: state === 'Callable' ? '#10b981' : (state === 'Limited' ? '#f59e0b' : '#ef4444'),
+          bg: state === 'Callable' ? 'rgba(16,185,129,0.1)' : (state === 'Limited' ? 'rgba(245,158,11,0.1)' : 'rgba(239,68,68,0.1)')
+        });
+      } else {
+        rows.push({
+          state: 'Blocked',
+          memoryId: 'N/A',
+          specialist: roleName,
+          nextTarget: 'N/A',
+          reuseBasis: 'No runtime-backed convention exists yet for this specialist role.',
+          color: '#64748b',
+          bg: 'rgba(100,116,139,0.1)'
+        });
+      }
 
-    var html = '<div style="display:flex;flex-direction:column;gap:0.5rem;font-size:0.75rem;color:var(--sb-on-surface);">';
+      var reuseIcon = { 'Callable': '⚡', 'Limited': '⚠️', 'Blocked': '🚫' };
+      var html = '<div style="display:flex;flex-direction:column;gap:0.5rem;font-size:0.75rem;color:var(--sb-on-surface);">';
 
-    reuseEntries.forEach(function(entry) {
-      html += '<div style="background:var(--sb-surface-alt,#1e293b);padding:0.45rem 0.55rem;border-radius:0.3rem;border-left:2px solid ' + entry.color + ';display:flex;flex-direction:column;gap:0.35rem;">';
+      rows.forEach(function(item) {
+        html += '<div style="background:var(--sb-surface-alt,#1e293b);padding:0.45rem 0.55rem;border-radius:0.3rem;border-left:2px solid ' + item.color + ';display:flex;flex-direction:column;gap:0.35rem;">';
+        html += '<div style="display:flex;align-items:center;justify-content:space-between;">';
+        html += '<strong style="color:var(--sb-on-surface);font-size:0.73rem;">' + (reuseIcon[item.state] || '●') + ' ' + escapeHtml(item.memoryId) + '</strong>';
+        html += '<code style="color:' + item.color + ';background:' + item.bg + ';padding:0.1rem 0.4rem;text-transform:uppercase;font-size:0.63rem;">' + escapeHtml(item.state) + '</code>';
+        html += '</div>';
+        html += '<div><span style="color:var(--sb-text-muted);font-weight:600;font-size:0.63rem;">Specialist Source:</span> <span style="font-family:monospace;font-size:0.68rem;color:#c084fc;">' + escapeHtml(item.specialist) + '</span></div>';
+        html += '<div><span style="color:var(--sb-text-muted);font-weight:600;font-size:0.63rem;">Next Directive Target:</span> <span style="font-family:monospace;font-size:0.68rem;color:#60a5fa;">' + escapeHtml(item.nextTarget) + '</span></div>';
+        html += '<div style="background:#0f172a;border-radius:0.2rem;padding:0.3rem 0.4rem;font-size:0.65rem;color:#cbd5e1;line-height:1.4;"><code>' + escapeHtml(item.reuseBasis) + '</code></div>';
+        html += '<div><span style="color:var(--sb-text-muted);font-weight:600;font-size:0.63rem;">Reuse Hash:</span> <code style="font-size:0.6rem;color:#64748b;">' + btoa(item.state + item.memoryId + item.nextTarget).substring(0, 16) + '</code></div>';
+        html += '</div>';
+      });
 
-      // Header
-      html += '<div style="display:flex;align-items:center;justify-content:space-between;">';
-      html += '<strong style="color:var(--sb-on-surface);font-size:0.73rem;">' + (reuseIcon[entry.state] || '●') + ' ' + escapeHtml(entry.memoryId) + '</strong>';
-      html += '<code style="color:' + entry.color + ';background:' + entry.bg + ';padding:0.1rem 0.4rem;text-transform:uppercase;font-size:0.63rem;">' + escapeHtml(entry.state) + '</code>';
-      html += '</div>';
-
-      // Context
-      html += '<div style="display:flex;flex-direction:column;gap:0.1rem;">';
-      html += '<div><span style="color:var(--sb-text-muted);font-weight:600;font-size:0.63rem;">Specialist Source:</span> <span style="font-family:monospace;font-size:0.68rem;color:#c084fc;">' + escapeHtml(entry.specialist) + '</span></div>';
-      html += '<div><span style="color:var(--sb-text-muted);font-weight:600;font-size:0.63rem;">Next Directive Target:</span> <span style="font-family:monospace;font-size:0.68rem;color:#60a5fa;">' + escapeHtml(entry.nextTarget) + '</span></div>';
-      html += '</div>';
-
-      // Object description
-      html += '<div style="background:#0f172a;border-radius:0.2rem;padding:0.3rem 0.4rem;font-size:0.65rem;color:#cbd5e1;line-height:1.4;">';
-      html += '<code>' + escapeHtml(entry.reuseBasis) + '</code>';
-      html += '</div>';
-
-      // ALCOA+ hash
-      var alcoa = btoa(entry.state + entry.memoryId + entry.nextTarget).substring(0, 16);
-      html += '<div><span style="color:var(--sb-text-muted);font-weight:600;font-size:0.63rem;">Reuse Hash:</span> <code style="font-size:0.6rem;color:#64748b;">' + alcoa + '</code></div>';
-
-      html += '</div>';
+      html += '<div style="margin-top:0.1rem;font-size:0.63rem;color:#64748b;">';
+      html += '<strong style="color:var(--sb-text-muted);">Audit Constraints:</strong> ';
+      html += 'Viewer Role: <code>' + escapeHtml(viewerRole) + '</code><br/>';
+      html += 'Selected Worker: <code>' + escapeHtml(selectedWorker) + '</code><br/>';
+      html += 'Selected Run: <code>' + escapeHtml(selectedRun) + '</code><br/>';
+      html += 'Reuse Basis: <code>real Back Office convention record linked to reusable memory entry</code><br/>';
+      html += 'Reuse values are <em>runtime-backed</em> when present; blocked state is shown honestly when absent. ';
+      html += 'Resolution Bound: <code>SI9 — Conventions as Core Product Object</code>.';
+      html += '</div></div>';
+      panel.innerHTML = html;
+    }).catch(function(err) {
+      panel.innerHTML = '<span style="font-size:0.7rem;color:#fca5a5;">convention reuse load failed: ' + escapeHtml(String(err)) + '</span>';
     });
-
-    html += '<div style="margin-top:0.1rem;font-size:0.63rem;color:#64748b;">';
-    html += '<strong style="color:var(--sb-text-muted);">Audit Constraints:</strong> ';
-    html += 'Viewer Role: <code>' + escapeHtml(viewerRole) + '</code><br/>';
-    html += 'Selected Worker: <code>' + escapeHtml(selectedWorker) + '</code><br/>';
-    html += 'Selected Run: <code>' + escapeHtml(selectedRun) + '</code><br/>';
-    html += 'Reuse Basis: <code>visible department-memory entry -> callable convention -> next directive or worker packet</code><br/>';
-    html += 'Reuse values are <em>role-derived mocks</em> until runtime packet binder is wired. ';
-    html += 'Resolution Bound: <code>SI9 — Conventions as Core Product Object</code>.';
-    html += '</div>';
-
-    html += '</div>';
-    panel.innerHTML = html;
   }
 
   // ── SAE43: Specialist Convention Invocation ──
@@ -4636,90 +4758,71 @@
     var selectedWorker = appId || 'unknown';
     var selectedRun = runId || 'latest';
 
-    // Release Action records derived from SAH48 trust/governance (role-mocked; shown honestly)
-    var releaseEntries = [];
+    panel.innerHTML = '<span style="font-size:0.7rem;color:#94a3b8;">loading runtime-backed release actions...</span>';
 
-    if (roleName === 'qa') {
-      releaseEntries = [{
-        state: 'Approved',
-        trustLineage: 'Governance Decision [Trusted]',
-        signoffBasis: 'Human Dev Manager affirmatively signed off on verification matrix and runtime proof.',
-        actionVerdict: 'Physical artifact bundle formally bound to release channel and systemic runtime injection.',
-        color: '#10b981',
-        bg: 'rgba(16,185,129,0.1)'
-      }];
-    } else if (roleName === 'coder') {
-      releaseEntries = [{
-        state: 'Pending',
-        trustLineage: 'Governance Decision [Provisional]',
-        signoffBasis: 'Lineage suspended in Dev Manager queue pending manual structural override or rejection.',
-        actionVerdict: 'Artifact delivery gated indefinitely until SI17 human resolution.',
-        color: '#f59e0b',
-        bg: 'rgba(245,158,11,0.1)'
-      }];
-    } else if (roleName === 'design') {
-      releaseEntries = [{
-        state: 'Denied',
-        trustLineage: 'Governance Decision [Blocked]',
-        signoffBasis: 'Dead execution branch rejected by explicit system governance bounds.',
-        actionVerdict: 'Release pipeline severed. Artifacts permanently blocked from subsequent department invocation.',
-        color: '#ef4444',
-        bg: 'rgba(239,68,68,0.1)'
-      }];
-    } else {
-      releaseEntries = [{
-        state: 'Denied',
-        trustLineage: 'N/A',
-        signoffBasis: 'Invalid capability stack.',
-        actionVerdict: 'Missing authority to propose release candidate.',
-        color: '#64748b',
-        bg: 'rgba(100,116,139,0.1)'
-      }];
-    }
+    Promise.all([
+      fetchBackofficeItems('assignments'),
+      fetchBackofficeItems('approvals'),
+      fetchBackofficeItems('releases')
+    ]).then(function(data) {
+      var assignments = sortNewestFirst((data[0] || []).filter(function(item) { return item.target_role === roleName; }));
+      var approvals = data[1] || [];
+      var releases = data[2] || [];
+      var assignment = assignments[0] || null;
 
-    var releaseIcon = { 'Approved': '✔️', 'Pending': '⏳', 'Denied': '❌' };
+      var rows = [];
+      if (assignment) {
+        var approval = approvals.find(function(item) { return item.assignment_id === assignment.id; }) || null;
+        var release = releases.find(function(item) { return item.version === ('workflow-' + roleName + '-' + assignment.id.substring(0, 8)); }) || null;
+        var state = release ? 'Approved' : (approval && approval.status === 'rejected' ? 'Denied' : 'Pending');
+        rows.push({
+          state: state,
+          trustLineage: approval ? ('Approval [' + approval.status + ']') : 'Approval [missing]',
+          signoffBasis: approval ? (approval.notes || 'Approval row exists.') : 'No runtime-backed approval row exists yet for this role.',
+          actionVerdict: release ? ('Release row written: ' + release.version) : (approval ? 'Approval exists but no release row is written yet.' : 'No release action can exist before approval.'),
+          color: state === 'Approved' ? '#10b981' : (state === 'Pending' ? '#f59e0b' : '#ef4444'),
+          bg: state === 'Approved' ? 'rgba(16,185,129,0.1)' : (state === 'Pending' ? 'rgba(245,158,11,0.1)' : 'rgba(239,68,68,0.1)')
+        });
+      } else {
+        rows.push({
+          state: 'Denied',
+          trustLineage: 'N/A',
+          signoffBasis: 'No runtime-backed assignment exists yet for this specialist role.',
+          actionVerdict: 'Missing assignment context blocks any release action.',
+          color: '#64748b',
+          bg: 'rgba(100,116,139,0.1)'
+        });
+      }
 
-    var html = '<div style="display:flex;flex-direction:column;gap:0.5rem;font-size:0.75rem;color:var(--sb-on-surface);">';
+      var releaseIcon = { 'Approved': '✔️', 'Pending': '⏳', 'Denied': '❌' };
+      var html = '<div style="display:flex;flex-direction:column;gap:0.5rem;font-size:0.75rem;color:var(--sb-on-surface);">';
 
-    releaseEntries.forEach(function(entry) {
-      html += '<div style="background:var(--sb-surface-alt,#1e293b);padding:0.45rem 0.55rem;border-radius:0.3rem;border-left:2px solid ' + entry.color + ';display:flex;flex-direction:column;gap:0.35rem;">';
+      rows.forEach(function(item) {
+        html += '<div style="background:var(--sb-surface-alt,#1e293b);padding:0.45rem 0.55rem;border-radius:0.3rem;border-left:2px solid ' + item.color + ';display:flex;flex-direction:column;gap:0.35rem;">';
+        html += '<div style="display:flex;align-items:center;justify-content:space-between;">';
+        html += '<strong style="color:var(--sb-on-surface);font-size:0.73rem;">' + (releaseIcon[item.state] || '●') + ' Dev Manager Release Action</strong>';
+        html += '<code style="color:' + item.color + ';background:' + item.bg + ';padding:0.1rem 0.4rem;text-transform:uppercase;font-size:0.63rem;">' + escapeHtml(item.state) + '</code>';
+        html += '</div>';
+        html += '<div><span style="color:var(--sb-text-muted);font-weight:600;font-size:0.63rem;">Trust Lineage:</span> <span style="font-family:monospace;font-size:0.68rem;color:#38bdf8;">' + escapeHtml(item.trustLineage) + '</span></div>';
+        html += '<div><span style="color:var(--sb-text-muted);font-weight:600;font-size:0.63rem;">Signoff Basis:</span> <span style="font-family:monospace;font-size:0.68rem;color:#cbd5e1;">' + escapeHtml(item.signoffBasis) + '</span></div>';
+        html += '<div style="background:#0f172a;border-radius:0.2rem;padding:0.3rem 0.4rem;font-size:0.65rem;color:#cbd5e1;line-height:1.4;"><code>' + escapeHtml(item.actionVerdict) + '</code></div>';
+        html += '<div><span style="color:var(--sb-text-muted);font-weight:600;font-size:0.63rem;">Action Hash:</span> <code style="font-size:0.6rem;color:#64748b;">' + btoa(item.state + item.trustLineage + item.actionVerdict).substring(0, 16) + '</code></div>';
+        html += '</div>';
+      });
 
-      // Header
-      html += '<div style="display:flex;align-items:center;justify-content:space-between;">';
-      html += '<strong style="color:var(--sb-on-surface);font-size:0.73rem;">' + (releaseIcon[entry.state] || '●') + ' Dev Manager Release Action</strong>';
-      html += '<code style="color:' + entry.color + ';background:' + entry.bg + ';padding:0.1rem 0.4rem;text-transform:uppercase;font-size:0.63rem;">' + escapeHtml(entry.state) + '</code>';
-      html += '</div>';
-
-      // Context
-      html += '<div style="display:flex;flex-direction:column;gap:0.1rem;">';
-      html += '<div><span style="color:var(--sb-text-muted);font-weight:600;font-size:0.63rem;">Trust Lineage:</span> <span style="font-family:monospace;font-size:0.68rem;color:#38bdf8;">' + escapeHtml(entry.trustLineage) + '</span></div>';
-      html += '<div><span style="color:var(--sb-text-muted);font-weight:600;font-size:0.63rem;">Signoff Basis:</span> <span style="font-family:monospace;font-size:0.68rem;color:#cbd5e1;">' + escapeHtml(entry.signoffBasis) + '</span></div>';
-      html += '</div>';
-
-      // Object description
-      html += '<div style="background:#0f172a;border-radius:0.2rem;padding:0.3rem 0.4rem;font-size:0.65rem;color:#cbd5e1;line-height:1.4;">';
-      html += '<code>' + escapeHtml(entry.actionVerdict) + '</code>';
-      html += '</div>';
-
-      // ALCOA+ hash
-      var alcoa = btoa(entry.state + entry.trustLineage + entry.actionVerdict).substring(0, 16);
-      html += '<div><span style="color:var(--sb-text-muted);font-weight:600;font-size:0.63rem;">Action Hash:</span> <code style="font-size:0.6rem;color:#64748b;">' + alcoa + '</code></div>';
-
-      html += '</div>';
+      html += '<div style="margin-top:0.1rem;font-size:0.63rem;color:#64748b;">';
+      html += '<strong style="color:var(--sb-text-muted);">Audit Constraints:</strong> ';
+      html += 'Viewer Role: <code>' + escapeHtml(viewerRole) + '</code><br/>';
+      html += 'Selected Worker: <code>' + escapeHtml(selectedWorker) + '</code><br/>';
+      html += 'Selected Run: <code>' + escapeHtml(selectedRun) + '</code><br/>';
+      html += 'Action Basis: <code>real Back Office approval row -> optional release row</code><br/>';
+      html += 'Release actions are <em>runtime-backed</em> when present; pending and denied states are shown from durable objects when available. ';
+      html += 'Resolution Bound: <code>SI17 — Human-in-the-Loop as a First-Class System Component</code>.';
+      html += '</div></div>';
+      panel.innerHTML = html;
+    }).catch(function(err) {
+      panel.innerHTML = '<span style="font-size:0.7rem;color:#fca5a5;">release action load failed: ' + escapeHtml(String(err)) + '</span>';
     });
-
-    html += '<div style="margin-top:0.1rem;font-size:0.63rem;color:#64748b;">';
-    html += '<strong style="color:var(--sb-text-muted);">Audit Constraints:</strong> ';
-    html += 'Viewer Role: <code>' + escapeHtml(viewerRole) + '</code><br/>';
-    html += 'Selected Worker: <code>' + escapeHtml(selectedWorker) + '</code><br/>';
-    html += 'Selected Run: <code>' + escapeHtml(selectedRun) + '</code><br/>';
-    html += 'Action Basis: <code>trust verdict -> manager signoff -> release or promotion action</code><br/>';
-    html += 'Release actions are <em>role-derived mocks</em> pending physical promotion wiring. ';
-    html += 'Resolution Bound: <code>SI17 — Human-in-the-Loop as a First-Class System Component</code>.';
-    html += '</div>';
-
-    html += '</div>';
-    panel.innerHTML = html;
   }
 
   // ── SAJ50: Specialist Convention Rollout & Release Execution ──
@@ -6298,99 +6401,73 @@
     var panel = document.getElementById('dev-department-memory-queue');
     if (!panel) return;
 
-    var queueItems = [
-      {
-        appId: 'solace-dev-manager',
-        role: 'manager',
-        state: 'pending',
-        candidateId: 'nexus-routing-v2.2-candidate',
-        basis: 'Consistent assignment packet generation detected. Pending human validation gate for GLOBAL promotion.',
-        runRef: 'manager-run-routing-01'
-      },
-      {
-        appId: 'solace-coder',
-        role: 'coder',
-        state: 'promoted',
-        candidateId: 'solace-prime-mermaid-coder-v1.2.0',
-        basis: 'Mature structural repetition (100% success rate across 5 traces). Promoted to SHARED memory.',
-        runRef: 'coder-run-mermaid-05'
-      },
-      {
-        appId: 'solace-design',
-        role: 'design',
-        state: 'blocked',
-        candidateId: 'N/A',
-        basis: 'No stable visual convention repetition yet. Output remains discover-tier.',
-        runRef: 'design-run-layout-02'
-      },
-      {
-        appId: 'solace-qa',
-        role: 'qa',
-        state: 'blocked',
-        candidateId: 'N/A',
-        basis: 'Verification traces are high-value but not yet reusable as a promoted department convention.',
-        runRef: 'qa-run-falsifier-03'
-      }
-    ];
+    panel.innerHTML = '<span style="font-size:0.7rem;color:#94a3b8;">loading runtime-backed department memory queue...</span>';
 
-    var counts = { promoted: 0, pending: 0, blocked: 0 };
-    queueItems.forEach(function(item) {
-      if (item.state === 'promoted') counts.promoted += 1;
-      else if (item.state === 'pending') counts.pending += 1;
-      else counts.blocked += 1;
+    Promise.all([
+      fetchBackofficeItems('memory_entries'),
+      fetchBackofficeItems('conventions')
+    ]).then(function(data) {
+      var entries = data[0] || [];
+      var conventions = data[1] || [];
+      var queueItems = DEV_ROLES.map(function(role) {
+        var roleEntries = sortNewestFirst(entries.filter(function(item) { return item.role === role.key; }));
+        var top = roleEntries[0] || null;
+        var convention = top ? (conventions.find(function(item) { return item.memory_entry_id === top.id; }) || conventions.find(function(item) { return item.source_role === role.key; }) || null) : (conventions.find(function(item) { return item.source_role === role.key; }) || null);
+        var state = top ? (top.status === 'promoted' ? 'promoted' : (top.status === 'candidate' ? 'pending' : 'blocked')) : 'blocked';
+        return {
+          appId: role.id,
+          role: role.key,
+          state: state,
+          candidateId: convention ? convention.name : (top ? top.title : 'N/A'),
+          basis: top ? (top.summary + (convention ? ' Convention status: ' + convention.status + '.' : ' No convention record yet.')) : 'No runtime-backed memory entry recorded yet for this role.',
+          runRef: top && top.run_id ? top.run_id : 'N/A'
+        };
+      });
+
+      var counts = { promoted: 0, pending: 0, blocked: 0 };
+      queueItems.forEach(function(item) {
+        if (item.state === 'promoted') counts.promoted += 1;
+        else if (item.state === 'pending') counts.pending += 1;
+        else counts.blocked += 1;
+      });
+
+      var html = '<div style="display:flex;flex-direction:column;gap:0.45rem;font-size:0.75rem;color:var(--sb-on-surface);">';
+      html += '<div style="display:flex;gap:0.35rem;flex-wrap:wrap;">';
+      html += '<span class="sb-pill" style="background:rgba(16,185,129,0.12);color:#10b981;">promoted ' + counts.promoted + '</span>';
+      html += '<span class="sb-pill" style="background:rgba(245,158,11,0.12);color:#f59e0b;">pending ' + counts.pending + '</span>';
+      html += '<span class="sb-pill" style="background:rgba(239,68,68,0.12);color:#ef4444;">blocked ' + counts.blocked + '</span>';
+      html += '</div>';
+
+      queueItems.forEach(function(item) {
+        var color = item.state === 'promoted' ? '#10b981' : (item.state === 'pending' ? '#f59e0b' : '#ef4444');
+        var bg = item.state === 'promoted' ? 'rgba(16,185,129,0.1)' : (item.state === 'pending' ? 'rgba(245,158,11,0.1)' : 'rgba(239,68,68,0.1)');
+        var label = item.state === 'promoted' ? 'PROMOTED' : (item.state === 'pending' ? 'PENDING REVIEW' : 'BLOCKED');
+        var isActive = item.appId === appId;
+        html += '<div style="background:var(--sb-surface-alt,#1e293b);padding:0.45rem 0.55rem;border-radius:0.3rem;border-left:2px solid ' + color + ';' + (isActive ? 'box-shadow:0 0 0 1px rgba(129,140,248,0.35);' : '') + '">';
+        html += '<div style="display:flex;align-items:center;justify-content:space-between;gap:0.5rem;margin-bottom:0.2rem;">';
+        html += '<strong style="font-size:0.72rem;">' + escapeHtml(item.appId) + '</strong>';
+        html += '<code style="color:' + color + ';background:' + bg + ';padding:0.1rem 0.35rem;font-size:0.65rem;">' + label + '</code>';
+        html += '</div>';
+        html += '<div style="display:flex;flex-direction:column;gap:0.16rem;font-size:0.69rem;">';
+        html += '<div><span style="color:var(--sb-text-muted);font-weight:600;">Role:</span> <code>' + escapeHtml(item.role) + '</code></div>';
+        html += '<div><span style="color:var(--sb-text-muted);font-weight:600;">Candidate:</span> <span style="font-family:monospace;color:#818cf8;">' + escapeHtml(item.candidateId) + '</span></div>';
+        html += '<div><span style="color:var(--sb-text-muted);font-weight:600;">Run Reference:</span> <code>' + escapeHtml(item.runRef) + '</code></div>';
+        html += '<div><span style="color:var(--sb-text-muted);font-weight:600;">Review Basis:</span> <span>' + escapeHtml(item.basis) + '</span></div>';
+        html += '</div></div>';
+      });
+
+      html += '<div style="margin-top:0.1rem;font-size:0.65rem;color:#64748b;">';
+      html += '<strong style="color:var(--sb-text-muted);">Active Queue Context:</strong><br/>';
+      html += 'Viewer Role: <code>solace-dev-manager</code><br/>';
+      html += 'Selected Worker: <code>' + escapeHtml(appId || 'unknown') + '</code><br/>';
+      html += 'Selected Run: <code>' + escapeHtml(runId || 'latest') + '</code><br/>';
+      html += 'Queue Basis: <code>real Back Office memory_entries and conventions tables</code><br/>';
+      html += 'Promotion Basis: <code>runtime-backed role memory queue with honest empty states</code>';
+      html += '</div></div>';
+      panel.innerHTML = html;
+    }).catch(function(err) {
+      panel.innerHTML = '<span style="font-size:0.7rem;color:#fca5a5;">department memory queue load failed: ' + escapeHtml(String(err)) + '</span>';
     });
-
-    var html = '<div style="display:flex;flex-direction:column;gap:0.45rem;font-size:0.75rem;color:var(--sb-on-surface);">';
-    html += '<div style="display:flex;gap:0.35rem;flex-wrap:wrap;">';
-    html += '<span class="sb-pill" style="background:rgba(16,185,129,0.12);color:#10b981;">promoted ' + counts.promoted + '</span>';
-    html += '<span class="sb-pill" style="background:rgba(245,158,11,0.12);color:#f59e0b;">pending ' + counts.pending + '</span>';
-    html += '<span class="sb-pill" style="background:rgba(239,68,68,0.12);color:#ef4444;">blocked ' + counts.blocked + '</span>';
-    html += '</div>';
-
-    queueItems.forEach(function(item) {
-      var color = '#94a3b8';
-      var bg = 'rgba(148,163,184,0.1)';
-      var label = 'UNKNOWN';
-      if (item.state === 'promoted') {
-        color = '#10b981';
-        bg = 'rgba(16,185,129,0.1)';
-        label = 'PROMOTED';
-      } else if (item.state === 'pending') {
-        color = '#f59e0b';
-        bg = 'rgba(245,158,11,0.1)';
-        label = 'PENDING REVIEW';
-      } else if (item.state === 'blocked') {
-        color = '#ef4444';
-        bg = 'rgba(239,68,68,0.1)';
-        label = 'BLOCKED';
-      }
-
-      var isActive = item.appId === appId;
-      html += '<div style="background:var(--sb-surface-alt,#1e293b);padding:0.45rem 0.55rem;border-radius:0.3rem;border-left:2px solid ' + color + ';' + (isActive ? 'box-shadow:0 0 0 1px rgba(129,140,248,0.35);' : '') + '">';
-      html += '<div style="display:flex;align-items:center;justify-content:space-between;gap:0.5rem;margin-bottom:0.2rem;">';
-      html += '<strong style="font-size:0.72rem;">' + escapeHtml(item.appId) + '</strong>';
-      html += '<code style="color:' + color + ';background:' + bg + ';padding:0.1rem 0.35rem;font-size:0.65rem;">' + label + '</code>';
-      html += '</div>';
-      html += '<div style="display:flex;flex-direction:column;gap:0.16rem;font-size:0.69rem;">';
-      html += '<div><span style="color:var(--sb-text-muted);font-weight:600;">Role:</span> <code>' + escapeHtml(item.role) + '</code></div>';
-      html += '<div><span style="color:var(--sb-text-muted);font-weight:600;">Candidate:</span> <span style="font-family:monospace;color:#818cf8;">' + escapeHtml(item.candidateId) + '</span></div>';
-      html += '<div><span style="color:var(--sb-text-muted);font-weight:600;">Run Reference:</span> <code>' + escapeHtml(item.runRef) + '</code></div>';
-      html += '<div><span style="color:var(--sb-text-muted);font-weight:600;">Review Basis:</span> <span>' + escapeHtml(item.basis) + '</span></div>';
-      html += '</div>';
-      html += '</div>';
-    });
-
-    html += '<div style="margin-top:0.1rem;font-size:0.65rem;color:#64748b;">';
-    html += '<strong style="color:var(--sb-text-muted);">Active Queue Context:</strong><br/>';
-    html += 'Viewer Role: <code>solace-dev-manager</code><br/>';
-    html += 'Selected Worker: <code>' + (appId || 'unknown') + '</code><br/>';
-    html += 'Selected Run: <code>' + (runId || 'latest') + '</code><br/>';
-    html += 'Queue Basis: <code>manager-facing visible department memory review queue</code><br/>';
-    html += 'Promotion Basis: <code>role-derived visible promotion status across specialists</code>';
-    html += '</div>';
-
-    html += '</div>';
-    panel.innerHTML = html;
   }
 
   // ── SAD22: Drift Detection & Adaptive Replay ──
