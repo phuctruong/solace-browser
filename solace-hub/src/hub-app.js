@@ -773,9 +773,41 @@
         }
         // -------------------------------------------------
 
-        // --- SAC72 Fetch Preview ---
+        // --- SAC82 Fetch Specialist Output Truth ---
         var previewSlot = document.getElementById('dev-active-workflow-preview');
-        if (previewSlot) {
+        if (previewSlot && lastLaunchAction && lastLaunchAction.requestId === reqId && (lastLaunchAction.targetAssignmentId === active.id || lastLaunchAction.sourceAssignmentId === active.id)) {
+            if (reportExists) {
+                previewSlot.innerHTML = '<strong style="display:block; margin-top:0.4rem; color:#f472b6;">Next-Step Specialist Output Truth:</strong>' +
+                                        '<div style="background:rgba(30,41,59,0.5); padding:0.4rem; border-left:2px solid #f472b6; border-radius:0.15rem; font-size:0.65rem; margin-bottom:0.5rem;">' +
+                                        'Source Request ID: <code>' + escapeHtml(lastLaunchAction.requestId.substring(0, 8)) + '</code><br/>' +
+                                        (lastLaunchAction.sourceAssignmentId ? 'Source Assignment ID: <code>' + escapeHtml(lastLaunchAction.sourceAssignmentId.substring(0, 8)) + '</code><br/>' : '') +
+                                        'Target Assignment ID: <code>' + escapeHtml(lastLaunchAction.targetAssignmentId.substring(0, 8)) + '</code><br/>' +
+                                        'Launched Role: <code>' + escapeHtml(lastLaunchAction.targetRole) + '</code><br/>' +
+                                        'Launched Run ID: <code>' + escapeHtml(lastLaunchAction.runId.substring(0, 8)) + '</code><br/>' +
+                                        (exactPacketTruth 
+                                           ? 'Output Status: <span style="color:#34d399;font-weight:600;">[✓] Exact launched-workflow output tracked</span><br/>Output Basis: <code>Report output exists for the launched next-step run, and request, assignment, role, and run remain aligned in the exact workflow-bound branch (SAC82)</code>' 
+                                           : 'Output Status: <span style="color:#fcd34d;font-weight:600;">[?] Fallback output tracked</span><br/>Output Basis: <code>Report output exists for a visible next-step run, but the current workflow binding has fallen back away from exact launched-workflow output truth (SAC82)</code>') +
+                                        '<div id="dev-output-fetch-target" style="margin-top:0.4rem;"><span style="color:#94a3b8;">loading specialist output truth…</span></div></div>';
+                
+                fetchArtifactText(boundRun.appId, boundRun.runId, 'report.html').then(function(res) {
+                    if (!res.missing && document.getElementById('dev-output-fetch-target')) {
+                        document.getElementById('dev-output-fetch-target').innerHTML = buildReportPreview(res.text, boundRun.appId, boundRun.runId);
+                    } else if (document.getElementById('dev-output-fetch-target')) {
+                        document.getElementById('dev-output-fetch-target').innerHTML = buildMissingState('report.html', res.reason || 'missing');
+                    }
+                });
+            } else {
+                previewSlot.innerHTML = '<strong style="display:block; margin-top:0.4rem; color:#94a3b8;">Next-Step Specialist Output Truth:</strong>' +
+                                        '<div style="background:rgba(30,41,59,0.5); padding:0.4rem; border-left:2px solid #475569; border-radius:0.15rem; font-size:0.65rem; margin-bottom:0.5rem; color:#64748b;">' +
+                                        'Source Request ID: <code>' + escapeHtml(lastLaunchAction.requestId.substring(0, 8)) + '</code><br/>' +
+                                        (lastLaunchAction.sourceAssignmentId ? 'Source Assignment ID: <code>' + escapeHtml(lastLaunchAction.sourceAssignmentId.substring(0, 8)) + '</code><br/>' : '') +
+                                        'Target Assignment ID: <code>' + escapeHtml(lastLaunchAction.targetAssignmentId.substring(0, 8)) + '</code><br/>' +
+                                        'Launched Role: <code>' + escapeHtml(lastLaunchAction.targetRole) + '</code><br/>' +
+                                        'Launched Run ID: <code>' + escapeHtml(lastLaunchAction.runId.substring(0, 8)) + '</code><br/>' +
+                                        'Output Status: <span style="color:#94a3b8;font-weight:600;">[ ] Awaiting specialist output truth</span><br/><code>No report.html artifact exists yet for the launched next-step run, so specialist output is not proven in the workflow branch (SAC82)</code></div>';
+            }
+        } else if (previewSlot) {
+            // SAC72 Fallback Fetch Preview
             if (reportExists) {
                 previewSlot.innerHTML = '<span style="font-size:0.7rem;color:#94a3b8;">loading report preview…</span>';
                 fetchArtifactText(boundRun.appId, boundRun.runId, 'report.html').then(function(res) {
@@ -787,7 +819,7 @@
                 });
             }
         }
-        // ---------------------------
+        // ---------------------------------------------
       });
     });
   }
