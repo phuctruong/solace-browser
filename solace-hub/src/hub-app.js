@@ -311,15 +311,34 @@
         if (!runId) return;
 
         saveWorkflowLaunchBinding(reqId, targetAssignment.id, appId, runId);
-        window.__solaceLastWorkflowLaunchAction = {
-          requestId: reqId,
-          sourceAssignmentId: sourceAssignmentId,
-          targetAssignmentId: targetAssignment.id,
-          targetRole: targetRole,
-          appId: appId,
-          runId: runId,
-          basis: 'workflow-routed-assignment-launch'
-        };
+        
+        // --- SAC87 Preserve Origin vs Nested Truth ---
+        if (window.__solaceLastWorkflowLaunchAction && window.__solaceLastWorkflowLaunchAction.targetAssignmentId === sourceAssignmentId) {
+            window.__solaceLastWorkflowNestedLaunchAction = {
+                requestId: reqId,
+                sourceAssignmentId: sourceAssignmentId,
+                sourceRole: window.__solaceLastWorkflowLaunchAction.targetRole,
+                sourceRunId: window.__solaceLastWorkflowLaunchAction.runId,
+                targetAssignmentId: targetAssignment.id,
+                targetRole: targetRole,
+                appId: appId,
+                runId: runId,
+                basis: 'workflow-routed-nested-assignment-launch'
+            };
+        } else {
+            window.__solaceLastWorkflowLaunchAction = {
+              requestId: reqId,
+              sourceAssignmentId: sourceAssignmentId,
+              targetAssignmentId: targetAssignment.id,
+              targetRole: targetRole,
+              appId: appId,
+              runId: runId,
+              basis: 'workflow-routed-assignment-launch'
+            };
+            window.__solaceLastWorkflowNestedLaunchAction = null;
+        }
+        // --------------------------------------------
+
         if (window.__solaceSelectRun) {
           window.__solaceSelectRun(appId, runId, null);
         }
@@ -956,6 +975,55 @@
                     appHtml += '<div style="margin-top:0.3rem; display:flex; gap:0.3rem;">';
                     appHtml += '<button onclick="window.__solaceLaunchWorkflowNextStep(\'' + targetRouteAction.sourceAssignmentId + '\', \'' + escapeHtml(targetRouteAction.targetRole) + '\', \'' + escapeHtml(targetRouteAction.assignmentId || '') + '\')" class="sb-btn sb-btn--sm" style="font-size:0.6rem;padding:0.15rem 0.4rem;background:#0f172a;color:#fff;border:1px solid #3b82f6;cursor:pointer;">Launch Executable Destination (' + escapeHtml(targetRouteAction.targetRole) + ')</button>';
                     appHtml += '</div></div>';
+
+                    // --- SAC87 Next-Step Destination Launch Truth ---
+                    var nestedLaunchAction = window.__solaceLastWorkflowNestedLaunchAction;
+                    if (
+                        nestedLaunchAction &&
+                        nestedLaunchAction.requestId === reqId &&
+                        nestedLaunchAction.sourceAssignmentId === lastLaunchAction.targetAssignmentId &&
+                        nestedLaunchAction.targetAssignmentId === targetRouteAction.assignmentId &&
+                        nestedLaunchAction.targetRole === targetRouteAction.targetRole
+                    ) {
+                        appHtml += '<div style="margin-top:0.4rem; padding-top:0.4rem; border-top:1px solid #334155;">';
+                        appHtml += '<strong style="display:block; margin-bottom:0.2rem; color:#60a5fa;">Next-Step Destination Launch Truth:</strong>';
+                        appHtml += '<div style="background:rgba(30,41,59,0.5); padding:0.4rem; border-left:2px solid #60a5fa; border-radius:0.15rem; font-size:0.65rem;">';
+                        appHtml += 'Nested Source Request ID: <code>' + escapeHtml(nestedLaunchAction.requestId.substring(0, 8)) + '</code><br/>';
+                        appHtml += 'Nested Source Assignment ID: <code>' + escapeHtml(nestedLaunchAction.sourceAssignmentId.substring(0, 8)) + '</code><br/>';
+                        if (nestedLaunchAction.sourceRole) {
+                            appHtml += 'Nested Source Role: <code>' + escapeHtml(nestedLaunchAction.sourceRole) + '</code><br/>';
+                        }
+                        if (nestedLaunchAction.sourceRunId) {
+                            appHtml += 'Nested Source Run ID: <code>' + escapeHtml(nestedLaunchAction.sourceRunId.substring(0, 8)) + '</code><br/>';
+                        }
+                        appHtml += 'Nested Target Assignment ID: <code>' + escapeHtml(nestedLaunchAction.targetAssignmentId.substring(0, 8)) + '</code><br/>';
+                        appHtml += 'Nested Launched Role: <code>' + escapeHtml(nestedLaunchAction.targetRole) + '</code><br/>';
+                        appHtml += 'Nested Launched Run ID: <code>' + escapeHtml(nestedLaunchAction.runId.substring(0, 8)) + '</code><br/>';
+                        if (exactPacketTruth) {
+                            appHtml += 'Destination Launch Branch: <span style="color:#34d399;font-weight:600;">[✓] Exact launched-workflow destination launch tracked</span><br/>';
+                            appHtml += 'Destination Launch Basis: <code>Workflow launched the routed destination assignment while request, source assignment, target assignment, role, and run remained aligned in the exact launched-workflow branch (SAC87)</code>';
+                        } else {
+                            appHtml += 'Destination Launch Branch: <span style="color:#fcd34d;font-weight:600;">[?] Fallback destination launch tracked</span><br/>';
+                            appHtml += 'Destination Launch Basis: <code>Workflow launched a visible matching destination assignment, but the current workflow binding has fallen back away from exact launched-workflow destination launch truth (SAC87)</code>';
+                        }
+                        appHtml += '</div></div>';
+                    } else {
+                        appHtml += '<div style="margin-top:0.4rem; padding-top:0.4rem; border-top:1px solid #334155;">';
+                        appHtml += '<strong style="display:block; margin-bottom:0.2rem; color:#60a5fa;">Next-Step Destination Launch Truth:</strong>';
+                        appHtml += '<div style="background:rgba(30,41,59,0.5); padding:0.4rem; border-left:2px solid #60a5fa; border-radius:0.15rem; font-size:0.65rem;">';
+                        appHtml += 'Nested Source Request ID: <code>' + escapeHtml(reqId.substring(0, 8)) + '</code><br/>';
+                        appHtml += 'Nested Source Assignment ID: <code>' + escapeHtml(lastLaunchAction.targetAssignmentId.substring(0, 8)) + '</code><br/>';
+                        appHtml += 'Nested Source Role: <code>' + escapeHtml(lastLaunchAction.targetRole) + '</code><br/>';
+                        appHtml += 'Nested Source Run ID: <code>' + escapeHtml(lastLaunchAction.runId.substring(0, 8)) + '</code><br/>';
+                        if (targetRouteAction.assignmentId) {
+                            appHtml += 'Nested Target Assignment ID: <code>' + escapeHtml(targetRouteAction.assignmentId.substring(0, 8)) + '</code><br/>';
+                        }
+                        appHtml += 'Nested Launched Role: <code>' + escapeHtml(targetRouteAction.targetRole) + '</code><br/>';
+                        appHtml += 'Destination Launch Branch: <span style="color:#fca5a5;font-weight:600;">[ ] Awaiting destination launch truth</span><br/>';
+                        appHtml += 'Destination Launch Basis: <code>Workflow routed the destination assignment, but no exact launched destination run has been recorded for this request/source assignment/target assignment branch yet (SAC87)</code>';
+                        appHtml += '</div></div>';
+                    }
+                    // ------------------------------------------------
                 } else if (lastSignoffResult.success) {
                     appHtml += '<div style="margin-top:0.4rem; padding-top:0.4rem; border-top:1px solid #334155;">';
                     appHtml += '<strong style="display:block; margin-bottom:0.2rem; color:#a78bfa;">Route Next-Step Destination:</strong>';
