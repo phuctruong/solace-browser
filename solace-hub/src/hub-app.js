@@ -1623,6 +1623,44 @@
                         }
                         appHtml += '</div></div>';
                         // --------------------------------------------------
+
+                        // --- SAC92 Next-Step Destination Approval Action Truth ---
+                        var nestedTargetLinkedId = nestedTargetApproval ? nestedTargetApproval.id : '';
+                        appHtml += '<div style="margin-top:0.4rem; border-top:1px solid #334155; padding-top:0.4rem;">';
+                        appHtml += '<strong style="display:block; margin-bottom:0.2rem; color:#818cf8;">Target Assignment Destination Approval Action:</strong>';
+                        appHtml += '<div style="background:rgba(30,41,59,0.35); padding:0.4rem; border-left:2px solid #818cf8; border-radius:0.15rem; font-size:0.65rem;">';
+                        appHtml += 'Nested Source Request ID: <code>' + escapeHtml(nestedLaunchAction.requestId.substring(0, 8)) + '</code><br/>';
+                        appHtml += 'Nested Source Assignment ID: <code>' + escapeHtml(nestedLaunchAction.sourceAssignmentId.substring(0, 8)) + '</code><br/>';
+                        if (nestedLaunchAction.sourceRole) {
+                            appHtml += 'Nested Source Role: <code>' + escapeHtml(nestedLaunchAction.sourceRole) + '</code><br/>';
+                        }
+                        if (nestedLaunchAction.sourceRunId) {
+                            appHtml += 'Nested Source Run ID: <code>' + escapeHtml(nestedLaunchAction.sourceRunId.substring(0, 8)) + '</code><br/>';
+                        }
+                        appHtml += 'Nested Target Assignment ID: <code>' + escapeHtml(nestedLaunchAction.targetAssignmentId.substring(0, 8)) + '</code><br/>';
+                        appHtml += 'Dispatched Nested Specialist: <code>' + escapeHtml(nestedLaunchAction.targetRole) + '</code><br/>';
+                        appHtml += 'Nested Action Run ID: <code>' + escapeHtml(nestedLaunchAction.runId.substring(0, 8)) + '</code><br/>';
+                        if (!nestedTargetApproval || nestedTargetApproval.status === 'pending') {
+                            appHtml += '<div style="margin-top:0.3rem; display:flex; gap:0.3rem;">';
+                            appHtml += '<button onclick="window.__solaceSignoffWorkflow(\'' + nestedLaunchAction.targetAssignmentId + '\', \'' + nestedTargetLinkedId + '\', \'approved\')" class="sb-btn sb-btn--sm" style="font-size:0.6rem;padding:0.15rem 0.4rem;background:#064e3b;color:#34d399;font-weight:600;border:1px solid #059669;cursor:pointer;">Approve Target</button>';
+                            appHtml += '<button onclick="window.__solaceSignoffWorkflow(\'' + nestedLaunchAction.targetAssignmentId + '\', \'' + nestedTargetLinkedId + '\', \'rejected\')" class="sb-btn sb-btn--sm" style="font-size:0.6rem;padding:0.15rem 0.4rem;background:#4c0519;color:#fca5a5;border:1px solid #e11d48;cursor:pointer;">Reject Target</button>';
+                            appHtml += '</div>';
+                            
+                            if (exactNestedLaunchTruth) {
+                                appHtml += '<div style="margin-top:0.3rem; font-size:0.65rem; color:#94a3b8;">Destination Action Basis: <code>Approval action will ' + (nestedTargetLinkedId ? 'update' : 'create') + ' the approval row for the launched nested target assignment while request, source assignment, target assignment, role, and run remain aligned in the exact launched-workflow branch (SAC92)</code></div>';
+                            } else {
+                                appHtml += '<div style="margin-top:0.3rem; font-size:0.65rem; color:#94a3b8;">Destination Action Basis: <code>Approval action targets the visible matching nested assignment, but the current workflow binding has fallen back away from exact launched-workflow destination approval action truth (SAC92)</code></div>';
+                            }
+                        } else {
+                            appHtml += 'Destination Action State: <span style="color:#94a3b8;font-weight:600;">[locked] nested approval already resolved as ' + escapeHtml(nestedTargetApproval.status) + '</span><br/>';
+                            if (exactNestedLaunchTruth) {
+                                appHtml += 'Destination Action Basis: <code>Approval action is intentionally unavailable because the launched nested target assignment already has a resolved approval row in the exact launched-workflow branch (SAC92)</code>';
+                            } else {
+                                appHtml += 'Destination Action Basis: <code>Approval action is intentionally unavailable because the visible matching nested assignment already has a resolved approval row after the current workflow binding fell back away from exact launched-workflow destination approval action truth (SAC92)</code>';
+                            }
+                        }
+                        appHtml += '</div></div>';
+                        // ---------------------------------------------------------
                     } else {
                         appHtml += '<div style="margin-top:0.4rem; padding-top:0.4rem; border-top:1px solid #334155;">';
                         appHtml += '<strong style="display:block; margin-bottom:0.2rem; color:#60a5fa;">Next-Step Destination Launch Truth:</strong>';
@@ -5218,91 +5256,45 @@
     var viewerRole = 'solace-dev-manager';
     var selectedWorker = appId || 'unknown';
     var selectedRun = runId || 'latest';
+    panel.innerHTML = '<span style="font-size:0.7rem;color:#94a3b8;">loading runtime-backed post-release health...</span>';
 
-    // Post-Release Health records derived from SAJ50 Rollout (role-mocked; shown honestly)
-    var healthEntries = [];
-
-    if (roleName === 'qa') {
-      healthEntries = [{
-        state: 'Healthy',
-        rolloutLineage: 'Execution Verdict [Live]',
-        healthBasis: 'Continuous heartbeat and semantic probes returning standard operational metrics.',
-        postReleaseVerdict: 'Deployed runtime component is stable and providing continuous structural value without regression.',
-        color: '#10b981',
-        bg: 'rgba(16,185,129,0.1)'
-      }];
-    } else if (roleName === 'coder') {
-      healthEntries = [{
-        state: 'Degraded',
-        rolloutLineage: 'Execution Verdict [Staged]',
-        healthBasis: 'Metric latency detected in staging sandbox executing parallel ghost traffic.',
-        postReleaseVerdict: 'Component exhibiting performance shear. Rollout flagged for remediation before Live promotion.',
-        color: '#f59e0b',
-        bg: 'rgba(245,158,11,0.1)'
-      }];
-    } else if (roleName === 'design') {
-      healthEntries = [{
-        state: 'Rolled Back',
-        rolloutLineage: 'Execution Verdict [Aborted/Reverted]',
-        healthBasis: 'Post-deployment structural panic. Automated governance bounds severed active connections.',
-        postReleaseVerdict: 'Physical rollback executed. Runtime system cleanly reverted to preceding canonical state.',
-        color: '#ef4444',
-        bg: 'rgba(239,68,68,0.1)'
-      }];
-    } else {
-      healthEntries = [{
-        state: 'Rolled Back',
-        rolloutLineage: 'N/A',
-        healthBasis: 'Missing telemetry vector.',
-        postReleaseVerdict: 'No metrics exist for unreleased artifacts.',
-        color: '#64748b',
-        bg: 'rgba(100,116,139,0.1)'
-      }];
-    }
-
-    var healthIcon = { 'Healthy': '✅', 'Degraded': '⚠️', 'Rolled Back': '🚑' };
-
-    var html = '<div style="display:flex;flex-direction:column;gap:0.5rem;font-size:0.75rem;color:var(--sb-on-surface);">';
-
-    healthEntries.forEach(function(entry) {
+    buildRoleWorkflowSnapshot(roleName, appId, runId).then(function(snapshot) {
+      var derived = buildRolePostReleaseSnapshot(snapshot);
+      var entry = {
+        state: derived.health.state,
+        rolloutLineage: derived.health.rolloutLineage,
+        healthBasis: derived.health.basis,
+        postReleaseVerdict: derived.health.verdict,
+        color: derived.health.state === 'Healthy' ? '#10b981' : (derived.health.state === 'Degraded' ? '#f59e0b' : '#ef4444'),
+        bg: derived.health.state === 'Healthy' ? 'rgba(16,185,129,0.1)' : (derived.health.state === 'Degraded' ? 'rgba(245,158,11,0.1)' : 'rgba(239,68,68,0.1)')
+      };
+      var healthIcon = { 'Healthy': '✅', 'Degraded': '⚠️', 'Rolled Back': '🚑' };
+      var html = '<div style="display:flex;flex-direction:column;gap:0.5rem;font-size:0.75rem;color:var(--sb-on-surface);">';
       html += '<div style="background:var(--sb-surface-alt,#1e293b);padding:0.45rem 0.55rem;border-radius:0.3rem;border-left:2px solid ' + entry.color + ';display:flex;flex-direction:column;gap:0.35rem;">';
-
-      // Header
       html += '<div style="display:flex;align-items:center;justify-content:space-between;">';
       html += '<strong style="color:var(--sb-on-surface);font-size:0.73rem;">' + (healthIcon[entry.state] || '●') + ' Post-Release Telemetry State</strong>';
       html += '<code style="color:' + entry.color + ';background:' + entry.bg + ';padding:0.1rem 0.4rem;text-transform:uppercase;font-size:0.63rem;">' + escapeHtml(entry.state) + '</code>';
       html += '</div>';
-
-      // Context
       html += '<div style="display:flex;flex-direction:column;gap:0.1rem;">';
       html += '<div><span style="color:var(--sb-text-muted);font-weight:600;font-size:0.63rem;">Deployment Lineage:</span> <span style="font-family:monospace;font-size:0.68rem;color:#38bdf8;">' + escapeHtml(entry.rolloutLineage) + '</span></div>';
       html += '<div><span style="color:var(--sb-text-muted);font-weight:600;font-size:0.63rem;">Health Basis:</span> <span style="font-family:monospace;font-size:0.68rem;color:#cbd5e1;">' + escapeHtml(entry.healthBasis) + '</span></div>';
       html += '</div>';
-
-      // Object description
-      html += '<div style="background:#0f172a;border-radius:0.2rem;padding:0.3rem 0.4rem;font-size:0.65rem;color:#cbd5e1;line-height:1.4;">';
-      html += '<code>' + escapeHtml(entry.postReleaseVerdict) + '</code>';
+      html += '<div style="background:#0f172a;border-radius:0.2rem;padding:0.3rem 0.4rem;font-size:0.65rem;color:#cbd5e1;line-height:1.4;"><code>' + escapeHtml(entry.postReleaseVerdict) + '</code></div>';
+      html += '<div><span style="color:var(--sb-text-muted);font-weight:600;font-size:0.63rem;">Telemetry Hash:</span> <code style="font-size:0.6rem;color:#64748b;">' + btoa(entry.state + entry.rolloutLineage + entry.postReleaseVerdict).substring(0, 16) + '</code></div>';
       html += '</div>';
-
-      // ALCOA+ hash
-      var alcoa = btoa(entry.state + entry.rolloutLineage + entry.postReleaseVerdict).substring(0, 16);
-      html += '<div><span style="color:var(--sb-text-muted);font-weight:600;font-size:0.63rem;">Telemetry Hash:</span> <code style="font-size:0.6rem;color:#64748b;">' + alcoa + '</code></div>';
-
-      html += '</div>';
+      html += '<div style="margin-top:0.1rem;font-size:0.63rem;color:#64748b;">';
+      html += '<strong style="color:var(--sb-text-muted);">Audit Constraints:</strong> ';
+      html += 'Viewer Role: <code>' + escapeHtml(viewerRole) + '</code><br/>';
+      html += 'Selected Worker: <code>' + escapeHtml(selectedWorker) + '</code><br/>';
+      html += 'Selected Run: <code>' + escapeHtml(selectedRun) + '</code><br/>';
+      html += 'Health Basis: <code>rollout execution -> ongoing telemetry -> healthy, degraded, or rolled-back state</code><br/>';
+      html += 'Health metrics are <em>runtime-backed</em> when release state exists; fallback states are shown honestly when it does not. ';
+      html += 'Resolution Bound: <code>SI19 — Measuring Solace System Efficiency</code>.';
+      html += '</div></div>';
+      panel.innerHTML = html;
+    }).catch(function(err) {
+      panel.innerHTML = '<span style="font-size:0.7rem;color:#fca5a5;">post-release health load failed: ' + escapeHtml(String(err)) + '</span>';
     });
-
-    html += '<div style="margin-top:0.1rem;font-size:0.63rem;color:#64748b;">';
-    html += '<strong style="color:var(--sb-text-muted);">Audit Constraints:</strong> ';
-    html += 'Viewer Role: <code>' + escapeHtml(viewerRole) + '</code><br/>';
-    html += 'Selected Worker: <code>' + escapeHtml(selectedWorker) + '</code><br/>';
-    html += 'Selected Run: <code>' + escapeHtml(selectedRun) + '</code><br/>';
-    html += 'Health Basis: <code>rollout execution -> ongoing telemetry -> healthy, degraded, or rolled-back state</code><br/>';
-    html += 'Health metrics are <em>role-derived mocks</em> simulating continuous post-release accountability. ';
-    html += 'Resolution Bound: <code>SI19 — Measuring Solace System Efficiency</code>.';
-    html += '</div>';
-
-    html += '</div>';
-    panel.innerHTML = html;
   }
 
   // ── SAL52: Specialist Post-Release Incident & Remediation ──
@@ -5317,90 +5309,45 @@
     var role = DEV_ROLES.find(function(r) { return r.id === appId; });
     var roleName = role ? role.key : 'unknown';
 
-    // Remediation records derived from SAK51 Health (role-mocked; shown honestly)
-    var remediationEntries = [];
+    panel.innerHTML = '<span style="font-size:0.7rem;color:#94a3b8;">loading runtime-backed post-release incident...</span>';
 
-    if (roleName === 'qa') {
-      remediationEntries = [{
-        state: 'Mitigated',
-        healthLineage: 'Telemetry Vector [Healthy]',
-        incidentBasis: 'No active incident bounds currently violated.',
-        remediationVerdict: 'System nominal. No remediation required.',
-        color: '#10b981',
-        bg: 'rgba(16,185,129,0.1)'
-      }];
-    } else if (roleName === 'coder') {
-      remediationEntries = [{
-        state: 'In Progress',
-        healthLineage: 'Telemetry Vector [Degraded]',
-        incidentBasis: 'Active execution shear generating P2 non-fatal alert.',
-        remediationVerdict: 'Remediation task dispatched to active execution loop. Temporary capacity constraints applied.',
-        color: '#f59e0b',
-        bg: 'rgba(245,158,11,0.1)'
-      }];
-    } else if (roleName === 'design') {
-      remediationEntries = [{
-        state: 'Unresolved',
-        healthLineage: 'Telemetry Vector [Rolled Back]',
-        incidentBasis: 'Terminal P0 panic isolated; system structural root cause remains unknown.',
-        remediationVerdict: 'Incident stands open pending manual forensic analysis. Asset deployment frozen.',
-        color: '#ef4444',
-        bg: 'rgba(239,68,68,0.1)'
-      }];
-    } else {
-      remediationEntries = [{
-        state: 'Unresolved',
-        healthLineage: 'N/A',
-        incidentBasis: 'Missing telemetry source.',
-        remediationVerdict: 'Cannot verify remediation path on untracked asset.',
-        color: '#64748b',
-        bg: 'rgba(100,116,139,0.1)'
-      }];
-    }
-
-    var remediationIcon = { 'Mitigated': '🛡️', 'In Progress': '🚧', 'Unresolved': '🔥' };
-
-    var html = '<div style="display:flex;flex-direction:column;gap:0.5rem;font-size:0.75rem;color:var(--sb-on-surface);">';
-
-    remediationEntries.forEach(function(entry) {
+    buildRoleWorkflowSnapshot(roleName, appId, runId).then(function(snapshot) {
+      var derived = buildRolePostReleaseSnapshot(snapshot);
+      var entry = {
+        state: derived.incident.state,
+        healthLineage: derived.incident.healthLineage,
+        incidentBasis: derived.incident.basis,
+        remediationVerdict: derived.incident.verdict,
+        color: derived.incident.state === 'Mitigated' ? '#10b981' : (derived.incident.state === 'In Progress' ? '#f59e0b' : '#ef4444'),
+        bg: derived.incident.state === 'Mitigated' ? 'rgba(16,185,129,0.1)' : (derived.incident.state === 'In Progress' ? 'rgba(245,158,11,0.1)' : 'rgba(239,68,68,0.1)')
+      };
+      var remediationIcon = { 'Mitigated': '🛡️', 'In Progress': '🚧', 'Unresolved': '🔥' };
+      var html = '<div style="display:flex;flex-direction:column;gap:0.5rem;font-size:0.75rem;color:var(--sb-on-surface);">';
       html += '<div style="background:var(--sb-surface-alt,#1e293b);padding:0.45rem 0.55rem;border-radius:0.3rem;border-left:2px solid ' + entry.color + ';display:flex;flex-direction:column;gap:0.35rem;">';
-
-      // Header
       html += '<div style="display:flex;align-items:center;justify-content:space-between;">';
       html += '<strong style="color:var(--sb-on-surface);font-size:0.73rem;">' + (remediationIcon[entry.state] || '●') + ' Incident Remediation State</strong>';
       html += '<code style="color:' + entry.color + ';background:' + entry.bg + ';padding:0.1rem 0.4rem;text-transform:uppercase;font-size:0.63rem;">' + escapeHtml(entry.state) + '</code>';
       html += '</div>';
-
-      // Context
       html += '<div style="display:flex;flex-direction:column;gap:0.1rem;">';
       html += '<div><span style="color:var(--sb-text-muted);font-weight:600;font-size:0.63rem;">Telemetry Lineage:</span> <span style="font-family:monospace;font-size:0.68rem;color:#38bdf8;">' + escapeHtml(entry.healthLineage) + '</span></div>';
       html += '<div><span style="color:var(--sb-text-muted);font-weight:600;font-size:0.63rem;">Incident Basis:</span> <span style="font-family:monospace;font-size:0.68rem;color:#cbd5e1;">' + escapeHtml(entry.incidentBasis) + '</span></div>';
       html += '</div>';
-
-      // Object description
-      html += '<div style="background:#0f172a;border-radius:0.2rem;padding:0.3rem 0.4rem;font-size:0.65rem;color:#cbd5e1;line-height:1.4;">';
-      html += '<code>' + escapeHtml(entry.remediationVerdict) + '</code>';
+      html += '<div style="background:#0f172a;border-radius:0.2rem;padding:0.3rem 0.4rem;font-size:0.65rem;color:#cbd5e1;line-height:1.4;"><code>' + escapeHtml(entry.remediationVerdict) + '</code></div>';
+      html += '<div><span style="color:var(--sb-text-muted);font-weight:600;font-size:0.63rem;">Remediation Hash:</span> <code style="font-size:0.6rem;color:#64748b;">' + btoa(entry.state + entry.healthLineage + entry.remediationVerdict).substring(0, 16) + '</code></div>';
       html += '</div>';
-
-      // ALCOA+ hash
-      var alcoa = btoa(entry.state + entry.healthLineage + entry.remediationVerdict).substring(0, 16);
-      html += '<div><span style="color:var(--sb-text-muted);font-weight:600;font-size:0.63rem;">Remediation Hash:</span> <code style="font-size:0.6rem;color:#64748b;">' + alcoa + '</code></div>';
-
-      html += '</div>';
+      html += '<div style="margin-top:0.1rem;font-size:0.63rem;color:#64748b;">';
+      html += '<strong style="color:var(--sb-text-muted);">Audit Constraints:</strong> ';
+      html += 'Viewer Role: <code>' + escapeHtml(viewerRole) + '</code><br/>';
+      html += 'Selected Worker: <code>' + escapeHtml(selectedWorker) + '</code><br/>';
+      html += 'Selected Run: <code>' + escapeHtml(selectedRun) + '</code><br/>';
+      html += 'Incident Basis: <code>post-release health -> remediation path -> mitigated, in-progress, or unresolved state</code><br/>';
+      html += 'Incident states are <em>runtime-backed</em> when release lineage exists; unresolved states are shown honestly when it does not. ';
+      html += 'Resolution Bound: <code>SI21 — The Solace Intelligence System</code>.';
+      html += '</div></div>';
+      panel.innerHTML = html;
+    }).catch(function(err) {
+      panel.innerHTML = '<span style="font-size:0.7rem;color:#fca5a5;">post-release incident load failed: ' + escapeHtml(String(err)) + '</span>';
     });
-
-    html += '<div style="margin-top:0.1rem;font-size:0.63rem;color:#64748b;">';
-    html += '<strong style="color:var(--sb-text-muted);">Audit Constraints:</strong> ';
-    html += 'Viewer Role: <code>' + escapeHtml(viewerRole) + '</code><br/>';
-    html += 'Selected Worker: <code>' + escapeHtml(selectedWorker) + '</code><br/>';
-    html += 'Selected Run: <code>' + escapeHtml(selectedRun) + '</code><br/>';
-    html += 'Incident Basis: <code>post-release health -> remediation path -> mitigated, in-progress, or unresolved state</code><br/>';
-    html += 'Incident states are <em>role-derived mocks</em> simulating operational escalation handling. ';
-    html += 'Resolution Bound: <code>SI21 — The Solace Intelligence System</code>.';
-    html += '</div>';
-
-    html += '</div>';
-    panel.innerHTML = html;
   }
 
   // ── SAC53: Specialist Post-Release Closure & Verification ──
@@ -5415,90 +5362,45 @@
     var role = DEV_ROLES.find(function(r) { return r.id === appId; });
     var roleName = role ? role.key : 'unknown';
 
-    // Verification records derived from SAC52 Incident/Remediation (role-mocked; shown honestly)
-    var closureEntries = [];
+    panel.innerHTML = '<span style="font-size:0.7rem;color:#94a3b8;">loading runtime-backed post-release closure...</span>';
 
-    if (roleName === 'qa') {
-      closureEntries = [{
-        state: 'Verified Closed',
-        incidentLineage: 'Remediation Vector [Mitigated]',
-        closureBasis: 'Continuous regression probes confirm structural stability restored.',
-        closureVerdict: 'Incident remediation verifiably closed. System operations actively confirmed nominal over standard thresholds.',
-        color: '#10b981',
-        bg: 'rgba(16,185,129,0.1)'
-      }];
-    } else if (roleName === 'coder') {
-      closureEntries = [{
-        state: 'Pending Verification',
-        incidentLineage: 'Remediation Vector [In Progress]',
-        closureBasis: 'Remediation pipeline actively executing. Insufficient telemetry baseline to prove stability.',
-        closureVerdict: 'Closure tracking suspended pending successful long-running execution of remediation bounds.',
-        color: '#f59e0b',
-        bg: 'rgba(245,158,11,0.1)'
-      }];
-    } else if (roleName === 'design') {
-      closureEntries = [{
-        state: 'Failed Verification',
-        incidentLineage: 'Remediation Vector [Unresolved]',
-        closureBasis: 'Remediation attempt produced unmitigated regression in downstream capability bounds.',
-        closureVerdict: 'Remediation closure rejected. Initial incident vector remains fundamentally unresolved.',
-        color: '#ef4444',
-        bg: 'rgba(239,68,68,0.1)'
-      }];
-    } else {
-      closureEntries = [{
-        state: 'Failed Verification',
-        incidentLineage: 'N/A',
-        closureBasis: 'Missing incident tracking source.',
-        closureVerdict: 'Cannot verify unauthenticated closure paths.',
-        color: '#64748b',
-        bg: 'rgba(100,116,139,0.1)'
-      }];
-    }
-
-    var closureIcon = { 'Verified Closed': '🔒', 'Pending Verification': '⏳', 'Failed Verification': '❌' };
-
-    var html = '<div style="display:flex;flex-direction:column;gap:0.5rem;font-size:0.75rem;color:var(--sb-on-surface);">';
-
-    closureEntries.forEach(function(entry) {
+    buildRoleWorkflowSnapshot(roleName, appId, runId).then(function(snapshot) {
+      var derived = buildRolePostReleaseSnapshot(snapshot);
+      var entry = {
+        state: derived.closure.state,
+        incidentLineage: derived.closure.incidentLineage,
+        closureBasis: derived.closure.basis,
+        closureVerdict: derived.closure.verdict,
+        color: derived.closure.state === 'Verified Closed' ? '#10b981' : (derived.closure.state === 'Pending Verification' ? '#f59e0b' : '#ef4444'),
+        bg: derived.closure.state === 'Verified Closed' ? 'rgba(16,185,129,0.1)' : (derived.closure.state === 'Pending Verification' ? 'rgba(245,158,11,0.1)' : 'rgba(239,68,68,0.1)')
+      };
+      var closureIcon = { 'Verified Closed': '🔒', 'Pending Verification': '⏳', 'Failed Verification': '❌' };
+      var html = '<div style="display:flex;flex-direction:column;gap:0.5rem;font-size:0.75rem;color:var(--sb-on-surface);">';
       html += '<div style="background:var(--sb-surface-alt,#1e293b);padding:0.45rem 0.55rem;border-radius:0.3rem;border-left:2px solid ' + entry.color + ';display:flex;flex-direction:column;gap:0.35rem;">';
-
-      // Header
       html += '<div style="display:flex;align-items:center;justify-content:space-between;">';
       html += '<strong style="color:var(--sb-on-surface);font-size:0.73rem;">' + (closureIcon[entry.state] || '●') + ' Remediation Closure State</strong>';
       html += '<code style="color:' + entry.color + ';background:' + entry.bg + ';padding:0.1rem 0.4rem;text-transform:uppercase;font-size:0.63rem;">' + escapeHtml(entry.state) + '</code>';
       html += '</div>';
-
-      // Context
       html += '<div style="display:flex;flex-direction:column;gap:0.1rem;">';
       html += '<div><span style="color:var(--sb-text-muted);font-weight:600;font-size:0.63rem;">Incident Lineage:</span> <span style="font-family:monospace;font-size:0.68rem;color:#38bdf8;">' + escapeHtml(entry.incidentLineage) + '</span></div>';
       html += '<div><span style="color:var(--sb-text-muted);font-weight:600;font-size:0.63rem;">Verification Basis:</span> <span style="font-family:monospace;font-size:0.68rem;color:#cbd5e1;">' + escapeHtml(entry.closureBasis) + '</span></div>';
       html += '</div>';
-
-      // Object description
-      html += '<div style="background:#0f172a;border-radius:0.2rem;padding:0.3rem 0.4rem;font-size:0.65rem;color:#cbd5e1;line-height:1.4;">';
-      html += '<code>' + escapeHtml(entry.closureVerdict) + '</code>';
+      html += '<div style="background:#0f172a;border-radius:0.2rem;padding:0.3rem 0.4rem;font-size:0.65rem;color:#cbd5e1;line-height:1.4;"><code>' + escapeHtml(entry.closureVerdict) + '</code></div>';
+      html += '<div><span style="color:var(--sb-text-muted);font-weight:600;font-size:0.63rem;">Closure Hash:</span> <code style="font-size:0.6rem;color:#64748b;">' + btoa(entry.state + entry.incidentLineage + entry.closureVerdict).substring(0, 16) + '</code></div>';
       html += '</div>';
-
-      // ALCOA+ hash
-      var alcoa = btoa(entry.state + entry.incidentLineage + entry.closureVerdict).substring(0, 16);
-      html += '<div><span style="color:var(--sb-text-muted);font-weight:600;font-size:0.63rem;">Closure Hash:</span> <code style="font-size:0.6rem;color:#64748b;">' + alcoa + '</code></div>';
-
-      html += '</div>';
+      html += '<div style="margin-top:0.1rem;font-size:0.63rem;color:#64748b;">';
+      html += '<strong style="color:var(--sb-text-muted);">Audit Constraints:</strong> ';
+      html += 'Viewer Role: <code>' + escapeHtml(viewerRole) + '</code><br/>';
+      html += 'Selected Worker: <code>' + escapeHtml(selectedWorker) + '</code><br/>';
+      html += 'Selected Run: <code>' + escapeHtml(selectedRun) + '</code><br/>';
+      html += 'Closure Basis: <code>post-release incident -> remediation verification -> verified-closed, pending-verification, or failed-verification state</code><br/>';
+      html += 'Closure states are <em>runtime-backed</em> when incident lineage exists; failed verification is shown honestly when it does not. ';
+      html += 'Resolution Bound: <code>SI21 — The Solace Intelligence System</code>.';
+      html += '</div></div>';
+      panel.innerHTML = html;
+    }).catch(function(err) {
+      panel.innerHTML = '<span style="font-size:0.7rem;color:#fca5a5;">post-release closure load failed: ' + escapeHtml(String(err)) + '</span>';
     });
-
-    html += '<div style="margin-top:0.1rem;font-size:0.63rem;color:#64748b;">';
-    html += '<strong style="color:var(--sb-text-muted);">Audit Constraints:</strong> ';
-    html += 'Viewer Role: <code>' + escapeHtml(viewerRole) + '</code><br/>';
-    html += 'Selected Worker: <code>' + escapeHtml(selectedWorker) + '</code><br/>';
-    html += 'Selected Run: <code>' + escapeHtml(selectedRun) + '</code><br/>';
-    html += 'Closure Basis: <code>post-release incident -> remediation verification -> verified-closed, pending-verification, or failed-verification state</code><br/>';
-    html += 'Closure states are <em>role-derived mocks</em> simulating definitive incident resolution accountability. ';
-    html += 'Resolution Bound: <code>SI21 — The Solace Intelligence System</code>.';
-    html += '</div>';
-
-    html += '</div>';
-    panel.innerHTML = html;
   }
 
   // ── SAC54: Specialist Post-Release Escalation & Reopen ──
@@ -5513,90 +5415,45 @@
     var role = DEV_ROLES.find(function(r) { return r.id === appId; });
     var roleName = role ? role.key : 'unknown';
 
-    // Escalation records derived from SAC53 Closure (role-mocked; shown honestly)
-    var escalationEntries = [];
+    panel.innerHTML = '<span style="font-size:0.7rem;color:#94a3b8;">loading runtime-backed post-release escalation...</span>';
 
-    if (roleName === 'qa') {
-      escalationEntries = [{
-        state: 'Under Observation',
-        closureLineage: 'Verification Check [Pending Verification]',
-        escalationBasis: 'Standard passive tracking loop active. Remediation under extended baseline review.',
-        escalationVerdict: 'No escalation required. Asset remains safely operational under strict constraint bounds.',
-        color: '#10b981',
-        bg: 'rgba(16,185,129,0.1)'
-      }];
-    } else if (roleName === 'coder') {
-      escalationEntries = [{
-        state: 'Reopened',
-        closureLineage: 'Verification Check [Failed Verification]',
-        escalationBasis: 'Closure verification falsified by recurring structural anomaly.',
-        escalationVerdict: 'Incident forcibly reopened for secondary structural remediation pass. Artifact demoted.',
-        color: '#f59e0b',
-        bg: 'rgba(245,158,11,0.1)'
-      }];
-    } else if (roleName === 'design') {
-      escalationEntries = [{
-        state: 'Escalated',
-        closureLineage: 'Verification Check [Failed Verification]',
-        escalationBasis: 'Successive unmitigated system panics triggered maximum automated escalation ceiling.',
-        escalationVerdict: 'Incident escalated to absolute override bounds. Total component quarantine enforced pending explicit manual intervention.',
-        color: '#ef4444',
-        bg: 'rgba(239,68,68,0.1)'
-      }];
-    } else {
-      escalationEntries = [{
-        state: 'Under Observation',
-        closureLineage: 'N/A',
-        escalationBasis: 'Missing closure verification context.',
-        escalationVerdict: 'Cannot escalate untracked remediation artifacts.',
-        color: '#64748b',
-        bg: 'rgba(100,116,139,0.1)'
-      }];
-    }
-
-    var escalationIcon = { 'Under Observation': '🔭', 'Reopened': '🔄', 'Escalated': '🚨' };
-
-    var html = '<div style="display:flex;flex-direction:column;gap:0.5rem;font-size:0.75rem;color:var(--sb-on-surface);">';
-
-    escalationEntries.forEach(function(entry) {
+    buildRoleWorkflowSnapshot(roleName, appId, runId).then(function(snapshot) {
+      var derived = buildRolePostReleaseSnapshot(snapshot);
+      var entry = {
+        state: derived.escalation.state,
+        closureLineage: derived.escalation.closureLineage,
+        escalationBasis: derived.escalation.basis,
+        escalationVerdict: derived.escalation.verdict,
+        color: derived.escalation.state === 'Under Observation' ? '#10b981' : (derived.escalation.state === 'Reopened' ? '#f59e0b' : '#ef4444'),
+        bg: derived.escalation.state === 'Under Observation' ? 'rgba(16,185,129,0.1)' : (derived.escalation.state === 'Reopened' ? 'rgba(245,158,11,0.1)' : 'rgba(239,68,68,0.1)')
+      };
+      var escalationIcon = { 'Under Observation': '🔭', 'Reopened': '🔄', 'Escalated': '🚨' };
+      var html = '<div style="display:flex;flex-direction:column;gap:0.5rem;font-size:0.75rem;color:var(--sb-on-surface);">';
       html += '<div style="background:var(--sb-surface-alt,#1e293b);padding:0.45rem 0.55rem;border-radius:0.3rem;border-left:2px solid ' + entry.color + ';display:flex;flex-direction:column;gap:0.35rem;">';
-
-      // Header
       html += '<div style="display:flex;align-items:center;justify-content:space-between;">';
       html += '<strong style="color:var(--sb-on-surface);font-size:0.73rem;">' + (escalationIcon[entry.state] || '●') + ' Incident Escalation State</strong>';
       html += '<code style="color:' + entry.color + ';background:' + entry.bg + ';padding:0.1rem 0.4rem;text-transform:uppercase;font-size:0.63rem;">' + escapeHtml(entry.state) + '</code>';
       html += '</div>';
-
-      // Context
       html += '<div style="display:flex;flex-direction:column;gap:0.1rem;">';
       html += '<div><span style="color:var(--sb-text-muted);font-weight:600;font-size:0.63rem;">Closure Lineage:</span> <span style="font-family:monospace;font-size:0.68rem;color:#38bdf8;">' + escapeHtml(entry.closureLineage) + '</span></div>';
       html += '<div><span style="color:var(--sb-text-muted);font-weight:600;font-size:0.63rem;">Escalation Basis:</span> <span style="font-family:monospace;font-size:0.68rem;color:#cbd5e1;">' + escapeHtml(entry.escalationBasis) + '</span></div>';
       html += '</div>';
-
-      // Object description
-      html += '<div style="background:#0f172a;border-radius:0.2rem;padding:0.3rem 0.4rem;font-size:0.65rem;color:#cbd5e1;line-height:1.4;">';
-      html += '<code>' + escapeHtml(entry.escalationVerdict) + '</code>';
+      html += '<div style="background:#0f172a;border-radius:0.2rem;padding:0.3rem 0.4rem;font-size:0.65rem;color:#cbd5e1;line-height:1.4;"><code>' + escapeHtml(entry.escalationVerdict) + '</code></div>';
+      html += '<div><span style="color:var(--sb-text-muted);font-weight:600;font-size:0.63rem;">Escalation Hash:</span> <code style="font-size:0.6rem;color:#64748b;">' + btoa(entry.state + entry.closureLineage + entry.escalationVerdict).substring(0, 16) + '</code></div>';
       html += '</div>';
-
-      // ALCOA+ hash
-      var alcoa = btoa(entry.state + entry.closureLineage + entry.escalationVerdict).substring(0, 16);
-      html += '<div><span style="color:var(--sb-text-muted);font-weight:600;font-size:0.63rem;">Escalation Hash:</span> <code style="font-size:0.6rem;color:#64748b;">' + alcoa + '</code></div>';
-
-      html += '</div>';
+      html += '<div style="margin-top:0.1rem;font-size:0.63rem;color:#64748b;">';
+      html += '<strong style="color:var(--sb-text-muted);">Audit Constraints:</strong> ';
+      html += 'Viewer Role: <code>' + escapeHtml(viewerRole) + '</code><br/>';
+      html += 'Selected Worker: <code>' + escapeHtml(selectedWorker) + '</code><br/>';
+      html += 'Selected Run: <code>' + escapeHtml(selectedRun) + '</code><br/>';
+      html += 'Escalation Basis: <code>post-release closure -> reopen or escalation path -> reopened, escalated, or under-observation state</code><br/>';
+      html += 'Escalation states are <em>runtime-backed</em> when closure lineage exists; escalated states are shown honestly when it does not. ';
+      html += 'Resolution Bound: <code>SI21 — The Solace Intelligence System</code>.';
+      html += '</div></div>';
+      panel.innerHTML = html;
+    }).catch(function(err) {
+      panel.innerHTML = '<span style="font-size:0.7rem;color:#fca5a5;">post-release escalation load failed: ' + escapeHtml(String(err)) + '</span>';
     });
-
-    html += '<div style="margin-top:0.1rem;font-size:0.63rem;color:#64748b;">';
-    html += '<strong style="color:var(--sb-text-muted);">Audit Constraints:</strong> ';
-    html += 'Viewer Role: <code>' + escapeHtml(viewerRole) + '</code><br/>';
-    html += 'Selected Worker: <code>' + escapeHtml(selectedWorker) + '</code><br/>';
-    html += 'Selected Run: <code>' + escapeHtml(selectedRun) + '</code><br/>';
-    html += 'Escalation Basis: <code>post-release closure -> reopen or escalation path -> reopened, escalated, or under-observation state</code><br/>';
-    html += 'Escalation states are <em>role-derived mocks</em> simulating accountable management paths for failed remediation limits. ';
-    html += 'Resolution Bound: <code>SI21 — The Solace Intelligence System</code>.';
-    html += '</div>';
-
-    html += '</div>';
-    panel.innerHTML = html;
   }
 
   // ── SAC55: Specialist Post-Release Quarantine & Override ──
@@ -5611,90 +5468,45 @@
     var role = DEV_ROLES.find(function(r) { return r.id === appId; });
     var roleName = role ? role.key : 'unknown';
 
-    // Quarantine records derived from SAC54 Escalation (role-mocked; shown honestly)
-    var quarantineEntries = [];
+    panel.innerHTML = '<span style="font-size:0.7rem;color:#94a3b8;">loading runtime-backed post-release quarantine...</span>';
 
-    if (roleName === 'qa') {
-      quarantineEntries = [{
-        state: 'Constrained Continuation',
-        escalationLineage: 'Incident Governor [Under Observation]',
-        controlBasis: 'Escalation limits remain within nominal passive inspection variance.',
-        controlVerdict: 'Operations permitted under strict continuous observation. No physical quarantine imposed.',
-        color: '#10b981',
-        bg: 'rgba(16,185,129,0.1)'
-      }];
-    } else if (roleName === 'coder') {
-      quarantineEntries = [{
-        state: 'Manual Override Required',
-        escalationLineage: 'Incident Governor [Reopened]',
-        controlBasis: 'Forced remediation loops exceeded automated retry limits.',
-        controlVerdict: 'Automated remediation frozen. Explicit human override required to resume structural changes.',
-        color: '#f59e0b',
-        bg: 'rgba(245,158,11,0.1)'
-      }];
-    } else if (roleName === 'design') {
-      quarantineEntries = [{
-        state: 'Quarantined',
-        escalationLineage: 'Incident Governor [Escalated]',
-        controlBasis: 'Severe terminal panic verified. Component exceeds safety threshold parameters.',
-        controlVerdict: 'Asset physically quarantined. All operations halted. Rollback isolation locked.',
-        color: '#ef4444',
-        bg: 'rgba(239,68,68,0.1)'
-      }];
-    } else {
-      quarantineEntries = [{
-        state: 'Quarantined',
-        escalationLineage: 'N/A',
-        controlBasis: 'Missing escalation context.',
-        controlVerdict: 'Untracked artifacts default to strict perimeter quarantine.',
-        color: '#64748b',
-        bg: 'rgba(100,116,139,0.1)'
-      }];
-    }
-
-    var quarantineIcon = { 'Constrained Continuation': '🌐', 'Manual Override Required': '🔑', 'Quarantined': '🛑' };
-
-    var html = '<div style="display:flex;flex-direction:column;gap:0.5rem;font-size:0.75rem;color:var(--sb-on-surface);">';
-
-    quarantineEntries.forEach(function(entry) {
+    buildRoleWorkflowSnapshot(roleName, appId, runId).then(function(snapshot) {
+      var derived = buildRolePostReleaseSnapshot(snapshot);
+      var entry = {
+        state: derived.quarantine.state,
+        escalationLineage: derived.quarantine.escalationLineage,
+        controlBasis: derived.quarantine.basis,
+        controlVerdict: derived.quarantine.verdict,
+        color: derived.quarantine.state === 'Constrained Continuation' ? '#10b981' : (derived.quarantine.state === 'Manual Override Required' ? '#f59e0b' : '#ef4444'),
+        bg: derived.quarantine.state === 'Constrained Continuation' ? 'rgba(16,185,129,0.1)' : (derived.quarantine.state === 'Manual Override Required' ? 'rgba(245,158,11,0.1)' : 'rgba(239,68,68,0.1)')
+      };
+      var quarantineIcon = { 'Constrained Continuation': '🌐', 'Manual Override Required': '🔑', 'Quarantined': '🛑' };
+      var html = '<div style="display:flex;flex-direction:column;gap:0.5rem;font-size:0.75rem;color:var(--sb-on-surface);">';
       html += '<div style="background:var(--sb-surface-alt,#1e293b);padding:0.45rem 0.55rem;border-radius:0.3rem;border-left:2px solid ' + entry.color + ';display:flex;flex-direction:column;gap:0.35rem;">';
-
-      // Header
       html += '<div style="display:flex;align-items:center;justify-content:space-between;">';
       html += '<strong style="color:var(--sb-on-surface);font-size:0.73rem;">' + (quarantineIcon[entry.state] || '●') + ' Incident Control State</strong>';
       html += '<code style="color:' + entry.color + ';background:' + entry.bg + ';padding:0.1rem 0.4rem;text-transform:uppercase;font-size:0.63rem;">' + escapeHtml(entry.state) + '</code>';
       html += '</div>';
-
-      // Context
       html += '<div style="display:flex;flex-direction:column;gap:0.1rem;">';
       html += '<div><span style="color:var(--sb-text-muted);font-weight:600;font-size:0.63rem;">Escalation Lineage:</span> <span style="font-family:monospace;font-size:0.68rem;color:#38bdf8;">' + escapeHtml(entry.escalationLineage) + '</span></div>';
       html += '<div><span style="color:var(--sb-text-muted);font-weight:600;font-size:0.63rem;">Control Basis:</span> <span style="font-family:monospace;font-size:0.68rem;color:#cbd5e1;">' + escapeHtml(entry.controlBasis) + '</span></div>';
       html += '</div>';
-
-      // Object description
-      html += '<div style="background:#0f172a;border-radius:0.2rem;padding:0.3rem 0.4rem;font-size:0.65rem;color:#cbd5e1;line-height:1.4;">';
-      html += '<code>' + escapeHtml(entry.controlVerdict) + '</code>';
+      html += '<div style="background:#0f172a;border-radius:0.2rem;padding:0.3rem 0.4rem;font-size:0.65rem;color:#cbd5e1;line-height:1.4;"><code>' + escapeHtml(entry.controlVerdict) + '</code></div>';
+      html += '<div><span style="color:var(--sb-text-muted);font-weight:600;font-size:0.63rem;">Control Hash:</span> <code style="font-size:0.6rem;color:#64748b;">' + btoa(entry.state + entry.escalationLineage + entry.controlVerdict).substring(0, 16) + '</code></div>';
       html += '</div>';
-
-      // ALCOA+ hash
-      var alcoa = btoa(entry.state + entry.escalationLineage + entry.controlVerdict).substring(0, 16);
-      html += '<div><span style="color:var(--sb-text-muted);font-weight:600;font-size:0.63rem;">Control Hash:</span> <code style="font-size:0.6rem;color:#64748b;">' + alcoa + '</code></div>';
-
-      html += '</div>';
+      html += '<div style="margin-top:0.1rem;font-size:0.63rem;color:#64748b;">';
+      html += '<strong style="color:var(--sb-text-muted);">Audit Constraints:</strong> ';
+      html += 'Viewer Role: <code>' + escapeHtml(viewerRole) + '</code><br/>';
+      html += 'Selected Worker: <code>' + escapeHtml(selectedWorker) + '</code><br/>';
+      html += 'Selected Run: <code>' + escapeHtml(selectedRun) + '</code><br/>';
+      html += 'Control Basis: <code>post-release escalation -> control path -> quarantined, manual-override-required, or constrained-continuation state</code><br/>';
+      html += 'Control states are <em>runtime-backed</em> when escalation lineage exists; quarantine is shown honestly when it does not. ';
+      html += 'Resolution Bound: <code>SI21 — The Solace Intelligence System</code>.';
+      html += '</div></div>';
+      panel.innerHTML = html;
+    }).catch(function(err) {
+      panel.innerHTML = '<span style="font-size:0.7rem;color:#fca5a5;">post-release quarantine load failed: ' + escapeHtml(String(err)) + '</span>';
     });
-
-    html += '<div style="margin-top:0.1rem;font-size:0.63rem;color:#64748b;">';
-    html += '<strong style="color:var(--sb-text-muted);">Audit Constraints:</strong> ';
-    html += 'Viewer Role: <code>' + escapeHtml(viewerRole) + '</code><br/>';
-    html += 'Selected Worker: <code>' + escapeHtml(selectedWorker) + '</code><br/>';
-    html += 'Selected Run: <code>' + escapeHtml(selectedRun) + '</code><br/>';
-    html += 'Control Basis: <code>post-release escalation -> control path -> quarantined, manual-override-required, or constrained-continuation state</code><br/>';
-    html += 'Control states are <em>role-derived mocks</em> simulating severe operational quarantine application bounds. ';
-    html += 'Resolution Bound: <code>SI21 — The Solace Intelligence System</code>.';
-    html += '</div>';
-
-    html += '</div>';
-    panel.innerHTML = html;
   }
 
   // ── SAP56: Specialist Post-Release Recovery & Re-entry ──
@@ -5709,90 +5521,45 @@
     var role = DEV_ROLES.find(function(r) { return r.id === appId; });
     var roleName = role ? role.key : 'unknown';
 
-    // Recovery authorization records derived from SAO55 Control Bounds (role-mocked; shown honestly)
-    var recoveryEntries = [];
+    panel.innerHTML = '<span style="font-size:0.7rem;color:#94a3b8;">loading runtime-backed post-release recovery...</span>';
 
-    if (roleName === 'qa') {
-      recoveryEntries = [{
-        state: 'Authorized',
-        controlLineage: 'Constraint Bound [Constrained Continuation]',
-        recoveryBasis: 'Incident structurally sealed under strict extended oversight without regression.',
-        recoveryVerdict: 'System authorized for full programmatic re-entry. Operational perimeter restrictions lifted.',
-        color: '#10b981',
-        bg: 'rgba(16,185,129,0.1)'
-      }];
-    } else if (roleName === 'coder') {
-      recoveryEntries = [{
-        state: 'Staged Recovery',
-        controlLineage: 'Constraint Bound [Manual Override Required]',
-        recoveryBasis: 'Remediation override successfully signed. Phased unfreezing initiated.',
-        recoveryVerdict: 'System authorized for partial baseline re-entry to prove live stabilization.',
-        color: '#f59e0b',
-        bg: 'rgba(245,158,11,0.1)'
-      }];
-    } else if (roleName === 'design') {
-      recoveryEntries = [{
-        state: 'Blocked',
-        controlLineage: 'Constraint Bound [Quarantined]',
-        recoveryBasis: 'Terminal component failure limits absolutely active.',
-        recoveryVerdict: 'System re-entry categorically denied. Quarantine isolation mathematically intact.',
-        color: '#ef4444',
-        bg: 'rgba(239,68,68,0.1)'
-      }];
-    } else {
-      recoveryEntries = [{
-        state: 'Blocked',
-        controlLineage: 'N/A',
-        recoveryBasis: 'Missing quarantine control context.',
-        recoveryVerdict: 'Cannot authorize untracked artifacts for general system re-entry.',
-        color: '#64748b',
-        bg: 'rgba(100,116,139,0.1)'
-      }];
-    }
-
-    var recoveryIcon = { 'Authorized': '✅', 'Staged Recovery': '🪜', 'Blocked': '🚫' };
-
-    var html = '<div style="display:flex;flex-direction:column;gap:0.5rem;font-size:0.75rem;color:var(--sb-on-surface);">';
-
-    recoveryEntries.forEach(function(entry) {
+    buildRoleWorkflowSnapshot(roleName, appId, runId).then(function(snapshot) {
+      var derived = buildRolePostReleaseSnapshot(snapshot);
+      var entry = {
+        state: derived.recovery.state,
+        controlLineage: derived.recovery.controlLineage,
+        recoveryBasis: derived.recovery.basis,
+        recoveryVerdict: derived.recovery.verdict,
+        color: derived.recovery.state === 'Authorized' ? '#10b981' : (derived.recovery.state === 'Staged Recovery' ? '#f59e0b' : '#ef4444'),
+        bg: derived.recovery.state === 'Authorized' ? 'rgba(16,185,129,0.1)' : (derived.recovery.state === 'Staged Recovery' ? 'rgba(245,158,11,0.1)' : 'rgba(239,68,68,0.1)')
+      };
+      var recoveryIcon = { 'Authorized': '✅', 'Staged Recovery': '🪜', 'Blocked': '🚫' };
+      var html = '<div style="display:flex;flex-direction:column;gap:0.5rem;font-size:0.75rem;color:var(--sb-on-surface);">';
       html += '<div style="background:var(--sb-surface-alt,#1e293b);padding:0.45rem 0.55rem;border-radius:0.3rem;border-left:2px solid ' + entry.color + ';display:flex;flex-direction:column;gap:0.35rem;">';
-
-      // Header
       html += '<div style="display:flex;align-items:center;justify-content:space-between;">';
       html += '<strong style="color:var(--sb-on-surface);font-size:0.73rem;">' + (recoveryIcon[entry.state] || '●') + ' Recovery & Re-entry State</strong>';
       html += '<code style="color:' + entry.color + ';background:' + entry.bg + ';padding:0.1rem 0.4rem;text-transform:uppercase;font-size:0.63rem;">' + escapeHtml(entry.state) + '</code>';
       html += '</div>';
-
-      // Context
       html += '<div style="display:flex;flex-direction:column;gap:0.1rem;">';
       html += '<div><span style="color:var(--sb-text-muted);font-weight:600;font-size:0.63rem;">Control Lineage:</span> <span style="font-family:monospace;font-size:0.68rem;color:#38bdf8;">' + escapeHtml(entry.controlLineage) + '</span></div>';
       html += '<div><span style="color:var(--sb-text-muted);font-weight:600;font-size:0.63rem;">Recovery Basis:</span> <span style="font-family:monospace;font-size:0.68rem;color:#cbd5e1;">' + escapeHtml(entry.recoveryBasis) + '</span></div>';
       html += '</div>';
-
-      // Object description
-      html += '<div style="background:#0f172a;border-radius:0.2rem;padding:0.3rem 0.4rem;font-size:0.65rem;color:#cbd5e1;line-height:1.4;">';
-      html += '<code>' + escapeHtml(entry.recoveryVerdict) + '</code>';
+      html += '<div style="background:#0f172a;border-radius:0.2rem;padding:0.3rem 0.4rem;font-size:0.65rem;color:#cbd5e1;line-height:1.4;"><code>' + escapeHtml(entry.recoveryVerdict) + '</code></div>';
+      html += '<div><span style="color:var(--sb-text-muted);font-weight:600;font-size:0.63rem;">Authorization Hash:</span> <code style="font-size:0.6rem;color:#64748b;">' + btoa(entry.state + entry.controlLineage + entry.recoveryVerdict).substring(0, 16) + '</code></div>';
       html += '</div>';
-
-      // ALCOA+ hash
-      var alcoa = btoa(entry.state + entry.controlLineage + entry.recoveryVerdict).substring(0, 16);
-      html += '<div><span style="color:var(--sb-text-muted);font-weight:600;font-size:0.63rem;">Authorization Hash:</span> <code style="font-size:0.6rem;color:#64748b;">' + alcoa + '</code></div>';
-
-      html += '</div>';
+      html += '<div style="margin-top:0.1rem;font-size:0.63rem;color:#64748b;">';
+      html += '<strong style="color:var(--sb-text-muted);">Audit Constraints:</strong> ';
+      html += 'Viewer Role: <code>' + escapeHtml(viewerRole) + '</code><br/>';
+      html += 'Selected Worker: <code>' + escapeHtml(selectedWorker) + '</code><br/>';
+      html += 'Selected Run: <code>' + escapeHtml(selectedRun) + '</code><br/>';
+      html += 'Recovery Basis: <code>post-release quarantine -> recovery path -> recovery-authorized, re-entry-blocked, or staged-recovery state</code><br/>';
+      html += 'Recovery states are <em>runtime-backed</em> when control lineage exists; blocked states are shown honestly when it does not. ';
+      html += 'Resolution Bound: <code>SI21 — The Solace Intelligence System</code>.';
+      html += '</div></div>';
+      panel.innerHTML = html;
+    }).catch(function(err) {
+      panel.innerHTML = '<span style="font-size:0.7rem;color:#fca5a5;">post-release recovery load failed: ' + escapeHtml(String(err)) + '</span>';
     });
-
-    html += '<div style="margin-top:0.1rem;font-size:0.63rem;color:#64748b;">';
-    html += '<strong style="color:var(--sb-text-muted);">Audit Constraints:</strong> ';
-    html += 'Viewer Role: <code>' + escapeHtml(viewerRole) + '</code><br/>';
-    html += 'Selected Worker: <code>' + escapeHtml(selectedWorker) + '</code><br/>';
-    html += 'Selected Run: <code>' + escapeHtml(selectedRun) + '</code><br/>';
-    html += 'Recovery Basis: <code>post-release quarantine -> recovery path -> recovery-authorized, re-entry-blocked, or staged-recovery state</code><br/>';
-    html += 'Recovery states are <em>role-derived mocks</em> simulating accounted unfreezing loops. ';
-    html += 'Resolution Bound: <code>SI21 — The Solace Intelligence System</code>.';
-    html += '</div>';
-
-    html += '</div>';
-    panel.innerHTML = html;
   }
 
   // ── SAQ57: Specialist Post-Release Return-to-Service Verification ──
@@ -5807,90 +5574,45 @@
     var role = DEV_ROLES.find(function(r) { return r.id === appId; });
     var roleName = role ? role.key : 'unknown';
 
-    // Return-to-service records derived from SAP56 Recovery Authorization (role-mocked; shown honestly)
-    var returnEntries = [];
+    panel.innerHTML = '<span style="font-size:0.7rem;color:#94a3b8;">loading runtime-backed post-release return...</span>';
 
-    if (roleName === 'qa') {
-      returnEntries = [{
-        state: 'Service Restored',
-        recoveryLineage: 'Authorization Gate [Authorized]',
-        serviceBasis: 'Full constraint limits held securely in wild production for 24h.',
-        serviceVerdict: 'Physical re-entry verified. Application service returned to nominal baseline stability with anomaly purged.',
-        color: '#10b981',
-        bg: 'rgba(16,185,129,0.1)'
-      }];
-    } else if (roleName === 'coder') {
-      returnEntries = [{
-        state: 'Provisional Service',
-        recoveryLineage: 'Authorization Gate [Staged Recovery]',
-        serviceBasis: 'Initial re-entry limits held. Ongoing dynamic stress telemetry active.',
-        serviceVerdict: 'Application routing active but constrained. Provisional release gating still applied to limit exposure radius.',
-        color: '#f59e0b',
-        bg: 'rgba(245,158,11,0.1)'
-      }];
-    } else if (roleName === 'design') {
-      returnEntries = [{
-        state: 'Re-entry Failed',
-        recoveryLineage: 'Authorization Gate [Blocked]',
-        serviceBasis: 'Terminal component blockade triggered cascading route faults during theoretical recovery simulation.',
-        serviceVerdict: 'Restoration aborted defensively. Artifact permanently decommissioned. Escalating to deep architectural rewrite.',
-        color: '#ef4444',
-        bg: 'rgba(239,68,68,0.1)'
-      }];
-    } else {
-      returnEntries = [{
-        state: 'Re-entry Failed',
-        recoveryLineage: 'N/A',
-        serviceBasis: 'Missing recovery authorization context.',
-        serviceVerdict: 'Cannot verify service restoration for artifacts possessing no valid recovery permission.',
-        color: '#64748b',
-        bg: 'rgba(100,116,139,0.1)'
-      }];
-    }
-
-    var returnIcon = { 'Service Restored': '✅', 'Provisional Service': '⚠️', 'Re-entry Failed': '💥' };
-
-    var html = '<div style="display:flex;flex-direction:column;gap:0.5rem;font-size:0.75rem;color:var(--sb-on-surface);">';
-
-    returnEntries.forEach(function(entry) {
+    buildRoleWorkflowSnapshot(roleName, appId, runId).then(function(snapshot) {
+      var derived = buildRolePostReleaseSnapshot(snapshot);
+      var entry = {
+        state: derived.serviceReturn.state,
+        recoveryLineage: derived.serviceReturn.recoveryLineage,
+        serviceBasis: derived.serviceReturn.basis,
+        serviceVerdict: derived.serviceReturn.verdict,
+        color: derived.serviceReturn.state === 'Service Restored' ? '#10b981' : (derived.serviceReturn.state === 'Provisional Service' ? '#f59e0b' : '#ef4444'),
+        bg: derived.serviceReturn.state === 'Service Restored' ? 'rgba(16,185,129,0.1)' : (derived.serviceReturn.state === 'Provisional Service' ? 'rgba(245,158,11,0.1)' : 'rgba(239,68,68,0.1)')
+      };
+      var returnIcon = { 'Service Restored': '✅', 'Provisional Service': '⚠️', 'Re-entry Failed': '💥' };
+      var html = '<div style="display:flex;flex-direction:column;gap:0.5rem;font-size:0.75rem;color:var(--sb-on-surface);">';
       html += '<div style="background:var(--sb-surface-alt,#1e293b);padding:0.45rem 0.55rem;border-radius:0.3rem;border-left:2px solid ' + entry.color + ';display:flex;flex-direction:column;gap:0.35rem;">';
-
-      // Header
       html += '<div style="display:flex;align-items:center;justify-content:space-between;">';
       html += '<strong style="color:var(--sb-on-surface);font-size:0.73rem;">' + (returnIcon[entry.state] || '●') + ' Return-to-Service State</strong>';
       html += '<code style="color:' + entry.color + ';background:' + entry.bg + ';padding:0.1rem 0.4rem;text-transform:uppercase;font-size:0.63rem;">' + escapeHtml(entry.state) + '</code>';
       html += '</div>';
-
-      // Context
       html += '<div style="display:flex;flex-direction:column;gap:0.1rem;">';
       html += '<div><span style="color:var(--sb-text-muted);font-weight:600;font-size:0.63rem;">Recovery Lineage:</span> <span style="font-family:monospace;font-size:0.68rem;color:#38bdf8;">' + escapeHtml(entry.recoveryLineage) + '</span></div>';
       html += '<div><span style="color:var(--sb-text-muted);font-weight:600;font-size:0.63rem;">Observation Basis:</span> <span style="font-family:monospace;font-size:0.68rem;color:#cbd5e1;">' + escapeHtml(entry.serviceBasis) + '</span></div>';
       html += '</div>';
-
-      // Object description
-      html += '<div style="background:#0f172a;border-radius:0.2rem;padding:0.3rem 0.4rem;font-size:0.65rem;color:#cbd5e1;line-height:1.4;">';
-      html += '<code>' + escapeHtml(entry.serviceVerdict) + '</code>';
+      html += '<div style="background:#0f172a;border-radius:0.2rem;padding:0.3rem 0.4rem;font-size:0.65rem;color:#cbd5e1;line-height:1.4;"><code>' + escapeHtml(entry.serviceVerdict) + '</code></div>';
+      html += '<div><span style="color:var(--sb-text-muted);font-weight:600;font-size:0.63rem;">Service Hash:</span> <code style="font-size:0.6rem;color:#64748b;">' + btoa(entry.state + entry.recoveryLineage + entry.serviceVerdict).substring(0, 16) + '</code></div>';
       html += '</div>';
-
-      // ALCOA+ hash
-      var alcoa = btoa(entry.state + entry.recoveryLineage + entry.serviceVerdict).substring(0, 16);
-      html += '<div><span style="color:var(--sb-text-muted);font-weight:600;font-size:0.63rem;">Service Hash:</span> <code style="font-size:0.6rem;color:#64748b;">' + alcoa + '</code></div>';
-
-      html += '</div>';
+      html += '<div style="margin-top:0.1rem;font-size:0.63rem;color:#64748b;">';
+      html += '<strong style="color:var(--sb-text-muted);">Audit Constraints:</strong> ';
+      html += 'Viewer Role: <code>' + escapeHtml(viewerRole) + '</code><br/>';
+      html += 'Selected Worker: <code>' + escapeHtml(selectedWorker) + '</code><br/>';
+      html += 'Selected Run: <code>' + escapeHtml(selectedRun) + '</code><br/>';
+      html += 'Service Basis: <code>post-release recovery -> service verification path -> returned-to-service, provisional-service, or re-entry-failed state</code><br/>';
+      html += 'Service restoration states are <em>runtime-backed</em> when recovery lineage exists; failed states are shown honestly when it does not. ';
+      html += 'Resolution Bound: <code>SI21 — The Solace Intelligence System</code>.';
+      html += '</div></div>';
+      panel.innerHTML = html;
+    }).catch(function(err) {
+      panel.innerHTML = '<span style="font-size:0.7rem;color:#fca5a5;">post-release return load failed: ' + escapeHtml(String(err)) + '</span>';
     });
-
-    html += '<div style="margin-top:0.1rem;font-size:0.63rem;color:#64748b;">';
-    html += '<strong style="color:var(--sb-text-muted);">Audit Constraints:</strong> ';
-    html += 'Viewer Role: <code>' + escapeHtml(viewerRole) + '</code><br/>';
-    html += 'Selected Worker: <code>' + escapeHtml(selectedWorker) + '</code><br/>';
-    html += 'Selected Run: <code>' + escapeHtml(selectedRun) + '</code><br/>';
-    html += 'Service Basis: <code>post-release recovery -> service verification path -> returned-to-service, provisional-service, or re-entry-failed state</code><br/>';
-    html += 'Service restoration states are <em>role-derived mocks</em> simulating accounted physical production unfreezing. ';
-    html += 'Resolution Bound: <code>SI21 — The Solace Intelligence System</code>.';
-    html += '</div>';
-
-    html += '</div>';
-    panel.innerHTML = html;
   }
 
   // ── SAR58: Specialist Post-Release Sustained Service Validation ──
