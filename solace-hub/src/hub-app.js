@@ -331,6 +331,7 @@
 
   window.__solaceSignoffWorkflow = function(assignmentId, existingId, status) {
     if (!assignmentId) return;
+    var launchCtx = window.__solaceLastWorkflowLaunchAction || null;
     
     var payload = {
         assignment_id: assignmentId,
@@ -352,6 +353,18 @@
         headers: {'Content-Type': 'application/json'},
         body: JSON.stringify(payload)
     }).then(function(r) { return r.json(); }).then(function(res) {
+        // --- SAC85 Tracking ---
+        window.__solaceLastWorkflowSignoffActionResult = {
+            assignmentId: assignmentId,
+            status: status,
+            requestId: window.__solaceActiveRequestId,
+            mutation: (existingId ? 'UPDATE' : 'CREATE'),
+            success: !!(res.created || res.updated),
+            targetRole: launchCtx && launchCtx.targetAssignmentId === assignmentId ? launchCtx.targetRole : null,
+            runId: launchCtx && launchCtx.targetAssignmentId === assignmentId ? launchCtx.runId : null
+        };
+        // ----------------------
+        
         if (!res.created && !res.updated) {
             console.warn('Signoff mutation failed', res);
         }
@@ -868,7 +881,7 @@
             appHtml += 'Action Target Assignment ID: <code>' + escapeHtml(lastLaunchAction.targetAssignmentId.substring(0, 8)) + '</code><br/>';
             appHtml += 'Action Target Role: <code>' + escapeHtml(lastLaunchAction.targetRole) + '</code><br/>';
             appHtml += 'Action Target Run ID: <code>' + escapeHtml(lastLaunchAction.runId.substring(0, 8)) + '</code><br/>';
-            appHtml += '<div style="display:flex; gap:0.3rem;">';
+            appHtml += '<div style="display:flex; gap:0.3rem; margin-bottom:0.3rem;">';
             appHtml += '<button onclick="window.__solaceSignoffWorkflow(\'' + lastLaunchAction.targetAssignmentId + '\', \'' + targetLinkedId + '\', \'approved\')" class="sb-btn sb-btn--sm" style="font-size:0.6rem;padding:0.15rem 0.4rem;background:#064e3b;color:#34d399;font-weight:600;border:1px solid #059669;cursor:pointer;">Approve Target</button>';
             appHtml += '<button onclick="window.__solaceSignoffWorkflow(\'' + lastLaunchAction.targetAssignmentId + '\', \'' + targetLinkedId + '\', \'rejected\')" class="sb-btn sb-btn--sm" style="font-size:0.6rem;padding:0.15rem 0.4rem;background:#4c0519;color:#fca5a5;border:1px solid #e11d48;cursor:pointer;">Reject Target</button>';
             appHtml += '</div>';
@@ -878,7 +891,45 @@
                 appHtml += 'Action Basis: <code>Approval action targets the visible matching assignment, but the current workflow binding has fallen back away from exact launched-workflow approval action truth (SAC84)</code>';
             }
             appHtml += '</div>';
-            // ---------------------------------------
+
+            // --- SAC85 Next-Step Approval Result Truth ---
+            var lastSignoffResult = window.__solaceLastWorkflowSignoffActionResult;
+            if (lastSignoffResult && lastSignoffResult.requestId === reqId && lastSignoffResult.assignmentId === lastLaunchAction.targetAssignmentId) {
+                appHtml += '<div style="margin-top:0.4rem; padding-top:0.4rem; border-top:1px solid #334155;">';
+                appHtml += '<strong style="display:block; margin-bottom:0.2rem; color:#f87171;">Next-Step Approval Mutation Result:</strong>';
+                appHtml += '<div style="background:rgba(30,41,59,0.5); padding:0.4rem; border-left:2px solid #f87171; border-radius:0.15rem; font-size:0.65rem;">';
+                appHtml += 'Target Assignment ID: <code>' + escapeHtml(lastSignoffResult.assignmentId.substring(0, 8)) + '</code><br/>';
+                if (lastSignoffResult.targetRole) {
+                    appHtml += 'Result Target Role: <code>' + escapeHtml(lastSignoffResult.targetRole) + '</code><br/>';
+                }
+                if (lastSignoffResult.runId) {
+                    appHtml += 'Result Target Run ID: <code>' + escapeHtml(lastSignoffResult.runId.substring(0, 8)) + '</code><br/>';
+                }
+                appHtml += 'Requested Status: <code>' + escapeHtml(lastSignoffResult.status) + '</code><br/>';
+                appHtml += 'Mutation Mode: <code>' + escapeHtml(lastSignoffResult.mutation) + '</code><br/>';
+                
+                if (lastSignoffResult.success) {
+                    appHtml += 'Mutation Status: <span style="color:#6ee7b7;font-weight:600;">[✓] Target approval successfully written to Back Office</span><br/>';
+                    if (exactPacketTruth) {
+                        appHtml += 'Result Branch: <span style="color:#34d399;font-weight:600;">[✓] Exact launched-workflow approval result tracked</span><br/>';
+                        appHtml += 'Result Basis: <code>Approval action wrote successfully for the launched target assignment, and request, assignment, role, and run remain aligned in the exact workflow-bound branch (SAC85)</code>';
+                    } else {
+                        appHtml += 'Result Branch: <span style="color:#fcd34d;font-weight:600;">[?] Fallback approval result tracked</span><br/>';
+                        appHtml += 'Result Basis: <code>Approval action wrote successfully for a visible matching assignment, but the current workflow binding has fallen back away from exact launched-workflow approval result truth (SAC85)</code>';
+                    }
+                } else {
+                    appHtml += 'Mutation Status: <span style="color:#fca5a5;font-weight:600;">[✗] Target approval write failed</span><br/>';
+                    if (exactPacketTruth) {
+                        appHtml += 'Result Branch: <span style="color:#fca5a5;font-weight:600;">[!] Exact launched-workflow approval result failed</span><br/>';
+                        appHtml += 'Result Basis: <code>Approval action failed for the launched target assignment while request, assignment, role, and run remained aligned in the exact workflow-bound branch (SAC85)</code>';
+                    } else {
+                        appHtml += 'Result Branch: <span style="color:#fca5a5;font-weight:600;">[!] Fallback approval result failed</span><br/>';
+                        appHtml += 'Result Basis: <code>Approval action failed for a visible matching assignment after the current workflow binding had already fallen back away from exact launched-workflow truth (SAC85)</code>';
+                    }
+                }
+                appHtml += '</div></div>';
+            }
+            // ---------------------------------------------
 
             approvalSlot.innerHTML = appHtml;
         }
