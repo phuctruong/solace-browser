@@ -713,6 +713,10 @@
         // --- SAC72 Inline Preview Box ---
         html += '<div id="dev-active-workflow-preview" style="margin-top:0.5rem;"></div>';
         // --------------------------------
+
+        // --- SAC83 Specialist Approval Box ---
+        html += '<div id="dev-active-workflow-approval-preview" style="margin-top:0.5rem;"></div>';
+        // -------------------------------------
         
         content.innerHTML = html;
 
@@ -820,6 +824,45 @@
             }
         }
         // ---------------------------------------------
+
+        // --- SAC83 Next-Step Specialist Approval Truth ---
+        var approvalSlot = document.getElementById('dev-active-workflow-approval-preview');
+        if (approvalSlot && lastLaunchAction && lastLaunchAction.requestId === reqId && (lastLaunchAction.targetAssignmentId === active.id || lastLaunchAction.sourceAssignmentId === active.id)) {
+            var targetApproval = approvals.find(function(item) { return item.assignment_id === lastLaunchAction.targetAssignmentId; }) || null;
+            
+            var appHtml = '<strong style="display:block; margin-top:0.4rem; color:#818cf8;">Next-Step Specialist Approval Truth:</strong>';
+            appHtml += '<div style="background:rgba(30,41,59,0.5); padding:0.4rem; border-left:2px solid #818cf8; border-radius:0.15rem; font-size:0.65rem; margin-bottom:0.5rem;">';
+            appHtml += 'Source Request ID: <code>' + escapeHtml(lastLaunchAction.requestId.substring(0, 8)) + '</code><br/>';
+            if (lastLaunchAction.sourceAssignmentId) {
+                appHtml += 'Source Assignment ID: <code>' + escapeHtml(lastLaunchAction.sourceAssignmentId.substring(0, 8)) + '</code><br/>';
+            }
+            appHtml += 'Target Assignment ID: <code>' + escapeHtml(lastLaunchAction.targetAssignmentId.substring(0, 8)) + '</code><br/>';
+            appHtml += 'Launched Role: <code>' + escapeHtml(lastLaunchAction.targetRole) + '</code><br/>';
+            appHtml += 'Launched Run ID: <code>' + escapeHtml(lastLaunchAction.runId.substring(0, 8)) + '</code><br/>';
+            
+            if (targetApproval) {
+                var color = targetApproval.status === 'approved' ? '#6ee7b7' : (targetApproval.status === 'rejected' ? '#fca5a5' : '#fcd34d');
+                appHtml += 'Signoff State: <span class="sb-pill" style="color:' + color + '; border:1px solid ' + color + '; font-size:0.65rem; margin-right:0.3rem;">' + escapeHtml(targetApproval.status) + '</span>';
+                if (targetApproval.notes) {
+                    appHtml += '<span style="color:var(--sb-text-muted);">' + escapeHtml(targetApproval.notes) + '</span><br/>';
+                } else {
+                    appHtml += '<br/>';
+                }
+            } else {
+                appHtml += 'Signoff State: <span class="sb-pill" style="color:#94a3b8; border:1px dashed #475569; font-size:0.65rem;">pending workflow signoff</span><br/>';
+            }
+            
+            if (exactPacketTruth) {
+                appHtml += 'Approval Branch: <span style="color:#34d399;font-weight:600;">[✓] Exact launched-workflow approval branch tracked</span><br/>';
+                appHtml += 'Approval Basis: <code>Approval state is read for the launched target assignment, and request, assignment, role, and run remain aligned in the exact workflow-bound branch (SAC83)</code>';
+            } else {
+                appHtml += 'Approval Branch: <span style="color:#fcd34d;font-weight:600;">[?] Fallback approval branch tracked</span><br/>';
+                appHtml += 'Approval Basis: <code>Approval state is visible for a matching assignment, but the current workflow binding has fallen back away from exact launched-workflow approval truth (SAC83)</code>';
+            }
+            appHtml += '</div>';
+            approvalSlot.innerHTML = appHtml;
+        }
+        // -------------------------------------------------
       });
     });
   }
