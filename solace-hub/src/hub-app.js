@@ -43,21 +43,190 @@
     return 'manager';
   }
 
+  function roleAppIdForRole(roleName) {
+    var role = DEV_ROLES.find(function(item) { return item.key === roleName; }) || null;
+    return role ? role.id : null;
+  }
+
+  function runtimeArtifactPath(appId, runId, filename) {
+    if (!appId || !runId || !filename) return 'N/A';
+    return '/api/v1/apps/' + appId + '/runs/' + runId + '/artifact/' + filename;
+  }
+
+  function syncWorkflowInboxRecord(assignmentId, toRole, contextSources, status) {
+    if (!assignmentId || !toRole) return Promise.resolve(null);
+
+    return fetchBackofficeItems('worker_inboxes').then(function(inboxes) {
+      var existingInbox = (inboxes || []).find(function(item) { return item.assignment_id === assignmentId; }) || null;
+      var inboxPayload = {
+        assignment_id: assignmentId,
+        to_role: toRole,
+        context_sources: contextSources || ('assignment:' + assignmentId),
+        file_targets: 'repo-local targets pending explicit worker packet binding',
+        required_artifacts: 'payload.json;events.jsonl;report.html',
+        constraints: 'Respect assignment scope, preserve contracts, and return durable evidence.',
+        status: status || 'prepared'
+      };
+      return upsertBackofficeRecord('worker_inboxes', existingInbox ? existingInbox.id : null, inboxPayload)
+        .then(function(res) {
+          return (res && res.record) ? res.record : existingInbox;
+        });
+    });
+  }
+
+  function syncWorkflowLaunchRecords(reqId, sourceAssignmentId, targetAssignmentId, targetRole, appId, runId) {
+    if (!reqId || !targetAssignmentId || !targetRole || !appId || !runId) {
+      return Promise.resolve({ skipped: true, reason: 'missing-launch-context' });
+    }
+
+    return Promise.all([
+      fetchBackofficeItems('assignments'),
+      fetchBackofficeItems('worker_inboxes'),
+      fetchBackofficeItems('runs'),
+      fetchBackofficeItems('artifacts')
+    ]).then(function(data) {
+      var assignments = data[0] || [];
+      var inboxes = data[1] || [];
+      var runs = data[2] || [];
+      var artifacts = data[3] || [];
+      var assignment = assignments.find(function(item) { return item.id === targetAssignmentId && item.request_id === reqId; }) || null;
+      if (!assignment) return { skipped: true, reason: 'assignment-not-found' };
+
+      var contextSources = 'request:' + reqId + ';target_assignment:' + targetAssignmentId + (sourceAssignmentId ? ';source_assignment:' + sourceAssignmentId : '');
+      var existingInbox = inboxes.find(function(item) { return item.assignment_id === targetAssignmentId; }) || null;
+      var existingRun = runs.find(function(item) { return item.run_id === runId; }) || null;
+
+      return syncWorkflowInboxRecord(targetAssignmentId, targetRole, contextSources, 'loaded')
+        .then(function(inboxRecord) {
+          var runPayload = {
+            assignment_id: targetAssignmentId,
+            inbox_id: inboxRecord ? inboxRecord.id : (existingInbox ? existingInbox.id : null),
+            role: targetRole,
+            executor: appId,
+            run_id: runId,
+            status: 'running',
+            evidence_ref: runtimeArtifactPath(appId, runId, 'events.jsonl')
+          };
+
+          return upsertBackofficeRecord('runs', existingRun ? existingRun.id : null, runPayload)
+            .then(function(runRes) {
+              var runRecord = (runRes && runRes.record) ? runRes.record : existingRun;
+              var artifactNames = ['payload.json', 'events.jsonl', 'report.html'];
+              return Promise.all(artifactNames.map(function(filename) {
+                var filePath = runtimeArtifactPath(appId, runId, filename);
+                var existingArtifact = artifacts.find(function(item) {
+                  return item.assignment_id === targetAssignmentId && item.file_path === filePath;
+                }) || null;
+                return upsertBackofficeRecord('artifacts', existingArtifact ? existingArtifact.id : null, {
+                  assignment_id: targetAssignmentId,
+                  file_path: filePath,
+                  evidence_hash: btoa(targetAssignmentId + ':' + runId + ':' + filename).substring(0, 16)
+                });
+              })).then(function() {
+                return {
+                  inbox: inboxRecord || existingInbox,
+                  run: runRecord
+                };
+              });
+            });
+        });
+    });
+  }
+
+  function buildRoleWorkflowSnapshot(roleName, appId, runId) {
+    var selectedRunId = runId || null;
+
+    return Promise.all([
+      fetchBackofficeItems('assignments'),
+      fetchBackofficeItems('approvals'),
+      fetchBackofficeItems('memory_entries'),
+      fetchBackofficeItems('conventions'),
+      fetchBackofficeItems('releases'),
+      fetchBackofficeItems('worker_inboxes'),
+      fetchBackofficeItems('runs')
+    ]).then(function(data) {
+      var assignments = data[0] || [];
+      var approvals = data[1] || [];
+      var memoryEntries = data[2] || [];
+      var conventions = data[3] || [];
+      var releases = data[4] || [];
+      var workerInboxes = data[5] || [];
+      var runs = data[6] || [];
+      var roleRuns = sortNewestFirst(runs.filter(function(item) { return item.role === roleName; }));
+      var runRecord = selectedRunId ? (roleRuns.find(function(item) { return item.run_id === selectedRunId; }) || null) : null;
+      var assignment = runRecord ? (assignments.find(function(item) { return item.id === runRecord.assignment_id; }) || null) : null;
+
+      if (!assignment) {
+        assignment = sortNewestFirst(assignments.filter(function(item) { return item.target_role === roleName; }))[0] || null;
+      }
+      if (!runRecord && assignment) {
+        runRecord = roleRuns.find(function(item) { return item.assignment_id === assignment.id; }) || null;
+      }
+
+      var approval = assignment ? (approvals.find(function(item) { return item.assignment_id === assignment.id; }) || null) : null;
+      var memoryEntry = assignment ? (sortNewestFirst(memoryEntries.filter(function(item) { return item.assignment_id === assignment.id; }))[0] || null) : null;
+      if (!memoryEntry) {
+        memoryEntry = sortNewestFirst(memoryEntries.filter(function(item) { return item.role === roleName; }))[0] || null;
+      }
+
+      var convention = memoryEntry ? (conventions.find(function(item) { return item.memory_entry_id === memoryEntry.id; }) || null) : null;
+      if (!convention) {
+        convention = sortNewestFirst(conventions.filter(function(item) { return item.source_role === roleName; }))[0] || null;
+      }
+
+      var release = assignment ? (
+        releases.find(function(item) { return item.source_assignment_id === assignment.id; }) ||
+        releases.find(function(item) { return item.version === ('workflow-' + roleName + '-' + assignment.id.substring(0, 8)); }) ||
+        null
+      ) : null;
+      var inbox = assignment ? (sortNewestFirst(workerInboxes.filter(function(item) { return item.assignment_id === assignment.id; }))[0] || null) : null;
+      var nextRole = nextDirectiveTargetForRole(roleName);
+      var nextAssignment = assignment ? (sortNewestFirst(assignments.filter(function(item) {
+        return item.request_id === assignment.request_id && item.target_role === nextRole;
+      }))[0] || null) : null;
+      var nextInbox = nextAssignment ? (sortNewestFirst(workerInboxes.filter(function(item) { return item.assignment_id === nextAssignment.id; }))[0] || null) : null;
+      var nextRun = nextAssignment ? (sortNewestFirst(runs.filter(function(item) { return item.assignment_id === nextAssignment.id; }))[0] || null) : null;
+      var roleAppId = roleAppIdForRole(roleName) || appId || null;
+      var selectedOrCurrentRunId = selectedRunId || (runRecord ? runRecord.run_id : null);
+
+      return {
+        roleName: roleName,
+        roleAppId: roleAppId,
+        assignment: assignment,
+        approval: approval,
+        memoryEntry: memoryEntry,
+        convention: convention,
+        release: release,
+        inbox: inbox,
+        runRecord: runRecord,
+        nextRole: nextRole,
+        nextAssignment: nextAssignment,
+        nextInbox: nextInbox,
+        nextRun: nextRun,
+        artifactBase: selectedOrCurrentRunId ? runtimeArtifactPath(roleAppId, selectedOrCurrentRunId, '').replace(/\/$/, '') : 'N/A'
+      };
+    });
+  }
+
   function syncWorkflowPromotionRecords(assignmentId, status, launchCtx) {
     if (!assignmentId) return Promise.resolve({ skipped: true, reason: 'missing-assignment' });
 
     return Promise.all([
       fetchBackofficeItems('assignments'),
       fetchBackofficeItems('requests'),
+      fetchBackofficeItems('worker_inboxes'),
+      fetchBackofficeItems('runs'),
       fetchBackofficeItems('memory_entries'),
       fetchBackofficeItems('conventions'),
       fetchBackofficeItems('releases')
     ]).then(function(data) {
       var assignments = data[0] || [];
       var requests = data[1] || [];
-      var memoryEntries = data[2] || [];
-      var conventions = data[3] || [];
-      var releases = data[4] || [];
+      var workerInboxes = data[2] || [];
+      var runs = data[3] || [];
+      var memoryEntries = data[4] || [];
+      var conventions = data[5] || [];
+      var releases = data[6] || [];
 
       var assignment = assignments.find(function(item) { return item.id === assignmentId; }) || null;
       if (!assignment) return { skipped: true, reason: 'assignment-not-found' };
@@ -69,6 +238,8 @@
       var runId = (launchCtx && launchCtx.targetAssignmentId === assignmentId && launchCtx.runId) || '';
       var shortId = assignmentId.substring(0, 8);
       var promotedStatus = status === 'approved' ? 'promoted' : 'rejected';
+      var inbox = workerInboxes.find(function(item) { return item.assignment_id === assignmentId; }) || null;
+      var runRecord = runId ? (runs.find(function(item) { return item.run_id === runId; }) || null) : (runs.find(function(item) { return item.assignment_id === assignmentId; }) || null);
       var existingMemory = memoryEntries.find(function(item) { return item.assignment_id === assignmentId; }) || null;
       var memoryPayload = {
         request_id: assignment.request_id,
@@ -85,7 +256,40 @@
         artifact_refs: 'assignment:' + assignmentId + ';run:' + (runId || 'none')
       };
 
-      return upsertBackofficeRecord('memory_entries', existingMemory ? existingMemory.id : null, memoryPayload)
+      var statusWrites = [
+        upsertBackofficeRecord('assignments', assignment.id, {
+          request_id: assignment.request_id,
+          target_role: assignment.target_role,
+          details: assignment.details,
+          status: status === 'approved' ? 'done' : 'review'
+        })
+      ];
+      if (inbox) {
+        statusWrites.push(upsertBackofficeRecord('worker_inboxes', inbox.id, {
+          assignment_id: inbox.assignment_id,
+          to_role: inbox.to_role,
+          context_sources: inbox.context_sources,
+          file_targets: inbox.file_targets,
+          required_artifacts: inbox.required_artifacts,
+          constraints: inbox.constraints,
+          status: status === 'approved' ? 'archived' : 'acted_on'
+        }));
+      }
+      if (runRecord) {
+        statusWrites.push(upsertBackofficeRecord('runs', runRecord.id, {
+          assignment_id: runRecord.assignment_id,
+          inbox_id: runRecord.inbox_id || '',
+          role: runRecord.role,
+          executor: runRecord.executor,
+          run_id: runRecord.run_id,
+          status: status === 'approved' ? 'passed' : 'failed',
+          evidence_ref: runRecord.evidence_ref || runtimeArtifactPath(roleAppIdForRole(roleName), runId || runRecord.run_id, 'events.jsonl')
+        }));
+      }
+
+      return Promise.all(statusWrites).then(function() {
+        return upsertBackofficeRecord('memory_entries', existingMemory ? existingMemory.id : null, memoryPayload);
+      })
         .then(function(memoryRes) {
           var memoryRecord = (memoryRes && memoryRes.record) ? memoryRes.record : existingMemory;
           if (!memoryRecord || status !== 'approved') {
@@ -118,7 +322,11 @@
           var existingRelease = releases.find(function(item) { return item.version === releaseVersion; }) || null;
           var releasePayload = {
             project_id: request.project_id,
+            source_assignment_id: assignmentId,
+            source_run_id: runId || '',
             version: releaseVersion,
+            status: 'ready',
+            approved_by: 'manager',
             evidence_bundle: 'assignment:' + assignmentId + ';run:' + (runId || 'none') + ';memory:' + memoryRecord.id
           };
 
@@ -199,7 +407,7 @@
   // ── SDH5: Live Dev Workspace Hydration ──
 
   var DEV_ROLES = [
-    { id: 'solace-dev-manager', key: 'manager', tables: ['requests','assignments','approvals','artifacts','releases','projects','memory_entries','conventions','design_handoffs','coder_handoffs','qa_handoffs'] },
+    { id: 'solace-dev-manager', key: 'manager', tables: ['requests','assignments','approvals','artifacts','worker_inboxes','runs','releases','projects','memory_entries','conventions','design_handoffs','coder_handoffs','qa_handoffs'] },
     { id: 'solace-design',      key: 'design',  tables: ['design_specs','design_reviews'] },
     { id: 'solace-coder',       key: 'coder',   tables: ['code_runs','code_artifacts','coder_reviews'] },
     { id: 'solace-qa',          key: 'qa',       tables: ['qa_runs','qa_findings','qa_signoffs'] }
@@ -332,17 +540,22 @@
           headers: {'Content-Type': 'application/json'},
           body: JSON.stringify(body)
       }).then(function(r) { return r.json(); }).then(function(result) {
+          var assignmentId = (result && result.record && result.record.id) ? result.record.id : (existing ? existing.id : null);
           var mutation = (existing && existing.id) ? 'updated' : 'created';
           window.__solaceLastWorkflowRouteAction = {
             requestId: reqId,
             sourceAssignmentId: null,
             targetRole: targetRole,
             mutation: mutation,
-            assignmentId: (result && result.record && result.record.id) ? result.record.id : (existing ? existing.id : null)
+            assignmentId: assignmentId
           };
-          hydrateActiveWorkflowRoutes();
-          hydrateActiveWorkflowResult();
-          hydrateDevWorkspace();
+          syncWorkflowInboxRecord(assignmentId, targetRole, 'request:' + reqId + ';route:manager', 'prepared')
+            .catch(function(err) { console.warn('Inbox sync failed', err); })
+            .then(function() {
+              hydrateActiveWorkflowRoutes();
+              hydrateActiveWorkflowResult();
+              hydrateDevWorkspace();
+            });
       });
     });
   };
@@ -390,16 +603,21 @@
           headers: {'Content-Type': 'application/json'},
           body: JSON.stringify(body)
       }).then(function(r) { return r.json(); }).then(function(result) {
+          var assignmentIdResult = (result && result.record && result.record.id) ? result.record.id : (existing ? existing.id : null);
           window.__solaceLastWorkflowRouteAction = {
             requestId: reqId,
             sourceAssignmentId: assignmentId,
             targetRole: targetRole,
             mutation: mutation,
-            assignmentId: (result && result.record && result.record.id) ? result.record.id : (existing ? existing.id : null)
+            assignmentId: assignmentIdResult
           };
-          hydrateActiveWorkflowRoutes();
-          hydrateActiveWorkflowResult();
-          hydrateDevWorkspace();
+          syncWorkflowInboxRecord(assignmentIdResult, targetRole, 'request:' + reqId + ';source_assignment:' + assignmentId, 'prepared')
+            .catch(function(err) { console.warn('Inbox sync failed', err); })
+            .then(function() {
+              hydrateActiveWorkflowRoutes();
+              hydrateActiveWorkflowResult();
+              hydrateDevWorkspace();
+            });
       });
     });
   };
@@ -465,8 +683,12 @@
         if (window.__solaceSelectRun) {
           window.__solaceSelectRun(appId, runId, null);
         }
-        hydrateActiveWorkflowResult();
-        hydrateDevWorkspace();
+        syncWorkflowLaunchRecords(reqId, sourceAssignmentId, targetAssignment.id, targetRole, appId, runId)
+          .catch(function(err) { console.warn('Launch sync failed', err); })
+          .then(function() {
+            hydrateActiveWorkflowResult();
+            hydrateDevWorkspace();
+          });
       });
     });
   };
@@ -633,6 +855,12 @@
            if (runId && window.__solaceSelectRun) {
                window.__solaceSelectRun(appId, runId, null);
            }
+           if (runId) {
+               syncWorkflowLaunchRecords(reqId, null, chosen.id, targetRole, appId, runId)
+                 .catch(function(err) { console.warn('Launch sync failed', err); })
+                 .then(function() { hydrateDevWorkspace(); });
+               return;
+           }
         } else {
            if (output) output.textContent += 'Launch FAILED (HTTP ' + res.status + '). See logs.\n';
            if (output) output.textContent += JSON.stringify(data) + '\n';
@@ -724,6 +952,7 @@
             nestedActualRun = (nestedRunData.runs || []).find(function(r) { return r.run_id === nestedLaunchAction.runId; });
         }
         var nestedEventsExist = nestedActualRun ? nestedActualRun.events_exist : false;
+        var nestedReportExists = nestedActualRun ? nestedActualRun.report_exists : false;
         // ----------------------------------------------
 
         panel.style.display = 'block';
@@ -1194,6 +1423,10 @@
                         // --- SAC89 Next-Step Destination Execution Evidence Truth (Container) ---
                         appHtml += '<div id="dev-nested-active-workflow-evidence-preview" style="margin-top:0.5rem;"></div>';
                         // ------------------------------------------------------------------------
+
+                        // --- SAC90 Next-Step Destination Output Truth (Container) ---
+                        appHtml += '<div id="dev-nested-active-workflow-output-preview" style="margin-top:0.5rem;"></div>';
+                        // ------------------------------------------------------------
                     } else {
                         appHtml += '<div style="margin-top:0.4rem; padding-top:0.4rem; border-top:1px solid #334155;">';
                         appHtml += '<strong style="display:block; margin-bottom:0.2rem; color:#60a5fa;">Next-Step Destination Launch Truth:</strong>';
@@ -1262,6 +1495,46 @@
                                              'Dispatched Nested Specialist: <code>' + escapeHtml(nestedLaunchAction.targetRole) + '</code><br/>' +
                                              'Nested Evidence Run ID: <code>' + escapeHtml(nestedLaunchAction.runId.substring(0, 8)) + '</code><br/>' +
                                              'Destination Evidence Status: <span style="color:#94a3b8;font-weight:600;">[ ] Awaiting destination execution evidence</span><br/><code>No events.jsonl artifact exists yet for the launched nested target run, so specialist destination execution is not proven in the workflow branch (SAC89)</code></div>';
+                }
+            }
+            // -----------------------------------------------------------------
+
+            // --- SAC90 Fetch Nested Specialist Output Truth ---
+            var nestedOutputSlot = document.getElementById('dev-nested-active-workflow-output-preview');
+            if (nestedOutputSlot && nestedLaunchMatchesCurrentBranch) {
+                if (nestedReportExists) {
+                    nestedOutputSlot.innerHTML = '<strong style="display:block; margin-top:0.4rem; color:#f472b6;">Next-Step Destination Output Truth:</strong>' +
+                                             '<div style="background:rgba(30,41,59,0.5); padding:0.4rem; border-left:2px solid #f472b6; border-radius:0.15rem; font-size:0.65rem; margin-bottom:0.5rem;">' +
+                                             'Nested Source Request ID: <code>' + escapeHtml(nestedLaunchAction.requestId.substring(0, 8)) + '</code><br/>' +
+                                             'Nested Source Assignment ID: <code>' + escapeHtml(nestedLaunchAction.sourceAssignmentId.substring(0, 8)) + '</code><br/>' +
+                                             (nestedLaunchAction.sourceRole ? 'Nested Source Role: <code>' + escapeHtml(nestedLaunchAction.sourceRole) + '</code><br/>' : '') +
+                                             (nestedLaunchAction.sourceRunId ? 'Nested Source Run ID: <code>' + escapeHtml(nestedLaunchAction.sourceRunId.substring(0, 8)) + '</code><br/>' : '') +
+                                             'Nested Target Assignment ID: <code>' + escapeHtml(nestedLaunchAction.targetAssignmentId.substring(0, 8)) + '</code><br/>' +
+                                             'Dispatched Nested Specialist: <code>' + escapeHtml(nestedLaunchAction.targetRole) + '</code><br/>' +
+                                             'Nested Output Run ID: <code>' + escapeHtml(nestedLaunchAction.runId.substring(0, 8)) + '</code><br/>' +
+                                             (exactNestedLaunchTruth 
+                                                ? 'Destination Output Status: <span style="color:#34d399;font-weight:600;">[✓] Exact launched-workflow destination output tracked</span><br/>Destination Output Basis: <code>Report output exists for the launched nested target run, and request, source assignment, target assignment, role, and run remain aligned in the exact launched-workflow branch (SAC90)</code>' 
+                                                : 'Destination Output Status: <span style="color:#fcd34d;font-weight:600;">[?] Fallback destination output tracked</span><br/>Destination Output Basis: <code>Report output exists for a visible nested target run, but the current workflow binding has fallen back away from exact launched-workflow destination output truth (SAC90)</code>') +
+                                             '<div id="dev-nested-output-fetch-target" style="margin-top:0.4rem;"><span style="color:#94a3b8;">loading destination output truth…</span></div></div>';
+                    
+                    fetchArtifactText(nestedLaunchAction.appId, nestedLaunchAction.runId, 'report.html').then(function(res) {
+                        if (!res.missing && document.getElementById('dev-nested-output-fetch-target')) {
+                            document.getElementById('dev-nested-output-fetch-target').innerHTML = buildReportPreview(res.text, nestedLaunchAction.appId, nestedLaunchAction.runId);
+                        } else if (document.getElementById('dev-nested-output-fetch-target')) {
+                            document.getElementById('dev-nested-output-fetch-target').innerHTML = buildMissingState('report.html', res.reason || 'missing');
+                        }
+                    });
+                } else {
+                    nestedOutputSlot.innerHTML = '<strong style="display:block; margin-top:0.4rem; color:#94a3b8;">Next-Step Destination Output Truth:</strong>' +
+                                             '<div style="background:rgba(30,41,59,0.5); padding:0.4rem; border-left:2px solid #475569; border-radius:0.15rem; font-size:0.65rem; margin-bottom:0.5rem; color:#64748b;">' +
+                                             'Nested Source Request ID: <code>' + escapeHtml(nestedLaunchAction.requestId.substring(0, 8)) + '</code><br/>' +
+                                             'Nested Source Assignment ID: <code>' + escapeHtml(nestedLaunchAction.sourceAssignmentId.substring(0, 8)) + '</code><br/>' +
+                                             (nestedLaunchAction.sourceRole ? 'Nested Source Role: <code>' + escapeHtml(nestedLaunchAction.sourceRole) + '</code><br/>' : '') +
+                                             (nestedLaunchAction.sourceRunId ? 'Nested Source Run ID: <code>' + escapeHtml(nestedLaunchAction.sourceRunId.substring(0, 8)) + '</code><br/>' : '') +
+                                             'Nested Target Assignment ID: <code>' + escapeHtml(nestedLaunchAction.targetAssignmentId.substring(0, 8)) + '</code><br/>' +
+                                             'Dispatched Nested Specialist: <code>' + escapeHtml(nestedLaunchAction.targetRole) + '</code><br/>' +
+                                             'Nested Output Run ID: <code>' + escapeHtml(nestedLaunchAction.runId.substring(0, 8)) + '</code><br/>' +
+                                             'Destination Output Status: <span style="color:#94a3b8;font-weight:600;">[ ] Awaiting destination output truth</span><br/><code>No report.html artifact exists yet for the launched nested target run, so specialist destination output is not proven in the workflow branch (SAC90)</code></div>';
                 }
             }
             // -----------------------------------------------------------------
@@ -3793,116 +4066,106 @@
 
     var role = DEV_ROLES.find(function(r) { return r.id === appId; });
     var roleName = role ? role.key : 'unknown';
+    panel.innerHTML = '<span style="font-size:0.7rem;color:#94a3b8;">loading runtime-backed promotion candidate...</span>';
 
-    // Promotion entries derived from SAV38 provenance (role-mocked; shown honestly)
-    var candidates = [];
+    buildRoleWorkflowSnapshot(roleName, appId, runId).then(function(snapshot) {
+      var candidates = [];
+      if (snapshot.assignment) {
+        var candidateStatus = 'Disqualified';
+        var candidateBasis = 'No durable execution records exist yet for this specialist assignment.';
+        var blockers = ['Missing run, approval, and memory evidence'];
+        var gate = 'Human gate (SI17) required before promoting to department memory';
 
-    if (roleName === 'coder') {
-      candidates = [{
-        status: 'Provisional',
-        bundleId: 'coder-run-20260328-001',
-        specialist: 'solace-prime-mermaid-coder-v1.2.0',
-        sourcePacket: 'inbox/coder/packet.json',
-        basis: 'Provenance check: Partial. final-output.json not yet produced.',
-        blockers: ['Awaiting final-output.json write completion'],
-        gate: 'Human gate (SI17) required before promoting to department memory',
-        color: '#f59e0b',
-        bg: 'rgba(245,158,11,0.1)'
-      }];
-    } else if (roleName === 'design') {
-      candidates = [{
-        status: 'Disqualified',
-        bundleId: 'design-run-20260328-002',
-        specialist: 'solace-ui-renderer-v1',
-        sourcePacket: 'inbox/design/command_lock.json',
-        basis: 'Provenance check: Invalid. Hash mismatch on layout-draft.svg; tokens.json missing.',
-        blockers: [
-          'hash-mismatch: layout-draft.svg (Expected sha256:cc01… got aa99…)',
-          'missing: tokens.json'
-        ],
-        gate: 'Must re-run design lane with corrected packet',
-        color: '#ef4444',
-        bg: 'rgba(239,68,68,0.1)'
-      }];
-    } else if (roleName === 'qa') {
-      candidates = [{
-        status: 'Ready-to-Seal',
-        bundleId: 'qa-run-20260328-003',
-        specialist: 'solace-qa-agent-v2',
-        sourcePacket: 'inbox/qa/test-suite.json',
-        basis: 'Provenance check: Verified. All 3 artifacts hash-matched.',
-        blockers: [],
-        gate: 'Human gate (SI17) — manager must approve seal action',
-        color: '#10b981',
-        bg: 'rgba(16,185,129,0.1)'
-      }];
-    } else {
-      candidates = [{
-        status: 'Disqualified',
-        bundleId: 'unknown-bundle',
-        specialist: 'Unbound',
-        sourcePacket: 'N/A',
-        basis: 'No specialist lane bound. Provenance chain incomplete.',
-        blockers: ['No lane registered'],
-        gate: 'N/A',
-        color: '#64748b',
-        bg: 'rgba(100,116,139,0.1)'
-      }];
-    }
+        if (snapshot.memoryEntry && snapshot.memoryEntry.status === 'promoted') {
+          candidateStatus = 'Ready-to-Seal';
+          candidateBasis = 'Back Office memory entry exists with promoted status for assignment ' + snapshot.assignment.id.substring(0, 8) + '.';
+          blockers = [];
+          gate = 'Seal already cleared. Candidate has been promoted into durable memory.';
+        } else if (snapshot.approval && snapshot.approval.status === 'approved') {
+          candidateStatus = 'Ready-to-Seal';
+          candidateBasis = 'Manager approval exists and the workflow can be promoted once memory write completes.';
+          blockers = snapshot.runRecord ? [] : ['Approval exists but no runtime run record is linked'];
+        } else if (snapshot.approval && snapshot.approval.status === 'rejected') {
+          candidateStatus = 'Disqualified';
+          candidateBasis = 'Manager rejected the workflow branch for this assignment.';
+          blockers = ['approval:' + snapshot.approval.status];
+          gate = 'Must re-run the lane or route a narrower retry.';
+        } else if (snapshot.runRecord || snapshot.inbox) {
+          candidateStatus = 'Provisional';
+          candidateBasis = snapshot.runRecord
+            ? ('Workflow run ' + snapshot.runRecord.run_id + ' exists but has not cleared manager signoff yet.')
+            : 'Worker inbox exists but no run has been recorded yet.';
+          blockers = [];
+          if (!snapshot.runRecord) blockers.push('Awaiting run record creation');
+          if (!snapshot.approval) blockers.push('Awaiting manager signoff');
+        }
 
-    var statusIcon = { 'Ready-to-Seal': '🟢', 'Provisional': '🟡', 'Disqualified': '🔴' };
-
-    var html = '<div style="display:flex;flex-direction:column;gap:0.5rem;font-size:0.75rem;color:var(--sb-on-surface);">';
-
-    candidates.forEach(function(c) {
-      html += '<div style="background:var(--sb-surface-alt,#1e293b);padding:0.45rem 0.55rem;border-radius:0.3rem;border-left:2px solid ' + c.color + ';display:flex;flex-direction:column;gap:0.35rem;">';
-
-      // Header
-      html += '<div style="display:flex;align-items:center;justify-content:space-between;">';
-      html += '<strong style="color:var(--sb-on-surface);font-size:0.73rem;">' + (statusIcon[c.status] || '●') + ' ' + escapeHtml(c.bundleId) + '</strong>';
-      html += '<code style="color:' + c.color + ';background:' + c.bg + ';padding:0.1rem 0.4rem;text-transform:uppercase;font-size:0.63rem;">' + escapeHtml(c.status) + '</code>';
-      html += '</div>';
-
-      // Context
-      html += '<div style="display:flex;flex-direction:column;gap:0.1rem;">';
-      html += '<div><span style="color:var(--sb-text-muted);font-weight:600;font-size:0.63rem;">Specialist:</span> <span style="font-family:monospace;font-size:0.68rem;color:#c084fc;">' + escapeHtml(c.specialist) + '</span></div>';
-      html += '<div><span style="color:var(--sb-text-muted);font-weight:600;font-size:0.63rem;">Promotion Basis:</span> <span style="font-size:0.63rem;color:#94a3b8;">' + escapeHtml(c.basis) + '</span></div>';
-      html += '</div>';
-
-      // Blockers
-      if (c.blockers.length > 0) {
-        html += '<div style="background:#0f172a;border-radius:0.2rem;padding:0.3rem 0.4rem;display:flex;flex-direction:column;gap:0.1rem;">';
-        html += '<span style="font-size:0.6rem;color:#64748b;font-weight:600;">BLOCKERS</span>';
-        c.blockers.forEach(function(b) {
-          html += '<div style="display:flex;align-items:center;gap:0.25rem;"><span style="color:#ef4444;font-size:0.63rem;">⚠</span><code style="font-size:0.6rem;color:#94a3b8;">' + escapeHtml(b) + '</code></div>';
+        candidates.push({
+          status: candidateStatus,
+          bundleId: (snapshot.runRecord && snapshot.runRecord.run_id) || snapshot.assignment.id,
+          specialist: roleName,
+          sourcePacket: snapshot.inbox ? ('worker_inboxes/' + snapshot.inbox.id) : 'N/A',
+          basis: candidateBasis,
+          blockers: blockers,
+          gate: gate,
+          color: candidateStatus === 'Ready-to-Seal' ? '#10b981' : (candidateStatus === 'Provisional' ? '#f59e0b' : '#ef4444'),
+          bg: candidateStatus === 'Ready-to-Seal' ? 'rgba(16,185,129,0.1)' : (candidateStatus === 'Provisional' ? 'rgba(245,158,11,0.1)' : 'rgba(239,68,68,0.1)')
         });
-        html += '</div>';
       } else {
-        html += '<div style="font-size:0.63rem;color:#10b981;"><em>No blockers — all gates clear.</em></div>';
+        candidates.push({
+          status: 'Disqualified',
+          bundleId: 'no-assignment',
+          specialist: roleName,
+          sourcePacket: 'N/A',
+          basis: 'No runtime-backed assignment exists yet for this specialist role.',
+          blockers: ['No assignment routed'],
+          gate: 'Route work before evaluating promotion candidacy.',
+          color: '#64748b',
+          bg: 'rgba(100,116,139,0.1)'
+        });
       }
 
-      // Gate
-      html += '<div><span style="color:var(--sb-text-muted);font-weight:600;font-size:0.63rem;">Seal Gate:</span> <span style="font-size:0.63rem;color:#cbd5e1;">' + escapeHtml(c.gate) + '</span></div>';
+      var statusIcon = { 'Ready-to-Seal': '🟢', 'Provisional': '🟡', 'Disqualified': '🔴' };
+      var html = '<div style="display:flex;flex-direction:column;gap:0.5rem;font-size:0.75rem;color:var(--sb-on-surface);">';
 
-      // ALCOA+ hash
-      var alcoa = btoa(c.status + c.bundleId + c.basis).substring(0, 16);
-      html += '<div><span style="color:var(--sb-text-muted);font-weight:600;font-size:0.63rem;">Promotion Hash:</span> <code style="font-size:0.6rem;color:#64748b;">' + alcoa + '</code></div>';
+      candidates.forEach(function(c) {
+        html += '<div style="background:var(--sb-surface-alt,#1e293b);padding:0.45rem 0.55rem;border-radius:0.3rem;border-left:2px solid ' + c.color + ';display:flex;flex-direction:column;gap:0.35rem;">';
+        html += '<div style="display:flex;align-items:center;justify-content:space-between;">';
+        html += '<strong style="color:var(--sb-on-surface);font-size:0.73rem;">' + (statusIcon[c.status] || '●') + ' ' + escapeHtml(c.bundleId) + '</strong>';
+        html += '<code style="color:' + c.color + ';background:' + c.bg + ';padding:0.1rem 0.4rem;text-transform:uppercase;font-size:0.63rem;">' + escapeHtml(c.status) + '</code>';
+        html += '</div>';
+        html += '<div style="display:flex;flex-direction:column;gap:0.1rem;">';
+        html += '<div><span style="color:var(--sb-text-muted);font-weight:600;font-size:0.63rem;">Specialist:</span> <span style="font-family:monospace;font-size:0.68rem;color:#c084fc;">' + escapeHtml(c.specialist) + '</span></div>';
+        html += '<div><span style="color:var(--sb-text-muted);font-weight:600;font-size:0.63rem;">Promotion Basis:</span> <span style="font-size:0.63rem;color:#94a3b8;">' + escapeHtml(c.basis) + '</span></div>';
+        html += '</div>';
+        if (c.blockers.length > 0) {
+          html += '<div style="background:#0f172a;border-radius:0.2rem;padding:0.3rem 0.4rem;display:flex;flex-direction:column;gap:0.1rem;">';
+          html += '<span style="font-size:0.6rem;color:#64748b;font-weight:600;">BLOCKERS</span>';
+          c.blockers.forEach(function(b) {
+            html += '<div style="display:flex;align-items:center;gap:0.25rem;"><span style="color:#ef4444;font-size:0.63rem;">⚠</span><code style="font-size:0.6rem;color:#94a3b8;">' + escapeHtml(b) + '</code></div>';
+          });
+          html += '</div>';
+        } else {
+          html += '<div style="font-size:0.63rem;color:#10b981;"><em>No blockers visible in durable workflow records.</em></div>';
+        }
+        html += '<div><span style="color:var(--sb-text-muted);font-weight:600;font-size:0.63rem;">Seal Gate:</span> <span style="font-size:0.63rem;color:#cbd5e1;">' + escapeHtml(c.gate) + '</span></div>';
+        html += '<div><span style="color:var(--sb-text-muted);font-weight:600;font-size:0.63rem;">Promotion Hash:</span> <code style="font-size:0.6rem;color:#64748b;">' + btoa(c.status + c.bundleId + c.basis).substring(0, 16) + '</code></div>';
+        html += '</div>';
+      });
 
-      html += '</div>';
+      html += '<div style="margin-top:0.1rem;font-size:0.63rem;color:#64748b;">';
+      html += '<strong style="color:var(--sb-text-muted);">Audit Constraints:</strong><br/>';
+      html += 'Viewer Role: <code>solace-dev-manager</code><br/>';
+      html += 'Selected Worker: <code>' + escapeHtml(appId || 'unknown') + '</code><br/>';
+      html += 'Selected Run: <code>' + escapeHtml(runId || 'latest') + '</code><br/>';
+      html += 'Promotion Basis: <code>real assignments, runs, approvals, and memory_entries for the selected specialist role</code><br/>';
+      html += 'Promotion values are <em>runtime-backed</em> when records exist; blocked states are shown honestly when they do not.<br/>';
+      html += 'Resolution Bound: <code>SI17 — Human-in-the-Loop as First-Class Component</code>.';
+      html += '</div></div>';
+      panel.innerHTML = html;
+    }).catch(function(err) {
+      panel.innerHTML = '<span style="font-size:0.7rem;color:#fca5a5;">promotion candidate load failed: ' + escapeHtml(String(err)) + '</span>';
     });
-
-    html += '<div style="margin-top:0.1rem;font-size:0.63rem;color:#64748b;">';
-    html += '<strong style="color:var(--sb-text-muted);">Audit Constraints:</strong><br/>';
-    html += 'Viewer Role: <code>solace-dev-manager</code><br/>';
-    html += 'Selected Worker: <code>' + escapeHtml(appId || 'unknown') + '</code><br/>';
-    html += 'Selected Run: <code>' + escapeHtml(runId || 'latest') + '</code><br/>';
-    html += 'Promotion Basis: <code>visible specialist promotion-candidate and seal-readiness state for current provenance context</code><br/>';
-    html += 'Promotion values are <em>role-derived mocks</em> until runtime provenance path is wired.<br/>';
-    html += 'Resolution Bound: <code>SI17 — Human-in-the-Loop as First-Class Component</code>.';
-    html += '</div>';
-
-    html += '</div>';
-    panel.innerHTML = html;
   }
 
   // ── SAM40: Specialist Memory Admission ──
@@ -3913,93 +4176,85 @@
 
     var role = DEV_ROLES.find(function(r) { return r.id === appId; });
     var roleName = role ? role.key : 'unknown';
+    panel.innerHTML = '<span style="font-size:0.7rem;color:#94a3b8;">loading runtime-backed memory admission...</span>';
 
-    // Admission entries derived from SAP39 seal action (role-mocked; shown honestly)
-    var admissionTokens = [];
+    buildRoleWorkflowSnapshot(roleName, appId, runId).then(function(snapshot) {
+      var admissionTokens = [];
+      if (snapshot.assignment) {
+        var status = 'Rejected';
+        var targetMemory = 'N/A';
+        var basis = 'No durable memory admission record exists yet for this specialist assignment.';
 
-    if (roleName === 'qa') {
-      admissionTokens = [{
-        status: 'Admitted',
-        bundleId: 'qa-run-20260328-003',
-        specialist: 'solace-qa-agent-v2',
-        sourcePacket: 'inbox/qa/test-suite.json',
-        targetMemory: 'outbox/qa/verified-tests/',
-        basis: 'Seal approved via SI17 Gate. Artifacts successfully written to department memory tree.',
-        color: '#10b981',
-        bg: 'rgba(16,185,129,0.1)'
-      }];
-    } else if (roleName === 'coder') {
-      admissionTokens = [{
-        status: 'Queued',
-        bundleId: 'coder-run-20260328-001',
-        specialist: 'solace-prime-mermaid-coder-v1.2.0',
-        sourcePacket: 'inbox/coder/packet.json',
-        targetMemory: 'Pending allocation',
-        basis: 'Awaiting promotion candidate to clear Provisional state.',
-        color: '#f59e0b',
-        bg: 'rgba(245,158,11,0.1)'
-      }];
-    } else if (roleName === 'design') {
-      admissionTokens = [{
-        status: 'Rejected',
-        bundleId: 'design-run-20260328-002',
-        specialist: 'solace-ui-renderer-v1',
-        sourcePacket: 'inbox/design/command_lock.json',
-        targetMemory: 'N/A',
-        basis: 'Promotion disqualified (hash-mismatch). Admission request denied.',
-        color: '#ef4444',
-        bg: 'rgba(239,68,68,0.1)'
-      }];
-    } else {
-      admissionTokens = [{
-        status: 'Rejected',
-        bundleId: 'unknown-bundle',
-        specialist: 'Unbound',
-        sourcePacket: 'N/A',
-        targetMemory: 'N/A',
-        basis: 'No specialist lane bound. Admission impossible.',
-        color: '#64748b',
-        bg: 'rgba(100,116,139,0.1)'
-      }];
-    }
+        if (snapshot.memoryEntry && snapshot.memoryEntry.status === 'promoted') {
+          status = 'Admitted';
+          targetMemory = 'memory_entries/' + snapshot.memoryEntry.id + (snapshot.convention ? ' -> conventions/' + snapshot.convention.id : '');
+          basis = 'Memory entry was promoted through the manager workflow and is now durable department memory.';
+        } else if (snapshot.memoryEntry && snapshot.memoryEntry.status === 'candidate') {
+          status = 'Queued';
+          targetMemory = 'memory_entries/' + snapshot.memoryEntry.id;
+          basis = 'Candidate memory exists but still awaits final promotion.';
+        } else if (snapshot.approval && snapshot.approval.status === 'approved') {
+          status = 'Queued';
+          targetMemory = 'Pending memory_entries write';
+          basis = 'Approval exists, but promotion write has not materialized into a durable memory entry yet.';
+        } else if (snapshot.approval && snapshot.approval.status === 'rejected') {
+          status = 'Rejected';
+          basis = 'Manager rejected the promotion path for this assignment.';
+        }
 
-    var html = '<div style="display:flex;flex-direction:column;gap:0.5rem;font-size:0.75rem;color:var(--sb-on-surface);">';
+        admissionTokens.push({
+          status: status,
+          bundleId: (snapshot.runRecord && snapshot.runRecord.run_id) || snapshot.assignment.id,
+          specialist: roleName,
+          sourcePacket: snapshot.inbox ? ('worker_inboxes/' + snapshot.inbox.id) : 'N/A',
+          targetMemory: targetMemory,
+          basis: basis,
+          color: status === 'Admitted' ? '#10b981' : (status === 'Queued' ? '#f59e0b' : '#ef4444'),
+          bg: status === 'Admitted' ? 'rgba(16,185,129,0.1)' : (status === 'Queued' ? 'rgba(245,158,11,0.1)' : 'rgba(239,68,68,0.1)')
+        });
+      } else {
+        admissionTokens.push({
+          status: 'Rejected',
+          bundleId: 'no-assignment',
+          specialist: roleName,
+          sourcePacket: 'N/A',
+          targetMemory: 'N/A',
+          basis: 'No specialist lane is routed yet, so memory admission is impossible.',
+          color: '#64748b',
+          bg: 'rgba(100,116,139,0.1)'
+        });
+      }
 
-    admissionTokens.forEach(function(token) {
-      html += '<div style="background:var(--sb-surface-alt,#1e293b);padding:0.45rem 0.55rem;border-radius:0.3rem;border-left:2px solid ' + token.color + ';display:flex;flex-direction:column;gap:0.35rem;">';
+      var html = '<div style="display:flex;flex-direction:column;gap:0.5rem;font-size:0.75rem;color:var(--sb-on-surface);">';
 
-      // Header
-      html += '<div style="display:flex;align-items:center;justify-content:space-between;">';
-      html += '<strong style="color:var(--sb-on-surface);font-size:0.73rem;">' + (token.status === 'Admitted' ? '📥' : '🔒') + ' ' + escapeHtml(token.bundleId) + '</strong>';
-      html += '<code style="color:' + token.color + ';background:' + token.bg + ';padding:0.1rem 0.4rem;text-transform:uppercase;font-size:0.63rem;">' + escapeHtml(token.status) + '</code>';
-      html += '</div>';
+      admissionTokens.forEach(function(token) {
+        html += '<div style="background:var(--sb-surface-alt,#1e293b);padding:0.45rem 0.55rem;border-radius:0.3rem;border-left:2px solid ' + token.color + ';display:flex;flex-direction:column;gap:0.35rem;">';
+        html += '<div style="display:flex;align-items:center;justify-content:space-between;">';
+        html += '<strong style="color:var(--sb-on-surface);font-size:0.73rem;">' + (token.status === 'Admitted' ? '📥' : '🔒') + ' ' + escapeHtml(token.bundleId) + '</strong>';
+        html += '<code style="color:' + token.color + ';background:' + token.bg + ';padding:0.1rem 0.4rem;text-transform:uppercase;font-size:0.63rem;">' + escapeHtml(token.status) + '</code>';
+        html += '</div>';
+        html += '<div style="display:flex;flex-direction:column;gap:0.1rem;">';
+        html += '<div><span style="color:var(--sb-text-muted);font-weight:600;font-size:0.63rem;">Specialist:</span> <span style="font-family:monospace;font-size:0.68rem;color:#c084fc;">' + escapeHtml(token.specialist) + '</span></div>';
+        html += '<div><span style="color:var(--sb-text-muted);font-weight:600;font-size:0.63rem;">Memory Target:</span> <span style="font-family:monospace;font-size:0.68rem;color:#10b981;">' + escapeHtml(token.targetMemory) + '</span></div>';
+        html += '<div><span style="color:var(--sb-text-muted);font-weight:600;font-size:0.63rem;">Admission Basis:</span> <span style="font-size:0.63rem;color:#94a3b8;">' + escapeHtml(token.basis) + '</span></div>';
+        html += '</div>';
+        html += '<div><span style="color:var(--sb-text-muted);font-weight:600;font-size:0.63rem;">Admission Hash:</span> <code style="font-size:0.6rem;color:#64748b;">' + btoa(token.status + token.bundleId + token.targetMemory).substring(0, 16) + '</code></div>';
+        html += '</div>';
+      });
 
-      // Context
-      html += '<div style="display:flex;flex-direction:column;gap:0.1rem;">';
-      html += '<div><span style="color:var(--sb-text-muted);font-weight:600;font-size:0.63rem;">Specialist:</span> <span style="font-family:monospace;font-size:0.68rem;color:#c084fc;">' + escapeHtml(token.specialist) + '</span></div>';
-      html += '<div><span style="color:var(--sb-text-muted);font-weight:600;font-size:0.63rem;">Memory Target:</span> <span style="font-family:monospace;font-size:0.68rem;color:#10b981;">' + escapeHtml(token.targetMemory) + '</span></div>';
-      html += '<div><span style="color:var(--sb-text-muted);font-weight:600;font-size:0.63rem;">Admission Basis:</span> <span style="font-size:0.63rem;color:#94a3b8;">' + escapeHtml(token.basis) + '</span></div>';
-      html += '</div>';
-
-      // ALCOA+ hash
-      var alcoa = btoa(token.status + token.bundleId + token.targetMemory).substring(0, 16);
-      html += '<div><span style="color:var(--sb-text-muted);font-weight:600;font-size:0.63rem;">Admission Hash:</span> <code style="font-size:0.6rem;color:#64748b;">' + alcoa + '</code></div>';
-
-      html += '</div>';
+      html += '<div style="margin-top:0.1rem;font-size:0.63rem;color:#64748b;">';
+      html += '<strong style="color:var(--sb-text-muted);">Audit Constraints:</strong><br/>';
+      html += 'Viewer Role: <code>solace-dev-manager</code><br/>';
+      html += 'Selected Worker: <code>' + escapeHtml(appId || 'unknown') + '</code><br/>';
+      html += 'Selected Run: <code>' + escapeHtml(runId || 'latest') + '</code><br/>';
+      html += 'Admission Basis: <code>real approvals, memory_entries, and conventions linked to the selected specialist assignment</code><br/>';
+      html += 'Admission values are <em>runtime-backed</em> when records exist; queued and rejected states are shown honestly when they do not.<br/>';
+      html += 'Resolution Bound: <code>SI18 — Transparency as Product Feature</code>.';
+      html += '</div></div>';
+      panel.innerHTML = html;
+    }).catch(function(err) {
+      panel.innerHTML = '<span style="font-size:0.7rem;color:#fca5a5;">memory admission load failed: ' + escapeHtml(String(err)) + '</span>';
     });
-
-    html += '<div style="margin-top:0.1rem;font-size:0.63rem;color:#64748b;">';
-    html += '<strong style="color:var(--sb-text-muted);">Audit Constraints:</strong><br/>';
-    html += 'Viewer Role: <code>solace-dev-manager</code><br/>';
-    html += 'Selected Worker: <code>' + escapeHtml(appId || 'unknown') + '</code><br/>';
-    html += 'Selected Run: <code>' + escapeHtml(runId || 'latest') + '</code><br/>';
-    html += 'Admission Basis: <code>visible specialist seal-action request and department-memory admission state for current promotion context</code><br/>';
-    html += 'Admission values are <em>role-derived mocks</em> until runtime fs pipeline is wired.<br/>';
-    html += 'Resolution Bound: <code>SI18 — Transparency as Product Feature</code>.';
-    html += '</div>';
-
-    html += '</div>';
-    panel.innerHTML = html;
   }
 
   // ── SAC41: Specialist Memory Entry ──
