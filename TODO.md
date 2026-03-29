@@ -1,22 +1,22 @@
 # TODO
 
 Repo: `solace-browser`
-Role: Solace Hub + Browser workspace for workflow-bound next-step destination approval truth
+Role: Solace Hub + Browser workspace for workflow-bound next-step destination approval action truth
 
 ## Current Round
 
-`SAC91` native workflow-bound next-step destination approval truth.
+`SAC92` native workflow-bound next-step destination approval action truth.
 
-`SAC90` made the workflow result box able to show whether the launched next-step destination branch has produced exact output truth on the same workflow branch.
+`SAC91` made the workflow result box able to show whether the launched next-step destination branch has a real approval state on the same workflow branch.
 
-The next blocker is approval truth for that launched destination branch. The manager can now inspect request truth, assignment truth, run truth, packet truth, provenance truth, pickup truth, execution evidence truth, output truth, approval truth, approval action truth, approval result truth, destination truth, destination launch truth, destination pickup truth, destination execution evidence truth, and destination output truth, but still cannot inspect whether that launched destination branch has a real approval state from the same workflow box.
+The next blocker is approval action truth for that launched destination branch. The manager can now inspect request truth, assignment truth, run truth, packet truth, provenance truth, pickup truth, execution evidence truth, output truth, approval truth, approval action truth, approval result truth, destination truth, destination launch truth, destination pickup truth, destination execution evidence truth, destination output truth, and destination approval truth, but still cannot inspect whether that launched destination branch can be acted on honestly from the same workflow box.
 
 ## Worker Inbox
 
-- `northstar`: `The Dev Manager must be able to move a real workflow from request -> assignment -> worker inbox packet -> run -> evidence -> approval -> next routed assignment -> next launch -> next specialist pickup -> next specialist execution evidence -> next specialist output -> next specialist approval truth -> next specialist approval action -> next specialist approval result -> next specialist destination truth -> next specialist destination launch truth -> next specialist destination pickup truth -> next specialist destination execution evidence truth -> next specialist destination output truth -> next specialist destination approval truth inside Solace Hub with each step inspectable and mutable from one honest workflow surface.`
+- `northstar`: `The Dev Manager must be able to move a real workflow from request -> assignment -> worker inbox packet -> run -> evidence -> approval -> next routed assignment -> next launch -> next specialist pickup -> next specialist execution evidence -> next specialist output -> next specialist approval truth -> next specialist approval action -> next specialist approval result -> next specialist destination truth -> next specialist destination launch truth -> next specialist destination pickup truth -> next specialist destination execution evidence truth -> next specialist destination output truth -> next specialist destination approval truth -> next specialist destination approval action truth inside Solace Hub with each step inspectable and mutable from one honest workflow surface.`
 - `worker_mode`: `external_coding_agent`
 - `worker_role`: `coder`
-- `task_statement`: `Add one workflow-bound next-step destination approval truth block into the active workflow result area. Keep it tied to the selected request, source assignment, target assignment, launched role, launched run, destination launch truth, destination pickup truth, destination execution evidence truth, destination output truth, packet provenance, pickup truth, execution evidence truth, output truth, approval truth, approval action truth, approval result truth, and destination truth already present in the chain.`
+- `task_statement`: `Add one workflow-bound next-step destination approval action truth block into the active workflow result area. Keep it tied to the selected request, source assignment, target assignment, launched role, launched run, destination launch truth, destination pickup truth, destination execution evidence truth, destination output truth, destination approval truth, packet provenance, pickup truth, execution evidence truth, output truth, approval truth, approval action truth, approval result truth, and destination truth already present in the chain.`
 - `scope_change_policy`: `FAIL_AND_NEW_TASK`
 
 ## Communication Protocol
@@ -59,7 +59,7 @@ Maintain one local evidence chain for every new claim:
 - `/home/phuc/projects/solace-prime/canon/hub/SI17 — Human-in-the-Loop as a First-Class System Component.md`
 - `/home/phuc/projects/solace-prime/canon/hub/SI18 — Transparency as a Product Feature.md`
 - `/home/phuc/projects/solace-browser/solace-hub/src/hub-app.js`
-- `/home/phuc/projects/solace-browser/tests/test_manager_run_specialist_destination_output_truth.py`
+- `/home/phuc/projects/solace-browser/tests/test_manager_run_specialist_destination_approval_truth.py`
 
 ## Audit Ground Truth
 
@@ -87,55 +87,56 @@ Maintain one local evidence chain for every new claim:
 - workflow-bound next-step destination pickup truth is visible
 - workflow-bound next-step destination execution evidence truth is visible
 - workflow-bound next-step destination output truth is visible
-- next-step destination approval truth for that exact launched destination branch is still not visible in the same workflow box
+- workflow-bound next-step destination approval truth is visible
+- next-step destination approval action truth for that exact launched destination branch is still not visible in the same workflow box
 
 ## Rules
 
-- do not invent a second destination approval model
+- do not invent a second destination approval action model
 - use the existing request, assignment, run, packet, provenance, pickup, execution evidence, output, approval, approval action, approval result, and destination context already present in the workflow chain
-- keep the destination approval truth bound to the active workflow request/assignment/run result
-- do not fake “specialist branch destination approval exists” unless the result box can clearly state the target role and exact launched destination branch context it belongs to
-- preserve `SAC66` through `SAC90`
+- keep the destination approval action truth bound to the active workflow request/assignment/run result
+- do not fake “specialist branch destination approval can be acted on” unless the result box can clearly state the target role and exact launched destination branch context it belongs to
+- preserve `SAC66` through `SAC91`
 
 ## Hard Rejection Criteria
 
-- the manager still cannot inspect next-step destination approval truth from the workflow result area
-- the destination approval truth view is detached from the launched target assignment or launched run
-- the panel shows generic role prose instead of explicit destination approval truth
-- the result area claims destination approval truth without clearly stating which request, source assignment, target assignment, role, and run the approval belongs to
+- the manager still cannot inspect next-step destination approval action truth from the workflow result area
+- the destination approval action truth view is detached from the launched target assignment or launched run
+- the panel shows generic role prose instead of explicit destination approval action truth
+- the result area claims destination approval action truth without clearly stating which request, source assignment, target assignment, role, and run the action belongs to
 
 ## Required Deliverables
 
-1. one visible workflow-bound next-step destination approval truth block in the result area
-2. one explicit link from request -> assignment -> approval -> next-step route -> next-step launch -> next-step packet preview -> next-step packet provenance -> next-step specialist pickup -> next-step specialist execution evidence -> next-step specialist output -> next-step specialist approval truth -> next-step specialist approval action -> next-step specialist approval result -> next-step specialist destination truth -> next-step specialist destination launch truth -> next-step specialist destination pickup truth -> next-step specialist destination execution evidence truth -> next-step specialist destination output truth -> next-step specialist destination approval truth
-3. one honest basis line describing whether the destination approval view is exact launched-workflow truth or a weaker fallback
-4. one Prime Mermaid artifact for request -> assignment -> approval -> next-step route -> next-step launch -> next-step packet preview -> next-step packet provenance -> next-step specialist pickup -> next-step specialist execution evidence -> next-step specialist output -> next-step specialist approval truth -> next-step specialist approval action -> next-step specialist approval result -> next-step specialist destination truth -> next-step specialist destination launch truth -> next-step specialist destination pickup truth -> next-step specialist destination execution evidence truth -> next-step specialist destination output truth -> next-step specialist destination approval truth
+1. one visible workflow-bound next-step destination approval action truth block in the result area
+2. one explicit link from request -> assignment -> approval -> next-step route -> next-step launch -> next-step packet preview -> next-step packet provenance -> next-step specialist pickup -> next-step specialist execution evidence -> next-step specialist output -> next-step specialist approval truth -> next-step specialist approval action -> next-step specialist approval result -> next-step specialist destination truth -> next-step specialist destination launch truth -> next-step specialist destination pickup truth -> next-step specialist destination execution evidence truth -> next-step specialist destination output truth -> next-step specialist destination approval truth -> next-step specialist destination approval action truth
+3. one honest basis line describing whether the destination approval action view is exact launched-workflow truth or a weaker fallback
+4. one Prime Mermaid artifact for request -> assignment -> approval -> next-step route -> next-step launch -> next-step packet preview -> next-step packet provenance -> next-step specialist pickup -> next-step specialist execution evidence -> next-step specialist output -> next-step specialist approval truth -> next-step specialist approval action -> next-step specialist approval result -> next-step specialist destination truth -> next-step specialist destination launch truth -> next-step specialist destination pickup truth -> next-step specialist destination execution evidence truth -> next-step specialist destination output truth -> next-step specialist destination approval truth -> next-step specialist destination approval action truth
 5. one narrow smoke path
 6. one narrow automated test
 
 ## Current Tickets
 
-### Ticket 1: Add workflow-bound next-step destination approval truth
+### Ticket 1: Add workflow-bound next-step destination approval action truth
 
-Objective: make the launched destination branch traceable into actual approval truth, not just output.
-
-Scope:
-
-- show next-step destination approval truth from the workflow result area
-- tie it to the launched destination role, assignment, run, destination launch truth, destination pickup truth, destination execution evidence truth, destination output truth, packet preview, packet provenance, pickup truth, execution evidence truth, output truth, approval truth, approval action truth, approval result truth, and destination truth
-
-Done when: a reviewer can see whether the exact launched next-step destination branch has an actual approval state without leaving the workflow result context.
-
-### Ticket 2: Preserve honest destination approval context
-
-Objective: keep the destination approval display truthful.
+Objective: make the launched destination branch traceable into actual approval action truth, not just approval state.
 
 Scope:
 
-- make clear which request, source assignment, target assignment, role, and run the destination approval belongs to
-- make clear whether the destination approval state is exact launched-workflow truth or weaker fallback
+- show next-step destination approval action truth from the workflow result area
+- tie it to the launched destination role, assignment, run, destination launch truth, destination pickup truth, destination execution evidence truth, destination output truth, destination approval truth, packet preview, packet provenance, pickup truth, execution evidence truth, output truth, approval truth, approval action truth, approval result truth, and destination truth
 
-Done when: the destination approval display is useful without obscuring system truth.
+Done when: a reviewer can see whether the exact launched next-step destination branch can be acted on honestly without leaving the workflow result context.
+
+### Ticket 2: Preserve honest destination approval action context
+
+Objective: keep the destination approval action display truthful.
+
+Scope:
+
+- make clear which request, source assignment, target assignment, role, and run the destination approval action belongs to
+- make clear whether the destination approval action state is exact launched-workflow truth or weaker fallback
+
+Done when: the destination approval action display is useful without obscuring system truth.
 
 ## Suggested File Targets
 
@@ -149,7 +150,7 @@ Done when: the destination approval display is useful without obscuring system t
 - changed files
 - exact test/check command output
 - exact routes or APIs exercised
-- sample next-step specialist destination approval basis
+- sample next-step specialist destination approval action basis
 - screenshot paths
 - local smoke path
 - remaining risks
@@ -159,4 +160,4 @@ Done when: the destination approval display is useful without obscuring system t
 - redesigning the whole inbox model
 - adding cloud sync or `solaceagi`
 - unrelated dashboard polish
-- fake destination approval truth without exact request/assignment/run packet relationship
+- fake destination approval action truth without exact request/assignment/run packet relationship

@@ -208,6 +208,162 @@
     });
   }
 
+  function buildRolePostReleaseSnapshot(snapshot) {
+    var releaseStatus = snapshot && snapshot.release ? (snapshot.release.status || 'ready') : null;
+    var approvalStatus = snapshot && snapshot.approval ? snapshot.approval.status : null;
+    var roleName = snapshot && snapshot.roleName ? snapshot.roleName : 'unknown';
+
+    var rolloutState = 'Aborted';
+    var rolloutLineage = snapshot && snapshot.release
+      ? ('Release [' + releaseStatus + ']')
+      : (approvalStatus ? ('Approval [' + approvalStatus + ']') : 'No durable release record');
+    if (releaseStatus === 'shipped') rolloutState = 'Live';
+    else if (releaseStatus === 'ready' || approvalStatus === 'approved') rolloutState = 'Staged';
+
+    var healthState = 'Rolled Back';
+    if (rolloutState === 'Live') healthState = 'Healthy';
+    else if (rolloutState === 'Staged') healthState = 'Degraded';
+
+    var incidentState = 'Unresolved';
+    if (healthState === 'Healthy') incidentState = 'Mitigated';
+    else if (healthState === 'Degraded') incidentState = 'In Progress';
+
+    var closureState = 'Failed Verification';
+    if (incidentState === 'Mitigated') closureState = 'Verified Closed';
+    else if (incidentState === 'In Progress') closureState = 'Pending Verification';
+
+    var escalationState = 'Escalated';
+    if (closureState === 'Verified Closed') escalationState = 'Under Observation';
+    else if (closureState === 'Pending Verification') escalationState = 'Reopened';
+
+    var quarantineState = 'Quarantined';
+    if (escalationState === 'Under Observation') quarantineState = 'Constrained Continuation';
+    else if (escalationState === 'Reopened') quarantineState = 'Manual Override Required';
+
+    var recoveryState = 'Blocked';
+    if (quarantineState === 'Constrained Continuation') recoveryState = 'Authorized';
+    else if (quarantineState === 'Manual Override Required') recoveryState = 'Staged Recovery';
+
+    var returnState = 'Re-entry Failed';
+    if (recoveryState === 'Authorized') returnState = 'Service Restored';
+    else if (recoveryState === 'Staged Recovery') returnState = 'Provisional Service';
+
+    return {
+      rolloutLineage: rolloutLineage,
+      health: {
+        state: healthState,
+        rolloutLineage: 'Execution Verdict [' + rolloutState + ']',
+        basis: rolloutState === 'Live'
+          ? ('Release ' + rolloutLineage + ' is shipped and remains the active lineage for role ' + roleName + '.')
+          : (rolloutState === 'Staged'
+            ? ('Release lineage is only ready or approval-backed; shipment is not yet separately recorded for role ' + roleName + '.')
+            : ('Release lineage is aborted or absent, so the system treats the branch as rolled back for role ' + roleName + '.')),
+        verdict: rolloutState === 'Live'
+          ? 'Durable shipped state exists. The rollout lineage is treated as operationally healthy.'
+          : (rolloutState === 'Staged'
+            ? 'The branch is still pre-shipment or staging-bound, so health remains degraded until shipment is proven.'
+            : 'No shipped rollout lineage exists. The branch is treated as rolled back.'
+          )
+      },
+      incident: {
+        state: incidentState,
+        healthLineage: 'Telemetry Vector [' + healthState + ']',
+        basis: healthState === 'Healthy'
+          ? 'Healthy rollout lineage leaves no active remediation incident in durable state.'
+          : (healthState === 'Degraded'
+            ? 'Staged or pre-shipment lineage still requires active remediation and monitoring.'
+            : 'Rolled-back or aborted lineage leaves the incident unresolved until a replacement path is proven.'
+          ),
+        verdict: healthState === 'Healthy'
+          ? 'No active incident remains; remediation is considered mitigated.'
+          : (healthState === 'Degraded'
+            ? 'Remediation remains in progress because the branch is not yet proven shipped and healthy.'
+            : 'Incident is unresolved because the lineage never reached durable healthy release state.'
+          )
+      },
+      closure: {
+        state: closureState,
+        incidentLineage: 'Remediation Vector [' + incidentState + ']',
+        basis: incidentState === 'Mitigated'
+          ? 'Mitigated incident state allows closure verification to pass.'
+          : (incidentState === 'In Progress'
+            ? 'In-progress remediation cannot yet be closed with durable proof.'
+            : 'Unresolved incident state fails closure verification.'
+          ),
+        verdict: incidentState === 'Mitigated'
+          ? 'Closure is verified because the rollout lineage is healthy and no active incident remains.'
+          : (incidentState === 'In Progress'
+            ? 'Closure stays pending until the degraded lineage graduates to durable healthy release state.'
+            : 'Closure fails because the branch remains unresolved or rolled back.'
+          )
+      },
+      escalation: {
+        state: escalationState,
+        closureLineage: 'Verification Check [' + closureState + ']',
+        basis: closureState === 'Verified Closed'
+          ? 'Verified closure keeps the lineage under observation only.'
+          : (closureState === 'Pending Verification'
+            ? 'Pending closure reopens the issue for continued remediation.'
+            : 'Failed closure escalates the lineage into stronger controls.'
+          ),
+        verdict: closureState === 'Verified Closed'
+          ? 'No escalation is required beyond observation.'
+          : (closureState === 'Pending Verification'
+            ? 'The issue is reopened because closure proof is incomplete.'
+            : 'The issue is escalated because closure verification failed outright.'
+          )
+      },
+      quarantine: {
+        state: quarantineState,
+        escalationLineage: 'Incident Governor [' + escalationState + ']',
+        basis: escalationState === 'Under Observation'
+          ? 'Observed incidents can continue under constraint without hard quarantine.'
+          : (escalationState === 'Reopened'
+            ? 'Reopened incidents require explicit manual override before broad continuation.'
+            : 'Escalated incidents force quarantine on the lineage.'
+          ),
+        verdict: escalationState === 'Under Observation'
+          ? 'Operations are constrained but allowed to continue.'
+          : (escalationState === 'Reopened'
+            ? 'Human override is required before this lineage can continue.'
+            : 'The lineage is quarantined because the escalation ceiling was reached.'
+          )
+      },
+      recovery: {
+        state: recoveryState,
+        controlLineage: 'Constraint Bound [' + quarantineState + ']',
+        basis: quarantineState === 'Constrained Continuation'
+          ? 'Constrained continuation authorizes routine recovery.'
+          : (quarantineState === 'Manual Override Required'
+            ? 'Manual override paths allow staged recovery only.'
+            : 'Quarantined lineages remain blocked from recovery.'
+          ),
+        verdict: quarantineState === 'Constrained Continuation'
+          ? 'Recovery is authorized because the lineage never crossed into hard quarantine.'
+          : (quarantineState === 'Manual Override Required'
+            ? 'Recovery is staged because override was required to continue.'
+            : 'Recovery is blocked because the lineage is still quarantined.'
+          )
+      },
+      serviceReturn: {
+        state: returnState,
+        recoveryLineage: 'Authorization Gate [' + recoveryState + ']',
+        basis: recoveryState === 'Authorized'
+          ? 'Authorized recovery permits a full return-to-service decision.'
+          : (recoveryState === 'Staged Recovery'
+            ? 'Staged recovery only permits provisional service.'
+            : 'Blocked recovery prevents service return.'
+          ),
+        verdict: recoveryState === 'Authorized'
+          ? 'Service is restored because recovery was fully authorized.'
+          : (recoveryState === 'Staged Recovery'
+            ? 'Service is only provisional because recovery is still staged.'
+            : 'Service re-entry fails because the lineage remains blocked.'
+          )
+      }
+    };
+  }
+
   function syncWorkflowPromotionRecords(assignmentId, status, launchCtx) {
     if (!assignmentId) return Promise.resolve({ skipped: true, reason: 'missing-assignment' });
 
@@ -278,7 +434,7 @@
       if (runRecord) {
         statusWrites.push(upsertBackofficeRecord('runs', runRecord.id, {
           assignment_id: runRecord.assignment_id,
-          inbox_id: runRecord.inbox_id || '',
+          inbox_id: runRecord.inbox_id || null,
           role: runRecord.role,
           executor: runRecord.executor,
           run_id: runRecord.run_id,
@@ -1427,6 +1583,46 @@
                         // --- SAC90 Next-Step Destination Output Truth (Container) ---
                         appHtml += '<div id="dev-nested-active-workflow-output-preview" style="margin-top:0.5rem;"></div>';
                         // ------------------------------------------------------------
+
+                        // --- SAC91 Next-Step Destination Approval Truth ---
+                        var nestedTargetApproval = approvals.find(function(item) { return item.assignment_id === nestedLaunchAction.targetAssignmentId; }) || null;
+                        appHtml += '<div style="margin-top:0.4rem; padding-top:0.4rem; border-top:1px solid #334155;">';
+                        appHtml += '<strong style="display:block; margin-bottom:0.2rem; color:#818cf8;">Next-Step Destination Approval Truth:</strong>';
+                        appHtml += '<div style="background:rgba(30,41,59,0.5); padding:0.4rem; border-left:2px solid #818cf8; border-radius:0.15rem; font-size:0.65rem;">';
+                        appHtml += 'Nested Source Request ID: <code>' + escapeHtml(nestedLaunchAction.requestId.substring(0, 8)) + '</code><br/>';
+                        appHtml += 'Nested Source Assignment ID: <code>' + escapeHtml(nestedLaunchAction.sourceAssignmentId.substring(0, 8)) + '</code><br/>';
+                        if (nestedLaunchAction.sourceRole) {
+                            appHtml += 'Nested Source Role: <code>' + escapeHtml(nestedLaunchAction.sourceRole) + '</code><br/>';
+                        }
+                        if (nestedLaunchAction.sourceRunId) {
+                            appHtml += 'Nested Source Run ID: <code>' + escapeHtml(nestedLaunchAction.sourceRunId.substring(0, 8)) + '</code><br/>';
+                        }
+                        appHtml += 'Nested Target Assignment ID: <code>' + escapeHtml(nestedLaunchAction.targetAssignmentId.substring(0, 8)) + '</code><br/>';
+                        appHtml += 'Dispatched Nested Specialist: <code>' + escapeHtml(nestedLaunchAction.targetRole) + '</code><br/>';
+                        appHtml += 'Nested Approval Run ID: <code>' + escapeHtml(nestedLaunchAction.runId.substring(0, 8)) + '</code><br/>';
+                        
+                        if (nestedTargetApproval) {
+                            var color = nestedTargetApproval.status === 'approved' ? '#6ee7b7' : (nestedTargetApproval.status === 'rejected' ? '#fca5a5' : '#fcd34d');
+                            appHtml += 'Signoff State: <span class="sb-pill" style="color:' + color + '; border:1px solid ' + color + '; font-size:0.65rem; margin-right:0.3rem;">' + escapeHtml(nestedTargetApproval.status) + '</span>';
+                            if (nestedTargetApproval.notes) {
+                                appHtml += '<span style="color:var(--sb-text-muted);">' + escapeHtml(nestedTargetApproval.notes) + '</span><br/>';
+                            } else {
+                                appHtml += '<br/>';
+                            }
+                            if (exactNestedLaunchTruth) {
+                                appHtml += 'Destination Approval Branch: <span style="color:#34d399;font-weight:600;">[✓] Exact launched-workflow destination approval tracked</span><br/>';
+                                appHtml += 'Destination Approval Basis: <code>Approval state is read for the launched nested target assignment, and request, source assignment, target assignment, role, and run remain aligned in the exact launched-workflow branch (SAC91)</code>';
+                            } else {
+                                appHtml += 'Destination Approval Branch: <span style="color:#fcd34d;font-weight:600;">[?] Fallback destination approval tracked</span><br/>';
+                                appHtml += 'Destination Approval Basis: <code>Approval state is visible for a matching nested target assignment, but the current workflow binding has fallen back away from exact launched-workflow destination approval truth (SAC91)</code>';
+                            }
+                        } else {
+                            appHtml += 'Signoff State: <span class="sb-pill" style="color:#94a3b8; border:1px dashed #475569; font-size:0.65rem;">pending workflow signoff</span><br/>';
+                            appHtml += 'Destination Approval Branch: <span style="color:#94a3b8;font-weight:600;">[ ] Awaiting destination approval truth</span><br/>';
+                            appHtml += 'Destination Approval Basis: <code>No approval row exists yet for the launched nested target assignment, so specialist destination approval is not proven in the workflow branch (SAC91)</code>';
+                        }
+                        appHtml += '</div></div>';
+                        // --------------------------------------------------
                     } else {
                         appHtml += '<div style="margin-top:0.4rem; padding-top:0.4rem; border-top:1px solid #334155;">';
                         appHtml += '<strong style="display:block; margin-bottom:0.2rem; color:#60a5fa;">Next-Step Destination Launch Truth:</strong>';
@@ -4424,91 +4620,65 @@
     var viewerRole = 'solace-dev-manager';
     var selectedWorker = appId || 'unknown';
     var selectedRun = runId || 'latest';
+    panel.innerHTML = '<span style="font-size:0.7rem;color:#94a3b8;">loading runtime-backed convention invocation...</span>';
 
-    // Invocation records derived from SAW42 reuse target (role-mocked; shown honestly)
-    var invocationEntries = [];
+    buildRoleWorkflowSnapshot(roleName, appId, runId).then(function(snapshot) {
+      var invocationEntries = [];
+      var state = 'Blocked';
+      var conventionTarget = snapshot.convention ? snapshot.convention.name : 'N/A';
+      var nextDirective = snapshot.nextAssignment ? ('assignment:' + snapshot.nextAssignment.id.substring(0, 8) + ' -> ' + snapshot.nextRole) : (snapshot.nextRole || 'N/A');
+      var invocationContext = 'No reusable convention exists to invoke.';
 
-    if (roleName === 'qa') {
-      invocationEntries = [{
-        state: 'Invoked',
-        conventionTarget: 'tests/e2e/verified-suite-v3.json',
-        nextDirective: 'SI-CODER-011: Implement Graph Routing Logic',
-        invocationContext: 'Convention successfully injected into Coder inbox packet outbox/coder/inbox/packet-011.json. Execution bound.',
-        color: '#10b981',
-        bg: 'rgba(16,185,129,0.1)'
-      }];
-    } else if (roleName === 'coder') {
-      invocationEntries = [{
-        state: 'Queued',
-        conventionTarget: 'tmp/pending-ast-matrix.bin',
-        nextDirective: 'SI-MGR-002: Review AST Matrix Structural Bounds',
-        invocationContext: 'Draft memory queued for manual manager invocation. Awaiting SI17 oversight trigger.',
-        color: '#f59e0b',
-        bg: 'rgba(245,158,11,0.1)'
-      }];
-    } else if (roleName === 'design') {
-      invocationEntries = [{
-        state: 'Blocked',
-        conventionTarget: 'N/A',
-        nextDirective: 'N/A',
-        invocationContext: 'No reusable memory exists to invoke. Execution route terminated.',
-        color: '#ef4444',
-        bg: 'rgba(239,68,68,0.1)'
-      }];
-    } else {
-      invocationEntries = [{
-        state: 'Blocked',
-        conventionTarget: 'N/A',
-        nextDirective: 'N/A',
-        invocationContext: 'Invalid routing path. Unbound tasks cannot generate callable conventions.',
-        color: '#64748b',
-        bg: 'rgba(100,116,139,0.1)'
-      }];
-    }
+      if (snapshot.convention && snapshot.nextAssignment) {
+        state = snapshot.nextInbox ? 'Invoked' : 'Queued';
+        invocationContext = snapshot.nextInbox
+          ? ('Convention ' + snapshot.convention.name + ' is bound to routed assignment ' + snapshot.nextAssignment.id.substring(0, 8) + '.')
+          : ('Convention exists, but the next worker inbox has not been materialized yet for role ' + snapshot.nextRole + '.');
+      } else if (snapshot.convention) {
+        state = 'Queued';
+        invocationContext = 'Convention exists, but no next assignment has been routed yet for invocation.';
+      }
 
-    var invokeIcon = { 'Invoked': '📍', 'Queued': '⏳', 'Blocked': '🚫' };
+      invocationEntries.push({
+        state: state,
+        conventionTarget: conventionTarget,
+        nextDirective: nextDirective,
+        invocationContext: invocationContext,
+        color: state === 'Invoked' ? '#10b981' : (state === 'Queued' ? '#f59e0b' : '#ef4444'),
+        bg: state === 'Invoked' ? 'rgba(16,185,129,0.1)' : (state === 'Queued' ? 'rgba(245,158,11,0.1)' : 'rgba(239,68,68,0.1)')
+      });
 
-    var html = '<div style="display:flex;flex-direction:column;gap:0.5rem;font-size:0.75rem;color:var(--sb-on-surface);">';
+      var invokeIcon = { 'Invoked': '📍', 'Queued': '⏳', 'Blocked': '🚫' };
+      var html = '<div style="display:flex;flex-direction:column;gap:0.5rem;font-size:0.75rem;color:var(--sb-on-surface);">';
 
-    invocationEntries.forEach(function(entry) {
-      html += '<div style="background:var(--sb-surface-alt,#1e293b);padding:0.45rem 0.55rem;border-radius:0.3rem;border-left:2px solid ' + entry.color + ';display:flex;flex-direction:column;gap:0.35rem;">';
+      invocationEntries.forEach(function(entry) {
+        html += '<div style="background:var(--sb-surface-alt,#1e293b);padding:0.45rem 0.55rem;border-radius:0.3rem;border-left:2px solid ' + entry.color + ';display:flex;flex-direction:column;gap:0.35rem;">';
+        html += '<div style="display:flex;align-items:center;justify-content:space-between;">';
+        html += '<strong style="color:var(--sb-on-surface);font-size:0.73rem;">' + (invokeIcon[entry.state] || '●') + ' Routing Step</strong>';
+        html += '<code style="color:' + entry.color + ';background:' + entry.bg + ';padding:0.1rem 0.4rem;text-transform:uppercase;font-size:0.63rem;">' + escapeHtml(entry.state) + '</code>';
+        html += '</div>';
+        html += '<div style="display:flex;flex-direction:column;gap:0.1rem;">';
+        html += '<div><span style="color:var(--sb-text-muted);font-weight:600;font-size:0.63rem;">Memory Object:</span> <span style="font-family:monospace;font-size:0.68rem;color:#38bdf8;">' + escapeHtml(entry.conventionTarget) + '</span></div>';
+        html += '<div><span style="color:var(--sb-text-muted);font-weight:600;font-size:0.63rem;">Next Directive:</span> <span style="font-family:monospace;font-size:0.68rem;color:#60a5fa;">' + escapeHtml(entry.nextDirective) + '</span></div>';
+        html += '</div>';
+        html += '<div style="background:#0f172a;border-radius:0.2rem;padding:0.3rem 0.4rem;font-size:0.65rem;color:#cbd5e1;line-height:1.4;"><code>' + escapeHtml(entry.invocationContext) + '</code></div>';
+        html += '<div><span style="color:var(--sb-text-muted);font-weight:600;font-size:0.63rem;">Routing Hash:</span> <code style="font-size:0.6rem;color:#64748b;">' + btoa(entry.state + entry.conventionTarget + entry.nextDirective).substring(0, 16) + '</code></div>';
+        html += '</div>';
+      });
 
-      // Header
-      html += '<div style="display:flex;align-items:center;justify-content:space-between;">';
-      html += '<strong style="color:var(--sb-on-surface);font-size:0.73rem;">' + (invokeIcon[entry.state] || '●') + ' Routing Step</strong>';
-      html += '<code style="color:' + entry.color + ';background:' + entry.bg + ';padding:0.1rem 0.4rem;text-transform:uppercase;font-size:0.63rem;">' + escapeHtml(entry.state) + '</code>';
-      html += '</div>';
-
-      // Context
-      html += '<div style="display:flex;flex-direction:column;gap:0.1rem;">';
-      html += '<div><span style="color:var(--sb-text-muted);font-weight:600;font-size:0.63rem;">Memory Object:</span> <span style="font-family:monospace;font-size:0.68rem;color:#38bdf8;">' + escapeHtml(entry.conventionTarget) + '</span></div>';
-      html += '<div><span style="color:var(--sb-text-muted);font-weight:600;font-size:0.63rem;">Next Directive:</span> <span style="font-family:monospace;font-size:0.68rem;color:#60a5fa;">' + escapeHtml(entry.nextDirective) + '</span></div>';
-      html += '</div>';
-
-      // Object description
-      html += '<div style="background:#0f172a;border-radius:0.2rem;padding:0.3rem 0.4rem;font-size:0.65rem;color:#cbd5e1;line-height:1.4;">';
-      html += '<code>' + escapeHtml(entry.invocationContext) + '</code>';
-      html += '</div>';
-
-      // ALCOA+ hash
-      var alcoa = btoa(entry.state + entry.conventionTarget + entry.nextDirective).substring(0, 16);
-      html += '<div><span style="color:var(--sb-text-muted);font-weight:600;font-size:0.63rem;">Routing Hash:</span> <code style="font-size:0.6rem;color:#64748b;">' + alcoa + '</code></div>';
-
-      html += '</div>';
+      html += '<div style="margin-top:0.1rem;font-size:0.63rem;color:#64748b;">';
+      html += '<strong style="color:var(--sb-text-muted);">Audit Constraints:</strong> ';
+      html += 'Viewer Role: <code>' + escapeHtml(viewerRole) + '</code><br/>';
+      html += 'Selected Worker: <code>' + escapeHtml(selectedWorker) + '</code><br/>';
+      html += 'Selected Run: <code>' + escapeHtml(selectedRun) + '</code><br/>';
+      html += 'Invocation Basis: <code>real convention record -> routed next assignment -> optional worker inbox</code><br/>';
+      html += 'Invocation routes are <em>runtime-backed</em> when records exist; blocked states are shown honestly when they do not. ';
+      html += 'Resolution Bound: <code>SI10 — The Solace Execution Graph</code>.';
+      html += '</div></div>';
+      panel.innerHTML = html;
+    }).catch(function(err) {
+      panel.innerHTML = '<span style="font-size:0.7rem;color:#fca5a5;">convention invocation load failed: ' + escapeHtml(String(err)) + '</span>';
     });
-
-    html += '<div style="margin-top:0.1rem;font-size:0.63rem;color:#64748b;">';
-    html += '<strong style="color:var(--sb-text-muted);">Audit Constraints:</strong> ';
-    html += 'Viewer Role: <code>' + escapeHtml(viewerRole) + '</code><br/>';
-    html += 'Selected Worker: <code>' + escapeHtml(selectedWorker) + '</code><br/>';
-    html += 'Selected Run: <code>' + escapeHtml(selectedRun) + '</code><br/>';
-    html += 'Invocation Basis: <code>callable department-memory entry -> convention invocation -> next directive or worker packet</code><br/>';
-    html += 'Invocation routes are <em>role-derived mocks</em> until runtime fs binding is wired. ';
-    html += 'Resolution Bound: <code>SI10 — The Solace Execution Graph</code>.';
-    html += '</div>';
-
-    html += '</div>';
-    panel.innerHTML = html;
   }
 
   // ── SAC44: Specialist Convention Delivery Receipt ──
@@ -4523,90 +4693,64 @@
     var selectedWorker = appId || 'unknown';
     var selectedRun = runId || 'latest';
 
-    // Delivery records derived from SAE43 routing target (role-mocked; shown honestly)
-    var deliveryEntries = [];
+    panel.innerHTML = '<span style="font-size:0.7rem;color:#94a3b8;">loading runtime-backed convention delivery...</span>';
 
-    if (roleName === 'qa') {
-      deliveryEntries = [{
-        state: 'Acknowledged',
-        conventionTarget: 'tests/e2e/verified-suite-v3.json',
-        targetPacket: 'outbox/coder/inbox/packet-011.json',
-        deliveryBasis: 'Receipt acknowledged by Coder agent runtime payload parser. Target constraint actively executing.',
-        color: '#10b981',
-        bg: 'rgba(16,185,129,0.1)'
-      }];
-    } else if (roleName === 'coder') {
-      deliveryEntries = [{
-        state: 'Pending',
-        conventionTarget: 'tmp/pending-ast-matrix.bin',
-        targetPacket: 'outbox/manager/inbox/packet-002.json',
-        deliveryBasis: 'Routing dispatched but receipt unacknowledged. Waiting for manager SI17 manual pickup.',
-        color: '#f59e0b',
-        bg: 'rgba(245,158,11,0.1)'
-      }];
-    } else if (roleName === 'design') {
-      deliveryEntries = [{
-        state: 'Rejected',
-        conventionTarget: 'N/A',
-        targetPacket: 'N/A',
-        deliveryBasis: 'No routing invocation to deliver. Path broken.',
-        color: '#ef4444',
-        bg: 'rgba(239,68,68,0.1)'
-      }];
-    } else {
-      deliveryEntries = [{
-        state: 'Rejected',
-        conventionTarget: 'N/A',
-        targetPacket: 'N/A',
-        deliveryBasis: 'Invalid capability. Unbound tasks do not receive delivery acknowledgements.',
-        color: '#64748b',
-        bg: 'rgba(100,116,139,0.1)'
-      }];
-    }
+    buildRoleWorkflowSnapshot(roleName, appId, runId).then(function(snapshot) {
+      var deliveryEntries = [];
+      var state = 'Rejected';
+      var targetPacket = snapshot.nextInbox ? ('worker_inboxes/' + snapshot.nextInbox.id) : 'N/A';
+      var deliveryBasis = 'No downstream worker inbox exists for receipt.';
 
-    var deliverIcon = { 'Acknowledged': '✔️', 'Pending': '⏳', 'Rejected': '❌' };
+      if (snapshot.nextInbox && (snapshot.nextInbox.status === 'loaded' || snapshot.nextInbox.status === 'acted_on' || snapshot.nextInbox.status === 'archived')) {
+        state = 'Acknowledged';
+        deliveryBasis = 'Target worker inbox exists and has progressed beyond prepared status.';
+      } else if (snapshot.nextInbox || snapshot.nextAssignment) {
+        state = 'Pending';
+        deliveryBasis = snapshot.nextInbox
+          ? ('Worker inbox exists with status ' + snapshot.nextInbox.status + '.')
+          : 'Next assignment exists but the target inbox has not been written yet.';
+      }
 
-    var html = '<div style="display:flex;flex-direction:column;gap:0.5rem;font-size:0.75rem;color:var(--sb-on-surface);">';
+      deliveryEntries.push({
+        state: state,
+        conventionTarget: snapshot.convention ? snapshot.convention.name : 'N/A',
+        targetPacket: targetPacket,
+        deliveryBasis: deliveryBasis,
+        color: state === 'Acknowledged' ? '#10b981' : (state === 'Pending' ? '#f59e0b' : '#ef4444'),
+        bg: state === 'Acknowledged' ? 'rgba(16,185,129,0.1)' : (state === 'Pending' ? 'rgba(245,158,11,0.1)' : 'rgba(239,68,68,0.1)')
+      });
 
-    deliveryEntries.forEach(function(entry) {
-      html += '<div style="background:var(--sb-surface-alt,#1e293b);padding:0.45rem 0.55rem;border-radius:0.3rem;border-left:2px solid ' + entry.color + ';display:flex;flex-direction:column;gap:0.35rem;">';
+      var deliverIcon = { 'Acknowledged': '✔️', 'Pending': '⏳', 'Rejected': '❌' };
+      var html = '<div style="display:flex;flex-direction:column;gap:0.5rem;font-size:0.75rem;color:var(--sb-on-surface);">';
 
-      // Header
-      html += '<div style="display:flex;align-items:center;justify-content:space-between;">';
-      html += '<strong style="color:var(--sb-on-surface);font-size:0.73rem;">' + (deliverIcon[entry.state] || '●') + ' Target Receipt</strong>';
-      html += '<code style="color:' + entry.color + ';background:' + entry.bg + ';padding:0.1rem 0.4rem;text-transform:uppercase;font-size:0.63rem;">' + escapeHtml(entry.state) + '</code>';
-      html += '</div>';
+      deliveryEntries.forEach(function(entry) {
+        html += '<div style="background:var(--sb-surface-alt,#1e293b);padding:0.45rem 0.55rem;border-radius:0.3rem;border-left:2px solid ' + entry.color + ';display:flex;flex-direction:column;gap:0.35rem;">';
+        html += '<div style="display:flex;align-items:center;justify-content:space-between;">';
+        html += '<strong style="color:var(--sb-on-surface);font-size:0.73rem;">' + (deliverIcon[entry.state] || '●') + ' Target Receipt</strong>';
+        html += '<code style="color:' + entry.color + ';background:' + entry.bg + ';padding:0.1rem 0.4rem;text-transform:uppercase;font-size:0.63rem;">' + escapeHtml(entry.state) + '</code>';
+        html += '</div>';
+        html += '<div style="display:flex;flex-direction:column;gap:0.1rem;">';
+        html += '<div><span style="color:var(--sb-text-muted);font-weight:600;font-size:0.63rem;">Memory Object:</span> <span style="font-family:monospace;font-size:0.68rem;color:#38bdf8;">' + escapeHtml(entry.conventionTarget) + '</span></div>';
+        html += '<div><span style="color:var(--sb-text-muted);font-weight:600;font-size:0.63rem;">Target Packet:</span> <span style="font-family:monospace;font-size:0.68rem;color:#f472b6;">' + escapeHtml(entry.targetPacket) + '</span></div>';
+        html += '</div>';
+        html += '<div style="background:#0f172a;border-radius:0.2rem;padding:0.3rem 0.4rem;font-size:0.65rem;color:#cbd5e1;line-height:1.4;"><code>' + escapeHtml(entry.deliveryBasis) + '</code></div>';
+        html += '<div><span style="color:var(--sb-text-muted);font-weight:600;font-size:0.63rem;">Delivery Hash:</span> <code style="font-size:0.6rem;color:#64748b;">' + btoa(entry.state + entry.conventionTarget + entry.targetPacket).substring(0, 16) + '</code></div>';
+        html += '</div>';
+      });
 
-      // Context
-      html += '<div style="display:flex;flex-direction:column;gap:0.1rem;">';
-      html += '<div><span style="color:var(--sb-text-muted);font-weight:600;font-size:0.63rem;">Memory Object:</span> <span style="font-family:monospace;font-size:0.68rem;color:#38bdf8;">' + escapeHtml(entry.conventionTarget) + '</span></div>';
-      html += '<div><span style="color:var(--sb-text-muted);font-weight:600;font-size:0.63rem;">Target Packet:</span> <span style="font-family:monospace;font-size:0.68rem;color:#f472b6;">' + escapeHtml(entry.targetPacket) + '</span></div>';
-      html += '</div>';
-
-      // Object description
-      html += '<div style="background:#0f172a;border-radius:0.2rem;padding:0.3rem 0.4rem;font-size:0.65rem;color:#cbd5e1;line-height:1.4;">';
-      html += '<code>' + escapeHtml(entry.deliveryBasis) + '</code>';
-      html += '</div>';
-
-      // ALCOA+ hash
-      var alcoa = btoa(entry.state + entry.conventionTarget + entry.targetPacket).substring(0, 16);
-      html += '<div><span style="color:var(--sb-text-muted);font-weight:600;font-size:0.63rem;">Delivery Hash:</span> <code style="font-size:0.6rem;color:#64748b;">' + alcoa + '</code></div>';
-
-      html += '</div>';
+      html += '<div style="margin-top:0.1rem;font-size:0.63rem;color:#64748b;">';
+      html += '<strong style="color:var(--sb-text-muted);">Audit Constraints:</strong> ';
+      html += 'Viewer Role: <code>' + escapeHtml(viewerRole) + '</code><br/>';
+      html += 'Selected Worker: <code>' + escapeHtml(selectedWorker) + '</code><br/>';
+      html += 'Selected Run: <code>' + escapeHtml(selectedRun) + '</code><br/>';
+      html += 'Delivery Basis: <code>real convention record -> next assignment -> worker_inboxes receipt state</code><br/>';
+      html += 'Receipt values are <em>runtime-backed</em> when records exist; rejected and pending states are shown honestly when they do not. ';
+      html += 'Resolution Bound: <code>SI21 — The Solace Intelligence System</code>.';
+      html += '</div></div>';
+      panel.innerHTML = html;
+    }).catch(function(err) {
+      panel.innerHTML = '<span style="font-size:0.7rem;color:#fca5a5;">convention delivery load failed: ' + escapeHtml(String(err)) + '</span>';
     });
-
-    html += '<div style="margin-top:0.1rem;font-size:0.63rem;color:#64748b;">';
-    html += '<strong style="color:var(--sb-text-muted);">Audit Constraints:</strong> ';
-    html += 'Viewer Role: <code>' + escapeHtml(viewerRole) + '</code><br/>';
-    html += 'Selected Worker: <code>' + escapeHtml(selectedWorker) + '</code><br/>';
-    html += 'Selected Run: <code>' + escapeHtml(selectedRun) + '</code><br/>';
-    html += 'Delivery Basis: <code>invoked convention -> target packet receipt -> execution binding acknowledgement</code><br/>';
-    html += 'Receipt values are <em>role-derived mocks</em> until runtime fs binding is wired. ';
-    html += 'Resolution Bound: <code>SI21 — The Solace Intelligence System</code>.';
-    html += '</div>';
-
-    html += '</div>';
-    panel.innerHTML = html;
   }
 
   // ── SAC45: Specialist Convention Activation & Target Execution ──
@@ -4621,90 +4765,64 @@
     var selectedWorker = appId || 'unknown';
     var selectedRun = runId || 'latest';
 
-    // Activation records derived from SAC44 delivery receipt (role-mocked; shown honestly)
-    var activationEntries = [];
+    panel.innerHTML = '<span style="font-size:0.7rem;color:#94a3b8;">loading runtime-backed convention activation...</span>';
 
-    if (roleName === 'qa') {
-      activationEntries = [{
-        state: 'Active',
-        conventionTarget: 'tests/e2e/verified-suite-v3.json',
-        targetRuntime: 'outbox/coder/runs/c-run-20260328-999',
-        activationBasis: 'Constraint bound to Coder execution loop. Test matrix natively gating task completion.',
-        color: '#10b981',
-        bg: 'rgba(16,185,129,0.1)'
-      }];
-    } else if (roleName === 'coder') {
-      activationEntries = [{
-        state: 'Queued',
-        conventionTarget: 'tmp/pending-ast-matrix.bin',
-        targetRuntime: 'outbox/manager/runs/pending-eval',
-        activationBasis: 'Manager runtime pending manual bootstrap. Constraint staged but dormant.',
-        color: '#f59e0b',
-        bg: 'rgba(245,158,11,0.1)'
-      }];
-    } else if (roleName === 'design') {
-      activationEntries = [{
-        state: 'Failed',
-        conventionTarget: 'N/A',
-        targetRuntime: 'N/A',
-        activationBasis: 'No delivered payload acknowledged. Runtime constraint binding aborted.',
-        color: '#ef4444',
-        bg: 'rgba(239,68,68,0.1)'
-      }];
-    } else {
-      activationEntries = [{
-        state: 'Failed',
-        conventionTarget: 'N/A',
-        targetRuntime: 'N/A',
-        activationBasis: 'Invalid capability. Unbound tasks do not cast execution constraints.',
-        color: '#64748b',
-        bg: 'rgba(100,116,139,0.1)'
-      }];
-    }
+    buildRoleWorkflowSnapshot(roleName, appId, runId).then(function(snapshot) {
+      var activationEntries = [];
+      var state = 'Failed';
+      var targetRuntime = snapshot.nextRun ? (snapshot.nextRun.executor + '/' + snapshot.nextRun.run_id) : 'N/A';
+      var activationBasis = 'No downstream run exists to prove execution binding.';
 
-    var activeIcon = { 'Active': '⚙️', 'Queued': '⏸️', 'Failed': '❌' };
+      if (snapshot.nextRun && (snapshot.nextRun.status === 'running' || snapshot.nextRun.status === 'passed')) {
+        state = 'Active';
+        activationBasis = 'Downstream run exists and is executing or has passed under the routed assignment.';
+      } else if (snapshot.nextInbox || snapshot.nextAssignment) {
+        state = 'Queued';
+        activationBasis = snapshot.nextRun
+          ? ('Downstream run exists with non-active status ' + snapshot.nextRun.status + '.')
+          : 'Target assignment exists but no run has been launched yet.';
+      }
 
-    var html = '<div style="display:flex;flex-direction:column;gap:0.5rem;font-size:0.75rem;color:var(--sb-on-surface);">';
+      activationEntries.push({
+        state: state,
+        conventionTarget: snapshot.convention ? snapshot.convention.name : 'N/A',
+        targetRuntime: targetRuntime,
+        activationBasis: activationBasis,
+        color: state === 'Active' ? '#10b981' : (state === 'Queued' ? '#f59e0b' : '#ef4444'),
+        bg: state === 'Active' ? 'rgba(16,185,129,0.1)' : (state === 'Queued' ? 'rgba(245,158,11,0.1)' : 'rgba(239,68,68,0.1)')
+      });
 
-    activationEntries.forEach(function(entry) {
-      html += '<div style="background:var(--sb-surface-alt,#1e293b);padding:0.45rem 0.55rem;border-radius:0.3rem;border-left:2px solid ' + entry.color + ';display:flex;flex-direction:column;gap:0.35rem;">';
+      var activeIcon = { 'Active': '⚙️', 'Queued': '⏸️', 'Failed': '❌' };
+      var html = '<div style="display:flex;flex-direction:column;gap:0.5rem;font-size:0.75rem;color:var(--sb-on-surface);">';
 
-      // Header
-      html += '<div style="display:flex;align-items:center;justify-content:space-between;">';
-      html += '<strong style="color:var(--sb-on-surface);font-size:0.73rem;">' + (activeIcon[entry.state] || '●') + ' Target Activation</strong>';
-      html += '<code style="color:' + entry.color + ';background:' + entry.bg + ';padding:0.1rem 0.4rem;text-transform:uppercase;font-size:0.63rem;">' + escapeHtml(entry.state) + '</code>';
-      html += '</div>';
+      activationEntries.forEach(function(entry) {
+        html += '<div style="background:var(--sb-surface-alt,#1e293b);padding:0.45rem 0.55rem;border-radius:0.3rem;border-left:2px solid ' + entry.color + ';display:flex;flex-direction:column;gap:0.35rem;">';
+        html += '<div style="display:flex;align-items:center;justify-content:space-between;">';
+        html += '<strong style="color:var(--sb-on-surface);font-size:0.73rem;">' + (activeIcon[entry.state] || '●') + ' Target Activation</strong>';
+        html += '<code style="color:' + entry.color + ';background:' + entry.bg + ';padding:0.1rem 0.4rem;text-transform:uppercase;font-size:0.63rem;">' + escapeHtml(entry.state) + '</code>';
+        html += '</div>';
+        html += '<div style="display:flex;flex-direction:column;gap:0.1rem;">';
+        html += '<div><span style="color:var(--sb-text-muted);font-weight:600;font-size:0.63rem;">Memory Object:</span> <span style="font-family:monospace;font-size:0.68rem;color:#38bdf8;">' + escapeHtml(entry.conventionTarget) + '</span></div>';
+        html += '<div><span style="color:var(--sb-text-muted);font-weight:600;font-size:0.63rem;">Target Runtime:</span> <span style="font-family:monospace;font-size:0.68rem;color:#a855f7;">' + escapeHtml(entry.targetRuntime) + '</span></div>';
+        html += '</div>';
+        html += '<div style="background:#0f172a;border-radius:0.2rem;padding:0.3rem 0.4rem;font-size:0.65rem;color:#cbd5e1;line-height:1.4;"><code>' + escapeHtml(entry.activationBasis) + '</code></div>';
+        html += '<div><span style="color:var(--sb-text-muted);font-weight:600;font-size:0.63rem;">Activation Hash:</span> <code style="font-size:0.6rem;color:#64748b;">' + btoa(entry.state + entry.conventionTarget + entry.targetRuntime).substring(0, 16) + '</code></div>';
+        html += '</div>';
+      });
 
-      // Context
-      html += '<div style="display:flex;flex-direction:column;gap:0.1rem;">';
-      html += '<div><span style="color:var(--sb-text-muted);font-weight:600;font-size:0.63rem;">Memory Object:</span> <span style="font-family:monospace;font-size:0.68rem;color:#38bdf8;">' + escapeHtml(entry.conventionTarget) + '</span></div>';
-      html += '<div><span style="color:var(--sb-text-muted);font-weight:600;font-size:0.63rem;">Target Runtime:</span> <span style="font-family:monospace;font-size:0.68rem;color:#a855f7;">' + escapeHtml(entry.targetRuntime) + '</span></div>';
-      html += '</div>';
-
-      // Object description
-      html += '<div style="background:#0f172a;border-radius:0.2rem;padding:0.3rem 0.4rem;font-size:0.65rem;color:#cbd5e1;line-height:1.4;">';
-      html += '<code>' + escapeHtml(entry.activationBasis) + '</code>';
-      html += '</div>';
-
-      // ALCOA+ hash
-      var alcoa = btoa(entry.state + entry.conventionTarget + entry.targetRuntime).substring(0, 16);
-      html += '<div><span style="color:var(--sb-text-muted);font-weight:600;font-size:0.63rem;">Activation Hash:</span> <code style="font-size:0.6rem;color:#64748b;">' + alcoa + '</code></div>';
-
-      html += '</div>';
+      html += '<div style="margin-top:0.1rem;font-size:0.63rem;color:#64748b;">';
+      html += '<strong style="color:var(--sb-text-muted);">Audit Constraints:</strong> ';
+      html += 'Viewer Role: <code>' + escapeHtml(viewerRole) + '</code><br/>';
+      html += 'Selected Worker: <code>' + escapeHtml(selectedWorker) + '</code><br/>';
+      html += 'Selected Run: <code>' + escapeHtml(selectedRun) + '</code><br/>';
+      html += 'Activation Basis: <code>real next assignment -> worker_inboxes -> runs execution state</code><br/>';
+      html += 'Activation values are <em>runtime-backed</em> when records exist; queued and failed states are shown honestly when they do not. ';
+      html += 'Resolution Bound: <code>SI21 — The Solace Intelligence System</code>.';
+      html += '</div></div>';
+      panel.innerHTML = html;
+    }).catch(function(err) {
+      panel.innerHTML = '<span style="font-size:0.7rem;color:#fca5a5;">convention activation load failed: ' + escapeHtml(String(err)) + '</span>';
     });
-
-    html += '<div style="margin-top:0.1rem;font-size:0.63rem;color:#64748b;">';
-    html += '<strong style="color:var(--sb-text-muted);">Audit Constraints:</strong> ';
-    html += 'Viewer Role: <code>' + escapeHtml(viewerRole) + '</code><br/>';
-    html += 'Selected Worker: <code>' + escapeHtml(selectedWorker) + '</code><br/>';
-    html += 'Selected Run: <code>' + escapeHtml(selectedRun) + '</code><br/>';
-    html += 'Activation Basis: <code>delivered convention -> target runtime binding -> active execution constraint</code><br/>';
-    html += 'Activation values are <em>role-derived mocks</em> until intelligence runtime loop is wired. ';
-    html += 'Resolution Bound: <code>SI21 — The Solace Intelligence System</code>.';
-    html += '</div>';
-
-    html += '</div>';
-    panel.innerHTML = html;
   }
 
   // ── SAF46: Specialist Convention Effect & Constrained Output ──
@@ -4719,90 +4837,63 @@
     var selectedWorker = appId || 'unknown';
     var selectedRun = runId || 'latest';
 
-    // Effect records derived from SAC45 activation target (role-mocked; shown honestly)
-    var effectEntries = [];
+    panel.innerHTML = '<span style="font-size:0.7rem;color:#94a3b8;">loading runtime-backed convention effect...</span>';
 
-    if (roleName === 'qa') {
-      effectEntries = [{
-        state: 'Visible',
-        targetRuntime: 'outbox/coder/runs/c-run-20260328-999',
-        producedArtifact: 'outbox/coder/runs/c-run-20260328-999/test-matrix-results.json',
-        effectBasis: 'Constrained outputs detected matching active conventions. Test assertions enforced structural layout.',
-        color: '#10b981',
-        bg: 'rgba(16,185,129,0.1)'
-      }];
-    } else if (roleName === 'coder') {
-      effectEntries = [{
-        state: 'Partial',
-        targetRuntime: 'outbox/manager/runs/pending-eval',
-        producedArtifact: 'tmp/eval-staging-diff.patch',
-        effectBasis: 'Runtime execution halted before structural closure. Pre-flight artifacts generated but incomplete.',
-        color: '#f59e0b',
-        bg: 'rgba(245,158,11,0.1)'
-      }];
-    } else if (roleName === 'design') {
-      effectEntries = [{
-        state: 'Absent',
-        targetRuntime: 'N/A',
-        producedArtifact: 'N/A',
-        effectBasis: 'No active runtime identified. Unable to measure constraint efficacy.',
-        color: '#ef4444',
-        bg: 'rgba(239,68,68,0.1)'
-      }];
-    } else {
-      effectEntries = [{
-        state: 'Absent',
-        targetRuntime: 'N/A',
-        producedArtifact: 'N/A',
-        effectBasis: 'Invalid capability. Unbound tasks do not yield constrained output telemetry.',
-        color: '#64748b',
-        bg: 'rgba(100,116,139,0.1)'
-      }];
-    }
+    buildRoleWorkflowSnapshot(roleName, appId, runId).then(function(snapshot) {
+      var effectEntries = [];
+      var state = 'Absent';
+      var targetRuntime = snapshot.nextRun ? (snapshot.nextRun.executor + '/' + snapshot.nextRun.run_id) : 'N/A';
+      var producedArtifact = snapshot.nextRun ? runtimeArtifactPath(roleAppIdForRole(snapshot.nextRole), snapshot.nextRun.run_id, 'report.html') : 'N/A';
+      var effectBasis = 'No downstream run exists to produce observable output.';
 
-    var effectIcon = { 'Visible': '✨', 'Partial': '〰️', 'Absent': '❌' };
+      if (snapshot.nextRun && snapshot.nextRun.status === 'passed') {
+        state = 'Visible';
+        effectBasis = 'Downstream run passed and emitted a report path that can be inspected as durable evidence.';
+      } else if (snapshot.nextRun && (snapshot.nextRun.status === 'running' || snapshot.nextRun.status === 'queued')) {
+        state = 'Partial';
+        effectBasis = 'Downstream run exists but has not reached a passed state yet.';
+      }
 
-    var html = '<div style="display:flex;flex-direction:column;gap:0.5rem;font-size:0.75rem;color:var(--sb-on-surface);">';
+      effectEntries.push({
+        state: state,
+        targetRuntime: targetRuntime,
+        producedArtifact: producedArtifact,
+        effectBasis: effectBasis,
+        color: state === 'Visible' ? '#10b981' : (state === 'Partial' ? '#f59e0b' : '#ef4444'),
+        bg: state === 'Visible' ? 'rgba(16,185,129,0.1)' : (state === 'Partial' ? 'rgba(245,158,11,0.1)' : 'rgba(239,68,68,0.1)')
+      });
 
-    effectEntries.forEach(function(entry) {
-      html += '<div style="background:var(--sb-surface-alt,#1e293b);padding:0.45rem 0.55rem;border-radius:0.3rem;border-left:2px solid ' + entry.color + ';display:flex;flex-direction:column;gap:0.35rem;">';
+      var effectIcon = { 'Visible': '✨', 'Partial': '〰️', 'Absent': '❌' };
+      var html = '<div style="display:flex;flex-direction:column;gap:0.5rem;font-size:0.75rem;color:var(--sb-on-surface);">';
 
-      // Header
-      html += '<div style="display:flex;align-items:center;justify-content:space-between;">';
-      html += '<strong style="color:var(--sb-on-surface);font-size:0.73rem;">' + (effectIcon[entry.state] || '●') + ' Terminal Output Footprint</strong>';
-      html += '<code style="color:' + entry.color + ';background:' + entry.bg + ';padding:0.1rem 0.4rem;text-transform:uppercase;font-size:0.63rem;">' + escapeHtml(entry.state) + '</code>';
-      html += '</div>';
+      effectEntries.forEach(function(entry) {
+        html += '<div style="background:var(--sb-surface-alt,#1e293b);padding:0.45rem 0.55rem;border-radius:0.3rem;border-left:2px solid ' + entry.color + ';display:flex;flex-direction:column;gap:0.35rem;">';
+        html += '<div style="display:flex;align-items:center;justify-content:space-between;">';
+        html += '<strong style="color:var(--sb-on-surface);font-size:0.73rem;">' + (effectIcon[entry.state] || '●') + ' Terminal Output Footprint</strong>';
+        html += '<code style="color:' + entry.color + ';background:' + entry.bg + ';padding:0.1rem 0.4rem;text-transform:uppercase;font-size:0.63rem;">' + escapeHtml(entry.state) + '</code>';
+        html += '</div>';
+        html += '<div style="display:flex;flex-direction:column;gap:0.1rem;">';
+        html += '<div><span style="color:var(--sb-text-muted);font-weight:600;font-size:0.63rem;">Target Runtime:</span> <span style="font-family:monospace;font-size:0.68rem;color:#a855f7;">' + escapeHtml(entry.targetRuntime) + '</span></div>';
+        html += '<div><span style="color:var(--sb-text-muted);font-weight:600;font-size:0.63rem;">Produced Artifact:</span> <span style="font-family:monospace;font-size:0.68rem;color:#facc15;">' + escapeHtml(entry.producedArtifact) + '</span></div>';
+        html += '</div>';
+        html += '<div style="background:#0f172a;border-radius:0.2rem;padding:0.3rem 0.4rem;font-size:0.65rem;color:#cbd5e1;line-height:1.4;"><code>' + escapeHtml(entry.effectBasis) + '</code></div>';
+        html += '<div><span style="color:var(--sb-text-muted);font-weight:600;font-size:0.63rem;">Effect Hash:</span> <code style="font-size:0.6rem;color:#64748b;">' + btoa(entry.state + entry.targetRuntime + entry.producedArtifact).substring(0, 16) + '</code></div>';
+        html += '</div>';
+      });
 
-      // Context
-      html += '<div style="display:flex;flex-direction:column;gap:0.1rem;">';
-      html += '<div><span style="color:var(--sb-text-muted);font-weight:600;font-size:0.63rem;">Target Runtime:</span> <span style="font-family:monospace;font-size:0.68rem;color:#a855f7;">' + escapeHtml(entry.targetRuntime) + '</span></div>';
-      html += '<div><span style="color:var(--sb-text-muted);font-weight:600;font-size:0.63rem;">Produced Artifact:</span> <span style="font-family:monospace;font-size:0.68rem;color:#facc15;">' + escapeHtml(entry.producedArtifact) + '</span></div>';
-      html += '</div>';
-
-      // Object description
-      html += '<div style="background:#0f172a;border-radius:0.2rem;padding:0.3rem 0.4rem;font-size:0.65rem;color:#cbd5e1;line-height:1.4;">';
-      html += '<code>' + escapeHtml(entry.effectBasis) + '</code>';
-      html += '</div>';
-
-      // ALCOA+ hash
-      var alcoa = btoa(entry.state + entry.targetRuntime + entry.producedArtifact).substring(0, 16);
-      html += '<div><span style="color:var(--sb-text-muted);font-weight:600;font-size:0.63rem;">Effect Hash:</span> <code style="font-size:0.6rem;color:#64748b;">' + alcoa + '</code></div>';
-
-      html += '</div>';
+      html += '<div style="margin-top:0.1rem;font-size:0.63rem;color:#64748b;">';
+      html += '<strong style="color:var(--sb-text-muted);">Audit Constraints:</strong> ';
+      html += 'Viewer Role: <code>' + escapeHtml(viewerRole) + '</code><br/>';
+      html += 'Selected Worker: <code>' + escapeHtml(selectedWorker) + '</code><br/>';
+      html += 'Selected Run: <code>' + escapeHtml(selectedRun) + '</code><br/>';
+      html += 'Effect Basis: <code>real downstream run state plus report artifact path</code><br/>';
+      html += 'Effect telemetry is <em>runtime-backed</em> when records exist; absent and partial states are shown honestly when they do not. ';
+      html += 'Resolution Bound: <code>SI18 — Transparency as a Product Feature</code>.';
+      html += '</div></div>';
+      panel.innerHTML = html;
+    }).catch(function(err) {
+      panel.innerHTML = '<span style="font-size:0.7rem;color:#fca5a5;">convention effect load failed: ' + escapeHtml(String(err)) + '</span>';
     });
-
-    html += '<div style="margin-top:0.1rem;font-size:0.63rem;color:#64748b;">';
-    html += '<strong style="color:var(--sb-text-muted);">Audit Constraints:</strong> ';
-    html += 'Viewer Role: <code>' + escapeHtml(viewerRole) + '</code><br/>';
-    html += 'Selected Worker: <code>' + escapeHtml(selectedWorker) + '</code><br/>';
-    html += 'Selected Run: <code>' + escapeHtml(selectedRun) + '</code><br/>';
-    html += 'Effect Basis: <code>active convention -> constrained runtime -> visible artifact or output shift</code><br/>';
-    html += 'Effect telemetry is <em>role-derived mocked</em> until final output parser verification is wired. ';
-    html += 'Resolution Bound: <code>SI18 — Transparency as a Product Feature</code>.';
-    html += '</div>';
-
-    html += '</div>';
-    panel.innerHTML = html;
   }
 
   // ── SAG47: Specialist Convention Proof & Evidence Verdict ──
@@ -4817,90 +4908,65 @@
     var selectedWorker = appId || 'unknown';
     var selectedRun = runId || 'latest';
 
-    // Proof records derived from SAF46 effect target (role-mocked; shown honestly)
-    var proofEntries = [];
+    panel.innerHTML = '<span style="font-size:0.7rem;color:#94a3b8;">loading runtime-backed convention proof...</span>';
 
-    if (roleName === 'qa') {
-      proofEntries = [{
-        state: 'Verified',
-        producedArtifact: 'outbox/coder/runs/c-run-20260328-999/test-matrix-results.json',
-        proofStrategy: 'pytest --cov --strict-markers',
-        evidenceVerdict: 'Output mathematically proven to satisfy convention constraints. Verification zero-knowledge check passed.',
-        color: '#10b981',
-        bg: 'rgba(16,185,129,0.1)'
-      }];
-    } else if (roleName === 'coder') {
-      proofEntries = [{
-        state: 'Partial',
-        producedArtifact: 'tmp/eval-staging-diff.patch',
-        proofStrategy: 'syntax_only_validation',
-        evidenceVerdict: 'Artifact syntactically valid but lacks execution proof. Structural constraints unverified.',
-        color: '#f59e0b',
-        bg: 'rgba(245,158,11,0.1)'
-      }];
-    } else if (roleName === 'design') {
-      proofEntries = [{
-        state: 'Missing',
-        producedArtifact: 'N/A',
-        proofStrategy: 'N/A',
-        evidenceVerdict: 'No effect footprint yielded. Evidence verdict cannot be reached.',
-        color: '#ef4444',
-        bg: 'rgba(239,68,68,0.1)'
-      }];
-    } else {
-      proofEntries = [{
-        state: 'Missing',
-        producedArtifact: 'N/A',
-        proofStrategy: 'N/A',
-        evidenceVerdict: 'Invalid capability. Unbound tasks bypass evidence verification loops.',
-        color: '#64748b',
-        bg: 'rgba(100,116,139,0.1)'
-      }];
-    }
+    buildRoleWorkflowSnapshot(roleName, appId, runId).then(function(snapshot) {
+      var proofEntries = [];
+      var state = 'Missing';
+      var producedArtifact = snapshot.nextRun ? runtimeArtifactPath(roleAppIdForRole(snapshot.nextRole), snapshot.nextRun.run_id, 'report.html') : 'N/A';
+      var proofStrategy = 'N/A';
+      var evidenceVerdict = 'No downstream artifact and no approval evidence exist yet.';
 
-    var proofIcon = { 'Verified': '🛡️', 'Partial': '⚖️', 'Missing': '❌' };
+      if (snapshot.release || (snapshot.approval && snapshot.approval.status === 'approved')) {
+        state = 'Verified';
+        proofStrategy = 'manager-approval + runtime artifact chain';
+        evidenceVerdict = 'Approval and durable promotion records exist for this specialist lineage.';
+      } else if (snapshot.nextRun || snapshot.runRecord) {
+        state = 'Partial';
+        proofStrategy = 'runtime run presence without terminal approval';
+        evidenceVerdict = 'Execution evidence exists, but release readiness has not yet been proven by approval and promotion.';
+      }
 
-    var html = '<div style="display:flex;flex-direction:column;gap:0.5rem;font-size:0.75rem;color:var(--sb-on-surface);">';
+      proofEntries.push({
+        state: state,
+        producedArtifact: producedArtifact,
+        proofStrategy: proofStrategy,
+        evidenceVerdict: evidenceVerdict,
+        color: state === 'Verified' ? '#10b981' : (state === 'Partial' ? '#f59e0b' : '#ef4444'),
+        bg: state === 'Verified' ? 'rgba(16,185,129,0.1)' : (state === 'Partial' ? 'rgba(245,158,11,0.1)' : 'rgba(239,68,68,0.1)')
+      });
 
-    proofEntries.forEach(function(entry) {
-      html += '<div style="background:var(--sb-surface-alt,#1e293b);padding:0.45rem 0.55rem;border-radius:0.3rem;border-left:2px solid ' + entry.color + ';display:flex;flex-direction:column;gap:0.35rem;">';
+      var proofIcon = { 'Verified': '🛡️', 'Partial': '⚖️', 'Missing': '❌' };
+      var html = '<div style="display:flex;flex-direction:column;gap:0.5rem;font-size:0.75rem;color:var(--sb-on-surface);">';
 
-      // Header
-      html += '<div style="display:flex;align-items:center;justify-content:space-between;">';
-      html += '<strong style="color:var(--sb-on-surface);font-size:0.73rem;">' + (proofIcon[entry.state] || '●') + ' Governing Evidence Verdict</strong>';
-      html += '<code style="color:' + entry.color + ';background:' + entry.bg + ';padding:0.1rem 0.4rem;text-transform:uppercase;font-size:0.63rem;">' + escapeHtml(entry.state) + '</code>';
-      html += '</div>';
+      proofEntries.forEach(function(entry) {
+        html += '<div style="background:var(--sb-surface-alt,#1e293b);padding:0.45rem 0.55rem;border-radius:0.3rem;border-left:2px solid ' + entry.color + ';display:flex;flex-direction:column;gap:0.35rem;">';
+        html += '<div style="display:flex;align-items:center;justify-content:space-between;">';
+        html += '<strong style="color:var(--sb-on-surface);font-size:0.73rem;">' + (proofIcon[entry.state] || '●') + ' Governing Evidence Verdict</strong>';
+        html += '<code style="color:' + entry.color + ';background:' + entry.bg + ';padding:0.1rem 0.4rem;text-transform:uppercase;font-size:0.63rem;">' + escapeHtml(entry.state) + '</code>';
+        html += '</div>';
+        html += '<div style="display:flex;flex-direction:column;gap:0.1rem;">';
+        html += '<div><span style="color:var(--sb-text-muted);font-weight:600;font-size:0.63rem;">Produced Artifact:</span> <span style="font-family:monospace;font-size:0.68rem;color:#facc15;">' + escapeHtml(entry.producedArtifact) + '</span></div>';
+        html += '<div><span style="color:var(--sb-text-muted);font-weight:600;font-size:0.63rem;">Proof Strategy:</span> <span style="font-family:monospace;font-size:0.68rem;color:#10b981;">' + escapeHtml(entry.proofStrategy) + '</span></div>';
+        html += '</div>';
+        html += '<div style="background:#0f172a;border-radius:0.2rem;padding:0.3rem 0.4rem;font-size:0.65rem;color:#cbd5e1;line-height:1.4;"><code>' + escapeHtml(entry.evidenceVerdict) + '</code></div>';
+        html += '<div><span style="color:var(--sb-text-muted);font-weight:600;font-size:0.63rem;">Verdict Hash:</span> <code style="font-size:0.6rem;color:#64748b;">' + btoa(entry.state + entry.producedArtifact + entry.proofStrategy).substring(0, 16) + '</code></div>';
+        html += '</div>';
+      });
 
-      // Context
-      html += '<div style="display:flex;flex-direction:column;gap:0.1rem;">';
-      html += '<div><span style="color:var(--sb-text-muted);font-weight:600;font-size:0.63rem;">Produced Artifact:</span> <span style="font-family:monospace;font-size:0.68rem;color:#facc15;">' + escapeHtml(entry.producedArtifact) + '</span></div>';
-      html += '<div><span style="color:var(--sb-text-muted);font-weight:600;font-size:0.63rem;">Proof Strategy:</span> <span style="font-family:monospace;font-size:0.68rem;color:#10b981;">' + escapeHtml(entry.proofStrategy) + '</span></div>';
-      html += '</div>';
-
-      // Object description
-      html += '<div style="background:#0f172a;border-radius:0.2rem;padding:0.3rem 0.4rem;font-size:0.65rem;color:#cbd5e1;line-height:1.4;">';
-      html += '<code>' + escapeHtml(entry.evidenceVerdict) + '</code>';
-      html += '</div>';
-
-      // ALCOA+ hash
-      var alcoa = btoa(entry.state + entry.producedArtifact + entry.proofStrategy).substring(0, 16);
-      html += '<div><span style="color:var(--sb-text-muted);font-weight:600;font-size:0.63rem;">Verdict Hash:</span> <code style="font-size:0.6rem;color:#64748b;">' + alcoa + '</code></div>';
-
-      html += '</div>';
+      html += '<div style="margin-top:0.1rem;font-size:0.63rem;color:#64748b;">';
+      html += '<strong style="color:var(--sb-text-muted);">Audit Constraints:</strong> ';
+      html += 'Viewer Role: <code>' + escapeHtml(viewerRole) + '</code><br/>';
+      html += 'Selected Worker: <code>' + escapeHtml(selectedWorker) + '</code><br/>';
+      html += 'Selected Run: <code>' + escapeHtml(selectedRun) + '</code><br/>';
+      html += 'Proof Basis: <code>real run evidence plus approval, memory, and release lineage</code><br/>';
+      html += 'Proof verdicts are <em>runtime-backed</em> when records exist; missing and partial states are shown honestly when they do not. ';
+      html += 'Resolution Bound: <code>SI19 — Measuring Solace System Efficiency</code>.';
+      html += '</div></div>';
+      panel.innerHTML = html;
+    }).catch(function(err) {
+      panel.innerHTML = '<span style="font-size:0.7rem;color:#fca5a5;">convention proof load failed: ' + escapeHtml(String(err)) + '</span>';
     });
-
-    html += '<div style="margin-top:0.1rem;font-size:0.63rem;color:#64748b;">';
-    html += '<strong style="color:var(--sb-text-muted);">Audit Constraints:</strong> ';
-    html += 'Viewer Role: <code>' + escapeHtml(viewerRole) + '</code><br/>';
-    html += 'Selected Worker: <code>' + escapeHtml(selectedWorker) + '</code><br/>';
-    html += 'Selected Run: <code>' + escapeHtml(selectedRun) + '</code><br/>';
-    html += 'Proof Basis: <code>constrained output -> evidence verdict -> governed convention lineage</code><br/>';
-    html += 'Proof verdicts are <em>role-derived mocks</em> until cryptographic pipeline binds. ';
-    html += 'Resolution Bound: <code>SI19 — Measuring Solace System Efficiency</code>.';
-    html += '</div>';
-
-    html += '</div>';
-    panel.innerHTML = html;
   }
 
   // ── SAH48: Specialist Convention Trust & Release Readiness ──
@@ -4915,90 +4981,71 @@
     var selectedWorker = appId || 'unknown';
     var selectedRun = runId || 'latest';
 
-    // Trust/Governance records derived from SAG47 evidence verdict (role-mocked; shown honestly)
-    var trustEntries = [];
+    panel.innerHTML = '<span style="font-size:0.7rem;color:#94a3b8;">loading runtime-backed convention trust...</span>';
 
-    if (roleName === 'qa') {
-      trustEntries = [{
-        state: 'Trusted',
-        verdictLineage: 'Evidence Verdict [Verified] on outbox/coder/runs/c-run-20260328-999',
-        governanceBasis: 'Cryptography bounds verified. No known physical vulnerabilities or structural drift present.',
-        decisionVerdict: 'Lineage cleared for immediate promotion and systemic Department Memory admission.',
-        color: '#10b981',
-        bg: 'rgba(16,185,129,0.1)'
-      }];
-    } else if (roleName === 'coder') {
-      trustEntries = [{
-        state: 'Provisional',
-        verdictLineage: 'Evidence Verdict [Partial] on tmp/eval-staging-diff.patch',
-        governanceBasis: 'Missing execution bounds validation. Component constrained to local testing sandbox only.',
-        decisionVerdict: 'Lineage barred from production. Subject to explicit Human oversight constraint (SI17).',
-        color: '#f59e0b',
-        bg: 'rgba(245,158,11,0.1)'
-      }];
-    } else if (roleName === 'design') {
-      trustEntries = [{
-        state: 'Blocked',
-        verdictLineage: 'Evidence Verdict [Missing]',
-        governanceBasis: 'No conclusive proof evaluated by governance mechanisms.',
-        decisionVerdict: 'Lineage entirely quarantined. Run is a dead-end execution node with zero intelligence trust.',
-        color: '#ef4444',
-        bg: 'rgba(239,68,68,0.1)'
-      }];
-    } else {
-      trustEntries = [{
-        state: 'Blocked',
-        verdictLineage: 'N/A',
-        governanceBasis: 'Invalid capability matrix.',
-        decisionVerdict: 'Governance routing disconnected from worker boundaries.',
-        color: '#64748b',
-        bg: 'rgba(100,116,139,0.1)'
-      }];
-    }
+    buildRoleWorkflowSnapshot(roleName, appId, runId).then(function(snapshot) {
+      var trustEntries = [];
+      var state = 'Blocked';
+      var verdictLineage = 'N/A';
+      var governanceBasis = 'No approval, release, or promoted memory exists for this assignment.';
+      var decisionVerdict = 'Lineage remains blocked until evidence and signoff are present.';
 
-    var trustIcon = { 'Trusted': '🟢', 'Provisional': '🟡', 'Blocked': '🔴' };
+      if (snapshot.release || (snapshot.memoryEntry && snapshot.memoryEntry.status === 'promoted')) {
+        state = 'Trusted';
+        verdictLineage = snapshot.release
+          ? ('Release [' + (snapshot.release.status || 'ready') + '] on assignment ' + snapshot.release.source_assignment_id)
+          : ('Memory Entry [promoted] on assignment ' + snapshot.assignment.id);
+        governanceBasis = 'Durable release or promoted memory records exist for this specialist lineage.';
+        decisionVerdict = 'Lineage is trusted for reuse and manager-controlled rollout.';
+      } else if (snapshot.runRecord || snapshot.nextRun || snapshot.convention || snapshot.approval) {
+        state = 'Provisional';
+        verdictLineage = snapshot.approval
+          ? ('Approval [' + snapshot.approval.status + ']')
+          : ('Run [' + ((snapshot.runRecord && snapshot.runRecord.status) || (snapshot.nextRun && snapshot.nextRun.status) || 'present') + ']');
+        governanceBasis = 'Some runtime evidence exists, but terminal release or promoted memory proof is incomplete.';
+        decisionVerdict = 'Lineage remains provisional and subject to explicit manager review.';
+      }
 
-    var html = '<div style="display:flex;flex-direction:column;gap:0.5rem;font-size:0.75rem;color:var(--sb-on-surface);">';
+      trustEntries.push({
+        state: state,
+        verdictLineage: verdictLineage,
+        governanceBasis: governanceBasis,
+        decisionVerdict: decisionVerdict,
+        color: state === 'Trusted' ? '#10b981' : (state === 'Provisional' ? '#f59e0b' : '#ef4444'),
+        bg: state === 'Trusted' ? 'rgba(16,185,129,0.1)' : (state === 'Provisional' ? 'rgba(245,158,11,0.1)' : 'rgba(239,68,68,0.1)')
+      });
 
-    trustEntries.forEach(function(entry) {
-      html += '<div style="background:var(--sb-surface-alt,#1e293b);padding:0.45rem 0.55rem;border-radius:0.3rem;border-left:2px solid ' + entry.color + ';display:flex;flex-direction:column;gap:0.35rem;">';
+      var trustIcon = { 'Trusted': '🟢', 'Provisional': '🟡', 'Blocked': '🔴' };
+      var html = '<div style="display:flex;flex-direction:column;gap:0.5rem;font-size:0.75rem;color:var(--sb-on-surface);">';
 
-      // Header
-      html += '<div style="display:flex;align-items:center;justify-content:space-between;">';
-      html += '<strong style="color:var(--sb-on-surface);font-size:0.73rem;">' + (trustIcon[entry.state] || '●') + ' Governance Readiness Decision</strong>';
-      html += '<code style="color:' + entry.color + ';background:' + entry.bg + ';padding:0.1rem 0.4rem;text-transform:uppercase;font-size:0.63rem;">' + escapeHtml(entry.state) + '</code>';
-      html += '</div>';
+      trustEntries.forEach(function(entry) {
+        html += '<div style="background:var(--sb-surface-alt,#1e293b);padding:0.45rem 0.55rem;border-radius:0.3rem;border-left:2px solid ' + entry.color + ';display:flex;flex-direction:column;gap:0.35rem;">';
+        html += '<div style="display:flex;align-items:center;justify-content:space-between;">';
+        html += '<strong style="color:var(--sb-on-surface);font-size:0.73rem;">' + (trustIcon[entry.state] || '●') + ' Governance Readiness Decision</strong>';
+        html += '<code style="color:' + entry.color + ';background:' + entry.bg + ';padding:0.1rem 0.4rem;text-transform:uppercase;font-size:0.63rem;">' + escapeHtml(entry.state) + '</code>';
+        html += '</div>';
+        html += '<div style="display:flex;flex-direction:column;gap:0.1rem;">';
+        html += '<div><span style="color:var(--sb-text-muted);font-weight:600;font-size:0.63rem;">Proof Lineage:</span> <span style="font-family:monospace;font-size:0.68rem;color:#38bdf8;">' + escapeHtml(entry.verdictLineage) + '</span></div>';
+        html += '<div><span style="color:var(--sb-text-muted);font-weight:600;font-size:0.63rem;">Governance Basis:</span> <span style="font-family:monospace;font-size:0.68rem;color:#cbd5e1;">' + escapeHtml(entry.governanceBasis) + '</span></div>';
+        html += '</div>';
+        html += '<div style="background:#0f172a;border-radius:0.2rem;padding:0.3rem 0.4rem;font-size:0.65rem;color:#cbd5e1;line-height:1.4;"><code>' + escapeHtml(entry.decisionVerdict) + '</code></div>';
+        html += '<div><span style="color:var(--sb-text-muted);font-weight:600;font-size:0.63rem;">Readiness Hash:</span> <code style="font-size:0.6rem;color:#64748b;">' + btoa(entry.state + entry.verdictLineage + entry.decisionVerdict).substring(0, 16) + '</code></div>';
+        html += '</div>';
+      });
 
-      // Context
-      html += '<div style="display:flex;flex-direction:column;gap:0.1rem;">';
-      html += '<div><span style="color:var(--sb-text-muted);font-weight:600;font-size:0.63rem;">Proof Lineage:</span> <span style="font-family:monospace;font-size:0.68rem;color:#38bdf8;">' + escapeHtml(entry.verdictLineage) + '</span></div>';
-      html += '<div><span style="color:var(--sb-text-muted);font-weight:600;font-size:0.63rem;">Governance Basis:</span> <span style="font-family:monospace;font-size:0.68rem;color:#cbd5e1;">' + escapeHtml(entry.governanceBasis) + '</span></div>';
-      html += '</div>';
-
-      // Object description
-      html += '<div style="background:#0f172a;border-radius:0.2rem;padding:0.3rem 0.4rem;font-size:0.65rem;color:#cbd5e1;line-height:1.4;">';
-      html += '<code>' + escapeHtml(entry.decisionVerdict) + '</code>';
-      html += '</div>';
-
-      // ALCOA+ hash
-      var alcoa = btoa(entry.state + entry.verdictLineage + entry.decisionVerdict).substring(0, 16);
-      html += '<div><span style="color:var(--sb-text-muted);font-weight:600;font-size:0.63rem;">Readiness Hash:</span> <code style="font-size:0.6rem;color:#64748b;">' + alcoa + '</code></div>';
-
-      html += '</div>';
+      html += '<div style="margin-top:0.1rem;font-size:0.63rem;color:#64748b;">';
+      html += '<strong style="color:var(--sb-text-muted);">Audit Constraints:</strong> ';
+      html += 'Viewer Role: <code>' + escapeHtml(viewerRole) + '</code><br/>';
+      html += 'Selected Worker: <code>' + escapeHtml(selectedWorker) + '</code><br/>';
+      html += 'Selected Run: <code>' + escapeHtml(selectedRun) + '</code><br/>';
+      html += 'Trust Basis: <code>real runs, approvals, memory_entries, conventions, and releases</code><br/>';
+      html += 'Trust states are <em>runtime-backed</em> when records exist; blocked and provisional states are shown honestly when they do not. ';
+      html += 'Resolution Bound: <code>SI21 — The Solace Intelligence System</code>.';
+      html += '</div></div>';
+      panel.innerHTML = html;
+    }).catch(function(err) {
+      panel.innerHTML = '<span style="font-size:0.7rem;color:#fca5a5;">convention trust load failed: ' + escapeHtml(String(err)) + '</span>';
     });
-
-    html += '<div style="margin-top:0.1rem;font-size:0.63rem;color:#64748b;">';
-    html += '<strong style="color:var(--sb-text-muted);">Audit Constraints:</strong> ';
-    html += 'Viewer Role: <code>' + escapeHtml(viewerRole) + '</code><br/>';
-    html += 'Selected Worker: <code>' + escapeHtml(selectedWorker) + '</code><br/>';
-    html += 'Selected Run: <code>' + escapeHtml(selectedRun) + '</code><br/>';
-    html += 'Trust Basis: <code>proof verdict -> governance decision -> release or promotion readiness</code><br/>';
-    html += 'Trust states are <em>role-derived mocks</em> pending central hub promotion sync. ';
-    html += 'Resolution Bound: <code>SI21 — The Solace Intelligence System</code>.';
-    html += '</div>';
-
-    html += '</div>';
-    panel.innerHTML = html;
   }
 
   // ── SAI49: Specialist Convention Release & Manager Signoff ──
@@ -5034,7 +5081,7 @@
           state: state,
           trustLineage: approval ? ('Approval [' + approval.status + ']') : 'Approval [missing]',
           signoffBasis: approval ? (approval.notes || 'Approval row exists.') : 'No runtime-backed approval row exists yet for this role.',
-          actionVerdict: release ? ('Release row written: ' + release.version) : (approval ? 'Approval exists but no release row is written yet.' : 'No release action can exist before approval.'),
+          actionVerdict: release ? ('Release row written: ' + release.version + ' [' + (release.status || 'ready') + ']') : (approval ? 'Approval exists but no release row is written yet.' : 'No release action can exist before approval.'),
           color: state === 'Approved' ? '#10b981' : (state === 'Pending' ? '#f59e0b' : '#ef4444'),
           bg: state === 'Approved' ? 'rgba(16,185,129,0.1)' : (state === 'Pending' ? 'rgba(245,158,11,0.1)' : 'rgba(239,68,68,0.1)')
         });
@@ -5092,90 +5139,72 @@
     var selectedWorker = appId || 'unknown';
     var selectedRun = runId || 'latest';
 
-    // Rollout Execution records derived from SAI49 Action (role-mocked; shown honestly)
-    var rolloutEntries = [];
+    panel.innerHTML = '<span style="font-size:0.7rem;color:#94a3b8;">loading runtime-backed convention rollout...</span>';
 
-    if (roleName === 'qa') {
-      rolloutEntries = [{
-        state: 'Live',
-        actionLineage: 'Manager Signoff [Approved]',
-        rolloutBasis: 'Approved lineage successfully applied to active production cluster.',
-        executionVerdict: 'Target component successfully deployed and servicing live Solace Intelligence System traffic.',
-        color: '#10b981',
-        bg: 'rgba(16,185,129,0.1)'
-      }];
-    } else if (roleName === 'coder') {
-      rolloutEntries = [{
-        state: 'Staged',
-        actionLineage: 'Manager Signoff [Pending]',
-        rolloutBasis: 'Local worker artifact pushed to pre-release mirror environment.',
-        executionVerdict: 'Target component operational in staging sandbox pending final human release toggle.',
-        color: '#f59e0b',
-        bg: 'rgba(245,158,11,0.1)'
-      }];
-    } else if (roleName === 'design') {
-      rolloutEntries = [{
-        state: 'Aborted',
-        actionLineage: 'Manager Signoff [Denied]',
-        rolloutBasis: 'Target deployment aborted cleanly at deployment boundary.',
-        executionVerdict: 'No physical system changes executed. Lineage remains isolated and dormant.',
-        color: '#ef4444',
-        bg: 'rgba(239,68,68,0.1)'
-      }];
-    } else {
-      rolloutEntries = [{
-        state: 'Aborted',
-        actionLineage: 'N/A',
-        rolloutBasis: 'Invalid capability stack.',
-        executionVerdict: 'Missing authority to execute release candidate.',
-        color: '#64748b',
-        bg: 'rgba(100,116,139,0.1)'
-      }];
-    }
+    buildRoleWorkflowSnapshot(roleName, appId, runId).then(function(snapshot) {
+      var rolloutEntries = [];
+      var state = 'Aborted';
+      var actionLineage = snapshot.release ? ('Release [' + (snapshot.release.status || 'ready') + ']') : 'N/A';
+      var rolloutBasis = 'No durable release record exists for this specialist assignment.';
+      var executionVerdict = 'No rollout path is proven beyond the manager release channel.';
 
-    var rolloutIcon = { 'Live': '🪐', 'Staged': '📦', 'Aborted': '🛑' };
+      if (snapshot.release && snapshot.release.status === 'shipped') {
+        state = 'Live';
+        rolloutBasis = 'Release record is marked shipped in the manager back office.';
+        executionVerdict = 'This lineage is recorded as shipped in durable release state.';
+      } else if ((snapshot.release && snapshot.release.status === 'ready') || (snapshot.approval && snapshot.approval.status === 'approved')) {
+        state = 'Staged';
+        rolloutBasis = snapshot.release
+          ? 'Release record exists with ready status; shipment has not been separately recorded.'
+          : 'Approval exists, but no release record has been written yet.';
+        executionVerdict = 'Lineage is release-ready or pre-shipment, not yet proven shipped.';
+      } else if (snapshot.approval && snapshot.approval.status === 'rejected') {
+        state = 'Aborted';
+        actionLineage = 'Approval [rejected]';
+        rolloutBasis = 'Manager rejected the branch before release readiness.';
+        executionVerdict = 'No rollout can occur because the workflow branch was explicitly rejected.';
+      }
 
-    var html = '<div style="display:flex;flex-direction:column;gap:0.5rem;font-size:0.75rem;color:var(--sb-on-surface);">';
+      rolloutEntries.push({
+        state: state,
+        actionLineage: actionLineage,
+        rolloutBasis: rolloutBasis,
+        executionVerdict: executionVerdict,
+        color: state === 'Live' ? '#10b981' : (state === 'Staged' ? '#f59e0b' : '#ef4444'),
+        bg: state === 'Live' ? 'rgba(16,185,129,0.1)' : (state === 'Staged' ? 'rgba(245,158,11,0.1)' : 'rgba(239,68,68,0.1)')
+      });
 
-    rolloutEntries.forEach(function(entry) {
-      html += '<div style="background:var(--sb-surface-alt,#1e293b);padding:0.45rem 0.55rem;border-radius:0.3rem;border-left:2px solid ' + entry.color + ';display:flex;flex-direction:column;gap:0.35rem;">';
+      var rolloutIcon = { 'Live': '🪐', 'Staged': '📦', 'Aborted': '🛑' };
+      var html = '<div style="display:flex;flex-direction:column;gap:0.5rem;font-size:0.75rem;color:var(--sb-on-surface);">';
 
-      // Header
-      html += '<div style="display:flex;align-items:center;justify-content:space-between;">';
-      html += '<strong style="color:var(--sb-on-surface);font-size:0.73rem;">' + (rolloutIcon[entry.state] || '●') + ' Deployment Execution State</strong>';
-      html += '<code style="color:' + entry.color + ';background:' + entry.bg + ';padding:0.1rem 0.4rem;text-transform:uppercase;font-size:0.63rem;">' + escapeHtml(entry.state) + '</code>';
-      html += '</div>';
+      rolloutEntries.forEach(function(entry) {
+        html += '<div style="background:var(--sb-surface-alt,#1e293b);padding:0.45rem 0.55rem;border-radius:0.3rem;border-left:2px solid ' + entry.color + ';display:flex;flex-direction:column;gap:0.35rem;">';
+        html += '<div style="display:flex;align-items:center;justify-content:space-between;">';
+        html += '<strong style="color:var(--sb-on-surface);font-size:0.73rem;">' + (rolloutIcon[entry.state] || '●') + ' Deployment Execution State</strong>';
+        html += '<code style="color:' + entry.color + ';background:' + entry.bg + ';padding:0.1rem 0.4rem;text-transform:uppercase;font-size:0.63rem;">' + escapeHtml(entry.state) + '</code>';
+        html += '</div>';
+        html += '<div style="display:flex;flex-direction:column;gap:0.1rem;">';
+        html += '<div><span style="color:var(--sb-text-muted);font-weight:600;font-size:0.63rem;">Release Lineage:</span> <span style="font-family:monospace;font-size:0.68rem;color:#38bdf8;">' + escapeHtml(entry.actionLineage) + '</span></div>';
+        html += '<div><span style="color:var(--sb-text-muted);font-weight:600;font-size:0.63rem;">Execution Basis:</span> <span style="font-family:monospace;font-size:0.68rem;color:#cbd5e1;">' + escapeHtml(entry.rolloutBasis) + '</span></div>';
+        html += '</div>';
+        html += '<div style="background:#0f172a;border-radius:0.2rem;padding:0.3rem 0.4rem;font-size:0.65rem;color:#cbd5e1;line-height:1.4;"><code>' + escapeHtml(entry.executionVerdict) + '</code></div>';
+        html += '<div><span style="color:var(--sb-text-muted);font-weight:600;font-size:0.63rem;">Rollout Hash:</span> <code style="font-size:0.6rem;color:#64748b;">' + btoa(entry.state + entry.actionLineage + entry.executionVerdict).substring(0, 16) + '</code></div>';
+        html += '</div>';
+      });
 
-      // Context
-      html += '<div style="display:flex;flex-direction:column;gap:0.1rem;">';
-      html += '<div><span style="color:var(--sb-text-muted);font-weight:600;font-size:0.63rem;">Release Lineage:</span> <span style="font-family:monospace;font-size:0.68rem;color:#38bdf8;">' + escapeHtml(entry.actionLineage) + '</span></div>';
-      html += '<div><span style="color:var(--sb-text-muted);font-weight:600;font-size:0.63rem;">Execution Basis:</span> <span style="font-family:monospace;font-size:0.68rem;color:#cbd5e1;">' + escapeHtml(entry.rolloutBasis) + '</span></div>';
-      html += '</div>';
-
-      // Object description
-      html += '<div style="background:#0f172a;border-radius:0.2rem;padding:0.3rem 0.4rem;font-size:0.65rem;color:#cbd5e1;line-height:1.4;">';
-      html += '<code>' + escapeHtml(entry.executionVerdict) + '</code>';
-      html += '</div>';
-
-      // ALCOA+ hash
-      var alcoa = btoa(entry.state + entry.actionLineage + entry.executionVerdict).substring(0, 16);
-      html += '<div><span style="color:var(--sb-text-muted);font-weight:600;font-size:0.63rem;">Rollout Hash:</span> <code style="font-size:0.6rem;color:#64748b;">' + alcoa + '</code></div>';
-
-      html += '</div>';
+      html += '<div style="margin-top:0.1rem;font-size:0.63rem;color:#64748b;">';
+      html += '<strong style="color:var(--sb-text-muted);">Audit Constraints:</strong> ';
+      html += 'Viewer Role: <code>' + escapeHtml(viewerRole) + '</code><br/>';
+      html += 'Selected Worker: <code>' + escapeHtml(selectedWorker) + '</code><br/>';
+      html += 'Selected Run: <code>' + escapeHtml(selectedRun) + '</code><br/>';
+      html += 'Rollout Basis: <code>real approval and release records with ready versus shipped separation</code><br/>';
+      html += 'Rollout executions are <em>runtime-backed</em> when records exist; staged and aborted states are shown honestly when they do not. ';
+      html += 'Resolution Bound: <code>SI18 — Transparency as a Product Feature</code>.';
+      html += '</div></div>';
+      panel.innerHTML = html;
+    }).catch(function(err) {
+      panel.innerHTML = '<span style="font-size:0.7rem;color:#fca5a5;">convention rollout load failed: ' + escapeHtml(String(err)) + '</span>';
     });
-
-    html += '<div style="margin-top:0.1rem;font-size:0.63rem;color:#64748b;">';
-    html += '<strong style="color:var(--sb-text-muted);">Audit Constraints:</strong> ';
-    html += 'Viewer Role: <code>' + escapeHtml(viewerRole) + '</code><br/>';
-    html += 'Selected Worker: <code>' + escapeHtml(selectedWorker) + '</code><br/>';
-    html += 'Selected Run: <code>' + escapeHtml(selectedRun) + '</code><br/>';
-    html += 'Rollout Basis: <code>release action -> rollout execution -> live, staged, or aborted state</code><br/>';
-    html += 'Rollout executions are <em>role-derived mocks</em> representing absolute systemic deployment conclusion. ';
-    html += 'Resolution Bound: <code>SI18 — Transparency as a Product Feature</code>.';
-    html += '</div>';
-
-    html += '</div>';
-    panel.innerHTML = html;
   }
 
   // ── SAK51: Specialist Post-Release Health & Rollback ──
