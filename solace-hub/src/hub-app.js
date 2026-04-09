@@ -1661,6 +1661,45 @@
                         }
                         appHtml += '</div></div>';
                         // ---------------------------------------------------------
+
+                        // --- SAC93 Next-Step Destination Approval Result Truth ---
+                        var nestedLastSignoffResult = window.__solaceLastWorkflowSignoffActionResult;
+                        if (nestedLastSignoffResult && nestedLastSignoffResult.requestId === reqId && nestedLastSignoffResult.assignmentId === nestedLaunchAction.targetAssignmentId) {
+                            appHtml += '<div style="margin-top:0.4rem; padding-top:0.4rem; border-top:1px solid #334155;">';
+                            appHtml += '<strong style="display:block; margin-bottom:0.2rem; color:#f87171;">Next-Step Destination Approval Mutation Result:</strong>';
+                            appHtml += '<div style="background:rgba(30,41,59,0.5); padding:0.4rem; border-left:2px solid #f87171; border-radius:0.15rem; font-size:0.65rem;">';
+                            appHtml += 'Nested Target Assignment ID: <code>' + escapeHtml(nestedLastSignoffResult.assignmentId.substring(0, 8)) + '</code><br/>';
+                            if (nestedLastSignoffResult.targetRole) {
+                                appHtml += 'Result Target Role: <code>' + escapeHtml(nestedLastSignoffResult.targetRole) + '</code><br/>';
+                            }
+                            if (nestedLastSignoffResult.runId) {
+                                appHtml += 'Result Target Run ID: <code>' + escapeHtml(nestedLastSignoffResult.runId.substring(0, 8)) + '</code><br/>';
+                            }
+                            appHtml += 'Requested Status: <code>' + escapeHtml(nestedLastSignoffResult.status) + '</code><br/>';
+                            appHtml += 'Mutation Mode: <code>' + escapeHtml(nestedLastSignoffResult.mutation) + '</code><br/>';
+                            
+                            if (nestedLastSignoffResult.success) {
+                                appHtml += 'Mutation Status: <span style="color:#6ee7b7;font-weight:600;">[✓] Target approval successfully written to Back Office</span><br/>';
+                                if (exactNestedLaunchTruth) {
+                                    appHtml += 'Result Branch: <span style="color:#34d399;font-weight:600;">[✓] Exact launched-workflow destination approval result tracked</span><br/>';
+                                    appHtml += 'Result Basis: <code>Approval action wrote successfully for the launched nested target assignment, and request, source assignment, target assignment, role, and run remain aligned in the exact launched-workflow branch (SAC93)</code>';
+                                } else {
+                                    appHtml += 'Result Branch: <span style="color:#fcd34d;font-weight:600;">[?] Fallback destination approval result tracked</span><br/>';
+                                    appHtml += 'Result Basis: <code>Approval action wrote successfully for a visible matching nested assignment, but the current workflow binding has fallen back away from exact launched-workflow destination approval result truth (SAC93)</code>';
+                                }
+                            } else {
+                                appHtml += 'Mutation Status: <span style="color:#fca5a5;font-weight:600;">[✗] Target approval write failed</span><br/>';
+                                if (exactNestedLaunchTruth) {
+                                    appHtml += 'Result Branch: <span style="color:#fca5a5;font-weight:600;">[!] Exact launched-workflow destination approval result failed</span><br/>';
+                                    appHtml += 'Result Basis: <code>Approval action failed for the launched nested target assignment while request, source assignment, target assignment, role, and run remained aligned in the exact launched-workflow branch (SAC93)</code>';
+                                } else {
+                                    appHtml += 'Result Branch: <span style="color:#fca5a5;font-weight:600;">[!] Fallback destination approval result failed</span><br/>';
+                                    appHtml += 'Result Basis: <code>Approval action failed for a visible matching nested assignment after the current workflow binding had already fallen back away from exact launched-workflow destination truth (SAC93)</code>';
+                                }
+                            }
+                            appHtml += '</div></div>';
+                        }
+                        // -------------------------------------------------------------
                     } else {
                         appHtml += '<div style="margin-top:0.4rem; padding-top:0.4rem; border-top:1px solid #334155;">';
                         appHtml += '<strong style="display:block; margin-bottom:0.2rem; color:#60a5fa;">Next-Step Destination Launch Truth:</strong>';

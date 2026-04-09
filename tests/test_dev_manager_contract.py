@@ -39,3 +39,16 @@ def test_manager_specs_exist() -> None:
     assert (
         specs_root / "project-mappings" / "solace-browser.prime-mermaid.md"
     ).exists()
+
+
+def test_manager_manifest_exposes_runtime_backed_workflow_objects() -> None:
+    manifest = (
+        REPO_ROOT / "data" / "apps" / "solace-dev-manager" / "manifest.yaml"
+    ).read_text(encoding="utf-8")
+
+    assert "- name: worker_inboxes" in manifest
+    assert "- name: runs" in manifest
+    assert "- name: memory_entries" in manifest
+    assert "- name: conventions" in manifest
+    assert "- name: source_assignment_id" in manifest
+    assert 'values: ["ready", "shipped", "canceled"]' in manifest

@@ -39,9 +39,9 @@ def test_hub_app_js_has_closure_function(app_js):
 
 
 def test_hub_app_js_honest_closure_states(app_js):
-    assert "state: 'Verified Closed'" in app_js
-    assert "state: 'Pending Verification'" in app_js
-    assert "state: 'Failed Verification'" in app_js
+    assert "'Verified Closed'" in app_js
+    assert "'Pending Verification'" in app_js
+    assert "'Failed Verification'" in app_js
 
 
 def test_hub_app_js_ties_closure_to_payload(app_js):

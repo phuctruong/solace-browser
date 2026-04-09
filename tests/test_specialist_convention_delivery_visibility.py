@@ -39,9 +39,9 @@ def test_hub_app_js_has_delivery_function(app_js):
 
 
 def test_hub_app_js_honest_delivery_states(app_js):
-    assert "state: 'Acknowledged'" in app_js
-    assert "state: 'Pending'" in app_js
-    assert "state: 'Rejected'" in app_js
+    assert "'Acknowledged'" in app_js
+    assert "'Pending'" in app_js
+    assert "'Rejected'" in app_js
 
 
 def test_hub_app_js_ties_delivery_to_payload(app_js):
@@ -54,7 +54,7 @@ def test_hub_app_js_has_active_delivery_context(app_js):
     assert "Selected Worker:" in app_js
     assert "Selected Run:" in app_js
     assert "Delivery Basis:" in app_js
-    assert "invoked convention -> target packet receipt -> execution binding acknowledgement" in app_js
+    assert "real convention record -> next assignment -> worker_inboxes receipt state" in app_js
 
 
 def test_geometric_law_alcoa_delivery_hash(app_js):

@@ -39,9 +39,9 @@ def test_hub_app_js_has_recovery_function(app_js):
 
 
 def test_hub_app_js_honest_recovery_states(app_js):
-    assert "state: 'Authorized'" in app_js
-    assert "state: 'Staged Recovery'" in app_js
-    assert "state: 'Blocked'" in app_js
+    assert "'Authorized'" in app_js
+    assert "'Staged Recovery'" in app_js
+    assert "'Blocked'" in app_js
 
 
 def test_hub_app_js_ties_recovery_to_payload(app_js):

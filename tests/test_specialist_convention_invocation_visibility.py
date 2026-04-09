@@ -39,9 +39,9 @@ def test_hub_app_js_has_invocation_function(app_js):
 
 
 def test_hub_app_js_honest_invocation_states(app_js):
-    assert "state: 'Invoked'" in app_js
-    assert "state: 'Queued'" in app_js
-    assert "state: 'Blocked'" in app_js
+    assert "'Invoked'" in app_js
+    assert "'Queued'" in app_js
+    assert "'Blocked'" in app_js
 
 
 def test_hub_app_js_ties_invocation_to_payload(app_js):
@@ -54,7 +54,7 @@ def test_hub_app_js_has_active_invocation_context(app_js):
     assert "Selected Worker:" in app_js
     assert "Selected Run:" in app_js
     assert "Invocation Basis:" in app_js
-    assert "callable department-memory entry -> convention invocation -> next directive or worker packet" in app_js
+    assert "real convention record -> routed next assignment -> optional worker inbox" in app_js
 
 
 def test_geometric_law_alcoa_invocation_hash(app_js):

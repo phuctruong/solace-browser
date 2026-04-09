@@ -21,7 +21,7 @@ def test_hub_app_js_has_department_memory_queue_logic() -> None:
     ).read_text(encoding="utf-8")
 
     assert "updateDepartmentMemoryQueue" in js
-    assert "manager-facing visible department memory review queue" in js
+    assert "real Back Office memory_entries and conventions tables" in js
 
 
 def test_hub_app_js_has_honest_department_memory_states() -> None:

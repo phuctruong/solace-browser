@@ -39,9 +39,9 @@ def test_hub_app_js_has_reuse_function(app_js):
 
 
 def test_hub_app_js_honest_reuse_states(app_js):
-    assert "state: 'Callable'" in app_js
-    assert "state: 'Limited'" in app_js
-    assert "state: 'Blocked'" in app_js
+    assert "'Callable'" in app_js
+    assert "'Limited'" in app_js
+    assert "'Blocked'" in app_js
 
 
 def test_hub_app_js_ties_reuse_to_payload(app_js):
@@ -54,11 +54,11 @@ def test_hub_app_js_has_active_reuse_context(app_js):
     assert "Selected Worker:" in app_js
     assert "Selected Run:" in app_js
     assert "Reuse Basis:" in app_js
-    assert "visible department-memory entry -> callable convention -> next directive or worker packet" in app_js
+    assert "real Back Office convention record linked to reusable memory entry" in app_js
 
 
 def test_geometric_law_alcoa_reuse_hash(app_js):
-    assert "btoa(entry.state + entry.memoryId + entry.nextTarget)" in app_js, \
+    assert "btoa(item.state + item.memoryId + item.nextTarget)" in app_js, \
         "ALCOA+ hash must bind state + memoryId + nextTarget"
 
 

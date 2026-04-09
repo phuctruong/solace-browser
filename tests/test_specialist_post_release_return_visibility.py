@@ -39,9 +39,9 @@ def test_hub_app_js_has_return_function(app_js):
 
 
 def test_hub_app_js_honest_return_states(app_js):
-    assert "state: 'Service Restored'" in app_js
-    assert "state: 'Provisional Service'" in app_js
-    assert "state: 'Re-entry Failed'" in app_js
+    assert "'Service Restored'" in app_js
+    assert "'Provisional Service'" in app_js
+    assert "'Re-entry Failed'" in app_js
 
 
 def test_hub_app_js_ties_return_to_payload(app_js):

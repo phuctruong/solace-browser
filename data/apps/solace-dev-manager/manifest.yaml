@@ -99,6 +99,60 @@ backoffice:
         - name: notes
           type: text
 
+    - name: worker_inboxes
+      display:
+        title: "Worker Inboxes"
+        badge: status
+      search: ["to_role", "context_sources", "status"]
+      columns:
+        - name: assignment_id
+          type: ref:assignments
+          required: true
+        - name: to_role
+          type: text
+          required: true
+        - name: context_sources
+          type: text
+          required: true
+        - name: file_targets
+          type: text
+        - name: required_artifacts
+          type: text
+          required: true
+        - name: constraints
+          type: text
+        - name: status
+          type: enum
+          values: ["prepared", "loaded", "acted_on", "archived"]
+          required: true
+
+    - name: runs
+      display:
+        title: "Workflow Runs"
+        badge: status
+      search: ["run_id", "role", "executor", "status"]
+      columns:
+        - name: assignment_id
+          type: ref:assignments
+          required: true
+        - name: inbox_id
+          type: ref:worker_inboxes
+        - name: role
+          type: text
+          required: true
+        - name: executor
+          type: text
+          required: true
+        - name: run_id
+          type: text
+          required: true
+        - name: status
+          type: enum
+          values: ["queued", "running", "passed", "failed", "blocked"]
+          required: true
+        - name: evidence_ref
+          type: text
+
     - name: releases
       display:
         title: "Releases"
@@ -107,11 +161,87 @@ backoffice:
         - name: project_id
           type: ref:projects
           required: true
+        - name: source_assignment_id
+          type: ref:assignments
+        - name: source_run_id
+          type: text
         - name: version
           type: text
           required: true
+        - name: status
+          type: enum
+          values: ["ready", "shipped", "canceled"]
+          required: true
+        - name: approved_by
+          type: text
         - name: evidence_bundle
           type: text
+          required: true
+
+    - name: memory_entries
+      display:
+        title: "Memory Entries"
+        badge: status
+      search: ["title", "role", "status"]
+      columns:
+        - name: request_id
+          type: ref:requests
+          required: true
+        - name: assignment_id
+          type: ref:assignments
+          required: true
+        - name: project_id
+          type: ref:projects
+          required: true
+        - name: role
+          type: text
+          required: true
+        - name: run_id
+          type: text
+        - name: entry_type
+          type: enum
+          values: ["convention", "decision", "evidence_bundle", "failure_pattern"]
+          required: true
+        - name: title
+          type: text
+          required: true
+        - name: summary
+          type: text
+          required: true
+        - name: status
+          type: enum
+          values: ["candidate", "promoted", "rejected", "superseded"]
+          required: true
+        - name: artifact_refs
+          type: text
+
+    - name: conventions
+      display:
+        title: "Conventions"
+        badge: status
+      search: ["name", "source_role", "status"]
+      columns:
+        - name: memory_entry_id
+          type: ref:memory_entries
+          required: true
+        - name: source_role
+          type: text
+          required: true
+        - name: name
+          type: text
+          required: true
+        - name: trigger
+          type: text
+          required: true
+        - name: scope
+          type: text
+          required: true
+        - name: proof_basis
+          type: text
+          required: true
+        - name: status
+          type: enum
+          values: ["candidate", "active", "deprecated", "orphan"]
           required: true
 
     - name: design_handoffs
@@ -222,4 +352,20 @@ backoffice:
     - name: Open Assignments
       type: kanban
       table: assignments
+      group_by: status
+    - name: Worker Inboxes
+      type: kanban
+      table: worker_inboxes
+      group_by: status
+    - name: Workflow Runs
+      type: kanban
+      table: runs
+      group_by: status
+    - name: Memory Queue
+      type: kanban
+      table: memory_entries
+      group_by: status
+    - name: Convention Status
+      type: kanban
+      table: conventions
       group_by: status

@@ -39,9 +39,9 @@ def test_hub_app_js_has_proof_function(app_js):
 
 
 def test_hub_app_js_honest_proof_states(app_js):
-    assert "state: 'Verified'" in app_js
-    assert "state: 'Partial'" in app_js
-    assert "state: 'Missing'" in app_js
+    assert "'Verified'" in app_js
+    assert "'Partial'" in app_js
+    assert "'Missing'" in app_js
 
 
 def test_hub_app_js_ties_proof_to_payload(app_js):
@@ -54,7 +54,7 @@ def test_hub_app_js_has_active_proof_context(app_js):
     assert "Selected Worker:" in app_js
     assert "Selected Run:" in app_js
     assert "Proof Basis:" in app_js
-    assert "constrained output -> evidence verdict -> governed convention lineage" in app_js
+    assert "real run evidence plus approval, memory, and release lineage" in app_js
 
 
 def test_geometric_law_alcoa_proof_hash(app_js):

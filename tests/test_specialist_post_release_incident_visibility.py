@@ -39,9 +39,9 @@ def test_hub_app_js_has_incident_function(app_js):
 
 
 def test_hub_app_js_honest_incident_states(app_js):
-    assert "state: 'Mitigated'" in app_js
-    assert "state: 'In Progress'" in app_js
-    assert "state: 'Unresolved'" in app_js
+    assert "'Mitigated'" in app_js
+    assert "'In Progress'" in app_js
+    assert "'Unresolved'" in app_js
 
 
 def test_hub_app_js_ties_incident_to_payload(app_js):

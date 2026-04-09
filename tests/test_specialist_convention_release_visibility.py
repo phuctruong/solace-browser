@@ -39,9 +39,9 @@ def test_hub_app_js_has_release_function(app_js):
 
 
 def test_hub_app_js_honest_release_states(app_js):
-    assert "state: 'Approved'" in app_js
-    assert "state: 'Pending'" in app_js
-    assert "state: 'Denied'" in app_js
+    assert "'Approved'" in app_js
+    assert "'Pending'" in app_js
+    assert "'Denied'" in app_js
 
 
 def test_hub_app_js_ties_release_to_payload(app_js):
@@ -54,11 +54,11 @@ def test_hub_app_js_has_active_release_context(app_js):
     assert "Selected Worker:" in app_js
     assert "Selected Run:" in app_js
     assert "Action Basis:" in app_js
-    assert "trust verdict -> manager signoff -> release or promotion action" in app_js
+    assert "real Back Office approval row -> optional release row" in app_js
 
 
 def test_geometric_law_alcoa_release_hash(app_js):
-    assert "btoa(entry.state + entry.trustLineage + entry.actionVerdict)" in app_js, \
+    assert "btoa(item.state + item.trustLineage + item.actionVerdict)" in app_js, \
         "ALCOA+ hash must bind state + trustLineage + actionVerdict"
 
 

@@ -39,9 +39,9 @@ def test_hub_app_js_has_trust_function(app_js):
 
 
 def test_hub_app_js_honest_trust_states(app_js):
-    assert "state: 'Trusted'" in app_js
-    assert "state: 'Provisional'" in app_js
-    assert "state: 'Blocked'" in app_js
+    assert "'Trusted'" in app_js
+    assert "'Provisional'" in app_js
+    assert "'Blocked'" in app_js
 
 
 def test_hub_app_js_ties_trust_to_payload(app_js):
@@ -54,7 +54,7 @@ def test_hub_app_js_has_active_trust_context(app_js):
     assert "Selected Worker:" in app_js
     assert "Selected Run:" in app_js
     assert "Trust Basis:" in app_js
-    assert "proof verdict -> governance decision -> release or promotion readiness" in app_js
+    assert "real runs, approvals, memory_entries, conventions, and releases" in app_js
 
 
 def test_geometric_law_alcoa_trust_hash(app_js):

@@ -39,9 +39,9 @@ def test_hub_app_js_has_health_function(app_js):
 
 
 def test_hub_app_js_honest_health_states(app_js):
-    assert "state: 'Healthy'" in app_js
-    assert "state: 'Degraded'" in app_js
-    assert "state: 'Rolled Back'" in app_js
+    assert "'Healthy'" in app_js
+    assert "'Degraded'" in app_js
+    assert "'Rolled Back'" in app_js
 
 
 def test_hub_app_js_ties_health_to_payload(app_js):

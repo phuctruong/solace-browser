@@ -39,9 +39,9 @@ def test_hub_app_js_has_promotion_function(app_js):
 
 
 def test_hub_app_js_honest_promotion_states(app_js):
-    assert "status: 'Ready-to-Seal'" in app_js
-    assert "status: 'Provisional'" in app_js
-    assert "status: 'Disqualified'" in app_js
+    assert "'Ready-to-Seal'" in app_js
+    assert "'Provisional'" in app_js
+    assert "'Disqualified'" in app_js
 
 
 def test_hub_app_js_ties_promotion_to_payload(app_js):

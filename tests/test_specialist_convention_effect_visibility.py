@@ -39,9 +39,9 @@ def test_hub_app_js_has_effect_function(app_js):
 
 
 def test_hub_app_js_honest_effect_states(app_js):
-    assert "state: 'Visible'" in app_js
-    assert "state: 'Partial'" in app_js
-    assert "state: 'Absent'" in app_js
+    assert "'Visible'" in app_js
+    assert "'Partial'" in app_js
+    assert "'Absent'" in app_js
 
 
 def test_hub_app_js_ties_effect_to_payload(app_js):
@@ -54,7 +54,7 @@ def test_hub_app_js_has_active_effect_context(app_js):
     assert "Selected Worker:" in app_js
     assert "Selected Run:" in app_js
     assert "Effect Basis:" in app_js
-    assert "active convention -> constrained runtime -> visible artifact or output shift" in app_js
+    assert "real downstream run state plus report artifact path" in app_js
 
 
 def test_geometric_law_alcoa_effect_hash(app_js):

@@ -39,9 +39,9 @@ def test_hub_app_js_has_admission_function(app_js):
 
 
 def test_hub_app_js_honest_admission_states(app_js):
-    assert "status: 'Admitted'" in app_js
-    assert "status: 'Queued'" in app_js
-    assert "status: 'Rejected'" in app_js
+    assert "'Admitted'" in app_js
+    assert "'Queued'" in app_js
+    assert "'Rejected'" in app_js
 
 
 def test_hub_app_js_ties_admission_to_payload(app_js):

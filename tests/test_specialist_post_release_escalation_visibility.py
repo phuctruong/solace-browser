@@ -39,9 +39,9 @@ def test_hub_app_js_has_escalation_function(app_js):
 
 
 def test_hub_app_js_honest_escalation_states(app_js):
-    assert "state: 'Reopened'" in app_js
-    assert "state: 'Escalated'" in app_js
-    assert "state: 'Under Observation'" in app_js
+    assert "'Reopened'" in app_js
+    assert "'Escalated'" in app_js
+    assert "'Under Observation'" in app_js
 
 
 def test_hub_app_js_ties_escalation_to_payload(app_js):

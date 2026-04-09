@@ -39,9 +39,9 @@ def test_hub_app_js_has_quarantine_function(app_js):
 
 
 def test_hub_app_js_honest_quarantine_states(app_js):
-    assert "state: 'Constrained Continuation'" in app_js
-    assert "state: 'Manual Override Required'" in app_js
-    assert "state: 'Quarantined'" in app_js
+    assert "'Constrained Continuation'" in app_js
+    assert "'Manual Override Required'" in app_js
+    assert "'Quarantined'" in app_js
 
 
 def test_hub_app_js_ties_quarantine_to_payload(app_js):

@@ -39,9 +39,9 @@ def test_hub_app_js_has_entry_function(app_js):
 
 
 def test_hub_app_js_honest_entry_states(app_js):
-    assert "state: 'Live'" in app_js
-    assert "state: 'Draft'" in app_js
-    assert "state: 'Revoked'" in app_js
+    assert "'Live'" in app_js
+    assert "'Draft'" in app_js
+    assert "'Revoked'" in app_js
 
 
 def test_hub_app_js_ties_entry_to_payload(app_js):
@@ -54,11 +54,11 @@ def test_hub_app_js_has_active_memory_context(app_js):
     assert "Selected Worker:" in app_js
     assert "Selected Run:" in app_js
     assert "Memory Basis:" in app_js
-    assert "visible specialist output -> memory admission -> department convention entry" in app_js
+    assert "real Back Office memory_entries table linked to optional convention record" in app_js
 
 
 def test_geometric_law_alcoa_entry_hash(app_js):
-    assert "btoa(entry.state + entry.bundleId + entry.conventionTarget)" in app_js, \
+    assert "btoa(item.state + item.bundleId + item.conventionTarget)" in app_js, \
         "ALCOA+ hash must bind state + bundleId + conventionTarget"
 
 

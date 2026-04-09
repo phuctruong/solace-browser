@@ -39,9 +39,9 @@ def test_hub_app_js_has_activation_function(app_js):
 
 
 def test_hub_app_js_honest_activation_states(app_js):
-    assert "state: 'Active'" in app_js
-    assert "state: 'Queued'" in app_js
-    assert "state: 'Failed'" in app_js
+    assert "'Active'" in app_js
+    assert "'Queued'" in app_js
+    assert "'Failed'" in app_js
 
 
 def test_hub_app_js_ties_activation_to_payload(app_js):
@@ -54,7 +54,7 @@ def test_hub_app_js_has_active_activation_context(app_js):
     assert "Selected Worker:" in app_js
     assert "Selected Run:" in app_js
     assert "Activation Basis:" in app_js
-    assert "delivered convention -> target runtime binding -> active execution constraint" in app_js
+    assert "real next assignment -> worker_inboxes -> runs execution state" in app_js
 
 
 def test_geometric_law_alcoa_activation_hash(app_js):

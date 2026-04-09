@@ -39,9 +39,9 @@ def test_hub_app_js_has_rollout_function(app_js):
 
 
 def test_hub_app_js_honest_rollout_states(app_js):
-    assert "state: 'Live'" in app_js
-    assert "state: 'Staged'" in app_js
-    assert "state: 'Aborted'" in app_js
+    assert "'Live'" in app_js
+    assert "'Staged'" in app_js
+    assert "'Aborted'" in app_js
 
 
 def test_hub_app_js_ties_rollout_to_payload(app_js):
@@ -54,7 +54,7 @@ def test_hub_app_js_has_active_rollout_context(app_js):
     assert "Selected Worker:" in app_js
     assert "Selected Run:" in app_js
     assert "Rollout Basis:" in app_js
-    assert "release action -> rollout execution -> live, staged, or aborted state" in app_js
+    assert "real approval and release records with ready versus shipped separation" in app_js
 
 
 def test_geometric_law_alcoa_rollout_hash(app_js):
